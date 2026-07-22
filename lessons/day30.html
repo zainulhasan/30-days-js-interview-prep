@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 30: Final Review & Cheat Sheet — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="The complete cheat sheet — every pattern and complexity from all 30 days in one table — plus a practical interview-day checklist." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 30 / 30 &middot; WEEK 4</p>
+  <h1>Final Review &amp; Cheat Sheet</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Compress all 30 days into one scannable reference: every algorithm, its complexity, and the
+      one-line signal that says "use this one."</li>
+    <li>Walk away with a practical <strong>interview-day checklist</strong> — not more algorithms,
+      the logistics and mental checklist for the actual day.</li>
+    <li>See your own progress through the course, and know exactly what's left if anything is.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>There's no new algorithm today. Days 1 through 29 built roughly 30 real, working implementations
+    from scratch — every one of them node-verified before it ever reached a page, every diagram
+    checked for the same handful of recurring bugs, every animation traced against the actual code
+    it's demonstrating. That's the entire point of this course: not reading about algorithms, but
+    building and watching each one actually run. Day 30 is compaction, not addition — turning a month
+    of that work into a single page you can review in ten minutes the morning of a real interview.</p>
+  <p>The two deliverables below are meant to be used differently. The <strong>cheat sheet</strong> is
+    a lookup table — skim it now, then come back to it later whenever a specific complexity or
+    trigger phrase needs confirming. The <strong>interview-day checklist</strong> is meant to be
+    read once, close to the actual day, since it's about logistics and mindset rather than material
+    you need to memorize.</p>
+
+  <h2>Diagram: the 30-day arc</h2>
+  <svg class="diagram" viewBox="0 0 640 300" role="img" aria-label="A horizontal timeline of the 30-day course: Days 1-7 covered JavaScript foundations and core patterns, Days 8-14 covered sorting, searching, and recursion, Days 15-21 covered core data structures, and Days 22-30 covered advanced topics and interview simulation.">
+    <text x="20" y="28" font-size="13" fill="#61AEEE" font-weight="bold">Four weeks, one arc</text>
+
+    <g font-size="10" fill="#818896" text-anchor="middle">
+      <text x="88" y="66">Days 1-7</text>
+      <text x="223" y="66">Days 8-14</text>
+      <text x="358" y="66">Days 15-21</text>
+      <text x="513" y="66">Days 22-30</text>
+    </g>
+
+    <g stroke="#21252B" stroke-width="1">
+      <rect x="20" y="70" width="135" height="50" fill="#61AEEE"/>
+      <rect x="155" y="70" width="135" height="50" fill="#C678DD"/>
+      <rect x="290" y="70" width="135" height="50" fill="#98C379"/>
+      <rect x="425" y="70" width="175" height="50" fill="#E6C07B"/>
+    </g>
+
+    <g font-size="12" fill="#DCDFE4">
+      <rect x="20" y="150" width="12" height="12" rx="2" fill="#61AEEE"/>
+      <text x="40" y="160">Week 1 — JS foundations + core patterns</text>
+      <rect x="20" y="174" width="12" height="12" rx="2" fill="#C678DD"/>
+      <text x="40" y="184">Week 2 — Sorting, searching, recursion</text>
+      <rect x="20" y="198" width="12" height="12" rx="2" fill="#98C379"/>
+      <text x="40" y="208">Week 3 — Core data structures</text>
+      <rect x="20" y="222" width="12" height="12" rx="2" fill="#E6C07B"/>
+      <text x="40" y="232">Week 4 — Advanced topics + interview simulation</text>
+    </g>
+
+    <text x="20" y="265" font-size="12" fill="#DCDFE4">Every block built on the ones before it — quickselect (14) needed sorting AND</text>
+    <text x="20" y="282" font-size="12" fill="#DCDFE4">binary search; today's cheat sheet is the whole arc on one page.</text>
+  </svg>
+
+  <h2>Interactive: your progress</h2>
+  <div class="card" style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;">
+    <div class="progress-label" id="finalProgressLabel">Loading your progress…</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="finalProgressFill" style="width:0%"></div>
+    </div>
+    <p class="narration" id="finalProgressDetail" style="margin-top:0.85rem;">—</p>
+  </div>
+
+  <h2>The complete cheat sheet — every algorithm, every complexity</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">All 30 days, one table. "Trigger" is the
+    one-line signal from Day 28's recognition process — the phrase or shape that tells you to reach
+    for this specific row.</p>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Algorithm</th><th>Day</th><th>Time</th><th>Space</th><th>Trigger</th></tr></thead>
+    <tbody>
+      <tr><td>Two Pointer</td><td>4</td><td>O(n)</td><td>O(1)</td><td>Converge from both ends of a sorted/orderable structure</td></tr>
+      <tr><td>Sliding Window</td><td>5</td><td>O(n)</td><td>O(1) – O(k)</td><td>Contiguous range with a grow/shrink validity condition</td></tr>
+      <tr><td>Hash Map / Set frequency</td><td>6</td><td>O(n)</td><td>O(n)</td><td>Need O(1) lookup/count; order doesn't matter</td></tr>
+      <tr><td>Bubble / Insertion Sort</td><td>8 / 8c</td><td>O(n) best, O(n&sup2;) worst</td><td>O(1)</td><td>Small or nearly-sorted input, simplicity over speed</td></tr>
+      <tr><td>Selection Sort</td><td>8b</td><td>O(n&sup2;) always</td><td>O(1)</td><td>Minimize the number of swaps specifically</td></tr>
+      <tr><td>Recursion (naive)</td><td>9</td><td>often O(2&#8319;)</td><td>O(depth)</td><td>Problem splits into smaller identical subproblems</td></tr>
+      <tr><td>Merge Sort</td><td>10</td><td>O(n log n) always</td><td>O(n)</td><td>Guaranteed worst-case time AND stability required</td></tr>
+      <tr><td>Quick Sort</td><td>11</td><td>O(n log n) avg, O(n&sup2;) worst</td><td>O(log n)</td><td>In-place sorting, average-case speed matters most</td></tr>
+      <tr><td>Binary Search — exact match</td><td>12</td><td>O(log n)</td><td>O(1)</td><td>Sorted array, looking for an exact value</td></tr>
+      <tr><td>Binary Search — boundary / search on answer</td><td>13</td><td>O(log n) or O(n log m)</td><td>O(1)</td><td>First/last occurrence, or a monotonic predicate</td></tr>
+      <tr><td>Quickselect</td><td>14</td><td>O(n) avg, O(n&sup2;) worst</td><td>O(1) extra</td><td>Kth largest/smallest without fully sorting</td></tr>
+      <tr><td>Linked list insert/delete at known node</td><td>15 / 16</td><td>O(1)</td><td>O(1)</td><td>O(1) insert/delete needed, no array shifting allowed</td></tr>
+      <tr><td>Fast/Slow Pointers</td><td>16</td><td>O(n)</td><td>O(1)</td><td>Find the middle, or detect a cycle, in one pass</td></tr>
+      <tr><td>Stack (Valid Parens / Min Stack)</td><td>17</td><td>O(1) per op</td><td>O(n)</td><td>Most-recent-first (LIFO) matching or undo</td></tr>
+      <tr><td>Queue / Deque (Sliding Window Max)</td><td>18</td><td>O(n) amortized</td><td>O(k)</td><td>FIFO order, or a monotonic window</td></tr>
+      <tr><td>BFS (tree)</td><td>19</td><td>O(n)</td><td>O(n)</td><td>Level-order traversal</td></tr>
+      <tr><td>DFS (tree)</td><td>19</td><td>O(n)</td><td>O(h)</td><td>Full-depth traversal, or backtracking</td></tr>
+      <tr><td>BST search / insert</td><td>20</td><td>O(h)</td><td>O(1) iterative</td><td>Sorted-order search/insert, or free sorted traversal</td></tr>
+      <tr><td>Iterative inorder BST validate</td><td>21</td><td>O(n)</td><td>O(h)</td><td>Validate sorted order without recursive min/max bounds</td></tr>
+      <tr><td>Heap insert / extract</td><td>22</td><td>O(log n)</td><td>O(n)</td><td>Repeated min/max needed from a changing set</td></tr>
+      <tr><td>Graph BFS / DFS</td><td>23</td><td>O(V + E)</td><td>O(V)</td><td>Nodes connect arbitrarily, not a strict hierarchy</td></tr>
+      <tr><td>BFS shortest path (unweighted)</td><td>24</td><td>O(V + E)</td><td>O(V)</td><td>Fewest hops/edges between two nodes</td></tr>
+      <tr><td>Topological Sort (Kahn's)</td><td>24</td><td>O(V + E)</td><td>O(V)</td><td>Order with dependencies; detect a cycle as a side effect</td></tr>
+      <tr><td>DP — sum recurrence (Fibonacci / Climbing Stairs)</td><td>25</td><td>O(n)</td><td>O(1) rolling</td><td>Count ways, overlapping subproblems, no decision involved</td></tr>
+      <tr><td>DP — max-of-choices (House Robber)</td><td>26</td><td>O(n)</td><td>O(1) rolling</td><td>Optimization with a constraint, 2 mutually exclusive options</td></tr>
+      <tr><td>DP — unbounded (Coin Change)</td><td>26</td><td>O(amount &times; options)</td><td>O(amount)</td><td>Reusable "coins," min/max over every option at each cell</td></tr>
+      <tr><td>Greedy (interval scheduling)</td><td>27</td><td>O(n log n)</td><td>O(1) – O(n)</td><td>Provably safe locally-optimal choice; sort first</td></tr>
+      <tr><td>Expand Around Center (palindrome)</td><td>29</td><td>O(n&sup2;)</td><td>O(1)</td><td>Longest palindromic substring</td></tr>
+      <tr><td>2D DP (Longest Common Subsequence)</td><td>29</td><td>O(m &times; n)</td><td>O(m &times; n)</td><td>Compare 2 sequences, subsequence not substring</td></tr>
+      <tr><td>Multi-source BFS</td><td>29</td><td>O(rows &times; cols)</td><td>O(rows &times; cols)</td><td>Distance from several simultaneous starting points</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview-day checklist</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Not algorithms — logistics and mindset, the
+    things that are easy to forget under pre-interview nerves.</p>
+
+  <h3>The night before</h3>
+  <ul class="how-to-list">
+    <li>Skim the cheat sheet above once. Don't try to learn anything new — if a pattern still feels
+      shaky, review its specific day, but don't cram unfamiliar material the night before.</li>
+    <li>Confirm the format: phone screen, virtual whiteboard, take-home, or onsite — each has
+      different logistics worth knowing in advance.</li>
+    <li>Get real sleep. Recognizing patterns under time pressure (Day 28/29) is measurably harder
+      when tired — this is not a night to stay up solving one more problem.</li>
+  </ul>
+
+  <h3>The morning of</h3>
+  <ul class="how-to-list">
+    <li>Warm up with one Easy problem, untimed — not to learn anything new, just to get your "talk
+      while you code" muscle moving before it matters.</li>
+    <li>For remote interviews: test your camera, microphone, and the specific coding environment
+      (CoderPad, HackerRank, shared Google Doc, whatever they use) at least 15 minutes early.</li>
+    <li>Have water nearby, and use the restroom before the call — obvious, and still worth writing
+      down, since it's the first thing anyone forgets when nervous.</li>
+  </ul>
+
+  <h3>During each problem</h3>
+  <ul class="how-to-list">
+    <li>Clarify the problem and constraints out loud before doing anything else (Day 29's
+      time-budget diagram).</li>
+    <li>State a brute-force approach and its complexity, even if you never write it.</li>
+    <li>Name the pattern you're reaching for, and why — the reasoning chain from constraint to
+      choice (Day 28) is what's actually being evaluated, not just the final code.</li>
+    <li>Narrate briefly while coding — short, present-tense, not a monologue and not silence.</li>
+    <li>Trace your code against the given example before declaring it done. If time remains, test an
+      edge case the example doesn't cover.</li>
+  </ul>
+
+  <h3>After each problem</h3>
+  <ul class="how-to-list">
+    <li>If you're asked "any questions for me" and you have none prepared, ask about the specific
+      problem — "was there a follow-up you'd normally ask here?" — it's a fair question and shows
+      genuine engagement.</li>
+    <li>Whatever happened, however it went, thank the interviewer specifically — interviewing is
+      also work on their end.</li>
+  </ul>
+
+  <h2>Interview corner — what comes after Day 30</h2>
+  <ul class="interview-list">
+    <li><strong>How do you keep these skills sharp after finishing the course?</strong> Spaced
+      repetition beats cramming — revisit the cheat sheet on a schedule (weekly, then monthly) rather
+      than once and never again. Pattern recognition specifically decays faster than raw knowledge;
+      the drill from Day 28 is worth repeating periodically with fresh problems.</li>
+    <li><strong>What should the next month of practice look like?</strong> Pick problems by pattern,
+      not by random difficulty — deliberately practicing 5 sliding-window problems in a row builds
+      recognition speed faster than 5 random problems from 5 different patterns. Mix in a timed mock
+      session (Day 29's format) roughly weekly.</li>
+    <li><strong>How do you handle a bad interview or a rejection?</strong> Every real candidate has
+      bad rounds — a single miss rarely reflects overall skill as accurately as it feels like it does
+      in the moment. Debrief honestly the same way Day 29 asked you to: which phase actually went
+      wrong (recognition, time management, communication, or a genuine gap in a specific pattern),
+      and let that — not general anxiety — drive what you practice next.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How many
+      interviews before it stops feeling this stressful?" — same answer as Day 29's mock-session
+      question: there's no fixed number, but the discomfort is a rehearsable skill, not a fixed
+      trait, and it does measurably fade with repetition.</span></li>
+    <li><strong>What's genuinely different about you after 30 days, versus someone who just read
+      about these patterns?</strong> Every algorithm in this course was verified against real test
+      cases before it ever became a page — you've watched each one actually run, not just read a
+      description of how it should behave. That's the gap between recognizing a pattern's name and
+      trusting yourself to implement it correctly under pressure, and it's the entire reason this
+      course insisted on runnable code and traced animations instead of prose explanations alone.</li>
+  </ul>
+
+  <h2>Quiz — final check</h2>
+
+  <div class="dsa-quiz" data-answer="contiguousvsends" data-explain="Sliding window always maintains a contiguous span with a validity condition that can grow or shrink as the scan proceeds; two-pointer converges two positions toward each other without requiring everything between them to form one meaningful, currently-valid range.">
+    <p class="q-text">1. In one sentence, what actually separates sliding window from two-pointer?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="contiguousvsends">Sliding window tracks a contiguous, currently-valid range; two-pointer just converges two positions toward each other</button>
+      <button class="btn dsa-quiz-option" data-value="samepattern">There's no real difference between them</button>
+      <button class="btn dsa-quiz-option" data-value="onlysorted">Two-pointer only works on sorted input; sliding window never needs sorted input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="mergeworst" data-explain="Merge sort's split-and-recombine shape doesn't depend on the input's values at all — every split is exactly in half regardless of what's in the array, so its O(n log n) is a genuine worst-case guarantee. Quick sort's partition step depends on the chosen pivot; an unlucky pivot sequence (e.g. already-sorted input with a naive last-element pivot) degrades it to O(n²).">
+    <p class="q-text">2. Why does merge sort guarantee O(n log n) in the worst case, while quick sort can degrade to O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="mergeworst">Merge sort's splits are always exactly in half regardless of input; quick sort's partition quality depends on the chosen pivot</button>
+      <button class="btn dsa-quiz-option" data-value="quickfaster">Quick sort is always faster, so the comparison isn't meaningful</button>
+      <button class="btn dsa-quiz-option" data-value="mergeinplace">Merge sort is in-place and quick sort isn't, which is what causes the difference</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="inorderdef" data-explain="A valid BST's inorder traversal is defined to come out strictly sorted — checking that every popped value is bigger than the last one is mathematically equivalent to checking every node's full-subtree bounds, just verified through traversal order instead of explicit min/max parameters." >
+    <p class="q-text">3. Why does an iterative inorder walk with a plain stack correctly validate a BST, with no min/max bounds tracked anywhere?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="inorderdef">A valid BST's inorder sequence is defined to be sorted — one running "bigger than the last?" check is equivalent to checking every subtree's bounds</button>
+      <button class="btn dsa-quiz-option" data-value="alwaysworks">Any traversal order would work equally well for this check</button>
+      <button class="btn dsa-quiz-option" data-value="cheat">It doesn't actually work correctly — it only looks correct on small examples</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="greedyproperty" data-explain="A greedy algorithm is only safe when the locally optimal choice at each step is provably always part of some globally optimal solution — the greedy-choice property. Without that proof (or with an active counter-example, like Day 27's coin-change case), greedy can silently produce a wrong answer.">
+    <p class="q-text">4. What single property has to hold before a greedy algorithm is safe to trust?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="greedyproperty">The greedy-choice property — a locally optimal choice is provably always part of some globally optimal solution</button>
+      <button class="btn dsa-quiz-option" data-value="sortedinput">The input must already be sorted</button>
+      <button class="btn dsa-quiz-option" data-value="alwayssafe">Greedy is always safe as long as the problem asks for a minimum or maximum</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="cycleexists" data-explain="If Kahn's algorithm's final order has fewer nodes than the graph's total node count, the leftover nodes never reached in-degree 0 — they're stuck in (or depend on) a cycle, so no valid topological order exists." >
+    <p class="q-text">5. In Kahn's algorithm, what does it mean when the final order comes up shorter than the total number of nodes?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cycleexists">The graph has a cycle — the leftover nodes never reached in-degree 0</button>
+      <button class="btn dsa-quiz-option" data-value="bugonly">It always indicates a bug in the in-degree calculation, nothing else</button>
+      <button class="btn dsa-quiz-option" data-value="fine">It's expected and doesn't indicate anything meaningful about the graph's structure</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 30 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day29.html">← Day 29: Mock Interview Day</a>
+    <a class="btn" href="../index.html">🎉 Back to course overview</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 30;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- live progress summary, reading the site's own localStorage tracker ----
+  function renderFinalProgress() {
+    const done = DSAProgress.completedCount();
+    const total = DSAProgress.TOTAL_DAYS;
+    const label = document.getElementById('finalProgressLabel');
+    const fill = document.getElementById('finalProgressFill');
+    const detail = document.getElementById('finalProgressDetail');
+
+    label.textContent = `You've marked ${done}/${total} days complete`;
+    fill.style.width = `${(done / total) * 100}%`;
+
+    if (done >= total) {
+      detail.textContent = 'Every day is marked complete. That\'s the whole 30-day arc, start to finish.';
+    } else {
+      const missing = [];
+      for (let d = 1; d <= total; d++) if (!DSAProgress.isDone(d)) missing.push(d);
+      detail.textContent = `Not marked complete yet: Day ${missing.join(', Day ')}. ` +
+        `Marking a day complete is just a personal tracker — it's fine to circle back to any of these.`;
+    }
+  }
+  renderFinalProgress();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+    renderFinalProgress();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
