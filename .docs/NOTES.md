@@ -109,10 +109,25 @@ animations' Play/Step/Reset/Shuffle all work and narration matches the visual/co
 quiz gives correct instant feedback, reveals toggle correctly, mark-complete writes to
 localStorage and undoes correctly, no horizontal overflow at ~375-427px width.
 
+## Done — Day 2 lesson (`lessons/day02.html`)
+Big-O notation: O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ). Diagram + interactive viz are
+both a hand-drawn SVG growth-curve chart (approved deviation from the Bars/Graph/Grid/CallStack
+engine for this one lesson only, per DECISIONS.md) — same chart-drawing function powers both the
+static reference chart and the animated Play/Step/Reset/Shuffle version with a live per-n
+operations table. Complexity table covers all 6 classes with time/space/why. Went through a
+full content-advisor review round-trip; fixed real issues (Two Sum mislabeled Medium instead of
+Easy, complexity table missing the required Space column, a quiz explanation that invented a
+false "crossover point" between O(n²) and O(n log n), chart not rescaling its x-axis after
+Shuffle picked a smaller n-range, thin code coverage for 2 of the 6 classes). Verified in-browser:
+zero console errors, animation narrations/values all recomputed and correct, quiz/reveal/mark-
+complete all work, mobile width has no overflow (added an overflow-x:auto wrapper around the
+7-column live table — note for future lessons: any table with many columns or number-heavy
+cells that can't word-wrap needs this wrapper, not just wide-text tables).
+
 ## Not started yet
-- Lesson pages `lessons/day02.html` … `day30.html` — use Day 1 as the template, apply every
-  point in "Lesson template" above, and get each one reviewed the same way before moving on.
-  Build order per DECISIONS.md: rest of Week 1 (Days 2–7) next, verify each in-browser, then
+- Lesson pages `lessons/day03.html` … `day30.html` — use Day 1 and Day 2 as the template, apply
+  every point in "Lesson template" above, and get each one reviewed the same way before moving
+  on. Build order per DECISIONS.md: rest of Week 1 (Days 3–7) next, verify each in-browser, then
   Weeks 2–4.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
 
