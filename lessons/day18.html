@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 18: Queues &amp; Deques — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Enqueue/dequeue mechanics, plus the sliding window maximum problem." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 18 / 30 &middot; WEEK 3</p>
+  <h1>Queues &amp; Deques</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Understand FIFO (first-in, first-out) queue mechanics — enqueue at the back, dequeue
+      from the front — and contrast it with Day 17's stack (LIFO, both ends collapse to one).</li>
+    <li>Understand a <strong>deque</strong> (double-ended queue): push and pop from
+      <em>both</em> ends, front and back.</li>
+    <li>Solve <strong>Sliding Window Maximum</strong> in O(n) using a <strong>monotonic deque</strong>
+      of indices — instead of the naive O(n·k) approach of rescanning every window.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p><strong>FIFO vs. LIFO.</strong> Day 17's stack is last-in, first-out: whatever you pushed
+    most recently is the first thing that comes back out, and both push and pop happen at the
+    <em>same</em> end. A queue flips that: it's first-in, first-out. Whoever <code>enqueue</code>d
+    first is the first one <code>dequeue</code>d — think of a checkout line. Enqueue always adds
+    to the <strong>back</strong>; dequeue always removes from the <strong>front</strong>. Those
+    are two different ends, which is the key structural difference from a stack.</p>
+  <p><strong>A JS gotcha worth knowing:</strong> a plain array works fine as a queue functionally
+    (<code>push</code> to enqueue, <code>shift</code> to dequeue), but <code>Array.prototype.shift()</code>
+    is O(n) — removing index 0 forces every remaining element to re-index down by one. A real O(1)
+    queue needs a different structure (two stacks, a linked list, or an index-based circular
+    buffer) — that's exactly what today's first two practice problems have you build.</p>
+  <p><strong>A deque</strong> (pronounced "deck") generalizes both: you can push and pop from
+    <em>either</em> end — <code>pushFront</code>/<code>pushBack</code>/<code>popFront</code>/<code>popBack</code>.
+    A stack is a deque restricted to one end; a queue is a deque restricted to push-back/pop-front.
+    Having both ends available is exactly what makes today's main algorithm possible.</p>
+  <p><strong>Sliding Window Maximum.</strong> Given an array and a window size <code>k</code>,
+    report the max of every contiguous window of size <code>k</code> as it slides across the
+    array. The naive approach rescans all <code>k</code> elements for every one of the
+    <code>n - k + 1</code> windows: O(n·k). A <strong>monotonic deque</strong> gets this to O(n):
+    keep a deque of <em>indices</em> whose values are strictly decreasing from front to back. The
+    front index is always the current window's max. When a new element arrives, pop any smaller
+    values off the <em>back</em> first — they can never win again, a bigger number just showed up
+    behind them. Then push the new index onto the back. Finally, if the front index has slid
+    outside the window, pop it from the <em>front</em> — even if it's still the largest value
+    ever seen, it's no longer inside the window, so it doesn't count anymore.</p>
+
+  <h2>Diagram: queue mechanics (FIFO)</h2>
+  <svg class="diagram" viewBox="0 0 620 250" role="img" aria-label="A queue holding 10, 20, 30 with front at 10 and back at 30. After dequeue then enqueue of 40, the queue holds 20, 30, 40 with front now at 20 and 40 newly added at the back.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Queue (FIFO): dequeue removes from the front, enqueue adds to the back</text>
+    <g font-size="13">
+      <rect x="20" y="32" width="90" height="36" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="65" y="55" text-anchor="middle" fill="#61AEEE">10</text>
+      <rect x="116" y="32" width="90" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="161" y="55" text-anchor="middle" fill="#DCDFE4">20</text>
+      <rect x="212" y="32" width="90" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="257" y="55" text-anchor="middle" fill="#DCDFE4">30</text>
+    </g>
+    <text x="65" y="86" font-size="11" fill="#61AEEE" text-anchor="middle">front</text>
+    <text x="65" y="100" font-size="11" fill="#818896" text-anchor="middle">dequeue() here</text>
+    <text x="257" y="86" font-size="11" fill="#E6C07B" text-anchor="middle">back</text>
+    <text x="257" y="100" font-size="11" fill="#818896" text-anchor="middle">enqueue() here</text>
+
+    <text x="20" y="140" font-size="13" fill="#61AEEE" font-weight="bold">After dequeue() removes 10, then enqueue(40) adds 40:</text>
+    <g font-size="13">
+      <rect x="20" y="154" width="90" height="36" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="65" y="177" text-anchor="middle" fill="#98C379">20</text>
+      <rect x="116" y="154" width="90" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="161" y="177" text-anchor="middle" fill="#DCDFE4">30</text>
+      <rect x="212" y="154" width="90" height="36" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="257" y="177" text-anchor="middle" fill="#61AEEE">40</text>
+    </g>
+    <text x="65" y="208" font-size="11" fill="#98C379" text-anchor="middle">new front</text>
+    <text x="257" y="208" font-size="11" fill="#61AEEE" text-anchor="middle">newly enqueued</text>
+    <text x="20" y="222" font-size="12" fill="#ABB2BF">10 left from the front, 40 joined at the back —</text>
+    <text x="20" y="238" font-size="12" fill="#ABB2BF">order of arrival is preserved.</text>
+  </svg>
+
+  <h2>Diagram: the monotonic deque's invariant</h2>
+  <svg class="diagram" viewBox="0 0 620 210" role="img" aria-label="Mid-algorithm snapshot: the deque holds index 4 (value 9) at the front and index 6 (value 7) at the back. Front to back, values strictly decrease, so the front is always the current window's max.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Snapshot mid-algorithm: deque = [index 4, index 6]</text>
+    <g font-size="13">
+      <rect x="180" y="32" width="120" height="40" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
+      <text x="240" y="52" text-anchor="middle" fill="#98C379">idx 4</text>
+      <text x="240" y="67" text-anchor="middle" fill="#98C379">val 9</text>
+      <rect x="320" y="32" width="120" height="40" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="380" y="52" text-anchor="middle" fill="#61AEEE">idx 6</text>
+      <text x="380" y="67" text-anchor="middle" fill="#61AEEE">val 7</text>
+    </g>
+    <text x="240" y="90" font-size="11" fill="#98C379" text-anchor="middle">front = current max</text>
+    <text x="380" y="90" font-size="11" fill="#61AEEE" text-anchor="middle">back = newest pushed</text>
+    <text x="20" y="118" font-size="12" fill="#DCDFE4">Values decrease strictly front → back (9 &gt; 7). That's the invariant every</text>
+    <text x="20" y="135" font-size="12" fill="#DCDFE4">push must preserve — pop smaller values off the back before pushing.</text>
+    <text x="20" y="160" font-size="12" fill="#DCDFE4">The deque stores <tspan fill="#E6C07B">indices</tspan>, not values — that's what lets it check whether the</text>
+    <text x="20" y="177" font-size="12" fill="#DCDFE4">front has slid outside the window, even when that front value is still the</text>
+    <text x="20" y="194" font-size="12" fill="#DCDFE4">largest one ever seen.</text>
+  </svg>
+
+  <h2>Interactive visualization: Sliding Window Maximum</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current index i</span>
+    <span><i class="lg-active"></i> in the deque</span>
+    <span><i class="lg-swap"></i> just popped from the back</span>
+    <span><i class="lg-compare"></i> just expired from the front</span>
+    <span><i class="lg-sorted"></i> front of deque = window max</span>
+  </div>
+  <div class="viz-panel">
+    <p style="margin:0 0 0.5rem;font-family:var(--font-head);font-size:0.8rem;color:var(--text-dim);">Array nums[i] — colors show what's happening at each index right now</p>
+    <div class="viz-stage"><div id="viz1Bars"></div></div>
+    <p style="margin:0.9rem 0 0.5rem;font-family:var(--font-head);font-size:0.8rem;color:var(--text-dim);">Deque contents after this step (front → back, shown as index:value)</p>
+    <div id="viz1Grid"></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: Sliding Window Maximum</h2>
+  <pre><code>function maxSlidingWindow(nums, k) {
+  const deque = [];   // holds INDICES; front-to-back values strictly decrease
+  const result = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    // 1. pop smaller trailing values off the BACK — they can never be the
+    //    max again now that a bigger (or equal) number has shown up
+    while (deque.length && nums[deque[deque.length - 1]] <= nums[i]) {
+      deque.pop();
+    }
+
+    // 2. push the current index onto the back
+    deque.push(i);
+
+    // 3. pop the FRONT if it has slid outside the window
+    if (deque[0] <= i - k) {
+      deque.shift();
+    }
+
+    // 4. once the window is full (i >= k - 1), the front is the max
+    if (i >= k - 1) {
+      result.push(nums[deque[0]]);
+    }
+  }
+
+  return result;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>deque</code> holds array <em>indices</em>, not values — storing values would make it
+      impossible to tell whether the front has aged out of the window (you'd have no way to
+      compare "position" against <code>i - k</code>).</li>
+    <li>Step 1's <code>while</code> loop pops the back as long as it's ≤ the incoming value. This
+      is what keeps the deque's invariant (strictly decreasing front-to-back) true after every
+      push — an equal or smaller trailing value is provably useless from now on.</li>
+    <li>Step 2 pushes <code>i</code> onto the back <em>after</em> the cleanup — the new element
+      always ends up as a valid candidate.</li>
+    <li>Step 3's check <code>deque[0] &lt;= i - k</code> tests whether the front index is still
+      inside the current window <code>[i - k + 1, i]</code>. If it isn't, it's evicted from the
+      front — regardless of how large its value is.</li>
+    <li>Step 4 only starts recording once the first full window exists (<code>i >= k - 1</code>);
+      before that there simply isn't a complete window yet.</li>
+  </ul>
+
+  <h3>Dry run: maxSlidingWindow([5, 3, 8, 2, 9, 1, 7, 4], k = 3)</h3>
+  <div style="overflow-x:auto;">
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>nums[i]</th><th>Deque before</th><th>Action(s)</th><th>Deque after</th><th>Window max</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>5</td><td>[]</td><td>push 0</td><td>[0]</td><td>—</td></tr>
+      <tr><td>1</td><td>3</td><td>[0]</td><td>3 doesn't evict 5 → push 1</td><td>[0, 1]</td><td>—</td></tr>
+      <tr><td>2</td><td>8</td><td>[0, 1]</td><td>pop back 1 (3≤8), pop back 0 (5≤8), push 2</td><td>[2]</td><td>nums[2] = 8</td></tr>
+      <tr><td>3</td><td>2</td><td>[2]</td><td>2 doesn't evict 8 → push 3</td><td>[2, 3]</td><td>nums[2] = 8</td></tr>
+      <tr><td>4</td><td>9</td><td>[2, 3]</td><td>pop back 3 (2≤9), pop back 2 (8≤9), push 4</td><td>[4]</td><td>nums[4] = 9</td></tr>
+      <tr><td>5</td><td>1</td><td>[4]</td><td>1 doesn't evict 9 → push 5</td><td>[4, 5]</td><td>nums[4] = 9</td></tr>
+      <tr><td>6</td><td>7</td><td>[4, 5]</td><td>pop back 5 (1≤7), 7 doesn't evict 9 → push 6</td><td>[4, 6]</td><td>nums[4] = 9</td></tr>
+      <tr><td>7</td><td>4</td><td>[4, 6]</td><td>4 doesn't evict 7 → push 7; front 4 ≤ 7−3=4 → expired, pop front</td><td>[6, 7]</td><td>nums[6] = 7</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Final result: <code>[8, 8, 9, 9, 9, 7]</code>.
+    Notice i=7: index 4 (value 9) is still the largest value ever seen, but it's outside the
+    window <code>[5, 6, 7]</code> — position, not value, decides eviction from the front.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Naive (rescan each window)</td><td>O(n·k)</td><td>O(1)</td><td>For each of the n − k + 1 windows, scan all k elements to find the max.</td></tr>
+      <tr><td>Monotonic deque</td><td>O(n)</td><td>O(k)</td><td>Every index is pushed onto the deque exactly once and popped at most once (from either end) — that's ≤ 2n total push/pop operations, not n·k. The deque never holds more than k indices at a time.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why does the deque store indices instead of values?</strong> Storing values would
+      make step 3 impossible — you need to compare the front's <em>position</em> against
+      <code>i - k</code> to know whether it has slid outside the window. A raw value carries no
+      position information at all.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this is the
+      single most common way this pattern breaks in an interview — writing
+      <code>deque.push(nums[i])</code> instead of <code>deque.push(i)</code> compiles fine and even
+      passes the first couple of test cases, then silently gives wrong answers once a stale-looking
+      value needs to expire.</span></li>
+    <li><strong>Why is this O(n) despite the nested-looking <code>while</code> loop inside the
+      <code>for</code> loop?</strong> Amortized analysis: each of the n indices is pushed onto the
+      deque exactly once over the whole run, and can be popped at most once (from the back or the
+      front) before it's gone for good. Total pushes + pops across the entire algorithm is bounded
+      by 2n, not n·k — the nesting looks like O(n·k) but the inner loop's total work across all
+      iterations is capped by how many elements exist, not by k.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if the
+      array is strictly increasing?" — then every push immediately pops the entire deque from the
+      back first, so the deque never holds more than 1 index; still O(n) overall, just a different
+      distribution of the work.</span></li>
+    <li><strong>What's the deque's invariant, and why does maintaining it work?</strong>
+      Front-to-back, the values at the stored indices strictly decrease. That's why the front is
+      always the correct answer: anything that could have beaten it was already popped off the
+      back before it could sit behind it.</li>
+    <li><strong>What happens if you forget to pop expired front indices before reading the
+      max?</strong><br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> you'll
+      silently return a max from an index that's no longer inside the current window — the code
+      won't throw, it'll just be wrong, and easy to miss unless you specifically trace an example
+      where the old max ages out (like i=7 in today's dry run).</span></li>
+    <li><strong>How is this different from Day 17's stack-based "next greater element"
+      pattern?</strong> Both use a monotonic structure, but "next greater element" only ever pops
+      from one end (a stack, LIFO). Sliding Window Maximum needs <em>both</em> ends — pop the back
+      to maintain the value invariant, pop the front to enforce the window boundary — which is
+      exactly why it needs a deque and not a plain stack.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the invariant before you write a line
+    of code — "I'll keep a deque of indices where the values are strictly decreasing front to
+    back, so the front is always my current window's max." Then narrate the two eviction rules
+    separately: "I pop the back when a new value makes an old one useless, and I pop the front
+    when an old index slides outside the window." Interviewers are listening for whether you can
+    articulate <em>why</em> each end gets popped, not just recite the code from memory.</p>
+
+  <h2>Practice problems</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Note: problem 3 (Sliding Window Maximum) is
+    LeetCode Hard and is today's own core algorithm, not a step up in difficulty from problems 1-2
+    — same intentional exception to the usual easy→medium ramp used on Days 10 and 11, since it's
+    the natural, direct application of what this lesson just taught.</p>
+
+  <div class="problem">
+    <h4>1. Implement Queue using Stacks <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/implement-queue-using-stacks/" target="_blank" rel="noopener">LeetCode: Implement Queue using Stacks</a>)</span></h4>
+    <p>Implement a FIFO queue (<code>push</code>, <code>pop</code>, <code>peek</code>,
+      <code>empty</code>) using only two stacks (LIFO structures).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Use an "in" stack for pushes. When you need
+      to pop or peek and the "out" stack is empty, dump the entire "in" stack into the "out" stack
+      first — that reversal is exactly what turns LIFO order back into FIFO order.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>class MyQueue {
+  constructor() {
+    this.inStack = [];
+    this.outStack = [];
+  }
+  push(x) {
+    this.inStack.push(x);
+  }
+  _transferIfNeeded() {
+    if (this.outStack.length === 0) {
+      while (this.inStack.length) this.outStack.push(this.inStack.pop());
+    }
+  }
+  pop() {
+    this._transferIfNeeded();
+    return this.outStack.pop();
+  }
+  peek() {
+    this._transferIfNeeded();
+    return this.outStack[this.outStack.length - 1];
+  }
+  empty() {
+    return this.inStack.length === 0 && this.outStack.length === 0;
+  }
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Design Circular Deque <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/design-circular-deque/" target="_blank" rel="noopener">LeetCode: Design Circular Deque</a>)</span></h4>
+    <p>Implement a fixed-capacity deque with <code>insertFront</code>, <code>insertLast</code>,
+      <code>deleteFront</code>, <code>deleteLast</code>, <code>getFront</code>, <code>getRear</code>,
+      <code>isEmpty</code>, and <code>isFull</code> — all O(1), using a fixed-size array as the
+      backing store (no shifting elements around).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Track a <code>front</code> index and a
+      <code>size</code> count instead of a separate "rear" index — the rear position is always
+      derivable as <code>(front + size - 1) % capacity</code>. Wrapping <code>front</code>
+      backwards for <code>insertFront</code> needs <code>(front - 1 + capacity) % capacity</code>,
+      not plain <code>front - 1</code> — JS's <code>%</code> keeps a negative sign on negative
+      operands, so the raw subtraction can go negative.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>class MyCircularDeque {
+  constructor(k) {
+    this.cap = k;
+    this.data = new Array(k);
+    this.front = 0;
+    this.size = 0;
+  }
+  insertFront(value) {
+    if (this.size === this.cap) return false;
+    this.front = (this.front - 1 + this.cap) % this.cap; // wrap backwards safely
+    this.data[this.front] = value;
+    this.size++;
+    return true;
+  }
+  insertLast(value) {
+    if (this.size === this.cap) return false;
+    const rear = (this.front + this.size) % this.cap;
+    this.data[rear] = value;
+    this.size++;
+    return true;
+  }
+  deleteFront() {
+    if (this.size === 0) return false;
+    this.front = (this.front + 1) % this.cap;
+    this.size--;
+    return true;
+  }
+  deleteLast() {
+    if (this.size === 0) return false;
+    this.size--; // rear is derived from size, so shrinking size "removes" it
+    return true;
+  }
+  getFront() {
+    return this.size === 0 ? -1 : this.data[this.front];
+  }
+  getRear() {
+    return this.size === 0 ? -1 : this.data[(this.front + this.size - 1) % this.cap];
+  }
+  isEmpty() {
+    return this.size === 0;
+  }
+  isFull() {
+    return this.size === this.cap;
+  }
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Sliding Window Maximum <span class="leetcode-link">(Hard — intentional exception, see note above — <a href="https://leetcode.com/problems/sliding-window-maximum/" target="_blank" rel="noopener">LeetCode: Sliding Window Maximum</a>)</span></h4>
+    <p>Given an array <code>nums</code> and window size <code>k</code>, return the max of every
+      contiguous window of size <code>k</code>. Today's main algorithm, applied directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Keep a deque of indices, front-to-back
+      strictly decreasing by value. Before pushing index i, pop any back indices whose value is
+      ≤ nums[i]. After pushing, pop the front if it's fallen outside <code>[i - k + 1, i]</code>.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function maxSlidingWindow(nums, k) {
+  const deque = [];
+  const result = [];
+  for (let i = 0; i < nums.length; i++) {
+    while (deque.length && nums[deque[deque.length - 1]] <= nums[i]) {
+      deque.pop();
+    }
+    deque.push(i);
+    if (deque[0] <= i - k) {
+      deque.shift();
+    }
+    if (i >= k - 1) {
+      result.push(nums[deque[0]]);
+    }
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="front" data-explain="A queue is FIFO: enqueue always adds to the back, and dequeue always removes from the front — the two operations happen at opposite ends, unlike a stack where both happen at the same end.">
+    <p class="q-text">1. In a queue, which end does dequeue() remove from?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="front">The front — the oldest element still waiting</button>
+      <button class="btn dsa-quiz-option" data-value="back">The back — same end as enqueue</button>
+      <button class="btn dsa-quiz-option" data-value="either">Either end, implementation's choice</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="indices" data-explain="The deque stores indices, not values — that's what lets step 3 check whether the front index has slid outside the current window (i - k), a check that's impossible if all you have is a bare value with no position information.">
+    <p class="q-text">2. What does the monotonic deque in Sliding Window Maximum actually store?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="indices">Array indices</button>
+      <button class="btn dsa-quiz-option" data-value="values">The array's values directly</button>
+      <button class="btn dsa-quiz-option" data-value="both">Neither — it stores running sums</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="decrease" data-explain="Front-to-back, the values at the stored indices strictly decrease. That's exactly why the front is always the current window's max — anything that could have beaten it was already popped off the back before it could end up behind it.">
+    <p class="q-text">3. Front to back, how do the values at the deque's stored indices relate to each other?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="decrease">They strictly decrease</button>
+      <button class="btn dsa-quiz-option" data-value="increase">They strictly increase</button>
+      <button class="btn dsa-quiz-option" data-value="sameorder">They stay in original array order, unsorted</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="amortized" data-explain="Each of the n indices is pushed onto the deque exactly once and popped at most once (from either end) over the entire run — total push/pop operations are bounded by 2n, not n·k, even though the while loop is nested inside the for loop.">
+    <p class="q-text">4. Why is Sliding Window Maximum's deque solution O(n), not O(n·k), despite the nested while loop?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="amortized">Each index is pushed once and popped at most once across the whole run — total work is bounded by 2n</button>
+      <button class="btn dsa-quiz-option" data-value="kissmall">Because k is always a small constant in practice</button>
+      <button class="btn dsa-quiz-option" data-value="notrue">It isn't actually O(n) — it's O(n·k), just with a small constant factor</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="Pop the back when a new value makes an existing trailing value useless (it can never be the max again). Pop the front when its index has slid outside the current window — regardless of how large that value still is." >
+    <p class="q-text">5. When do we pop from the deque's front vs. its back?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">Back: a smaller trailing value is now useless. Front: its index has expired out of the window.</button>
+      <button class="btn dsa-quiz-option" data-value="frontonly">Only ever from the front — same as a plain queue</button>
+      <button class="btn dsa-quiz-option" data-value="backonly">Only ever from the back — same as a plain stack</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 18 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day17.html">← Day 17: Stacks</a>
+    <a class="btn" href="day19.html">Day 19: Trees — BFS &amp; DFS →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 18;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: Sliding Window Maximum via a monotonic deque of indices ----
+  // Verified algorithm (matches "The code" section exactly, plus instrumentation
+  // to drive the Bars + Grid renderers step by step).
+  function buildSlidingWindowSteps(nums, k) {
+    const n = nums.length;
+    const steps = [];
+    const deque = []; // indices
+    const matrix = Array.from({ length: n }, () => Array(k).fill(undefined));
+    const confirmed = {}; // permanent green highlight on grid slot 0 once a window's max is recorded
+
+    function snapshotRow(i) {
+      matrix[i] = Array(k).fill(undefined);
+      deque.forEach((idx, slot) => { matrix[i][slot] = idx + ':' + nums[idx]; });
+    }
+    function cloneMatrix() { return matrix.map((row) => row.slice()); }
+    function barStates(i, extra) {
+      const s = {};
+      deque.forEach((idx) => { s[idx] = 'active'; });
+      if (extra) Object.assign(s, extra);
+      if (i !== null) s[i] = 'pointer';
+      return s;
+    }
+    function gridStates(extra) { return Object.assign({}, confirmed, extra || {}); }
+
+    steps.push({
+      narration: `Slide a window of size ${k} across [${nums.join(', ')}], tracking each window's max with a monotonic deque of indices.`,
+      barStates: {}, matrix: cloneMatrix(), gridStates: gridStates(), values: nums,
+    });
+
+    for (let i = 0; i < n; i++) {
+      while (deque.length && nums[deque[deque.length - 1]] <= nums[i]) {
+        const popped = deque[deque.length - 1];
+        const st = {}; st[popped] = 'swap';
+        steps.push({
+          narration: `nums[${i}]=${nums[i]} ≥ nums[${popped}]=${nums[popped]} at the back → pop index ${popped}, it can never be the max again.`,
+          barStates: barStates(i, st), matrix: cloneMatrix(), gridStates: gridStates(), values: nums,
+        });
+        deque.pop();
+        snapshotRow(i);
+      }
+
+      deque.push(i);
+      snapshotRow(i);
+      steps.push({
+        narration: `Push index ${i} (value ${nums[i]}) onto the back of the deque.`,
+        barStates: barStates(i), matrix: cloneMatrix(), gridStates: gridStates(), values: nums,
+      });
+
+      if (deque[0] <= i - k) {
+        const expired = deque[0];
+        const st = {}; st[expired] = 'compare';
+        steps.push({
+          narration: `Front index ${expired} ≤ ${i - k} → it has slid outside the window, pop it from the front.`,
+          barStates: barStates(i, st), matrix: cloneMatrix(), gridStates: gridStates(), values: nums,
+        });
+        deque.shift();
+        snapshotRow(i);
+      }
+
+      if (i >= k - 1) {
+        const maxIdx = deque[0];
+        confirmed[i + ',0'] = 'sorted';
+        const bSt = {}; bSt[maxIdx] = 'sorted';
+        steps.push({
+          narration: `Window [${i - k + 1}..${i}] complete → max is nums[${maxIdx}]=${nums[maxIdx]} (front of deque).`,
+          barStates: barStates(i, bSt), matrix: cloneMatrix(), gridStates: gridStates(), values: nums,
+        });
+      }
+    }
+    return steps;
+  }
+
+  const K = 3;
+  const BASE1 = [5, 3, 8, 2, 9, 1, 7, 4];
+  const bars1 = new DSA.Bars(document.getElementById('viz1Bars'), { min: 0, max: 10 });
+  bars1.setData(BASE1);
+  const grid1 = new DSA.Grid(document.getElementById('viz1Grid'));
+  grid1.setData(BASE1.length, K, BASE1.map((_, i) => 'i=' + i), ['front', 'mid', 'back']);
+
+  let steps1 = buildSlidingWindowSteps(BASE1, K);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1000,
+    onStep(step) {
+      if (!step) {
+        bars1.paint({}, BASE1);
+        grid1.paint(Array.from({ length: BASE1.length }, () => Array(K).fill(undefined)), {});
+        return;
+      }
+      bars1.paint(step.barStates, step.values);
+      grid1.paint(step.matrix, step.gridStates);
+    },
+    onShuffle() {
+      const fresh = DSA.randomArray(8, 0, 9);
+      bars1.setData(fresh);
+      grid1.setData(fresh.length, K, fresh.map((_, i) => 'i=' + i), ['front', 'mid', 'back']);
+      steps1 = buildSlidingWindowSteps(fresh, K);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
