@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 28: Pattern Recognition Masterclass — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="The real interview skill: recognizing which of the 12+ patterns from this course applies to a cold problem statement, before writing a line of code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 28 / 30 &middot; WEEK 4</p>
+  <h1>Pattern Recognition Masterclass</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Learn to recognize, from a <strong>cold problem statement</strong> with no day label attached,
+      which of the 12+ patterns from this course actually applies — the real skill an interview
+      tests, more than any single memorized algorithm.</li>
+    <li>Build a <strong>signal-words reference</strong> connecting common problem phrasing directly to
+      a pattern, so recognition becomes fast and automatic instead of a guessing game.</li>
+    <li>Drill recognition on unlabeled problem statements, then apply the process to 3 new problems.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Days 1 through 27 each taught "here is how pattern X works" — and each one came with the single
+    biggest hint of all: the day number itself told you which pattern to use before you'd even read
+    the problem. A real interview strips that hint away completely. You get a paragraph of prose and
+    a blank editor, and the actual test is whether you can look at that paragraph and know, within the
+    first minute, which toolbox to open. Closing that gap — cold recognition, not just "I remember how
+    sliding window works when someone tells me it's a sliding window problem" — is the single
+    highest-leverage thing left to practice.</p>
+  <p>A reliable 3-step process gets you there:</p>
+  <ol class="how-to-list">
+    <li><strong>What's the data shape?</strong> A flat array/string, a linked chain, a tree/BST, a
+      general graph (nodes with arbitrary connections), or no explicit structure at all — just a
+      sequence of decisions to make (that last one is usually DP or greedy territory).</li>
+    <li><strong>What's the goal/constraint phrasing?</strong> Contiguous range? Already sorted, or
+      benefits from being sorted? Need the current min/max repeatedly? Counting distinct ways?
+      Reachability (yes/no)? An optimal sequence of choices?</li>
+    <li><strong>Match shape + goal to the narrowest pattern that fits</strong>, and sanity-check
+      against the signal words below.</li>
+  </ol>
+  <p>One honest caveat: some problems deliberately combine two patterns, and this course has built
+    several of them on purpose — Day 14's quickselect (partition + halving), Day 21's BST validation
+    (a stack doing a tree traversal's job), Day 26/27's coin change (the exact same problem, correct
+    under DP, wrong under greedy). Recognition isn't always "pick the one right answer" — sometimes
+    it's "which two patterns compose, and in what order."</p>
+
+  <h2>Diagram: the master dispatch — which week's toolkit do I need?</h2>
+  <svg class="diagram" viewBox="0 0 620 460" role="img" aria-label="Master dispatch flowchart. A flat array or string with a one-pass or two-ended feel routes to Week 1 patterns and Day 7's flowchart. Needing sorted data, a sorted search range, or identical subproblems routes to Week 2 patterns and Day 14's flowchart. An already-linked, stacked, queued, or tree-shaped structure with a traversal or order question routes to Week 3 patterns and Day 21's flowchart. Needing the current minimum or maximum from a changing set routes to a heap. Nodes connecting arbitrarily, not as a strict parent-child hierarchy, routes to graph BFS, DFS, shortest path, or topological sort. A sequence of decisions with overlapping subproblems routes to greedy if a locally optimal choice is provably always safe, otherwise dynamic programming.">
+    <defs>
+      <marker id="arr28" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#818896"/></marker>
+    </defs>
+
+    <g font-size="13">
+      <rect x="20" y="15" width="330" height="46" rx="8" fill="#2C313A" stroke="#61AEEE"/>
+      <text x="35" y="34" fill="#DCDFE4">Flat array/string, one pass or</text>
+      <text x="35" y="52" fill="#DCDFE4">two ends moving?</text>
+    </g>
+    <path d="M355,38 L400,38" stroke="#61AEEE" stroke-width="2" marker-end="url(#arr28)"/>
+    <text x="410" y="34" fill="#61AEEE" font-weight="bold" font-size="14">Week 1 patterns</text>
+    <text x="410" y="50" font-size="11" class="dim">(see Day 7's flowchart)</text>
+
+    <g font-size="13">
+      <rect x="20" y="80" width="330" height="46" rx="8" fill="#2C313A" stroke="#C678DD"/>
+      <text x="35" y="99" fill="#DCDFE4">Need it sorted, searching a sorted</text>
+      <text x="35" y="117" fill="#DCDFE4">range, or identical subproblems?</text>
+    </g>
+    <path d="M355,103 L400,103" stroke="#C678DD" stroke-width="2" marker-end="url(#arr28)"/>
+    <text x="410" y="99" fill="#C678DD" font-weight="bold" font-size="14">Week 2 patterns</text>
+    <text x="410" y="117" font-size="11" class="dim">(see Day 14's flowchart)</text>
+
+    <g font-size="13">
+      <rect x="20" y="145" width="330" height="46" rx="8" fill="#2C313A" stroke="#4D96D9"/>
+      <text x="35" y="164" fill="#DCDFE4">Already a list/stack/queue/tree,</text>
+      <text x="35" y="182" fill="#DCDFE4">question is traversal or order?</text>
+    </g>
+    <path d="M355,168 L400,168" stroke="#4D96D9" stroke-width="2" marker-end="url(#arr28)"/>
+    <text x="410" y="164" fill="#4D96D9" font-weight="bold" font-size="14">Week 3 patterns</text>
+    <text x="410" y="182" font-size="11" class="dim">(see Day 21's flowchart)</text>
+
+    <g font-size="13">
+      <rect x="20" y="210" width="330" height="46" rx="8" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="35" y="229" fill="#DCDFE4">Need the current min/max from</text>
+      <text x="35" y="247" fill="#DCDFE4">a changing set, repeatedly?</text>
+    </g>
+    <path d="M355,233 L400,233" stroke="#E6C07B" stroke-width="2" marker-end="url(#arr28)"/>
+    <text x="410" y="229" fill="#E6C07B" font-weight="bold" font-size="14">Heap</text>
+    <text x="410" y="247" font-size="11" class="dim">(Day 22)</text>
+
+    <g font-size="13">
+      <rect x="20" y="275" width="330" height="46" rx="8" fill="#2C313A" stroke="#E06C75"/>
+      <text x="35" y="294" fill="#DCDFE4">Nodes connect arbitrarily, not just</text>
+      <text x="35" y="312" fill="#DCDFE4">parent to child?</text>
+    </g>
+    <path d="M355,298 L400,298" stroke="#E06C75" stroke-width="2" marker-end="url(#arr28)"/>
+    <text x="410" y="294" fill="#E06C75" font-weight="bold" font-size="14">Graph BFS/DFS/</text>
+    <text x="410" y="312" font-size="13" fill="#E06C75" font-weight="bold">shortest path/topo sort</text>
+    <text x="410" y="328" font-size="11" class="dim">(Day 23/24)</text>
+
+    <g font-size="13">
+      <rect x="20" y="345" width="330" height="52" rx="8" fill="#2C313A" stroke="#98C379"/>
+      <text x="35" y="364" fill="#DCDFE4">Sequence of decisions, overlapping</text>
+      <text x="35" y="382" fill="#DCDFE4">subproblems — is greedy provably</text>
+      <text x="35" y="393" fill="#DCDFE4">safe?</text>
+    </g>
+    <path d="M355,371 L400,371" stroke="#98C379" stroke-width="2" marker-end="url(#arr28)"/>
+    <text x="410" y="364" fill="#98C379" font-weight="bold" font-size="14">yes: Greedy (Day 27)</text>
+    <text x="410" y="382" fill="#98C379" font-weight="bold" font-size="14">no: DP (Day 25/26)</text>
+
+    <text x="20" y="425" font-size="12" class="dim">Check top to bottom. Rows 1-3 route you to a sub-flowchart you already</text>
+    <text x="20" y="442" font-size="12" class="dim">have — Day 28's job is knowing WHICH one to open first.</text>
+  </svg>
+
+  <h2>Signal words — problem phrasing → pattern</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">This is the fast lookup table for the 30-second
+    recognition window. Scan for the phrase, not the exact wording — interviewers rarely use these
+    words verbatim, but the underlying signal is the same.</p>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Signal in the problem</th><th>Pattern</th><th>Day</th></tr></thead>
+    <tbody>
+      <tr><td>"pair that sums to X," "two elements that..."</td><td>Hash Map (unsorted) or Two Pointer (sorted)</td><td>6 / 4</td></tr>
+      <tr><td>"longest/shortest/max/min ... contiguous substring/subarray"</td><td>Sliding Window</td><td>5</td></tr>
+      <tr><td>"palindrome," "reverse in place," converging from both ends</td><td>Two Pointer</td><td>4</td></tr>
+      <tr><td>"frequency," "anagram," "duplicate," "group by"</td><td>Hash Map / Set</td><td>6</td></tr>
+      <tr><td>"kth largest/smallest," "top k," a running min/max as data streams in</td><td>Heap</td><td>22</td></tr>
+      <tr><td>"in a sorted array," "search space is monotonic"</td><td>Binary Search</td><td>12 / 13</td></tr>
+      <tr><td>"detect a cycle," "find the middle" (linked list)</td><td>Fast/Slow Pointers</td><td>16</td></tr>
+      <tr><td>"valid parentheses/brackets," "next greater element," "undo"</td><td>Stack</td><td>17</td></tr>
+      <tr><td>"sliding window maximum," "process in the order added"</td><td>Queue / Deque</td><td>18</td></tr>
+      <tr><td>"level order," "shortest path (unweighted)," "fewest hops/steps"</td><td>BFS</td><td>19 / 24</td></tr>
+      <tr><td>"explore all paths," "backtrack," "all combinations/permutations"</td><td>DFS / Recursion</td><td>9 / 19 / 23</td></tr>
+      <tr><td>"inorder gives sorted order," "predecessor/successor"</td><td>Binary Search Tree</td><td>20</td></tr>
+      <tr><td>"connections/network," "islands," "prerequisites"</td><td>Graph</td><td>23 / 24</td></tr>
+      <tr><td>"minimum/maximum ways to reach," "count distinct ways"</td><td>Dynamic Programming</td><td>25 / 26</td></tr>
+      <tr><td>"fewest coins/jumps/cost," "can I reach the end"</td><td>DP — check greedy-choice property before trusting greedy</td><td>25 / 26 / 27</td></tr>
+      <tr><td>"schedule non-overlapping," "meeting rooms," "activity selection"</td><td>Greedy</td><td>27</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interactive: pattern recognition drill</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">8 unlabeled problem statements. Pick the pattern
+    before checking the reasoning — this is the exact 30-second judgment call an interview asks for.</p>
+
+  <div class="dsa-quiz" data-answer="sliding" data-explain="Signal: &quot;longest ... substring&quot; + &quot;without repeating&quot; is a contiguous-range validity condition that can grow and shrink — the canonical sliding window shape (Day 5).">
+    <p class="q-text">1. "Given a string, find the length of the longest substring without repeating characters."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sliding">Sliding Window</button>
+      <button class="btn dsa-quiz-option" data-value="twoptr">Two Pointer</button>
+      <button class="btn dsa-quiz-option" data-value="hashonly">Hash Map alone, no window</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="binary" data-explain="Signal: &quot;sorted array&quot; + &quot;O(log n)&quot; is the most direct binary search tell in the whole course (Day 12).">
+    <p class="q-text">2. "Given a sorted array, determine if a target value exists, in O(log n) time."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="binary">Binary Search</button>
+      <button class="btn dsa-quiz-option" data-value="linear">Linear Scan (two pointer)</button>
+      <button class="btn dsa-quiz-option" data-value="hash">Hash Map lookup</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="fastslow" data-explain="Signal: &quot;linked list&quot; + &quot;has a cycle&quot; is Day 16's fast/slow-pointer problem almost verbatim — no extra memory needed for a single pass." >
+    <p class="q-text">3. "Given the head of a linked list, determine whether it has a cycle."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="fastslow">Fast/Slow Pointers</button>
+      <button class="btn dsa-quiz-option" data-value="stack">Stack — push every node, check for a repeat</button>
+      <button class="btn dsa-quiz-option" data-value="bst">Binary Search Tree logic</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="bfs" data-explain="Signal: &quot;level-order&quot; IS the definition of BFS (Day 19) — a queue processes one full depth before the next." >
+    <p class="q-text">4. "Given a binary tree, return its level-order traversal."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bfs">BFS (Queue)</button>
+      <button class="btn dsa-quiz-option" data-value="dfs">DFS (Stack/recursion)</button>
+      <button class="btn dsa-quiz-option" data-value="heap">Heap</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="dp" data-explain="Signal: &quot;fewest coins&quot; over reusable denominations is the exact Day 25/26 unbounded-DP shape — and Day 27 proved greedy is NOT safe here for arbitrary coin systems." >
+    <p class="q-text">5. "Given coin denominations and an amount, find the fewest coins needed to make it."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="dp">Dynamic Programming</button>
+      <button class="btn dsa-quiz-option" data-value="greedy">Greedy — always take the largest coin</button>
+      <button class="btn dsa-quiz-option" data-value="twoptr">Two Pointer</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="greedy" data-explain="Signal: &quot;minimum to remove so none overlap&quot; is Day 27's Non-overlapping Intervals almost exactly — sort by end time, provably safe greedy." >
+    <p class="q-text">6. "Given a list of intervals, find the minimum number to remove so the rest don't overlap."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="greedy">Greedy (sort by end time)</button>
+      <button class="btn dsa-quiz-option" data-value="dp">Dynamic Programming</button>
+      <button class="btn dsa-quiz-option" data-value="bst">Binary Search Tree</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="graph" data-explain="Signal: a grid where adjacent cells connect is a graph in disguise — no explicit &quot;graph&quot; wording required (Day 23). Counting islands is counting connected components via BFS/DFS." >
+    <p class="q-text">7. "Given a grid of 1s and 0s, count the number of islands (connected groups of 1s)."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="graph">Graph BFS/DFS (treat the grid as a graph)</button>
+      <button class="btn dsa-quiz-option" data-value="sliding">Sliding Window</button>
+      <button class="btn dsa-quiz-option" data-value="sort">Sorting</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="heap" data-explain="Signal: &quot;continuously&quot; + &quot;kth largest&quot; as data streams in is Day 22's exact use case — a heap keeps the running answer available in O(log n) per insert, far cheaper than re-sorting on every new number." >
+    <p class="q-text">8. "Given a stream of numbers arriving one at a time, continuously report the kth largest seen so far."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="heap">Heap</button>
+      <button class="btn dsa-quiz-option" data-value="resort">Re-sort the whole list on every new number</button>
+      <button class="btn dsa-quiz-option" data-value="twoptr">Two Pointer</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <h2>The code: every core template, side by side</h2>
+  <p>Not one new algorithm today — the reference sheet of every pattern's minimal skeleton, so you can
+    scan straight to the shape you need mid-interview.</p>
+  <pre><code>// TWO POINTERS (Day 4) — converge from both ends
+function twoPointerTemplate(arr) {
+  let lo = 0, hi = arr.length - 1;
+  while (lo < hi) {
+    // inspect arr[lo] and arr[hi], then narrow toward the middle
+    if (/* need a bigger value */ false) lo++;
+    else hi--;
+  }
+}
+
+// SLIDING WINDOW (Day 5) — grow/shrink a contiguous range
+function slidingWindowTemplate(arr) {
+  let left = 0;
+  for (let right = 0; right < arr.length; right++) {
+    // expand the window to include arr[right]
+    while (/* window is invalid */ false) {
+      left++;                          // shrink from the left until valid again
+    }
+    // window [left, right] is valid here — record a result
+  }
+}
+
+// HASH MAP FREQUENCY (Day 6) — count/lookup in O(1) amortized
+function frequencyTemplate(arr) {
+  const seen = new Map();
+  for (const x of arr) seen.set(x, (seen.get(x) || 0) + 1);
+  return seen;
+}
+
+// BINARY SEARCH — exact match (Day 12)
+function binarySearchTemplate(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo <= hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (nums[mid] === target) return mid;
+    else if (nums[mid] < target) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return -1;
+}
+
+// BFS (Day 19/24) — level order or shortest path, uses a QUEUE
+function bfsTemplate(start, getNeighbors) {
+  const visited = new Set([start]);
+  const queue = [start];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    for (const next of getNeighbors(node)) {
+      if (!visited.has(next)) { visited.add(next); queue.push(next); }
+    }
+  }
+}
+
+// DFS (Day 9/19/23) — full-depth exploration, recursion or an explicit STACK
+function dfsTemplate(node, getNeighbors, visited = new Set()) {
+  if (visited.has(node)) return;
+  visited.add(node);
+  for (const next of getNeighbors(node)) dfsTemplate(next, getNeighbors, visited);
+}
+
+// DYNAMIC PROGRAMMING (Day 25/26) — cache overlapping subproblems
+function dpTemplate(n) {
+  const dp = new Array(n + 1).fill(0);
+  // seed the base case(s) here
+  for (let i = 1; i <= n; i++) {
+    // dp[i] = combine(dp[i-1], dp[i-2], ...) — sum, max, or min, depending on the problem
+  }
+  return dp[n];
+}
+
+// GREEDY (Day 27) — sort by the property that makes the choice safe, then one pass
+function greedyTemplate(items) {
+  items.sort((a, b) => 0 /* the key that makes THIS greedy choice provably safe */);
+  let result = 0;
+  for (const item of items) {
+    // make the locally-best choice and never revisit it
+  }
+  return result;
+}
+</code></pre>
+
+  <h3>Worked example: applying the 3-step process cold</h3>
+  <p><strong>Problem:</strong> "Given a string, return true if you can rearrange its characters to
+    form a palindrome."</p>
+  <ol class="how-to-list">
+    <li><strong>Data shape:</strong> a flat string — Week 1 territory.</li>
+    <li><strong>Goal phrasing:</strong> "can be <em>rearranged</em>" is the key word. It explicitly
+      says order doesn't matter — which immediately rules out two-pointer and sliding window (both
+      depend on position/order). If order is irrelevant and only <em>counts</em> matter, that's a
+      hash map / frequency-counting signal (Day 6).</li>
+    <li><strong>Match:</strong> a string's characters can be rearranged into a palindrome if and only
+      if at most one character has an odd count (that lone odd-count character sits in the middle;
+      every other character needs an even count to mirror on both sides).</li>
+  </ol>
+  <pre><code>function canFormPalindrome(s) {
+  const freq = new Map();
+  for (const ch of s) freq.set(ch, (freq.get(ch) || 0) + 1);
+  let oddCount = 0;
+  for (const count of freq.values()) if (count % 2 !== 0) oddCount++;
+  return oddCount <= 1;
+}
+// canFormPalindrome("civic") -> true (already a palindrome)
+// canFormPalindrome("ivicc") -> true (rearranges to "civic")
+// canFormPalindrome("hello") -> false (too many odd-count characters)</code></pre>
+
+  <h2>Complexity — every pattern from the course, at a glance</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Pattern</th><th>Typical time</th><th>Typical space</th><th>Day</th></tr></thead>
+    <tbody>
+      <tr><td>Two Pointer</td><td>O(n)</td><td>O(1)</td><td>4</td></tr>
+      <tr><td>Sliding Window</td><td>O(n)</td><td>O(1) – O(k)</td><td>5</td></tr>
+      <tr><td>Hash Map / Set</td><td>O(n)</td><td>O(n)</td><td>6</td></tr>
+      <tr><td>Comparison sorting (merge/quick)</td><td>O(n log n)</td><td>O(1) – O(n)</td><td>8 / 10 / 11</td></tr>
+      <tr><td>Binary Search</td><td>O(log n)</td><td>O(1)</td><td>12 / 13</td></tr>
+      <tr><td>Recursion (naive / memoized)</td><td>O(2&sup2;) naive, O(n) memoized</td><td>O(n) call stack</td><td>9 / 25</td></tr>
+      <tr><td>Linked list op at a known node</td><td>O(1)</td><td>O(1)</td><td>15 / 16</td></tr>
+      <tr><td>Stack / Queue op</td><td>O(1)</td><td>O(n)</td><td>17 / 18</td></tr>
+      <tr><td>BFS / DFS traversal</td><td>O(V + E)</td><td>O(V)</td><td>19 / 23</td></tr>
+      <tr><td>BST search/insert (iterative)</td><td>O(h)</td><td>O(1)</td><td>20</td></tr>
+      <tr><td>Heap insert/extract</td><td>O(log n)</td><td>O(n)</td><td>22</td></tr>
+      <tr><td>Graph shortest path (unweighted) / topo sort</td><td>O(V + E)</td><td>O(V)</td><td>24</td></tr>
+      <tr><td>Dynamic Programming (1D)</td><td>O(n) – O(n &times; options)</td><td>O(1) – O(n)</td><td>25 / 26</td></tr>
+      <tr><td>Greedy</td><td>O(n log n) (sort-dominated)</td><td>O(1) – O(n)</td><td>27</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What do you do when a problem seems to fit two patterns at once?</strong> Name both
+      out loud, then let whichever constraint is hardest to satisfy drive the choice. If a hash map
+      and a two-pointer sweep would both technically work but the array isn't sorted and sorting it
+      first would cost more than the hash map's O(n) space is worth, the hash map wins — say that
+      trade-off explicitly rather than silently picking one.</li>
+    <li><strong>What's the biggest tell that a problem is graph-shaped, even when it's never drawn as
+      one?</strong> Any time entities have connections to each other that aren't a strict
+      parent-child hierarchy — friend networks, course prerequisites, word ladders, grid adjacency —
+      model it as nodes and edges even if the word "graph" never appears in the prompt. A grid where
+      you can move to adjacent cells is a graph with implicit edges.</li>
+    <li><strong>How do you avoid pattern-matching too early and missing a simpler approach?</strong>
+      Treat your first guess as a hypothesis, not a commitment — trace it against the example given in
+      the problem before writing real code.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this is exactly
+      the discipline Day 27 taught with the coin-change counter-example — a plausible-looking greedy
+      guess can pass the given example and still be wrong. Always hand-trace before committing.</span></li>
+    <li><strong>What if you genuinely can't identify the pattern in the first minute?</strong> Fall
+      back to brute force, state its complexity out loud, and look for the specific inefficiency: work
+      that repeats (memoize or hash it), comparisons that could be skipped if the data were ordered
+      (sort or two-pointer it), or a search space that's monotonic (binary search it).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So brute force is a
+      valid thing to say out loud?" — yes, always. Naming the brute force and its complexity, then
+      explaining what's wasteful about it, is a stronger interview signal than sitting silently
+      searching for the "clever" answer.</span></li>
+  </ul>
+
+  <h2>3 more problems — recognize first, then solve</h2>
+
+  <div class="problem">
+    <h4>1. Product of Array Except Self <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/product-of-array-except-self/" target="_blank" rel="noopener">LeetCode: Product of Array Except Self</a>)</span></h4>
+    <p>Given an array, return an array where each element is the product of every OTHER element,
+      without using division. Keyword-only pattern-matching ("array," "product") could mislead toward
+      a hash map — the real signal is "combine information from both sides," which points to a
+      prefix/suffix pass instead.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Build the answer in two passes: first, a
+      left-to-right pass where each position holds the product of everything to its left. Then a
+      right-to-left pass multiplies in the product of everything to its right. No division needed.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function productExceptSelf(nums) {
+  const n = nums.length;
+  const res = new Array(n).fill(1);
+  let prefix = 1;
+  for (let i = 0; i < n; i++) {
+    res[i] = prefix;
+    prefix *= nums[i];
+  }
+  let suffix = 1;
+  for (let i = n - 1; i >= 0; i--) {
+    res[i] *= suffix;
+    suffix *= nums[i];
+  }
+  return res;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. 3Sum Closest <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/3sum-closest/" target="_blank" rel="noopener">LeetCode: 3Sum Closest</a>)</span></h4>
+    <p>Given an array and a target, find the sum of 3 numbers closest to the target. The exact same
+      sort-then-two-pointer shape as Day 11's 3Sum practice problem — the only change is the
+      termination condition (closest, not exact).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Sort first. Fix one number, then two-pointer the
+      rest of the array converging toward the target — same skeleton as 3Sum, but instead of stopping
+      the instant you find an exact match, track the closest sum seen so far and keep narrowing.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function threeSumClosest(nums, target) {
+  nums = nums.slice().sort((a, b) => a - b);
+  let closest = nums[0] + nums[1] + nums[2];
+  for (let i = 0; i < nums.length - 2; i++) {
+    let lo = i + 1, hi = nums.length - 1;
+    while (lo < hi) {
+      const sum = nums[i] + nums[lo] + nums[hi];
+      if (Math.abs(sum - target) < Math.abs(closest - target)) closest = sum;
+      if (sum === target) return sum;
+      else if (sum < target) lo++;
+      else hi--;
+    }
+  }
+  return closest;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Word Search <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/word-search/" target="_blank" rel="noopener">LeetCode: Word Search</a>)</span></h4>
+    <p>Given a grid of letters and a word, return whether the word can be traced through adjacent
+      cells (up/down/left/right), using each cell at most once. Never labeled a "graph" or a "tree" —
+      but a grid with adjacency IS a graph, and "trace a path" IS DFS with backtracking.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>DFS from every cell that matches the word's first
+      letter. At each step, temporarily mark the current cell as visited (so the path can't reuse it),
+      recurse into all 4 neighbors looking for the next letter, then un-mark it on the way back out —
+      classic backtracking.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function wordExist(board, word) {
+  const rows = board.length, cols = board[0].length;
+
+  function dfs(r, c, i) {
+    if (i === word.length) return true;
+    if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] !== word[i]) return false;
+
+    const original = board[r][c];
+    board[r][c] = '#';                 // mark visited so this path can't reuse it
+    const found = dfs(r + 1, c, i + 1) || dfs(r - 1, c, i + 1)
+               || dfs(r, c + 1, i + 1) || dfs(r, c - 1, i + 1);
+    board[r][c] = original;            // un-mark on the way back out (backtrack)
+    return found;
+  }
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (dfs(r, c, 0)) return true;
+    }
+  }
+  return false;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="shapethengoal" data-explain="Identify the data shape first (array, linked structure, tree, graph, or no explicit structure), then the goal/constraint phrasing (contiguous? sorted? min/max repeatedly? count of ways?) — matching both together narrows to a specific pattern far faster than guessing from keywords alone.">
+    <p class="q-text">1. What's the first question to ask when recognizing a pattern in a cold problem?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="shapethengoal">What's the data shape, then what's the goal/constraint phrasing?</button>
+      <button class="btn dsa-quiz-option" data-value="difficulty">What difficulty label does the problem have?</button>
+      <button class="btn dsa-quiz-option" data-value="language">What programming language is required?</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="contiguous" data-explain="Sliding window maintains a CONTIGUOUS range with a validity condition that grows/shrinks as you scan; two-pointer converges from both ends and doesn't require the elements between the pointers to form a meaningful contiguous span.">
+    <p class="q-text">2. What's the key differentiator between sliding window and two-pointer?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="contiguous">Sliding window maintains a contiguous range with a shrink/grow condition; two-pointer just converges from both ends</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're the same pattern with different names</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">Sliding window requires sorted input; two-pointer never does</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="orderindependent" data-explain="If a problem explicitly says characters/elements can be REARRANGED, order no longer matters — that rules out order-dependent patterns like two-pointer and sliding window, and points toward frequency counting (hash map) instead." >
+    <p class="q-text">3. The phrase "rearrange the characters" in a problem statement rules out which kinds of patterns?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="orderindependent">Order-dependent patterns like two-pointer and sliding window — only counts matter now</button>
+      <button class="btn dsa-quiz-option" data-value="hashmapruleout">Hash maps and frequency counting</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — it doesn't affect which pattern applies</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="true" data-explain="Any set of entities with arbitrary connections — friend networks, course prerequisites, grid adjacency — is a graph whether or not the problem ever uses that word. Recognizing the implicit node/edge structure is the whole skill." >
+    <p class="q-text">4. True or false: a problem can be graph-shaped even if it never uses the word "graph."</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="true">True</button>
+      <button class="btn dsa-quiz-option" data-value="false">False — the word "graph" always appears if a graph algorithm is needed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="brutefallback" data-explain="When you can't identify the pattern in the first minute, state the brute-force approach and its complexity out loud — the specific inefficiency it reveals (repeated work, unordered comparisons, unbounded search) usually points directly at the pattern that removes it." >
+    <p class="q-text">5. When should you fall back to brute force during pattern recognition?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="brutefallback">When you can't identify the pattern in the first minute — its specific inefficiency usually reveals the right pattern</button>
+      <button class="btn dsa-quiz-option" data-value="never">Never — brute force should never be mentioned in an interview</button>
+      <button class="btn dsa-quiz-option" data-value="always">Always start with brute force and stop there, regardless of complexity</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 28 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day27.html">← Day 27: Greedy Algorithms</a>
+    <a class="btn" href="day29.html">Day 29: Mock Interview Day →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 28;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
