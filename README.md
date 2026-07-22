@@ -1,5 +1,7 @@
 # 30 Days of DSA in JavaScript — Interview Ready
 
+*From dummy to dummies.*
+
 A free, self-paced Data Structures & Algorithms course for JavaScript interview prep.
 Every lesson has a diagram, an interactive step-through animation, a line-by-line dry run,
 real interview questions, practice problems, and a quiz — all in plain English.
@@ -11,6 +13,10 @@ works fully offline.
 ## Live site
 
 Once GitHub Pages is enabled (see below), the course is live at:
+
+**https://dsa.itszain.tech/** (custom domain, via the repo's `CNAME` file)
+
+or the default GitHub Pages URL:
 
 **https://zainulhasan.github.io/30-days-js-interview-prep/**
 

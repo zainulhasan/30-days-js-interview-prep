@@ -339,7 +339,24 @@ manual verification pass, exactly as expected:
 - **Open decision, not yet actioned:** whether to vendor the actual JetBrains Mono font file
   (self-hosted, OFL-licensed, offline-safe) so headings/code render in true JetBrains Mono
   instead of falling back to a system monospace font. Asked the user; awaiting their answer.
-- GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
+- **SEO pass — user explicitly requested, do once all 30 lessons are built and verified** (not
+  piecemeal per-lesson): proper per-page `<title>`/heading structure (already have unique titles
+  per lesson, worth auditing for consistency/keyword quality once the full set exists), meta
+  description quality pass, Core Web Vitals check (the site should already be fast — static
+  HTML/CSS/vanilla JS, no heavy JS frameworks — but verify with Lighthouse once index.html + all
+  30 lessons are final), structured data (e.g. Course/LearningResource or BreadcrumbList JSON-LD
+  — check what schema.org type fits an educational course site), `sitemap.xml` + `robots.txt`
+  (neither exists yet), and Google Search Console submission/indexing once the custom domain
+  (`dsa.itszain.tech`, see the CNAME entry above) is confirmed live. This is a full task on its
+  own, not a few line-edits — plan a dedicated pass, don't bolt it onto the remaining lesson
+  builds.
+- GitHub Pages: user added a `CNAME` file directly on GitHub (commit `fb02ed3`, outside this
+  session) pointing at custom domain `dsa.itszain.tech` — discovered via a rejected `git push`
+  (remote had commits this session didn't make), resolved with `git pull --rebase`. Suggests the
+  user is setting up (or has set up) Pages hosting themselves; haven't independently confirmed the
+  domain is live/serving. **Lesson: a push can be rejected by legitimate user activity on GitHub
+  itself, not just other agent sessions — always `git fetch`/inspect what's actually on the remote
+  before assuming a rejected push means another session collided, and never force-push over it.**
 
 ## Done — theme pivoted again: now "One Dark Pro" (VS Code theme), colors extracted to tokens.css
 The light/cream theme (previous entry above) was superseded in the same session — user wanted

@@ -136,6 +136,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 /* ---------- home page -------------------------------------------- */
 .hero { text-align: center; padding: 2rem 1rem 1rem; }
 .hero p { color: var(--text-dim); max-width: 640px; margin: 0.5rem auto; }
+.hero-tagline { color: var(--accent); font-style: italic; font-weight: 600; }
 
 .progress-bar-wrap {
   background: var(--bg-raised);
