@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Day 9: Recursion & the Call Stack — 30 Days of DSA in JavaScript</title>
 <meta name="description" content="Watch the call stack grow and shrink as recursive calls run — base case, recursive case, and why deep recursion can crash." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AFEF'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -40,25 +40,25 @@
 
   <h2>Diagram</h2>
   <svg class="diagram" viewBox="0 0 620 230" role="img" aria-label="Calling factorial(3) pushes three frames onto the call stack; the base case returns a value, and each frame pops and multiplies as the stack unwinds">
-    <text x="20" y="18" font-size="13" fill="#2E6DA4" font-weight="bold">Calling factorial(3) — the stack grows</text>
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Calling factorial(3) — the stack grows</text>
     <text x="20" y="34" font-size="10" class="dim">(newest call on top)</text>
     <g font-size="13">
-      <rect x="20" y="42" width="160" height="34" rx="6" fill="#FFFFFF" stroke="#2F9E6F" stroke-width="2"/>
-      <text x="100" y="64" text-anchor="middle" fill="#2F9E6F">factorial(1) — base case</text>
-      <rect x="20" y="80" width="160" height="34" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="100" y="102" text-anchor="middle" fill="#1A312C">factorial(2)</text>
-      <rect x="20" y="118" width="160" height="34" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="100" y="140" text-anchor="middle" fill="#1A312C">factorial(3)</text>
+      <rect x="20" y="42" width="160" height="34" rx="6" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
+      <text x="100" y="64" text-anchor="middle" fill="#98C379">factorial(1) — base case</text>
+      <rect x="20" y="80" width="160" height="34" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="100" y="102" text-anchor="middle" fill="#DCDFE4">factorial(2)</text>
+      <rect x="20" y="118" width="160" height="34" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="100" y="140" text-anchor="middle" fill="#DCDFE4">factorial(3)</text>
     </g>
     <text x="20" y="172" font-size="12" class="dim">factorial(1) returns 1 directly.</text>
 
-    <text x="330" y="18" font-size="13" fill="#B8791F" font-weight="bold">Returning — the stack shrinks</text>
+    <text x="330" y="18" font-size="13" fill="#E6C07B" font-weight="bold">Returning — the stack shrinks</text>
     <text x="330" y="34" font-size="10" class="dim">factorial(1) already popped off the top</text>
     <g font-size="13">
-      <rect x="330" y="42" width="160" height="34" rx="6" fill="#FFFFFF" stroke="#B8791F" stroke-width="2"/>
-      <text x="410" y="64" text-anchor="middle" fill="#B8791F">factorial(2) = 2 × 1</text>
-      <rect x="330" y="80" width="160" height="34" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="410" y="102" text-anchor="middle" fill="#1A312C">factorial(3)</text>
+      <rect x="330" y="42" width="160" height="34" rx="6" fill="#2C313A" stroke="#E6C07B" stroke-width="2"/>
+      <text x="410" y="64" text-anchor="middle" fill="#E6C07B">factorial(2) = 2 × 1</text>
+      <rect x="330" y="80" width="160" height="34" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="410" y="102" text-anchor="middle" fill="#DCDFE4">factorial(3)</text>
     </g>
     <text x="330" y="172" font-size="12" class="dim">factorial(1) already popped.</text>
     <text x="330" y="188" font-size="12" class="dim">factorial(2) resumes, multiplies</text>

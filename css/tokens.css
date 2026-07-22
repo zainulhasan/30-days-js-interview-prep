@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Design tokens — 30 Days of DSA in JavaScript
+   Single source of truth for colors, fonts, and radius. Change values here;
+   every page picks them up automatically via css/style.css's @import.
+   Theme: "One Dark Pro" (the popular VS Code dark theme) — a dark,
+   IDE-familiar palette for a programming-focused study site. Hex values
+   pulled directly from github.com/Binaryify/OneDark-Pro (themes/OneDark-Pro.json
+   and scss/atom-one-dark-inside.scss) — not approximated from memory.
+   ========================================================================== */
+
+:root {
+  --bg: #282C34;          /* editor.background */
+  --bg-raised: #2C313A;   /* card / navbar — slightly lighter than editor.background for elevation (no exact VS Code equivalent; website "cards" need a distinct surface VS Code chrome doesn't have) */
+  --bg-raised-2: #21252B; /* sideBar.background / editorWidget.background */
+  --btn-bg: #404754;      /* button.background — real theme value, used for secondary buttons */
+  --border: #3E4452;      /* focusBorder */
+  --text: #ABB2BF;        /* editor.foreground / mono-1 */
+  --text-dim: #818896;    /* mono-2 */
+  --heading: #DCDFE4;     /* brightened foreground for headings/logos/important labels */
+  --accent: #61AEEE;      /* hue-2 / textLink.foreground — buttons, links, nav highlights */
+  --accent-hover: #4D96D9;
+  --accent-2: #98C379;    /* hue-4 — progress, completed, secondary buttons */
+  --warn: #D19A66;        /* hue-6 */
+  --error: #E06C75;       /* hue-5 */
+
+  /* animation/visualizer state colors — used identically everywhere:
+     yellow = comparing   red = swap/remove   green = sorted/found
+     blue   = pointer/pivot   purple = active/current   neutral = untouched */
+  --c-neutral: #3E4452;
+  --c-neutral-text: #ABB2BF;
+  --c-compare: #E6C07B;   /* hue-6-2, yellow */
+  --c-compare-text: #282C34;
+  --c-swap: #E06C75;      /* hue-5, red */
+  --c-swap-text: #282C34;
+  --c-sorted: #98C379;    /* hue-4, green */
+  --c-sorted-text: #282C34;
+  --c-pointer: #61AEEE;   /* hue-2, blue */
+  --c-pointer-text: #282C34;
+  --c-active: #C678DD;    /* hue-3, purple — "current" recursion frame etc */
+  --c-active-text: #282C34;
+
+  --radius: 14px;
+  --font-head: 'JetBrains Mono', 'Fira Code', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}

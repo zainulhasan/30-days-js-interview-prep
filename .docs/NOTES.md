@@ -212,12 +212,50 @@ contradicted the lesson's own stability teaching whenever Shuffle produced a dup
 with explicit tie-case wording. Also fixed a legend promising an unused blue state while green
 was overloaded to mean two different things.
 
+## Done — Day 8 split into 3 pages + sitewide theme pivot
+User asked for multi-topic days to be split into small focused sub-pages rather than one big
+page. Day 8 (bubble/selection/insertion sort — the clearest offender, 3 genuinely distinct named
+algorithms) was split into `day08.html` (Bubble, part 1/3), `day08b.html` (Selection, part 2/3,
+new practice problems), `day08c.html` (Insertion, part 3/3, carries the sole "Mark Day 8
+complete" button since progress is tracked per-day not per-part). `day07.html`/`day09.html` nav
+links updated. **Standing rule going forward** (see also DECISIONS.md): split any future day
+that bundles 3+ genuinely distinct, individually-nameable algorithms into sub-pages the same
+way; a pattern-with-multiple-shapes (two-pointer, sliding window, recursion examples, hash-map
+examples) is NOT the same thing and should stay one lesson — only split on real "algorithm X vs
+algorithm Y vs algorithm Z" bundling.
+
+Separately, the user supplied a full replacement design spec: dark theme → warm light/cream
+theme (exact palette in DECISIONS.md §2.5). This is a **full sitewide pivot**, not additive —
+`css/style.css`'s `:root` was rewritten, and every already-built lesson's hand-drawn SVG
+diagrams needed a sitewide hex find-replace (they hardcode colors, don't read CSS vars).
+Verified safe first (small closed palette, checked via grep before touching anything), executed
+via `sd`, verified in-browser afterward across every renderer type (Bars, the Day 2 chart, the
+Day 9 CallStack, Graph-style tree diagrams) with no console errors and good contrast throughout.
+**Full details, exact hex mapping, and the still-open font-vendoring question are in
+DECISIONS.md §2.5 — read that before starting Day 11**, since every new lesson must be authored
+directly in the new palette from here on (the old dark-theme hex values must not be reused).
+
 ## Not started yet
 - Lesson pages `lessons/day11.html` … `day30.html` (rest of Week 2: Days 11-14; Week 3: core
   data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-10 as
-  the template, apply every point in "Lesson template" above and the lessons-learned noted here,
-  review each via `.docs/REVIEW-CHECKLIST.md`.
+  the template (now in the theme below), apply every point in "Lesson template" above and
+  the lessons-learned noted here, review each via `.docs/REVIEW-CHECKLIST.md`.
+- **Open decision, not yet actioned:** whether to vendor the actual JetBrains Mono font file
+  (self-hosted, OFL-licensed, offline-safe) so headings/code render in true JetBrains Mono
+  instead of falling back to a system monospace font. Asked the user; awaiting their answer.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
+
+## Done — theme pivoted again: now "One Dark Pro" (VS Code theme), colors extracted to tokens.css
+The light/cream theme (previous entry above) was superseded in the same session — user wanted
+the exact color scheme of the popular VS Code **One Dark Pro** theme instead. Full details,
+exact hex sourcing (pulled from the real theme repo via `gh api`/`curl`, not memory), and the
+repeatable sitewide-recolor process are in **`.docs/DECISIONS.md` §2.5 — read that before
+touching colors again.** Short version: colors now live in `css/tokens.css` (new file,
+`style.css` pulls it in via `@import`), and every lesson's inline SVG diagrams were sitewide
+find-replaced (twice — once to light, once to One Dark Pro) since they hardcode hex rather than
+reading CSS variables. Verified in-browser across every renderer (Bars, Day 2's chart, Day 9's
+CallStack, Day 10's tree diagram) with hard reloads, no console errors, good contrast throughout.
+**Every lesson from Day 11 onward must be authored directly in the `tokens.css` palette.**
 
 ## Environment for local preview
 ```bash

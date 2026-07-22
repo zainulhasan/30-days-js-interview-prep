@@ -78,45 +78,65 @@ player, not a separate animation system.
 
 ---
 
-## 2.5. Design pivot: light/cream theme replaces the original dark theme (post-Day-10)
+## 2.5. Design pivot(s): dark → light/cream → "One Dark Pro" dark (post-Day-10)
 
-After Days 1–10 were built, reviewed, and shipped under the original dark theme (see §2 above,
-"dark background, monospace headings"), the user supplied a full replacement design spec: a
-calm, warm, light theme (cream `#FFF4E1` background, white cards, dark-green/teal/mint palette)
-for better long-session readability, explicitly ruling out dark backgrounds for lesson content.
-This **replaces** the dark theme as the site's only theme (no light/dark toggle — light is now
-the sole theme, matching the "never use dark backgrounds" rule).
+After Days 1–10 shipped under the original dark theme (§2 above), the theme changed **twice**
+in the same session. History, in order, since each pivot's mechanics matter for future changes:
 
-**What changed:**
-- `css/style.css` `:root` — full palette swap (see the file for exact hex values), border radius
-  bumped from 8px to 14px, box shadows softened (were tuned for a dark background), and a
-  `.btn` fix (`text-decoration: none`, `display: inline-block`) for anchor-tag buttons.
-- **Every already-built lesson's inline SVG diagrams** — these hard-code hex colors directly
-  (they don't read CSS variables), so the palette swap required a **sitewide find-replace**
-  across `lessons/*.html`, mapping each of the ~11 distinct dark-theme hex constants used
-  throughout to a corresponding light-theme hex (done via `sd`, verified safe first because the
-  site only ever used a small, consistent palette — confirmed via `grep -oE '#[0-9a-fA-F]{6}'`
-  before touching anything). Favicons (percent-encoded hex inside the data-URI, so *not* caught
-  by the plain-hex find-replace) needed a separate pass.
-- Day 2's growth-chart `SERIES` color definitions (JS, not CSS) were covered by the same
-  lessons/*.html pass since that chart's colors are defined inline in `<script>`.
-- Legend swatches (`.legend i`) got a subtle border added — the new neutral fill color
-  (`#F0E9D8`) is close enough to the cream page background that an unbordered swatch was nearly
-  invisible; the border makes every legend chip readable regardless of exact fill/background
-  contrast.
+1. **Dark → light/cream.** User supplied a full warm light-theme spec (cream background, white
+   cards, dark-green/teal/mint) for reading comfort. Fully executed and verified in-browser.
+2. **Light/cream → "One Dark Pro" dark.** User then asked to soften the cream background
+   (still felt too bright), and separately asked for the exact color scheme of the popular VS
+   Code theme **[One Dark Pro](https://github.com/Binaryify/OneDark-Pro)** — a dark,
+   IDE-familiar palette, fitting for a programming-focused study site. **This is the current,
+   final theme.** Hex values were pulled directly from the real theme source (not approximated
+   from memory): `themes/OneDark-Pro.json` (`editor.background`, `sideBar.background`,
+   `button.background`, `textLink.foreground`, `focusBorder`) and
+   `scss/atom-one-dark-inside.scss` (the `hue-1..6` syntax-highlight colors) via `gh api` +
+   `curl` against the live repo.
 
-**Font:** JetBrains Mono was already first in the `--font-head` stack (headings/code), unchanged
-by this pivot. Body paragraph text stays a readable sans-serif system stack, not monospace —
-full-monospace body text would work against the "highly readable for long study sessions" goal
-in the same design brief. **Not yet vendored** — JetBrains Mono isn't bundled as a font file, so
-most readers see a system monospace fallback (Menlo/Consolas/etc.), not literal JetBrains Mono.
-Vendoring the actual font (self-hosted, offline-safe, OFL-licensed) is a candidate follow-up if
-the user wants guaranteed-consistent rendering — flagged, not yet actioned.
+**Mechanics that apply to ANY future theme change on this site (read this before changing
+colors again):**
+- **`css/tokens.css` is now the single source of truth for every color/font/radius token** —
+  extracted out of `style.css` specifically so future palette changes are a one-file edit.
+  `style.css` pulls it in via `@import url('tokens.css');` (must stay the first real rule in the
+  file, comments are fine before it). Component CSS in `style.css` should never hardcode a
+  color — always reference a `--token`.
+- **Every lesson's hand-drawn SVG diagrams hardcode hex colors directly — they do NOT read CSS
+  variables.** This means `tokens.css` alone is not enough; every theme change also requires a
+  **sitewide find-replace across `lessons/*.html`** (and Day 2's inline `SERIES` chart colors,
+  which live in a `<script>` tag, not CSS). Process used both times, safe to repeat:
+  1. `grep -oE '#[0-9a-fA-F]{6}' lessons/*.html js/*.js | sort | uniq -c | sort -rn` — confirm
+     the site still only uses a small, closed set of hex constants (it does, by discipline).
+  2. For any hex value being reused as a *different* meaning in the new palette, check its
+     actual usage context first (`grep -oE '.{20}#HEXVALUE.{10}'`) before batch-replacing — a
+     value like `#FFFFFF` can mean different things depending on where it appears.
+  3. Run one `sd -s '#OLD' '#NEW'` per mapping across `lessons/*.html js/*.js`. Order-safe as
+     long as no new target hex equals another old source hex (verify before running).
+  4. **Favicons are separately encoded** — the `<link rel="icon">` data URI percent-encodes `#`
+     as `%23`, so plain hex find-replace never touches them. Needs its own
+     `sd -s "fill='%23OLD'" "fill='%23NEW'"` pass.
+  5. Re-verify in-browser afterward across every renderer type used so far (Bars, the Day 2
+     chart, the Day 9 CallStack, Graph-style tree diagrams) with a hard reload
+     (`ignoreCache: true`) — browsers (and this project's own dev server) cache CSS/JS
+     aggressively, so a stale render can look like a bug that isn't one.
+- **Legend swatches (`.legend i`) always get a border** (currently a light rgba tint) —
+  necessary because a "neutral" state color can end up close in luminance to the page
+  background depending on the palette, making an unbordered swatch nearly invisible. Keep this
+  border on any future palette.
 
-**Process note for any FUTURE lesson (Day 11 onward):** every new lesson must be written
-directly in the new light-theme hex palette from the start — do not reuse the old dark-theme
-hex values. See `css/style.css`'s `:root` block for the canonical values, or the color legend
-table above.
+**Font:** JetBrains Mono is first in the `--font-head` stack (headings/code), per explicit user
+request. Body paragraph text stays a readable sans-serif system stack, not monospace — full body
+monospace would work against long-session readability. **Not yet vendored** — JetBrains Mono
+isn't bundled as a font file, so most readers see a system monospace fallback (Menlo/Consolas/
+etc.), not literal JetBrains Mono. Vendoring it (self-hosted, offline-safe, OFL-licensed) is a
+flagged, not-yet-actioned follow-up — ask the user before adding it (matches the "check license,
+vendor, ask first" rule in §2 above).
+
+**Process note for any FUTURE lesson (Day 11 onward):** write directly in the current
+`tokens.css` palette from the start — do not reuse any prior theme's hex values. If the theme
+changes again before Day 30 is done, re-run the sitewide find-replace process above rather than
+leaving old and new lessons on different palettes.
 
 ---
 

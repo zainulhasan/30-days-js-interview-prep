@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Day 1: JS Essentials for DSA — 30 Days of DSA in JavaScript</title>
 <meta name="description" content="Arrays, objects, loops, destructuring, and spread — the JavaScript toolkit every DSA solution uses." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AFEF'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -53,44 +53,44 @@
     elements move and which don't.</p>
   <svg class="diagram" viewBox="0 0 620 300" role="img" aria-label="push and pop touch only the end of the array in O(1); unshift and shift must move every other element, costing O(n)">
     <defs>
-      <marker id="arrDown1" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto"><path d="M0,0 L8,0 L4,8 Z" fill="#2F9E6F"/></marker>
+      <marker id="arrDown1" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto"><path d="M0,0 L8,0 L4,8 Z" fill="#98C379"/></marker>
     </defs>
 
-    <text x="145" y="18" font-size="13" fill="#2F9E6F" font-weight="bold">push(6) / pop() — end of the array</text>
+    <text x="145" y="18" font-size="13" fill="#98C379" font-weight="bold">push(6) / pop() — end of the array</text>
     <g font-size="14">
-      <rect x="145" y="30" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="170" y="57" text-anchor="middle" fill="#1A312C">4</text>
-      <rect x="201" y="30" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="226" y="57" text-anchor="middle" fill="#1A312C">7</text>
-      <rect x="257" y="30" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="282" y="57" text-anchor="middle" fill="#1A312C">2</text>
-      <rect x="313" y="30" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="338" y="57" text-anchor="middle" fill="#1A312C">9</text>
-      <rect x="369" y="30" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
-      <text x="394" y="57" text-anchor="middle" fill="#1A312C">5</text>
-      <rect x="425" y="30" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#2F9E6F" stroke-dasharray="4 3"/>
-      <text x="450" y="57" text-anchor="middle" fill="#2F9E6F">6</text>
+      <rect x="145" y="30" width="50" height="44" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="170" y="57" text-anchor="middle" fill="#DCDFE4">4</text>
+      <rect x="201" y="30" width="50" height="44" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="226" y="57" text-anchor="middle" fill="#DCDFE4">7</text>
+      <rect x="257" y="30" width="50" height="44" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="282" y="57" text-anchor="middle" fill="#DCDFE4">2</text>
+      <rect x="313" y="30" width="50" height="44" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="338" y="57" text-anchor="middle" fill="#DCDFE4">9</text>
+      <rect x="369" y="30" width="50" height="44" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="394" y="57" text-anchor="middle" fill="#DCDFE4">5</text>
+      <rect x="425" y="30" width="50" height="44" rx="6" fill="#2C313A" stroke="#98C379" stroke-dasharray="4 3"/>
+      <text x="450" y="57" text-anchor="middle" fill="#98C379">6</text>
     </g>
-    <path d="M450,78 L450,94" stroke="#2F9E6F" stroke-width="2" marker-end="url(#arrDown1)"/>
+    <path d="M450,78 L450,94" stroke="#98C379" stroke-width="2" marker-end="url(#arrDown1)"/>
     <text x="145" y="115" font-size="12" class="dim">Only the last slot moves — 4, 7, 2, 9, 5 stay put → O(1).</text>
     <text x="145" y="132" font-size="12" class="dim">pop() is the same in reverse: delete the last slot only.</text>
 
-    <line x1="10" y1="150" x2="610" y2="150" stroke="#E7DDCC" stroke-dasharray="4 4"/>
+    <line x1="10" y1="150" x2="610" y2="150" stroke="#3E4452" stroke-dasharray="4 4"/>
 
-    <text x="145" y="176" font-size="13" fill="#B8791F" font-weight="bold">unshift(1) / shift() — front of the array</text>
+    <text x="145" y="176" font-size="13" fill="#E6C07B" font-weight="bold">unshift(1) / shift() — front of the array</text>
     <g font-size="14">
-      <rect x="145" y="192" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#2F9E6F" stroke-dasharray="4 3"/>
-      <text x="170" y="219" text-anchor="middle" fill="#2F9E6F">1</text>
-      <rect x="201" y="192" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#B8791F"/>
-      <text x="226" y="219" text-anchor="middle" fill="#1A312C">4</text>
-      <rect x="257" y="192" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#B8791F"/>
-      <text x="282" y="219" text-anchor="middle" fill="#1A312C">7</text>
-      <rect x="313" y="192" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#B8791F"/>
-      <text x="338" y="219" text-anchor="middle" fill="#1A312C">2</text>
-      <rect x="369" y="192" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#B8791F"/>
-      <text x="394" y="219" text-anchor="middle" fill="#1A312C">9</text>
-      <rect x="425" y="192" width="50" height="44" rx="6" fill="#FFFFFF" stroke="#B8791F"/>
-      <text x="450" y="219" text-anchor="middle" fill="#1A312C">5</text>
+      <rect x="145" y="192" width="50" height="44" rx="6" fill="#2C313A" stroke="#98C379" stroke-dasharray="4 3"/>
+      <text x="170" y="219" text-anchor="middle" fill="#98C379">1</text>
+      <rect x="201" y="192" width="50" height="44" rx="6" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="226" y="219" text-anchor="middle" fill="#DCDFE4">4</text>
+      <rect x="257" y="192" width="50" height="44" rx="6" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="282" y="219" text-anchor="middle" fill="#DCDFE4">7</text>
+      <rect x="313" y="192" width="50" height="44" rx="6" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="338" y="219" text-anchor="middle" fill="#DCDFE4">2</text>
+      <rect x="369" y="192" width="50" height="44" rx="6" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="394" y="219" text-anchor="middle" fill="#DCDFE4">9</text>
+      <rect x="425" y="192" width="50" height="44" rx="6" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="450" y="219" text-anchor="middle" fill="#DCDFE4">5</text>
     </g>
     <text x="145" y="260" font-size="12" class="dim">Amber boxes all shift right first, to free up index 0 → O(n).</text>
     <text x="145" y="277" font-size="12" class="dim">shift() reverses this: remove index 0, then shift everyone left.</text>
