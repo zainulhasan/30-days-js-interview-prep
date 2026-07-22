@@ -342,6 +342,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .legend .lg-sorted { background: var(--c-sorted); }
 .legend .lg-pointer { background: var(--c-pointer); }
 .legend .lg-neutral { background: var(--c-neutral); }
+.legend .lg-active { background: var(--c-active); }
 
 /* ---------- visualizer shell --------------------------------------- */
 .viz-panel {

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 9: Recursion & the Call Stack — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Watch the call stack grow and shrink as recursive calls run — base case, recursive case, and why deep recursion can crash." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 9 / 30 &middot; WEEK 2</p>
+  <h1>Recursion &amp; the Call Stack</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Write a recursive function with a correct base case and recursive case.</li>
+    <li>Visualize the call stack growing (calls) and shrinking (returns) as recursion runs.</li>
+    <li>Know why deep recursion can crash — and when to prefer an iterative version instead.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Recursion is like asking a question to someone who doesn't know the answer, so they ask
+    someone else the same question but for a smaller version of the problem — and so on, until
+    someone (the <strong>base case</strong>) knows the answer directly without asking anyone
+    else. Then everyone reports their answer back up the chain, each person using the answer
+    they received to compute their own.</p>
+  <p>Under the hood, JavaScript tracks this chain with an actual data structure: the
+    <strong>call stack</strong>. Every function call pushes a new frame onto the stack —
+    remembering where to resume once that call returns. Every <code>return</code> pops the top
+    frame off and hands its value back to whoever called it. A recursive function without a
+    correct base case never stops pushing — and since the stack has a fixed size limit, that
+    crashes with a <code>RangeError: Maximum call stack size exceeded</code>.</p>
+
+  <h2>Diagram</h2>
+  <svg class="diagram" viewBox="0 0 620 230" role="img" aria-label="Calling factorial(3) pushes three frames onto the call stack; the base case returns a value, and each frame pops and multiplies as the stack unwinds">
+    <text x="20" y="18" font-size="13" fill="#58a6ff" font-weight="bold">Calling factorial(3) — the stack grows</text>
+    <text x="20" y="34" font-size="10" class="dim">(newest call on top)</text>
+    <g font-size="13">
+      <rect x="20" y="42" width="160" height="34" rx="6" fill="#1c2330" stroke="#3fb950" stroke-width="2"/>
+      <text x="100" y="64" text-anchor="middle" fill="#3fb950">factorial(1) — base case</text>
+      <rect x="20" y="80" width="160" height="34" rx="6" fill="#1c2330" stroke="#2a3140"/>
+      <text x="100" y="102" text-anchor="middle" fill="#e6edf3">factorial(2)</text>
+      <rect x="20" y="118" width="160" height="34" rx="6" fill="#1c2330" stroke="#2a3140"/>
+      <text x="100" y="140" text-anchor="middle" fill="#e6edf3">factorial(3)</text>
+    </g>
+    <text x="20" y="172" font-size="12" class="dim">factorial(1) returns 1 directly.</text>
+
+    <text x="330" y="18" font-size="13" fill="#d4a72c" font-weight="bold">Returning — the stack shrinks</text>
+    <text x="330" y="34" font-size="10" class="dim">factorial(1) already popped off the top</text>
+    <g font-size="13">
+      <rect x="330" y="42" width="160" height="34" rx="6" fill="#1c2330" stroke="#d4a72c" stroke-width="2"/>
+      <text x="410" y="64" text-anchor="middle" fill="#d4a72c">factorial(2) = 2 × 1</text>
+      <rect x="330" y="80" width="160" height="34" rx="6" fill="#1c2330" stroke="#2a3140"/>
+      <text x="410" y="102" text-anchor="middle" fill="#e6edf3">factorial(3)</text>
+    </g>
+    <text x="330" y="172" font-size="12" class="dim">factorial(1) already popped.</text>
+    <text x="330" y="188" font-size="12" class="dim">factorial(2) resumes, multiplies</text>
+    <text x="330" y="204" font-size="12" class="dim">by the 1 it got back → returns 2.</text>
+  </svg>
+
+  <h2>Interactive visualizations</h2>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-sorted"></i> returning this step</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+
+  <h3>1. factorial(5) — linear recursion</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. Reverse a string recursively</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// Every recursive function needs exactly these two parts:
+
+function factorial(n) {
+  if (n <= 1) return 1;              // BASE CASE — stops the recursion
+  return n * factorial(n - 1);       // RECURSIVE CASE — smaller sub-problem
+}
+
+function reverseStr(s) {
+  if (s === '') return '';           // BASE CASE — empty string reverses to itself
+  return reverseStr(s.slice(1)) + s[0]; // RECURSIVE CASE — reverse the rest, append first char
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>factorial</code>'s base case triggers at <code>n &lt;= 1</code> (not just
+      <code>n === 0</code>) — this guards against ever calling <code>factorial(-1)</code> if
+      someone passes a negative number by mistake, which would recurse forever.</li>
+    <li><code>reverseStr</code>'s recursive case calls itself with a <em>strictly smaller</em>
+      input (<code>s.slice(1)</code> is always one character shorter) — every recursive function
+      must shrink the problem toward the base case, or it never terminates.</li>
+    <li>Notice the recursive call happens <em>before</em> the work that uses its result
+      (<code>n *</code> and <code>+ s[0]</code>) — that's what forces the stack to grow all the
+      way down to the base case before any multiplication or concatenation actually happens.</li>
+  </ul>
+
+  <h3>Dry run: factorial(4)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Call</th><th>Action</th><th>Waiting on</th></tr></thead>
+    <tbody>
+      <tr><td>factorial(4)</td><td>4 &gt; 1, call factorial(3)</td><td>factorial(3)'s result</td></tr>
+      <tr><td>factorial(3)</td><td>3 &gt; 1, call factorial(2)</td><td>factorial(2)'s result</td></tr>
+      <tr><td>factorial(2)</td><td>2 &gt; 1, call factorial(1)</td><td>factorial(1)'s result</td></tr>
+      <tr><td>factorial(1)</td><td>1 &lt;= 1 — base case, return 1</td><td>—</td></tr>
+      <tr><td>factorial(2) resumes</td><td>2 × 1 = 2, return 2</td><td>—</td></tr>
+      <tr><td>factorial(3) resumes</td><td>3 × 2 = 6, return 6</td><td>—</td></tr>
+      <tr><td>factorial(4) resumes</td><td>4 × 6 = 24, return 24</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Recursive factorial(n)</td><td>O(n)</td><td>O(n)</td><td>n calls deep — every waiting frame sits on the call stack until it returns.</td></tr>
+      <tr><td>Iterative factorial(n)</td><td>O(n)</td><td>O(1)</td><td>A single loop variable, no call stack growth at all.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same time complexity, very different space —
+    this is the classic recursion trade-off: recursive code often reads more clearly, but it
+    costs O(depth) stack space that an equivalent loop wouldn't need.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What are the two required parts of every recursive function?</strong> A base
+      case that returns without recursing, and a recursive case that calls itself with a
+      strictly smaller input. Missing either one causes infinite recursion.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> a base
+      case that exists but is unreachable (e.g. checking <code>n === 0</code> when the input can
+      skip past zero, like counting down by 2 from an odd number) is just as broken as having no
+      base case at all.</span></li>
+    <li><strong>Why does deep recursion crash in JavaScript?</strong> Each call frame uses real
+      memory on a stack of limited size (typically low thousands of frames, engine-dependent).
+      Recurse deeper than that and you get <code>RangeError: Maximum call stack size
+      exceeded</code>.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Doesn't tail
+      call optimization fix this?" — in the language spec, yes, but almost no JS engine
+      (including V8, which powers Chrome and Node) actually implements it in practice. Don't
+      rely on TCO in JavaScript.</span></li>
+    <li><strong>When would you rewrite a recursive solution as iterative?</strong> When the
+      input could be large enough to risk a stack overflow, or when the recursive version's
+      O(depth) space cost genuinely matters — e.g. processing a very long linked list or a deep
+      tree recursively vs. with an explicit stack/loop.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> state the base case and recursive case
+    explicitly before writing code — "the base case is an empty string, which reverses to
+    itself; the recursive case reverses everything after the first character, then appends it."
+    Interviewers are listening for that structure, not just working code.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Fibonacci Number <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/fibonacci-number/" target="_blank" rel="noopener">LeetCode: Fibonacci Number</a>)</span></h4>
+    <p>Given n, return the nth Fibonacci number (F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2)).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Two base cases this time (n=0 and n=1), not
+      just one — write both before the recursive case.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+// Note: this naive version is O(2^n) — very slow for large n.
+// We fix that with memoization on Day 25.</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Power of Two <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/power-of-two/" target="_blank" rel="noopener">LeetCode: Power of Two</a>)</span></h4>
+    <p>Given an integer, return true if it's a power of two.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Think about what's special about the
+      binary representation of a power of two. What would recursively shrinking n toward 1 look
+      like, and what should stop it early?</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function isPowerOfTwo(n) {
+  if (n <= 0) return false;
+  if (n === 1) return true;
+  if (n % 2 !== 0) return false;
+  return isPowerOfTwo(n / 2);
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Pow(x, n) <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/powx-n/" target="_blank" rel="noopener">LeetCode: Pow(x, n)</a>)</span></h4>
+    <p>Implement <code>x^n</code> (x to the power n), where n can be negative.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Multiplying x by itself n times is O(n) —
+      today's Pow(x,n) is about beating that. What operation from earlier this week cuts a
+      problem in half every step instead of shrinking by one?</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function myPow(x, n) {
+  if (n < 0) return 1 / myPow(x, -n);
+  if (n === 0) return 1;
+  const half = myPow(x, Math.floor(n / 2));
+  return n % 2 === 0 ? half * half : half * half * x;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="A base case that stops the recursion and a recursive case that shrinks toward it are both required — missing either causes infinite recursion.">
+    <p class="q-text">1. Every correct recursive function needs:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">A base case AND a recursive case that shrinks the problem</button>
+      <button class="btn dsa-quiz-option" data-value="baseonly">Just a base case</button>
+      <button class="btn dsa-quiz-option" data-value="recuronly">Just a recursive case</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="push" data-explain="Every function call — recursive or not — pushes a new frame onto the call stack, which is popped when that call returns.">
+    <p class="q-text">2. Each recursive call does what to the call stack?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="push">Pushes a new frame</button>
+      <button class="btn dsa-quiz-option" data-value="replace">Replaces the current frame</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — recursion doesn't use the call stack</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="rangeerror" data-explain="Too many stacked frames without returning hits the engine's call stack size limit and throws a RangeError." >
+    <p class="q-text">3. What happens when recursion goes too deep in JavaScript?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="rangeerror">RangeError: Maximum call stack size exceeded</button>
+      <button class="btn dsa-quiz-option" data-value="silent">It silently returns undefined</button>
+      <button class="btn dsa-quiz-option" data-value="tco">V8 automatically optimizes it away with tail call optimization</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="Recursive factorial(n) makes n nested calls, each sitting on the stack until it returns — O(n) extra space, unlike the O(1) space of a loop." >
+    <p class="q-text">4. What's the space complexity of the recursive factorial(n), and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n) — n frames stack up before any of them return</button>
+      <button class="btn dsa-quiz-option" data-value="o1">O(1) — recursion doesn't use extra memory</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="unreachable" data-explain="A base case that technically exists but can never actually be hit (e.g. checking n===0 when n can skip past zero) is functionally the same bug as having no base case at all." >
+    <p class="q-text">5. Which of these is just as broken as having no base case at all?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="unreachable">A base case that technically exists but is unreachable for some inputs</button>
+      <button class="btn dsa-quiz-option" data-value="twobase">Having two different base cases</button>
+      <button class="btn dsa-quiz-option" data-value="earlybase">A base case that triggers "too early"</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 9 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day08.html">← Day 8: Bubble / Selection / Insertion Sort</a>
+    <a class="btn" href="day10.html">Day 10: Merge Sort →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 9;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: factorial(n) via CallStack ----
+  function buildFactorialSteps(n) {
+    const steps = [];
+    const stackVals = [];
+    for (let cur = n; cur >= 1; cur--) {
+      stackVals.push(cur);
+      const frames = stackVals.map((v, i) => ({ label: `factorial(${v})`, state: i === stackVals.length - 1 ? 'active' : 'default' }));
+      if (cur === 1) {
+        frames[frames.length - 1].state = 'sorted';
+        steps.push({ narration: `Call factorial(1) — base case (n <= 1). Return 1 immediately, no further calls.`, frames });
+      } else {
+        steps.push({ narration: `Call factorial(${cur}) — not base case. Must call factorial(${cur - 1}) and wait for its answer before multiplying.`, frames });
+      }
+    }
+    let returnVal = 1;
+    for (let k = 0; k < n; k++) {
+      const cur = stackVals[stackVals.length - 1];
+      if (cur > 1) returnVal = cur * returnVal;
+      stackVals.pop();
+      const frames = stackVals.map((v, i) => ({ label: `factorial(${v})`, state: i === stackVals.length - 1 ? 'active' : 'default' }));
+      const narration = stackVals.length
+        ? `factorial(${cur}) returns ${returnVal}. Pop this frame — factorial(${stackVals[stackVals.length - 1]}) resumes and multiplies by ${returnVal}.`
+        : `factorial(${cur}) returns ${returnVal}. Pop the last frame — the stack is empty. Final answer: ${returnVal}.`;
+      steps.push({ narration, frames });
+    }
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const callStack1 = new DSA.CallStack(viz1Stage);
+  callStack1.render([]);
+  const N1 = 5;
+  let steps1 = buildFactorialSteps(N1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 1300,
+    onStep(step) { callStack1.render(step ? step.frames : []); },
+    onShuffle() { const n = 3 + Math.floor(Math.random() * 4); steps1 = buildFactorialSteps(n); player1.setSteps(steps1); },
+  });
+
+  // ---- viz 2: reverse string recursively via CallStack ----
+  function buildReverseSteps(str) {
+    const steps = [];
+    const stackVals = [];
+    for (let i = 0; i <= str.length; i++) {
+      const suffix = str.slice(i);
+      stackVals.push(suffix);
+      const frames = stackVals.map((v, idx) => ({ label: `reverse("${v}")`, state: idx === stackVals.length - 1 ? 'active' : 'default' }));
+      if (suffix === '') {
+        frames[frames.length - 1].state = 'sorted';
+        steps.push({ narration: `Call reverse("") — base case (empty string). Return "" immediately.`, frames });
+      } else {
+        steps.push({ narration: `Call reverse("${suffix}") — not base case. Need reverse("${suffix.slice(1)}") first, then append "${suffix[0]}".`, frames });
+      }
+    }
+    let returnVal = '';
+    const totalFrames = stackVals.length; // capture before the loop — stackVals shrinks below as we pop
+    for (let k = 0; k < totalFrames; k++) {
+      const suffix = stackVals[stackVals.length - 1];
+      if (suffix !== '') returnVal = returnVal + suffix[0];
+      stackVals.pop();
+      const frames = stackVals.map((v, idx) => ({ label: `reverse("${v}")`, state: idx === stackVals.length - 1 ? 'active' : 'default' }));
+      const narration = stackVals.length
+        ? `reverse("${suffix}") returns "${returnVal}". Pop — reverse("${stackVals[stackVals.length - 1]}") resumes.`
+        : `reverse("${suffix}") returns "${returnVal}". Stack empty. Final answer: "${returnVal}".`;
+      steps.push({ narration, frames });
+    }
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const callStack2 = new DSA.CallStack(viz2Stage);
+  callStack2.render([]);
+  const STR2 = 'abcd';
+  let steps2 = buildReverseSteps(STR2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2, narrationEl: document.getElementById('viz2Narration'), counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'), stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'), shuffleBtn: document.getElementById('viz2Shuffle'), speed: 1300,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+    onShuffle() {
+      const pool = 'abcdefg';
+      const len = 3 + Math.floor(Math.random() * 3);
+      let s = '';
+      for (let i = 0; i < len; i++) s += pool[Math.floor(Math.random() * pool.length)];
+      steps2 = buildReverseSteps(s);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
