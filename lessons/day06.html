@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 6: Hash Maps & Sets — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="O(1) average lookup with Map and Set, and the frequency-counting pattern that turns O(n²) into O(n)." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 6 / 30 &middot; WEEK 1</p>
+  <h1>Hash Maps &amp; Sets</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Use <code>Map</code> and <code>Set</code> fluently for average O(1) lookup, insert, and delete.</li>
+    <li>Recognize the frequency-counting pattern: "have I seen this?" / "how many times does X appear?"</li>
+    <li>Turn an O(n²) nested-loop search into O(n) by trading space for time.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A hash map is like a coat check counter with numbered tickets. Without it, finding your
+    coat means checking every coat on the rack one by one — O(n). With a ticket number, the
+    attendant jumps straight to your coat — O(1) on average. A hash map does this by running
+    each key through a <strong>hash function</strong> that turns it into a number, then uses
+    that number to jump directly to a storage slot, instead of scanning.</p>
+  <p>This is the biggest lever you'll pull all month: almost any "have I seen this before?" or
+    "how many times does X appear?" question can go from an O(n²) nested loop (checking every
+    element against every other element) to a single O(n) pass, by remembering what you've seen
+    in a <code>Map</code> or <code>Set</code> as you go — <strong>at the cost of O(n) extra
+    memory</strong>. That trade — memory for speed — is the single most common move in interview
+    solutions.</p>
+
+  <h2>Diagrams</h2>
+
+  <h3>1. Linear scan vs. hash lookup</h3>
+  <svg class="diagram" viewBox="0 0 620 150" role="img" aria-label="Searching an array checks every element one by one, O(n); a hash map jumps directly to the right slot, O(1) on average">
+    <text x="20" y="18" font-size="13" class="dim">Is 7 in this collection?</text>
+    <g font-size="14">
+      <rect x="20" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#d4a72c"/>
+      <text x="40" y="53" text-anchor="middle" fill="#d4a72c">3</text>
+      <rect x="64" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#d4a72c"/>
+      <text x="84" y="53" text-anchor="middle" fill="#d4a72c">9</text>
+      <rect x="108" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#d4a72c"/>
+      <text x="128" y="53" text-anchor="middle" fill="#d4a72c">1</text>
+      <rect x="152" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#d4a72c"/>
+      <text x="172" y="53" text-anchor="middle" fill="#d4a72c">7</text>
+      <text x="200" y="53" font-size="12" fill="#3fb950">← found (4 checks)</text>
+    </g>
+    <text x="20" y="86" font-size="12" class="dim">Array: check element 1, 2, 3, 4... up to n checks in the worst case. O(n).</text>
+    <g font-size="14">
+      <rect x="20" y="98" width="70" height="36" rx="6" fill="#1c2330" stroke="#58a6ff"/>
+      <text x="55" y="121" text-anchor="middle" fill="#58a6ff">hash(7)</text>
+    </g>
+    <text x="110" y="121" font-size="16" fill="#58a6ff">→</text>
+    <g font-size="14">
+      <rect x="140" y="98" width="40" height="36" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="160" y="121" text-anchor="middle" fill="#3fb950">7</text>
+      <text x="190" y="121" font-size="12" fill="#3fb950">← found (1 check)</text>
+    </g>
+  </svg>
+
+  <h3>2. Frequency counting</h3>
+  <svg class="diagram" viewBox="0 0 620 165" role="img" aria-label="Building a frequency map by scanning a string once, incrementing a count for each character seen">
+    <text x="20" y="18" font-size="13" class="dim">Scanning "abcb" once, building a count as we go</text>
+    <g font-size="14">
+      <rect x="20" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="40" y="53" text-anchor="middle" fill="#3fb950">a</text>
+      <rect x="64" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="84" y="53" text-anchor="middle" fill="#3fb950">b</text>
+      <rect x="108" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="128" y="53" text-anchor="middle" fill="#3fb950">c</text>
+      <rect x="152" y="30" width="40" height="36" rx="6" fill="#1c2330" stroke="#d4a72c" stroke-width="2"/>
+      <text x="172" y="53" text-anchor="middle" fill="#d4a72c">b</text>
+    </g>
+    <text x="220" y="53" font-size="12" fill="#d4a72c">← seen before, count++</text>
+    <text x="20" y="90" font-size="13" class="dim">Map after the scan:</text>
+    <text x="20" y="112" font-size="13" fill="#e6edf3" font-family="monospace">{ a: 1, b: 2, c: 1 }</text>
+    <text x="20" y="135" font-size="12" class="dim">One pass, O(1) work per character — O(n) total, instead of a</text>
+    <text x="20" y="152" font-size="12" class="dim">separate counting pass for every distinct character.</text>
+  </svg>
+
+  <h2>Interactive visualizations</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current element</span>
+    <span><i class="lg-swap"></i> not unique yet / no match</span>
+    <span><i class="lg-sorted"></i> match found / unique</span>
+    <span><i class="lg-neutral"></i> untouched / stored in map</span>
+  </div>
+
+  <h3>1. Two Sum with a hash map</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. First unique character</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// --- Two Sum, the O(n) way (Day 2 showed the O(n²) brute force) ---
+function twoSum(nums, target) {
+  const seen = new Map(); // value -> index
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) return [seen.get(complement), i];
+    seen.set(nums[i], i);
+  }
+  return [-1, -1];
+}
+
+// --- Frequency counting ---
+function firstUniqChar(s) {
+  const counts = new Map();
+  for (const ch of s) counts.set(ch, (counts.get(ch) || 0) + 1);
+  for (let i = 0; i < s.length; i++) {
+    if (counts.get(s[i]) === 1) return i;
+  }
+  return -1;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>twoSum</code> — for each number, first check whether its <em>complement</em>
+      (what it would need to reach the target) is already in the map. Only if not, add the
+      current number. This single pass replaces the nested loop entirely — no sorting needed,
+      unlike Day 4's two-pointer version.</li>
+    <li><code>firstUniqChar</code> — two passes, both O(n): the first builds a full frequency
+      count; the second finds the first character whose count is exactly 1. You can't combine
+      these into one pass, because a character's final count isn't known until the whole string
+      has been scanned.</li>
+  </ul>
+
+  <h3>Dry run: twoSum([3, 2, 4], target = 6)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>nums[i]</th><th>complement</th><th>In map?</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>3</td><td>3</td><td>No</td><td>seen.set(3, 0) → {3: 0}</td></tr>
+      <tr><td>1</td><td>2</td><td>4</td><td>No</td><td>seen.set(2, 1) → {3: 0, 2: 1}</td></tr>
+      <tr><td>2</td><td>4</td><td>2</td><td>Yes (index 1)</td><td>return [1, 2]</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Found in one pass, no sorting, works even
+    though the array isn't sorted — the exact case Day 4's two-pointer version couldn't handle
+    directly.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>map.get</code> / <code>set</code> / <code>has</code></td><td>O(1) average, O(n) worst case</td><td>O(1) per call</td><td>Worst case: every key collides into the same slot, degrading to a linear scan.</td></tr>
+      <tr><td>Two Sum, brute force (Day 2)</td><td>O(n²)</td><td>O(1)</td><td>Check every pair.</td></tr>
+      <tr><td>Two Sum, hash map (today)</td><td>O(n)</td><td>O(n)</td><td>One entry per number seen so far — genuinely unbounded, since numbers can be arbitrary.</td></tr>
+      <tr><td>Frequency counting a string/array</td><td>O(n)</td><td>O(min(n, alphabet size))</td><td>One count per <em>distinct</em> element. For a fixed small alphabet (e.g. lowercase English letters, 26 possible keys) this is really O(1) space, not O(n) — it only grows with n when the value range itself is unbounded.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong><code>Map</code> vs. a plain object — when do you use which?</strong> Prefer
+      <code>Map</code> by default: any value can be a key (not just strings), it preserves
+      insertion order reliably, has a real <code>.size</code>, and has no prototype to
+      accidentally collide with (a key literally named <code>"toString"</code> is safe in a
+      Map, not in a plain object).</li>
+    <li><strong>Why is hash lookup "O(1) average" instead of just "O(1)"?</strong> Different
+      keys can hash to the same slot (a collision). A well-implemented hash map handles this
+      gracefully and stays close to O(1) in practice, but a pathological set of keys can degrade
+      it toward O(n).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How would you
+      handle collisions yourself?" — chaining (each slot holds a small list) or open addressing
+      (probe for the next free slot) are the two classic answers.</span></li>
+    <li><strong>What's the classic trap with frequency-counting problems?</strong> Trying to do
+      it in one pass when the answer genuinely depends on the <em>final</em> count of something
+      (like "first unique character") — you can't know a character is unique until you've seen
+      the whole string.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't
+      fight this — two clean O(n) passes is still O(n) overall, and far less buggy than a
+      contorted attempt at one pass.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the trade explicitly — "I'll use a
+    hash map to remember what I've seen, which costs O(n) extra space but drops the time from
+    O(n²) to O(n)." Interviewers want to hear that you know it's a trade, not a free win —
+    mentioning the space cost unprompted is a strong signal.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Two Sum <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">LeetCode: Two Sum</a>)</span></h4>
+    <p>Given an array of integers and a target, return the indices of the two numbers that add
+      up to the target. (You wrote the O(n²) brute force for this on Day 2 — now write the O(n)
+      version.)</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>For each number, ask "have I already seen
+      the number that would complete this pair?" before adding the current number to the map.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function twoSum(nums, target) {
+  const seen = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) return [seen.get(complement), i];
+    seen.set(nums[i], i);
+  }
+  return [-1, -1];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Valid Anagram <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/valid-anagram/" target="_blank" rel="noopener">LeetCode: Valid Anagram</a>)</span></h4>
+    <p>Given two strings, return true if the second is an anagram of the first (same letters,
+      same counts, any order).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Build a frequency count of the first
+      string, then walk the second string subtracting from those counts. If anything goes
+      negative, or the lengths differ, they're not anagrams.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function isAnagram(s, t) {
+  if (s.length !== t.length) return false;
+  const counts = new Map();
+  for (const ch of s) counts.set(ch, (counts.get(ch) || 0) + 1);
+  for (const ch of t) {
+    if (!counts.get(ch)) return false; // missing, or already at 0
+    counts.set(ch, counts.get(ch) - 1);
+  }
+  return true;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Group Anagrams <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/group-anagrams/" target="_blank" rel="noopener">LeetCode: Group Anagrams</a>)</span></h4>
+    <p>Given an array of strings, group the anagrams together (any order).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Anagrams share the same sorted letters.
+      Use that sorted string as a map key, and group original words under it.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function groupAnagrams(strs) {
+  const groups = new Map();
+  for (const word of strs) {
+    const key = word.split('').sort().join('');
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(word);
+  }
+  return [...groups.values()];
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="o1" data-explain="Map.get/set/has are O(1) on average — that's the entire point of a hash map.">
+    <p class="q-text">1. What's the average time complexity of <code>map.get(key)</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">O(log n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="collision" data-explain="When many keys hash into the same slot, the map has to fall back to scanning within that slot — the worst case degrades toward O(n).">
+    <p class="q-text">2. Why can hash map lookups degrade to O(n) in the worst case?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="collision">Hash collisions — multiple keys landing in the same slot</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">The map has to stay sorted</button>
+      <button class="btn dsa-quiz-option" data-value="gc">Garbage collection pauses</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="map" data-explain="Map accepts any key type, preserves insertion order reliably, and has no prototype to accidentally collide with.">
+    <p class="q-text">3. For general-purpose key/value storage in an interview solution, which is the safer default?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="map">Map</button>
+      <button class="btn dsa-quiz-option" data-value="object">A plain object ({})</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're equally safe in every case</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="index" data-explain="Storing value -> index lets you instantly return the position of a previously-seen number once its complement shows up.">
+    <p class="q-text">4. In the hash-map Two Sum, what does the map store as each value's mapped data?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="index">The index where that value was seen</button>
+      <button class="btn dsa-quiz-option" data-value="count">How many times that value appeared</button>
+      <button class="btn dsa-quiz-option" data-value="target">The target sum</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="freq" data-explain="Detecting duplicates, counting occurrences, and comparing anagrams are all classic 'remember what you've seen' problems — exactly what frequency counting solves.">
+    <p class="q-text">5. The frequency-counting pattern is the right fit for problems like:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="freq">Counting occurrences, detecting duplicates, comparing anagrams</button>
+      <button class="btn dsa-quiz-option" data-value="sort">Sorting an array into ascending order</button>
+      <button class="btn dsa-quiz-option" data-value="recursion">Computing a recursive tree traversal</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 6 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day05.html">← Day 5: Sliding Window Pattern</a>
+    <a class="btn" href="day07.html">Day 7: Week 1 Review →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 6;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: Two Sum with a hash map ----
+  function buildTwoSumSteps(nums, target) {
+    const steps = [{ narration: `nums = [${nums.join(', ')}], target = ${target}. Map starts empty.`, states: {}, map: [] }];
+    const seen = new Map();
+    for (let i = 0; i < nums.length; i++) {
+      const complement = target - nums[i];
+      if (seen.has(complement)) {
+        steps.push({
+          narration: `nums[${i}] = ${nums[i]}. Complement ${complement} IS in the map (at index ${seen.get(complement)}) — match! Return [${seen.get(complement)}, ${i}].`,
+          states: Object.fromEntries([[seen.get(complement), 'sorted'], [i, 'sorted']]),
+          map: [...seen], // array of [key, value] pairs — preserves true insertion order, unlike a plain object with numeric keys
+        });
+        break;
+      } else {
+        const statesBefore = Object.fromEntries([...seen.values()].map((idx) => [idx, 'default']).concat([[i, 'pointer']]));
+        seen.set(nums[i], i); // set first, so the narrated "add to map" is reflected in this step's map snapshot
+        steps.push({
+          narration: `nums[${i}] = ${nums[i]}. Complement needed: ${complement}. Not in the map yet — add nums[${i}]=${nums[i]} to the map.`,
+          states: statesBefore,
+          map: [...seen],
+        });
+      }
+    }
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [3, 2, 4];
+  const TARGET1 = 6;
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 8 });
+  bars1.setData(BASE1);
+  const mapDisplay1 = document.createElement('div');
+  mapDisplay1.className = 'narration';
+  mapDisplay1.style.marginTop = '0.5rem';
+  mapDisplay1.style.fontSize = '0.85rem';
+  document.getElementById('viz1Narration').after(mapDisplay1);
+
+  let steps1 = buildTwoSumSteps(BASE1, TARGET1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1600,
+    onStep(step) {
+      if (!step) { bars1.paint({}, bars1.data); mapDisplay1.textContent = 'Map: {}'; return; }
+      bars1.paint(step.states, bars1.data);
+      const entries = step.map.map(([k, v]) => `${k}→${v}`).join(', ');
+      mapDisplay1.textContent = `Map so far: { ${entries} }`;
+    },
+    onShuffle() {
+      const a = DSA.randomArray(4, 1, 8);
+      const target = a[Math.floor(Math.random() * 2)] + a[2 + Math.floor(Math.random() * 2)];
+      steps1 = buildTwoSumSteps(a, target);
+      bars1.setData(a);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: first unique character ----
+  function buildFirstUniqSteps(str) {
+    const chars = str.split('');
+    const counts = {};
+    for (const c of chars) counts[c] = (counts[c] || 0) + 1;
+    const steps = [{ narration: `s = "${str}". First pass: count every character. Counts: { ${Object.entries(counts).map(([k, v]) => `${k}: ${v}`).join(', ')} }`, states: {} }];
+    let answerIdx = -1;
+    for (let i = 0; i < chars.length; i++) {
+      const isUnique = counts[chars[i]] === 1;
+      if (isUnique && answerIdx === -1) {
+        answerIdx = i;
+        steps.push({ narration: `Second pass, i=${i}: "${chars[i]}" has count ${counts[chars[i]]} — unique! This is the answer.`, states: { [i]: 'sorted' } });
+        break;
+      } else {
+        steps.push({ narration: `Second pass, i=${i}: "${chars[i]}" has count ${counts[chars[i]]} — ${isUnique ? 'unique!' : 'not unique, keep scanning.'}`, states: { [i]: isUnique ? 'sorted' : 'swap' } });
+      }
+    }
+    if (answerIdx === -1) {
+      steps.push({ narration: `No unique character found.`, states: {} });
+    }
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const STR2 = 'swiss';
+  const bars2 = new DSA.Bars(viz2Stage, { uniform: true });
+  bars2.setData(STR2.split(''));
+
+  let steps2 = buildFirstUniqSteps(STR2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1500,
+    onStep(step) {
+      if (!step) { bars2.setData(STR2.split('')); return; }
+      bars2.paint(step.states, bars2.data);
+    },
+    onShuffle() {
+      const pool = 'aabbccdxyz';
+      const len = 5 + Math.floor(Math.random() * 4);
+      let s = '';
+      for (let i = 0; i < len; i++) s += pool[Math.floor(Math.random() * pool.length)];
+      steps2 = buildFirstUniqSteps(s);
+      bars2.setData(s.split(''));
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
