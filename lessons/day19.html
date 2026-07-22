@@ -453,8 +453,8 @@ function dfs(root) {
     <p class="dsa-quiz-feedback" hidden></p>
   </div>
 
-  <div class="dsa-quiz" data-answer="bfsblows" data-explain="BFS's queue must hold the entire widest level at once — nearly 1000 nodes here — while DFS's stack only ever holds O(h), a couple of frames, since the tree is just two levels deep." >
-    <p class="q-text">4. On a tree that's wide but shallow (one root with 1,000 direct children), which traversal's extra space blows up the most?</p>
+  <div class="dsa-quiz" data-answer="bfsblows" data-explain="BFS's queue must hold the entire widest level at once — close to 500 nodes here — while DFS's stack only ever holds O(h), around 10 frames, since a complete binary tree this size is only about 10 levels deep." >
+    <p class="q-text">4. On a complete binary tree with about 1,000 nodes (roughly 10 levels deep, so the widest level holds close to 500 nodes), which traversal's extra space blows up the most?</p>
     <div class="dsa-quiz-options">
       <button class="btn dsa-quiz-option" data-value="bfsblows">BFS — its queue must hold the entire widest level at once</button>
       <button class="btn dsa-quiz-option" data-value="dfsblows">DFS — recursion depth would be enormous</button>
