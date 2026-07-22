@@ -24,8 +24,10 @@
       guarantees finding <em>a</em> match, not a specific one.</li>
     <li>Recognize "search on answer": binary search over a range of possible <em>answers</em>
       instead of over array indices, using a yes/no feasibility check at each guess.</li>
-    <li>See both variants use <code>while (lo &lt; hi)</code> and narrow to a single boundary —
-      the opposite shape from Day 12's exact-match <code>lo &lt;= hi</code> template.</li>
+    <li>See two different loop shapes that both narrow toward a boundary instead of stopping at a
+      match: first/last occurrence keeps Day 12's <code>lo &lt;= hi</code> shape but changes what
+      happens on a match, while search-on-answer switches to a <code>lo &lt; hi</code> convergence
+      loop entirely.</li>
   </ul>
 
   <h2>Concept</h2>
@@ -163,9 +165,15 @@
       <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if higher
       isn't strictly better?" — then the condition isn't monotonic, and binary search doesn't
       apply at all; don't force it onto a non-monotonic problem.</span></li>
-    <li><strong>Why <code>while (lo &lt; hi)</code> here instead of Day 12's <code>lo &lt;= hi</code>?</strong>
-      These variants converge to a single boundary index, not an exact match-or-fail. When
-      <code>lo === hi</code>, that's already the answer — no need for one more redundant check.<br>
+    <li><strong>Why does <code>findBound</code> keep Day 12's <code>lo &lt;= hi</code> shape, but
+      Sqrt(x)/Koko switch to <code>while (lo &lt; hi)</code>?</strong> Two different ways to reach
+      a boundary. <code>findBound</code> still checks for an exact value match at each
+      <code>mid</code> — same question as Day 12 — it just keeps going instead of returning
+      immediately, so it keeps Day 12's inclusive loop shape and tracks the answer in a separate
+      <code>result</code> variable. Sqrt(x)/Koko never check for an exact match at all — they
+      converge <code>lo</code> and <code>hi</code> onto the same index, which needs the exclusive
+      <code>lo &lt; hi</code> loop so the loop stops the instant <code>lo === hi</code>, with no
+      separate result variable needed.<br>
       <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> mixing the
       two templates (e.g. <code>while (lo &lt; hi)</code> with <code>hi = mid - 1</code>, or using
       <code>lo = mid</code> without the ceiling-mid fix from Day 12's trap diagram) is the single
