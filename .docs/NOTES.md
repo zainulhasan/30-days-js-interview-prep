@@ -281,6 +281,57 @@ reading CSS variables. Verified in-browser across every renderer (Bars, Day 2's 
 CallStack, Day 10's tree diagram) with hard reloads, no console errors, good contrast throughout.
 **Every lesson from Day 11 onward must be authored directly in the `tokens.css` palette.**
 
+## Found + fixed — stale favicon color sitewide (missed by the earlier theme correction)
+While starting Day 12, noticed `lessons/day10.html`'s favicon still used the old approximated
+blue (`%2361AFEF`) instead of the corrected exact One Dark Pro blue (`%2361AEEE`) — the
+"hex precision drift" fix documented in DECISIONS.md §2.5 corrected plain `#hex` usages sitewide
+but its separate percent-encoded favicon pass was never actually run. Checked every file: all 12
+pre-Day-11 pages (`index.html`, `day01`–`day10`, `day08b`, `day08c`) had the stale favicon; only
+`day11.html` (built after the correction) had it right. Fixed with one `sd -s "%2361AFEF"
+"%2361AEEE"` pass across `lessons/*.html index.html` (only one hex mapping needed — favicons only
+ever use the background + accent colors) and verified via grep that no stale value remains
+anywhere. **Lesson for any future palette change: always grep specifically for `%23` + old hex
+after the "sitewide fix," don't just trust that the documented process ran — it silently didn't
+here.**
+
+## Done — Day 12 (Binary Search) and Day 13 (Binary Search Variations)
+- **Day 12**: classic iterative template (`lo <= hi`, `hi = mid - 1`/`lo = mid + 1`), verified via
+  node against multiple cases. Two diagrams: one tracing a live search, one specifically
+  illustrating the `lo = mid` (without ceiling) infinite-loop trap that recurs in "search on
+  answer" templates — this second diagram sets up Day 13's Sqrt(x) practice problem directly.
+  Practice problems: Binary Search, Search in Rotated Sorted Array, Find Peak Element (the last
+  one deliberately non-sorted-array, to teach "monotonic predicate" over "sorted array" as the
+  real requirement).
+- **Day 13**: first/last occurrence (two independent narrowing searches sharing one
+  `findBound(isFirst)` helper) and search-on-answer (Koko Eating Bananas), both verified via node.
+  Practice problems: Sqrt(x) (ties back to Day 12's infinite-loop trap diagram via its ceiling-mid
+  fix), Find First and Last Position of Element in Sorted Array, Koko Eating Bananas. One diagram
+  needed a text-clipping fix mid-build (a box's text was exactly as wide as the box — shortened
+  the wording rather than widening the box, simpler fix for this recurring bug class).
+  Both lessons verified in-browser (390px + 1280px, zero console errors, full animation
+  step-through matches node output exactly, quiz/reveal/mark-complete all work).
+
+## Parallel build approach adopted for Days 14+ (user asked to speed up via parallelism)
+Starting Day 14, dispatched multiple `general-purpose` Agent tool calls in parallel (not the
+heavier Workflow tool — user asked to "build in parallel," which the Agent tool already supports
+without needing full workflow orchestration) to draft several lessons simultaneously instead of
+one at a time. Each agent gets a fully self-contained prompt: project context, required page
+structure, hard rules (node-verify all real algorithm code before writing it, SVG text-wrapping
+caveat, exact tokens.css hex values, exact favicon/boilerplate markup, the full cross-lesson
+practice-problem duplicate-avoidance list compiled from every prior day, no unauthorized file
+changes, no git operations, no browser testing — that stays with me), plus day-specific topic
+guidance and reserved-topic warnings for adjacent days (e.g. Day 15's agent was told to leave
+list-reversal and fast/slow-pointer problems for Day 16). Agents only WRITE the lesson file —
+node-verification of their own algorithm claims is on them, but browser-testing, the content-
+advisor review pass, fixing review findings, committing, and updating this file all stay with me
+afterward, same rigor as every solo-built lesson so far. First parallel batch: Day 14 (Week 2
+Review), Day 15 (Linked Lists), Day 17 (Stacks), Day 18 (Queues & Deques) — Day 16 deliberately
+held back until Day 15 lands, since it builds directly on Day 15's Node/LinkedList class and
+needs to see the actual implementation for consistency, not just the topic description.
+**Standing process note:** every agent-drafted lesson still needs the full same verification I've
+been doing solo (browser console/animation/quiz/mobile checks, content-advisor review, fix,
+commit) — parallelism speeds up first-draft writing, not the verification gate.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
