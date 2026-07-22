@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 4: Two-Pointer Pattern — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Turn O(n²) brute-force pair searches into O(n) scans with two pointers — the converging shape and the same-direction shape." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 4 / 30 &middot; WEEK 1</p>
+  <h1>Two-Pointer Pattern</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Recognize when a problem is a good fit for two pointers — usually a sorted array, or "compare pairs" phrasing.</li>
+    <li>Implement both common shapes: pointers <strong>converging</strong> from opposite ends, and pointers moving <strong>the same direction</strong> at different speeds.</li>
+    <li>Turn an O(n²) brute-force pair search into an O(n) two-pointer scan.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Picture two librarians searching a <em>sorted</em> shelf for two books whose page counts
+    add up to exactly 500. Instead of checking every possible pair (that's the brute-force
+    O(n²) way), one librarian starts at the thinnest book, the other at the thickest, and they
+    walk <strong>toward each other</strong>. If the two page counts add up to too much, the one
+    at the thick end steps in (a smaller book). If it's too little, the one at the thin end
+    steps in (a bigger book). Every step rules out one book from further consideration — that's
+    what makes it O(n) instead of O(n²). This only works because the shelf is <strong>sorted</strong>;
+    on a shuffled shelf, moving a pointer wouldn't reliably move the sum in a useful direction.</p>
+  <p>The second shape is different: two pointers moving the <strong>same direction</strong>, one
+    fast (scanning ahead) and one slow (marking where to write next). This is how you compact
+    an array in place — for example, squeezing out duplicates from a sorted array without
+    allocating a new one. You saw this exact "read pointer / write pointer" idea already in Day
+    3's String Compression problem — two-pointer isn't one trick, it's a family of tricks that
+    all avoid a nested loop.</p>
+
+  <h2>Diagrams</h2>
+
+  <h3>1. Converging pointers (opposite ends)</h3>
+  <svg class="diagram" viewBox="0 0 620 180" role="img" aria-label="Two pointers starting at opposite ends of a sorted array and moving toward each other based on whether the sum is too big or too small">
+    <text x="20" y="18" font-size="13" class="dim">Sorted array, target sum = 12. Pointers start at both ends.</text>
+    <g font-size="14">
+      <rect x="20" y="30" width="46" height="42" rx="6" fill="#1c2330" stroke="#58a6ff" stroke-width="2"/>
+      <text x="43" y="57" text-anchor="middle" fill="#58a6ff">2</text>
+      <rect x="70" y="30" width="46" height="42" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="93" y="57" text-anchor="middle" fill="#e6edf3">4</text>
+      <rect x="120" y="30" width="46" height="42" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="143" y="57" text-anchor="middle" fill="#e6edf3">5</text>
+      <rect x="170" y="30" width="46" height="42" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="193" y="57" text-anchor="middle" fill="#e6edf3">7</text>
+      <rect x="220" y="30" width="46" height="42" rx="6" fill="#1c2330" stroke="#d4a72c" stroke-width="2"/>
+      <text x="243" y="57" text-anchor="middle" fill="#d4a72c">9</text>
+    </g>
+    <text x="30" y="90" font-size="12" fill="#58a6ff">left</text>
+    <text x="225" y="90" font-size="12" fill="#d4a72c">right</text>
+    <text x="20" y="120" font-size="12" class="dim">2 + 9 = 11, too small → move left pointer inward (need a bigger number).</text>
+    <text x="20" y="140" font-size="12" class="dim">If the sum were too big, we'd move right inward instead (need a smaller number).</text>
+    <text x="20" y="160" font-size="12" class="dim">Each move rules out one element for good — that's the whole O(n) budget, spent once each.</text>
+  </svg>
+
+  <h3>2. Same-direction pointers (read / write)</h3>
+  <svg class="diagram" viewBox="0 0 620 170" role="img" aria-label="A slow write pointer and a fast read pointer moving the same direction to compact duplicates out of a sorted array in place">
+    <text x="20" y="18" font-size="13" class="dim">Remove duplicates from a sorted array, in place: [1, 1, 2, 2, 3]</text>
+    <g font-size="14">
+      <rect x="20" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="42" y="56" text-anchor="middle" fill="#e6edf3">1</text>
+      <rect x="70" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="92" y="56" text-anchor="middle" fill="#e6edf3">1</text>
+      <rect x="120" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="142" y="56" text-anchor="middle" fill="#e6edf3">2</text>
+      <rect x="170" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="192" y="56" text-anchor="middle" fill="#e6edf3">2</text>
+      <rect x="220" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="242" y="56" text-anchor="middle" fill="#e6edf3">3</text>
+    </g>
+    <text x="70" y="88" font-size="11" fill="#d4a72c">write (slow) — index 1</text>
+    <text x="220" y="88" font-size="11" fill="#58a6ff">read (fast) — index 4</text>
+    <text x="20" y="115" font-size="12" class="dim">read scans every element; write only advances (and copies) when read finds</text>
+    <text x="20" y="132" font-size="12" class="dim">a value different from what's already written. Duplicates get overwritten.</text>
+    <text x="20" y="153" font-size="12" class="dim">Result after the scan: [1, 2, 3, ...] — the first (write+1) slots are the answer.</text>
+  </svg>
+
+  <h2>Interactive visualizations</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> left / write pointer</span>
+    <span><i class="lg-compare"></i> right / read pointer</span>
+    <span><i class="lg-sorted"></i> found / kept</span>
+    <span><i class="lg-swap"></i> ruled out / duplicate</span>
+  </div>
+
+  <h3>1. Two Sum II — converging pointers</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. Remove Duplicates — read/write pointers</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// --- Shape 1: converging pointers (array must be SORTED) ---
+function twoSumSorted(nums, target) {
+  let left = 0, right = nums.length - 1;
+  while (left < right) {
+    const sum = nums[left] + nums[right];
+    if (sum === target) return [left, right];
+    if (sum < target) left++;   // need a bigger sum → drop the smaller number
+    else right--;               // need a smaller sum → drop the bigger number
+  }
+  return [-1, -1]; // no pair found
+}
+
+// --- Shape 2: same-direction read/write pointers ---
+function removeDuplicates(nums) {
+  let write = 0; // boundary of the unique section built so far; nums[0] is already "written"
+  for (let read = 1; read < nums.length; read++) {
+    if (nums[read] !== nums[write]) {
+      write++;
+      nums[write] = nums[read];
+    }
+  }
+  return write + 1; // length of the deduplicated section
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>twoSumSorted</code> — <code>left</code> and <code>right</code> start at the two
+      ends. Each loop compares the current sum to the target and moves exactly one pointer
+      inward — never both, and never outward. That guarantees at most n total moves.</li>
+    <li><code>removeDuplicates</code> — <code>nums[0]</code> is trivially already "written," so
+      <code>read</code> starts at index 1 and visits every remaining index once. <code>write</code>
+      only moves (and copies <code>nums[read]</code> into the array) when it spots a genuinely
+      new value — so duplicates are simply never copied forward.</li>
+  </ul>
+
+  <h3>Dry run: twoSumSorted([2, 4, 5, 7, 9], target = 12)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>left</th><th>right</th><th>nums[left] + nums[right]</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>0 (2)</td><td>4 (9)</td><td>11</td><td>too small → left++</td></tr>
+      <tr><td>2</td><td>1 (4)</td><td>4 (9)</td><td>13</td><td>too big → right--</td></tr>
+      <tr><td>3</td><td>1 (4)</td><td>3 (7)</td><td>11</td><td>too small → left++</td></tr>
+      <tr><td>4</td><td>2 (5)</td><td>3 (7)</td><td>12</td><td>match! return [2, 3]</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Found in 4 steps instead of checking all
+    <code>5×4/2 = 10</code> possible pairs — and this same array/target pair is what the
+    interactive visualization above animates.</p>
+
+  <h3>Dry run: removeDuplicates([1, 1, 2, 2, 3])</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>read</th><th>nums[read]</th><th>nums[write]</th><th>Action</th><th>write after</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>1</td><td>1 (write=0)</td><td>same → duplicate, skip</td><td>0</td></tr>
+      <tr><td>2</td><td>2</td><td>1 (write=0)</td><td>different → write++, copy</td><td>1</td></tr>
+      <tr><td>3</td><td>2</td><td>2 (write=1)</td><td>same → duplicate, skip</td><td>1</td></tr>
+      <tr><td>4</td><td>3</td><td>2 (write=1)</td><td>different → write++, copy</td><td>2</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Returns <code>write + 1 = 3</code> — the
+    first 3 slots, <code>[1, 2, 3]</code>, are the deduplicated result. This matches Diagram 2
+    above at the moment read=4: write is still at index 1, about to become 2.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Brute-force pair check (nested loop)</td><td>O(n²)</td><td>O(1)</td><td>Every element compared against every other element.</td></tr>
+      <tr><td>Two-pointer, converging</td><td>O(n)</td><td>O(1)</td><td>Each pointer only ever moves inward — at most n moves total, combined.</td></tr>
+      <tr><td>Two-pointer, read/write</td><td>O(n)</td><td>O(1)</td><td>A single pass; write only touches each output slot once.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>How do you know a problem is a two-pointer fit?</strong> Look for: the array is
+      sorted (or can cheaply be sorted), you're comparing pairs or a range, and a brute-force
+      solution would be O(n²) with two nested loops over the same array.</li>
+    <li><strong>Why does the converging pattern require a sorted array?</strong> The decision
+      "move left or move right" relies on knowing that increasing <code>left</code> can only
+      increase the sum, and decreasing <code>right</code> can only decrease it. That's only
+      guaranteed if the array is sorted.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> running
+      this pattern on unsorted data doesn't crash — it just silently returns a wrong or missed
+      answer, the same class of bug as running binary search on unsorted data. Always confirm
+      "is this sorted?" before reaching for converging two pointers.</span></li>
+    <li><strong>What if there could be multiple valid pairs?</strong> Don't return immediately
+      on a match — record it and keep moving both pointers inward (skipping over duplicate
+      values if the problem asks for unique pairs).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Now do it for
+      triplets" (3Sum) — fix one pointer, run the two-pointer scan on the rest. Same core idea,
+      one extra outer loop.</span></li>
+    <li><strong>In Container With Most Water, why move the shorter wall's pointer, not the
+      taller one's?</strong> The container's height is capped by the shorter wall. Moving the
+      taller wall's pointer inward can only shrink the width while the height cap stays the same
+      or gets worse — it can never help. Moving the shorter wall is the only move that has any
+      chance of finding a taller wall and improving the area.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> state the precondition first — "since
+    this array is sorted, I can use two pointers converging from both ends instead of checking
+    every pair" — then narrate each pointer move in terms of the goal: "the sum's too small, so
+    I need a bigger number, so I'll move left forward." Naming <em>why</em> a pointer moves, not
+    just that it moves, is what shows you understand the pattern instead of having memorized it.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Remove Duplicates from Sorted Array <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/remove-duplicates-from-sorted-array/" target="_blank" rel="noopener">LeetCode: Remove Duplicates from Sorted Array</a>)</span></h4>
+    <p>Remove duplicates from a sorted array in place so each unique element appears once,
+      and return the count of unique elements.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>This is exactly today's read/write
+      pattern. Compare each element to the last one you wrote, not the last one you read.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function removeDuplicates(nums) {
+  let write = 0; // nums[0] is already "written"
+  for (let read = 1; read < nums.length; read++) {
+    if (nums[read] !== nums[write]) {
+      write++;
+      nums[write] = nums[read];
+    }
+  }
+  return write + 1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Two Sum II - Input Array Is Sorted <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/" target="_blank" rel="noopener">LeetCode: Two Sum II - Input Array Is Sorted</a>)</span></h4>
+    <p>Given a sorted array and a target, return the 1-indexed positions of the two numbers
+      that add up to the target.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>This is exactly today's converging
+      pattern — the only twist is the answer is 1-indexed, not 0-indexed.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function twoSum(numbers, target) {
+  let left = 0, right = numbers.length - 1;
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
+    if (sum === target) return [left + 1, right + 1];
+    if (sum < target) left++;
+    else right--;
+  }
+  return [-1, -1];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Container With Most Water <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/container-with-most-water/" target="_blank" rel="noopener">LeetCode: Container With Most Water</a>)</span></h4>
+    <p>Given heights of vertical lines, find two lines that, together with the x-axis, form a
+      container holding the most water.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Start with the widest possible container
+      (both ends) and always move the pointer at the <em>shorter</em> wall inward — see the
+      Interview Corner for why that's the only move that can improve the answer.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function maxArea(height) {
+  let left = 0, right = height.length - 1;
+  let best = 0;
+  while (left < right) {
+    const width = right - left;
+    const area = width * Math.min(height[left], height[right]);
+    best = Math.max(best, area);
+    if (height[left] < height[right]) left++;
+    else right--;
+  }
+  return best;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="sorted" data-explain="Only on sorted data can you trust that moving left forward always increases the sum, and moving right backward always decreases it.">
+    <p class="q-text">1. The converging two-pointer pattern for pair-sum problems requires the array to be:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sorted">Sorted</button>
+      <button class="btn dsa-quiz-option" data-value="unique">All unique values</button>
+      <button class="btn dsa-quiz-option" data-value="any">Any array works</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="left" data-explain="A too-small sum means you need a bigger number — moving left forward trades in the smallest remaining value for a bigger one.">
+    <p class="q-text">2. In the converging pattern, if the current sum is LESS than the target, which pointer moves?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="left">left (moves forward)</button>
+      <button class="btn dsa-quiz-option" data-value="right">right (moves backward)</button>
+      <button class="btn dsa-quiz-option" data-value="both">Both pointers</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="boundary" data-explain="write marks the end of the unique-elements-so-far section — everything at or before it is the finished, deduplicated result.">
+    <p class="q-text">3. In the read/write pointer pattern for removing duplicates, what does the write pointer represent?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="boundary">The boundary of the unique section built so far</button>
+      <button class="btn dsa-quiz-option" data-value="current">The element currently being read</button>
+      <button class="btn dsa-quiz-option" data-value="target">The target value being searched for</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="Both pointers combined make at most n moves total — that's O(n), versus O(n²) for checking every pair.">
+    <p class="q-text">4. What's the time complexity of the two-pointer approach, versus a brute-force nested-loop pair check?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n) vs O(n²)</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">O(log n) vs O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're the same complexity</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="shorter" data-explain="The shorter wall caps the container's height — only moving it has any chance of finding a taller wall and a bigger area.">
+    <p class="q-text">5. In Container With Most Water, which pointer should you move inward?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="shorter">The pointer at the shorter wall</button>
+      <button class="btn dsa-quiz-option" data-value="taller">The pointer at the taller wall</button>
+      <button class="btn dsa-quiz-option" data-value="either">It never matters which one</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 4 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day03.html">← Day 3: Arrays & Strings</a>
+    <a class="btn" href="day05.html">Day 5: Sliding Window Pattern →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 4;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: converging pointers (Two Sum II style) ----
+  function buildConvergeSteps(sorted, target) {
+    const steps = [{ narration: `Sorted array [${sorted.join(', ')}], target = ${target}. left starts at index 0, right at the last index.`, values: sorted.slice(), states: { 0: 'pointer', [sorted.length - 1]: 'compare' } }];
+    let left = 0, right = sorted.length - 1;
+    let found = null;
+    while (left < right) {
+      const sum = sorted[left] + sorted[right];
+      if (sum === target) {
+        found = [left, right];
+        steps.push({ narration: `nums[${left}] + nums[${right}] = ${sorted[left]} + ${sorted[right]} = ${sum}. Match! Found the pair.`, values: sorted.slice(), states: { [left]: 'sorted', [right]: 'sorted' } });
+        break;
+      } else if (sum < target) {
+        steps.push({ narration: `nums[${left}] + nums[${right}] = ${sum}, too small (need ${target}) → move left forward.`, values: sorted.slice(), states: { [left]: 'swap', [right]: 'compare' } });
+        left++;
+      } else {
+        steps.push({ narration: `nums[${left}] + nums[${right}] = ${sum}, too big (need ${target}) → move right backward.`, values: sorted.slice(), states: { [left]: 'pointer', [right]: 'swap' } });
+        right--;
+      }
+      if (left < right) {
+        steps.push({ narration: `Pointers now at left=${left} (${sorted[left]}), right=${right} (${sorted[right]}).`, values: sorted.slice(), states: { [left]: 'pointer', [right]: 'compare' } });
+      }
+    }
+    if (!found && left >= right) {
+      steps.push({ narration: `left and right have met — no pair sums to ${target}.`, values: sorted.slice(), states: {} });
+    }
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [2, 4, 5, 7, 9];
+  const TARGET1 = 12;
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 12 });
+  bars1.setData(BASE1);
+
+  let steps1 = buildConvergeSteps(BASE1, TARGET1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1500,
+    onStep(step) {
+      if (!step) { bars1.setData(BASE1); return; }
+      bars1.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const arr = DSA.randomArray(5, 1, 9).sort((a, b) => a - b);
+      const target = arr[Math.floor(Math.random() * 2)] + arr[arr.length - 1 - Math.floor(Math.random() * 2)];
+      steps1 = buildConvergeSteps(arr, target);
+      bars1.setData(arr);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: read/write pointers (remove duplicates) ----
+  function buildDedupSteps(sorted) {
+    const steps = [{ narration: `arr = [${sorted.join(', ')}]. write starts at 0, read starts at 0.`, values: sorted.slice(), states: { 0: 'pointer' } }];
+    const arr = sorted.slice();
+    let write = 0;
+    for (let read = 0; read < arr.length; read++) {
+      if (read === 0) continue;
+      if (arr[read] !== arr[write]) {
+        write++;
+        arr[write] = arr[read];
+        const states = {};
+        for (let k = 0; k <= write; k++) states[k] = 'sorted';
+        states[read] = 'pointer';
+        steps.push({ narration: `read=${read} (${sorted[read]}) is different from arr[write=${write - 1}] — new unique value. write moves to ${write}, copy it in.`, values: arr.slice(), states });
+      } else {
+        const states = {};
+        for (let k = 0; k <= write; k++) states[k] = 'sorted';
+        states[read] = 'swap';
+        steps.push({ narration: `read=${read} (${sorted[read]}) matches arr[write=${write}] — duplicate, skip it. write does not move.`, values: arr.slice(), states });
+      }
+    }
+    const finalStates = {};
+    for (let k = 0; k <= write; k++) finalStates[k] = 'sorted';
+    for (let k = write + 1; k < arr.length; k++) finalStates[k] = 'swap';
+    steps.push({ narration: `Done. The first ${write + 1} slots [${arr.slice(0, write + 1).join(', ')}] are the deduplicated result — the rest is leftover, ignored.`, values: arr.slice(), states: finalStates });
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const BASE2 = [1, 1, 2, 2, 2, 3, 4, 4];
+  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: 6 });
+  bars2.setData(BASE2);
+
+  let steps2 = buildDedupSteps(BASE2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1500,
+    onStep(step) {
+      if (!step) { bars2.setData(BASE2); return; }
+      bars2.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const raw = DSA.randomArray(7, 1, 4).sort((a, b) => a - b);
+      steps2 = buildDedupSteps(raw);
+      bars2.setData(raw);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
