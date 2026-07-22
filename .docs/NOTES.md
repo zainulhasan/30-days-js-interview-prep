@@ -330,14 +330,11 @@ manual verification pass, exactly as expected:
   Graph-renderer fixes total from this one lesson being the first real usage.
 - Day 18 review dispatched, pending as of this note.
 
-## Not started yet
-- Day 21 (Week 3 Review — now unblocked, Days 19+20 both done), Day 26 (DP II), Day 27 (Greedy),
-  Day 28 (Pattern Recognition Masterclass), Day 29 (Mock Interview Day), Day 30 (Final Review).
-  Days 28-30 synthesize/reference the whole curriculum — build those last, likely solo rather
-  than via agent, once everything else is done. Use Days 1-25 as the template (now in the theme
-  below), apply every point in "Lesson template" above and the lessons-learned noted here —
-  especially the 3 recurring bug classes and the directed-edge-arrowhead fix — and review each
-  via `.docs/REVIEW-CHECKLIST.md`.
+## ALL 30 LESSONS COMPLETE
+Days 1-30 are all built, node-verified, browser-tested, and committed. See the per-batch "Done"
+entries throughout this file for what each day covers and what bugs were found/fixed along the
+way. Nothing left in the core curriculum — remaining work is the deferred SEO pass below, plus
+whatever polish/follow-up the user asks for next.
 - **Open decision, not yet actioned:** whether to vendor the actual JetBrains Mono font file
   (self-hosted, OFL-licensed, offline-safe) so headings/code render in true JetBrains Mono
   instead of falling back to a system monospace font. Asked the user; awaiting their answer.
@@ -569,6 +566,31 @@ the viewBox height to fit. Browser-tested the timer directly (Start decrements c
 real ~2.5s wait, Pause halts it, Reset restores the initial value, double-clicking Start doesn't
 double the countdown speed, and all 4 timers run independently) — zero console errors, zero mobile
 overflow, quiz/reveal/mark-complete all confirmed working.
+
+## Done — Day 30 (Final Review & Cheat Sheet) — COURSE COMPLETE
+Built solo. The capstone: a single 30-row master cheat sheet (Algorithm/Day/Time/Space/Trigger)
+compiled from every day's already-established complexity data — no new complexity claims, all
+cross-checked against what each individual lesson already stated to avoid contradicting earlier
+pages. A practical interview-day checklist (night before / morning of / during each problem /
+after each problem) — logistics and mindset, deliberately not more algorithms, since Days 28-29
+already covered recognition and timed practice. New capstone-only feature: a live "your progress"
+panel that reads `DSAProgress.completedCount()`/`isDone()` directly from the site's own
+localStorage tracker (previously only shown on `index.html`) and lists which specific days aren't
+marked complete yet — genuinely interactive and unique to this final page, confirmed in-browser to
+update immediately when a day is (un)marked. The "30-day arc" diagram reuses the horizontal-bar
++ legend pattern proven twice now (Day 27's interval viz, Day 29's time-budget diagram) rather
+than inventing a new geometry. No new practice problems — deliberately, since Day 29 just gave 4
+and Day 30's job is compaction, not more solving. Nav's "next" link points back to
+`../index.html` ("🎉 Back to course overview") since there is no Day 31. Browser-tested clean:
+zero console errors, zero mobile overflow (including the 5-column, 30-row cheat sheet table via
+its `overflow-x:auto` wrapper), progress panel verified against real localStorage state (showed
+7/30 accurately reflecting every day marked complete during this session's testing, updated live
+to 8/30 the moment Day 30 itself was marked), quiz/mark-complete all confirmed working.
+
+**All 30 lessons are now built, verified, and committed.** This closes out the core curriculum
+build. Remaining open item: the SEO pass explicitly deferred by the user until all lessons were
+done (see the entry above — title/heading audit, meta descriptions, Core Web Vitals, structured
+data, sitemap.xml, robots.txt, GSC submission).
 
 ## Environment for local preview
 ```bash
