@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 5: Sliding Window Pattern — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Fixed-size and variable-size sliding windows — turn repeated resumming into O(n) by tracking what enters and leaves." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 5 / 30 &middot; WEEK 1</p>
+  <h1>Sliding Window Pattern</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Recognize sliding-window problems: anything about a <strong>contiguous</strong> subarray or substring.</li>
+    <li>Implement both shapes: a <strong>fixed-size</strong> window and a <strong>variable-size</strong> (expand/shrink) window.</li>
+    <li>Turn a brute-force O(n·k) or O(n²) rescan into a single O(n) pass.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Imagine looking at a strip of numbers through a physical window frame that only shows 3 at
+    a time. The brute-force way to find, say, the maximum 3-number sum: slide the frame one
+    step, then <strong>re-add all 3 numbers you can see</strong> — O(k) work per slide, O(n·k)
+    total. The sliding-window trick: when you slide the frame right by one, you already know
+    the sum inside it — you just <strong>subtract the number that left</strong> on the left edge
+    and <strong>add the number that entered</strong> on the right edge. One subtraction, one
+    addition, O(1) per slide, O(n) total. You never recompute from scratch.</p>
+  <p>That's a <strong>fixed-size</strong> window. A <strong>variable-size</strong> window works
+    the same "track what enters and leaves" idea, but the frame itself grows and shrinks: you
+    expand the right edge to bring in new elements, and whenever the window breaks some rule
+    (too big a sum, a repeated character), you shrink from the left edge until it's valid again.
+    Both shapes share the same core move: two pointers marking the window's edges, and O(1)
+    bookkeeping — not a full rescan — every time either edge moves.</p>
+
+  <h2>Diagrams</h2>
+
+  <h3>1. Fixed-size window (size 3)</h3>
+  <svg class="diagram" viewBox="0 0 620 160" role="img" aria-label="A fixed-size window of 3 elements sliding right by one: the leaving element is subtracted and the entering element is added, instead of resumming the whole window">
+    <text x="20" y="18" font-size="13" class="dim">[4, 2, 5, 1, 3] — window size k = 3, sliding right by one</text>
+    <g font-size="14">
+      <rect x="20" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b" stroke-width="2"/>
+      <text x="42" y="56" text-anchor="middle" fill="#e5534b">4</text>
+      <rect x="70" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="92" y="56" text-anchor="middle" fill="#3fb950">2</text>
+      <rect x="120" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="142" y="56" text-anchor="middle" fill="#3fb950">5</text>
+      <rect x="170" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#58a6ff" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="192" y="56" text-anchor="middle" fill="#58a6ff">1</text>
+      <rect x="220" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="242" y="56" text-anchor="middle" fill="#e6edf3">3</text>
+    </g>
+    <text x="20" y="86" font-size="12" fill="#e5534b">leaves (−4)</text>
+    <text x="170" y="86" font-size="12" fill="#58a6ff">enters (+1)</text>
+    <text x="20" y="115" font-size="12" class="dim">Old window sum [4,2,5] = 11. New window [2,5,1] = 11 − 4 + 1 = 8 — one</text>
+    <text x="20" y="132" font-size="12" class="dim">subtraction, one addition. No need to re-add 2 and 5, they never left the window.</text>
+  </svg>
+
+  <h3>2. Variable-size window (expand / shrink)</h3>
+  <svg class="diagram" viewBox="0 0 620 185" role="img" aria-label="A variable-size window expanding to include new characters, then shrinking from the left when a duplicate breaks the no-repeat rule">
+    <text x="20" y="18" font-size="13" class="dim">Longest substring without repeats, on "abca" — right hits a repeat</text>
+    <g font-size="14">
+      <rect x="20" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="42" y="56" text-anchor="middle" fill="#e5534b">a</text>
+      <rect x="70" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="92" y="56" text-anchor="middle" fill="#3fb950">b</text>
+      <rect x="120" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="142" y="56" text-anchor="middle" fill="#3fb950">c</text>
+      <rect x="170" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#58a6ff" stroke-width="2"/>
+      <text x="192" y="56" text-anchor="middle" fill="#58a6ff">a</text>
+    </g>
+    <text x="20" y="86" font-size="12" fill="#e5534b">left (index 0)</text>
+    <text x="170" y="86" font-size="12" fill="#58a6ff">right (index 3) — "a" is already in the window!</text>
+    <text x="20" y="115" font-size="12" class="dim">Window "abc" was valid (length 3, our best so far).</text>
+    <text x="20" y="132" font-size="12" class="dim">Adding this "a" would duplicate it — shrink from the left.</text>
+    <text x="20" y="149" font-size="12" class="dim">Dropping just "a" (index 0) already clears the duplicate.</text>
+    <text x="20" y="166" font-size="12" class="dim">Window becomes "bca" — still length 3.</text>
+  </svg>
+
+  <h2>Interactive visualizations</h2>
+  <div class="legend">
+    <span><i class="lg-swap"></i> leaving / duplicate</span>
+    <span><i class="lg-sorted"></i> in window, valid</span>
+    <span><i class="lg-pointer"></i> entering / right edge</span>
+    <span><i class="lg-neutral"></i> outside window</span>
+  </div>
+
+  <h3>1. Maximum sum subarray of size k</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. Longest substring without repeating characters</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// --- Shape 1: fixed-size window ---
+function maxSumSubarray(arr, k) {
+  let windowSum = 0;
+  for (let i = 0; i < k; i++) windowSum += arr[i]; // build the first window once
+  let best = windowSum;
+  for (let i = k; i < arr.length; i++) {
+    windowSum += arr[i] - arr[i - k]; // add entering, subtract leaving
+    best = Math.max(best, windowSum);
+  }
+  return best;
+}
+
+// --- Shape 2: variable-size window ---
+function lengthOfLongestSubstring(s) {
+  const seen = new Set();
+  let left = 0, best = 0;
+  for (let right = 0; right < s.length; right++) {
+    while (seen.has(s[right])) {       // shrink until the duplicate is gone
+      seen.delete(s[left]);
+      left++;
+    }
+    seen.add(s[right]);                // now safe to include s[right]
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>maxSumSubarray</code> — the first loop builds the initial window's sum once
+      (O(k)). Every loop after that does exactly one add and one subtract — O(1) each — instead
+      of re-summing k elements.</li>
+    <li><code>lengthOfLongestSubstring</code> — <code>right</code> always moves forward, one
+      step per outer-loop iteration. The <code>while</code> loop shrinks <code>left</code>
+      (possibly zero times, possibly several) until the window contains no duplicate of
+      <code>s[right]</code>. Because <code>left</code> only ever moves forward too, it can
+      advance at most n times total across the <em>entire</em> function — that's what keeps
+      this O(n) instead of O(n²), even though there's a loop inside a loop.</li>
+  </ul>
+
+  <h3>Dry run: maxSumSubarray([4, 2, 5, 1, 3], k = 3)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>Window</th><th>windowSum</th><th>best</th></tr></thead>
+    <tbody>
+      <tr><td>—</td><td>[4, 2, 5]</td><td>11 (initial)</td><td>11</td></tr>
+      <tr><td>3</td><td>[2, 5, 1]</td><td>11 + 1 − 4 = 8</td><td>11</td></tr>
+      <tr><td>4</td><td>[5, 1, 3]</td><td>8 + 3 − 2 = 9</td><td>11</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">The best 3-element window is the very
+    first one, [4, 2, 5] = 11 — found in one O(k) setup pass plus two O(1) slides, instead of
+    three separate O(k) resums.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force, fixed window (resum every slide)</td><td>O(n·k)</td><td>O(1)</td><td>Every one of ~n windows costs O(k) to sum from scratch.</td></tr>
+      <tr><td>Sliding window, fixed size</td><td>O(n)</td><td>O(1)</td><td>One O(k) setup, then O(1) per slide.</td></tr>
+      <tr><td>Brute force, all substrings</td><td>O(n²) or worse</td><td>O(n)</td><td>Checking every substring for a property usually costs at least O(n) each.</td></tr>
+      <tr><td>Sliding window, variable size — numeric constraint (e.g. running sum)</td><td>O(n)</td><td>O(1)</td><td><code>left</code>/<code>right</code> each move forward at most n times total; no extra structure needed, just a running number.</td></tr>
+      <tr><td>Sliding window, variable size — set/map-tracked (e.g. no-repeat characters)</td><td>O(n)</td><td>O(window size)</td><td>Same pointer movement, but the window's contents must be tracked in a Set/Map sized to whatever's currently inside it.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>How do you recognize a sliding-window problem?</strong> The problem asks about a
+      <em>contiguous</em> subarray or substring — a maximum/minimum sum, a length, or "does a
+      window satisfy some property" (no repeats, sum ≤ target, at most k distinct characters).
+      If it's about non-contiguous subsequences, sliding window doesn't apply — look at DP
+      instead (Week 4).</li>
+    <li><strong>Fixed vs. variable window — how do you tell which one a problem needs?</strong>
+      If the window size is given directly ("subarray of size k"), it's fixed. If you're
+      optimizing the window size itself ("longest/shortest subarray such that..."), it's
+      variable.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Can you do
+      this with O(1) extra space instead of a Set/Map?" — sometimes, if the constraint is purely
+      numeric (e.g. a running sum), but character/frequency constraints usually need the
+      tracking structure.</span></li>
+    <li><strong>What's the most common sliding-window bug?</strong> Forgetting to shrink the
+      window fully before re-measuring it, or shrinking by a fixed amount instead of by a
+      <code>while</code> loop.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> using
+      <code>if</code> instead of <code>while</code> to shrink only shrinks by one step — if the
+      window is invalid by more than one element, an <code>if</code> leaves it still invalid.
+      Always shrink with a loop that re-checks the condition.</span></li>
+    <li><strong>What if k is bigger than the array's length?</strong> There's no valid
+      fixed-size window at all — decide (and say out loud) whether that should return 0,
+      <code>-Infinity</code>, or throw, based on what the problem specifies.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the window's invariant before
+    coding — "I'll expand right to grow the window, and shrink left with a while loop any time
+    the window has a duplicate, so at every point after the inner loop the window is valid."
+    Stating the invariant is what proves to an interviewer you're not just pattern-matching
+    syntax you memorized.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Maximum Average Subarray I <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/maximum-average-subarray-i/" target="_blank" rel="noopener">LeetCode: Maximum Average Subarray I</a>)</span></h4>
+    <p>Given an array and an integer k, find the contiguous subarray of length k with the
+      maximum average value.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Track the maximum <em>sum</em> with a
+      fixed-size sliding window, and only divide by k once at the very end.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function findMaxAverage(nums, k) {
+  let windowSum = 0;
+  for (let i = 0; i < k; i++) windowSum += nums[i];
+  let best = windowSum;
+  for (let i = k; i < nums.length; i++) {
+    windowSum += nums[i] - nums[i - k];
+    best = Math.max(best, windowSum);
+  }
+  return best / k;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Minimum Size Subarray Sum <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/minimum-size-subarray-sum/" target="_blank" rel="noopener">LeetCode: Minimum Size Subarray Sum</a>)</span></h4>
+    <p>Given a target sum and an array of positive integers, find the length of the shortest
+      contiguous subarray whose sum is ≥ target. Return 0 if no such subarray exists.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Variable window: expand right and add to a
+      running sum; whenever the running sum is ≥ target, that's a candidate — try shrinking left
+      to see if it's still ≥ target with a smaller window.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function minSubArrayLen(target, nums) {
+  let left = 0, sum = 0, best = Infinity;
+  for (let right = 0; right < nums.length; right++) {
+    sum += nums[right];
+    while (sum >= target) {
+      best = Math.min(best, right - left + 1);
+      sum -= nums[left];
+      left++;
+    }
+  }
+  return best === Infinity ? 0 : best;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Longest Substring Without Repeating Characters <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/" target="_blank" rel="noopener">LeetCode: Longest Substring Without Repeating Characters</a>)</span></h4>
+    <p>Given a string, find the length of the longest substring without repeating characters.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>This is today's second visualization,
+      exactly. Track the characters currently in the window with a Set.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function lengthOfLongestSubstring(s) {
+  const seen = new Set();
+  let left = 0, best = 0;
+  for (let right = 0; right < s.length; right++) {
+    while (seen.has(s[right])) {
+      seen.delete(s[left]);
+      left++;
+    }
+    seen.add(s[right]);
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="contiguous" data-explain="Sliding window only works on a contiguous run of elements — that's exactly what lets you track just the entering/leaving edges.">
+    <p class="q-text">1. Sliding window applies to problems about:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="contiguous">Contiguous subarrays/substrings</button>
+      <button class="btn dsa-quiz-option" data-value="any">Any subset of elements, in any order</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">Only sorted arrays</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="addsub" data-explain="One subtraction for the element leaving, one addition for the element entering — O(1) instead of re-summing the whole window.">
+    <p class="q-text">2. When a fixed-size window slides right by one, what's the O(1) update?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="addsub">Subtract the leaving element, add the entering element</button>
+      <button class="btn dsa-quiz-option" data-value="resum">Re-sum every element in the new window</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — the sum never changes</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="invalid" data-explain="Shrinking is a response to the window breaking its rule — a duplicate appearing, a sum exceeding a limit, etc.">
+    <p class="q-text">3. In a variable-size window, when do you shrink from the left?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="invalid">Whenever the window becomes invalid (breaks its constraint)</button>
+      <button class="btn dsa-quiz-option" data-value="everystep">On every single step, no matter what</button>
+      <button class="btn dsa-quiz-option" data-value="never">Never — only the right edge ever moves</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="Even though there's a loop inside a loop, left and right together move forward at most n times total across the whole run — that's what makes it O(n), not O(n²).">
+    <p class="q-text">4. Despite having a while loop inside a for loop, why is the variable-window substring pattern O(n) and not O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">left and right each only ever move forward, at most n steps total combined</button>
+      <button class="btn dsa-quiz-option" data-value="ok">It's actually O(n²) — the inner loop is misleading</button>
+      <button class="btn dsa-quiz-option" data-value="cache">JS engines cache the results automatically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="while" data-explain="A while loop keeps shrinking until the window is valid again, however many steps that takes. An if only shrinks once, which can leave the window still invalid.">
+    <p class="q-text">5. Why should you shrink a variable window with a <code>while</code> loop instead of a single <code>if</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="while">The window might need to shrink by more than one step to become valid again</button>
+      <button class="btn dsa-quiz-option" data-value="speed">while is faster than if in JavaScript</button>
+      <button class="btn dsa-quiz-option" data-value="nodiff">There's no difference, both work identically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 5 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day04.html">← Day 4: Two-Pointer Pattern</a>
+    <a class="btn" href="day06.html">Day 6: Hash Maps & Sets →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 5;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: fixed-size sliding window (max sum subarray) ----
+  function buildFixedWindowSteps(arr, k) {
+    const inWindow = (i, lo, hi) => i >= lo && i < hi;
+    let sum = 0;
+    for (let i = 0; i < k; i++) sum += arr[i];
+    let best = sum;
+    const stateFor = (lo, hi, extra) => {
+      const s = {};
+      for (let i = 0; i < arr.length; i++) s[i] = inWindow(i, lo, hi) ? 'sorted' : 'default';
+      Object.assign(s, extra);
+      return s;
+    };
+    const steps = [{ narration: `arr = [${arr.join(', ')}], k = ${k}. Build the first window's sum: [${arr.slice(0, k).join(', ')}] = ${sum}.`, states: stateFor(0, k, {}) }];
+    for (let i = k; i < arr.length; i++) {
+      const entering = arr[i], leaving = arr[i - k];
+      sum += entering - leaving;
+      const improved = sum > best;
+      best = Math.max(best, sum);
+      steps.push({
+        narration: `Slide right: ${leaving} leaves (−${leaving}), ${entering} enters (+${entering}). New sum = ${sum}.${improved ? ' New best!' : ` Best stays ${best}.`}`,
+        states: stateFor(i - k + 1, i + 1, { [i - k]: 'swap', [i]: 'pointer' }),
+      });
+    }
+    steps.push({ narration: `Done. Maximum ${k}-window sum = ${best}.`, states: stateFor(-1, -1, {}) });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [4, 2, 5, 1, 3];
+  const K1 = 3;
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 6 });
+  bars1.setData(BASE1);
+
+  let steps1 = buildFixedWindowSteps(BASE1, K1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1600,
+    onStep(step) {
+      if (!step) { bars1.paint(stateForReset(), BASE1); return; }
+      bars1.paint(step.states, BASE1);
+    },
+    onShuffle() {
+      const arr = DSA.randomArray(6, 1, 9);
+      steps1 = buildFixedWindowSteps(arr, K1);
+      bars1.setData(arr);
+      player1.setSteps(steps1);
+    },
+  });
+  function stateForReset() { return {}; }
+
+  // ---- viz 2: variable-size window (longest substring without repeats) ----
+  function buildVariableWindowSteps(str) {
+    const chars = str.split('');
+    const steps = [{ narration: `s = "${str}". left = 0, right will scan forward.`, values: chars, states: {} }];
+    const seen = new Set();
+    let left = 0, best = 0, bestRange = [0, -1];
+    for (let right = 0; right < chars.length; right++) {
+      while (seen.has(chars[right])) {
+        steps.push({ narration: `"${chars[right]}" is already in the window — shrink: drop s[${left}]="${chars[left]}" from the left.`, values: chars, states: windowStates(chars, left, right - 1, { [left]: 'swap' }) });
+        seen.delete(chars[left]);
+        left++;
+      }
+      seen.add(chars[right]);
+      const len = right - left + 1;
+      const improved = len > best;
+      if (improved) { best = len; bestRange = [left, right]; }
+      steps.push({ narration: `Add s[${right}]="${chars[right]}" to the window. Window is now "${chars.slice(left, right + 1).join('')}" (length ${len}).${improved ? ' New best!' : ''}`, values: chars, states: windowStates(chars, left, right, { [right]: 'pointer' }) });
+    }
+    steps.push({ narration: `Done. Longest substring without repeats: "${chars.slice(bestRange[0], bestRange[1] + 1).join('')}" (length ${best}).`, values: chars, states: windowStates(chars, bestRange[0], bestRange[1], {}) });
+    return steps;
+  }
+  function windowStates(chars, lo, hi, extra) {
+    const s = {};
+    for (let i = 0; i < chars.length; i++) s[i] = (i >= lo && i <= hi) ? 'sorted' : 'default';
+    return Object.assign(s, extra);
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const STR2 = 'abcabcbb';
+  const bars2 = new DSA.Bars(viz2Stage, { uniform: true });
+  bars2.setData(STR2.split(''));
+
+  let steps2 = buildVariableWindowSteps(STR2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1500,
+    onStep(step) {
+      if (!step) { bars2.setData(STR2.split('')); return; }
+      if (step.values.length !== bars2.data.length) bars2.setData(step.values);
+      bars2.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const pool = 'abcdefg';
+      const len = 6 + Math.floor(Math.random() * 4);
+      let s = '';
+      for (let i = 0; i < len; i++) s += pool[Math.floor(Math.random() * pool.length)];
+      steps2 = buildVariableWindowSteps(s);
+      bars2.setData(s.split(''));
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
