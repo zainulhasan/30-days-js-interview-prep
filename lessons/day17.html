@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 17: Stacks — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Push/pop mechanics through valid parentheses and a min-stack — LIFO order, and why it's the natural fit for 'most recent first' problems." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 17 / 30 &middot; WEEK 3</p>
+  <h1>Stacks</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Understand LIFO (last in, first out) and the three core operations — <code>push</code>
+      (add to top), <code>pop</code> (remove from top), <code>peek</code> (look at the top
+      without removing it) — all O(1).</li>
+    <li>Use a stack to solve Valid Parentheses: match opening and closing brackets by always
+      comparing the incoming bracket against whatever is currently on <em>top</em>.</li>
+    <li>See how a stack can also track its own running minimum (Min Stack) in O(1), by storing
+      extra bookkeeping alongside each pushed value instead of rescanning on every query.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A <strong>stack</strong> is a collection where you can only add or remove from one end —
+    the <strong>top</strong>. Think of a stack of plates: you place a new plate on top
+    (<code>push</code>), and when you need one, you take the top plate off
+    (<code>pop</code>) — you never pull a plate from the middle or bottom without first removing
+    everything above it. This ordering is called <strong>LIFO</strong>: Last In, First Out. It's
+    the opposite of a queue (FIFO — First In, First Out), which we'll build on Day 18.</p>
+  <p>A stack supports exactly three operations, all O(1):</p>
+  <ul class="goal-list">
+    <li><code>push(value)</code> — add <code>value</code> to the top.</li>
+    <li><code>pop()</code> — remove and return the top value.</li>
+    <li><code>peek()</code> — return the top value without removing it. (LeetCode's Min Stack API
+      below calls this same operation <code>top()</code> — same thing, different name.)</li>
+  </ul>
+  <p>In JavaScript, a plain array already behaves like a stack if you only ever use
+    <code>.push()</code> and <code>.pop()</code> — both operate on the <em>end</em> of the array,
+    which we simply treat as "the top." No special class is required.</p>
+  <p>Stacks show up whenever a problem needs to undo or match against "whatever happened most
+    recently" — undo history in an editor, the back button in a browser, and, today's core
+    example, matching brackets: when a closing bracket arrives, it must match the <em>most
+    recently opened, still-unclosed</em> bracket — exactly what a stack's top gives you for free.</p>
+
+  <h2>Diagram: push and pop always happen at the top</h2>
+  <svg class="diagram" viewBox="0 0 620 250" role="img" aria-label="Pushing the openers of the brace-bracket-paren-paren-bracket-brace string onto a stack builds it up with the most recently pushed character on top. When the matching closer arrives, it is compared against the top of the stack and, on a match, that top frame is popped off.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Push '{', '[', '(' — newest stays on top</text>
+    <text x="20" y="33" font-size="10" fill="#818896">(scanning the start of "{[()()]}")</text>
+    <g font-size="13">
+      <rect x="20" y="42" width="220" height="32" rx="6" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="130" y="63" text-anchor="middle" fill="#61AEEE">'(' — top of stack</text>
+      <rect x="20" y="78" width="220" height="32" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="130" y="99" text-anchor="middle" fill="#DCDFE4">'['</text>
+      <rect x="20" y="114" width="220" height="32" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="130" y="135" text-anchor="middle" fill="#DCDFE4">'{'</text>
+    </g>
+    <text x="20" y="164" font-size="12" fill="#DCDFE4">The next incoming character must match the</text>
+    <text x="20" y="181" font-size="12" fill="#DCDFE4">TOP frame first — '(' — not '[' or '{'.</text>
+
+    <text x="340" y="18" font-size="13" fill="#98C379" font-weight="bold">')' arrives → matches '(' → pop</text>
+    <text x="340" y="33" font-size="10" fill="#818896">the '(' frame is removed</text>
+    <g font-size="13">
+      <rect x="340" y="42" width="220" height="32" rx="6" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
+      <text x="450" y="63" text-anchor="middle" fill="#98C379">'[' — new top</text>
+      <rect x="340" y="78" width="220" height="32" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="450" y="99" text-anchor="middle" fill="#DCDFE4">'{'</text>
+    </g>
+    <text x="340" y="164" font-size="12" fill="#DCDFE4">'(' is gone — it matched and popped.</text>
+    <text x="340" y="181" font-size="12" fill="#DCDFE4">Next incoming closer must match '['.</text>
+    <text x="20" y="215" font-size="12" fill="#ABB2BF">Push adds to the top; pop removes from the top —</text>
+    <text x="20" y="232" font-size="12" fill="#ABB2BF">always LIFO. A stack never touches the middle or bottom.</text>
+  </svg>
+
+  <h2>Diagram: Min Stack — track the running minimum alongside each value</h2>
+  <svg class="diagram" viewBox="0 0 620 230" role="img" aria-label="A min stack after pushing 5, 3, 7, then 1: each frame stores both its own value and the minimum value seen so far at that level, so the top of the stack always reports the current minimum in O(1)." >
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">After push(5), push(3), push(7), push(1):</text>
+    <g font-size="13">
+      <rect x="190" y="34" width="240" height="32" rx="6" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="310" y="55" text-anchor="middle" fill="#61AEEE">value 1 | running min 1</text>
+      <rect x="190" y="70" width="240" height="32" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="310" y="91" text-anchor="middle" fill="#DCDFE4">value 7 | running min 3</text>
+      <rect x="190" y="106" width="240" height="32" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="310" y="127" text-anchor="middle" fill="#DCDFE4">value 3 | running min 3</text>
+      <rect x="190" y="142" width="240" height="32" rx="6" fill="#2C313A" stroke="#3E4452"/>
+      <text x="310" y="163" text-anchor="middle" fill="#DCDFE4">value 5 | running min 5</text>
+    </g>
+    <text x="20" y="192" font-size="12" fill="#DCDFE4">getMin() just reads the top frame's stored min — O(1),</text>
+    <text x="20" y="209" font-size="12" fill="#DCDFE4">no scanning. Pop 1, and 7's own stored min (3) is instantly correct.</text>
+  </svg>
+
+  <h2>Interactive visualization: Valid Parentheses, character by character</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> reading this character</span>
+    <span><i class="lg-active"></i> top of stack</span>
+    <span><i class="lg-compare"></i> comparing top vs. incoming closer</span>
+    <span><i class="lg-sorted"></i> matched / valid</span>
+    <span><i class="lg-swap"></i> mismatch / invalid</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="display:flex;flex-direction:column;gap:0.9rem;width:100%;">
+        <div id="viz1StringStage"></div>
+        <div id="viz1StackStage"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: Min Stack — push/pop with running min</h2>
+  <div class="legend">
+    <span><i class="lg-active"></i> top of stack</span>
+    <span><i class="lg-neutral"></i> lower frames</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: Valid Parentheses</h2>
+  <pre><code>function isValid(s) {
+  const stack = [];
+  const pairs = { ')': '(', ']': '[', '}': '{' }; // closer -> the opener it must match
+
+  for (const ch of s) {
+    if (ch === '(' || ch === '[' || ch === '{') {
+      stack.push(ch);                 // opener — push it, we'll need it later
+    } else {
+      // closer — first make sure there's something to match against
+      if (stack.length === 0 || stack.pop() !== pairs[ch]) return false;
+    }
+  }
+  return stack.length === 0; // true only if every opener got matched and popped
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>pairs</code> maps each closing bracket to the opening bracket it must match —
+      looking it up is O(1), so the whole scan stays O(n).</li>
+    <li>Every opening bracket is simply pushed — nothing to check yet, since we don't know what
+      will need to match it until a closer shows up.</li>
+    <li>For a closing bracket, <code>stack.length === 0 || stack.pop() !== pairs[ch]</code> does
+      two jobs in one line thanks to short-circuiting: first it guards against popping an empty
+      stack (an unmatched closer with nothing open), and only if that passes does it actually
+      pop and compare the result against what this closer requires.</li>
+    <li>The final <code>return stack.length === 0</code> is easy to forget — a string like
+      <code>"((()"</code> never hits the <code>return false</code> inside the loop (every
+      individual comparison "succeeds" because no closer ever mismatches), but it leaves
+      unmatched openers sitting on the stack. Only checking emptiness at the very end catches that.</li>
+  </ul>
+
+  <h3>Dry run: isValid("{[()()]}")</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Index</th><th>Char</th><th>Action</th><th>Stack (bottom → top)</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>{</td><td>opener — push</td><td>{</td></tr>
+      <tr><td>1</td><td>[</td><td>opener — push</td><td>{ [</td></tr>
+      <tr><td>2</td><td>(</td><td>opener — push</td><td>{ [ (</td></tr>
+      <tr><td>3</td><td>)</td><td>top is '(' — matches → pop</td><td>{ [</td></tr>
+      <tr><td>4</td><td>(</td><td>opener — push</td><td>{ [ (</td></tr>
+      <tr><td>5</td><td>)</td><td>top is '(' — matches → pop</td><td>{ [</td></tr>
+      <tr><td>6</td><td>]</td><td>top is '[' — matches → pop</td><td>{</td></tr>
+      <tr><td>7</td><td>}</td><td>top is '{' — matches → pop</td><td>(empty)</td></tr>
+      <tr><td>—</td><td>—</td><td>end of string, stack is empty</td><td>return <strong>true</strong></td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Every closer matched the top of the stack
+    at the moment it arrived, and the stack was back to empty by the end — that combination is
+    exactly what "valid" means.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Valid Parentheses</td><td>O(n)</td><td>O(n)</td><td>Each character is pushed or
+        popped at most once (a single pass). Worst case — all openers, e.g. <code>"((((("</code>
+        — every character sits on the stack at once.</td></tr>
+      <tr><td>Min Stack (push, pop, top, getMin)</td><td>O(1) each</td><td>O(n)</td><td>Every
+        operation only touches the top of one or two arrays — no loop, no scan. The space cost is
+        a second array the same size as the first, to store each level's running min.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why is a stack (not a queue) the natural fit for matching brackets?</strong> The
+      rule is "the most recently opened bracket must be the first one closed" — that's exactly
+      LIFO order. A queue would try to match brackets in the order they were <em>opened</em>
+      (FIFO), which is backwards for nesting.</li>
+    <li><strong>What's the very first thing you check when a closing bracket arrives?</strong>
+      Whether the stack is empty.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> forgetting
+      to guard <code>pop()</code>/<code>peek()</code> with a length check is the most common way
+      this problem breaks — popping an empty array returns <code>undefined</code> in JS instead
+      of throwing, so a missing guard doesn't crash, it just silently produces a wrong
+      answer that's easy to miss in testing.</span></li>
+    <li><strong>Why isn't "the stack became empty at some point" enough to call the string
+      valid?</strong> You must also check it's empty at the very <em>end</em>, after the whole
+      string is scanned — a string like <code>"(()"</code> never triggers a mismatch mid-scan,
+      but it leaves an unclosed <code>'('</code> sitting on the stack forever.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if the
+      string also has other characters mixed in, like letters or digits?" — skip anything that
+      isn't one of the six bracket characters (<code>else if (isCloser(ch)) { ... } else
+      continue;</code>); the interviewer is checking whether you generalize the stack idea
+      instead of assuming the input is only brackets.</span></li>
+    <li><strong>How does Min Stack get O(1) <code>getMin()</code> without rescanning?</strong> A
+      second, parallel stack records the running minimum <em>as of that push</em> — each
+      <code>push(val)</code> also pushes <code>Math.min(val, currentMin)</code> onto the min
+      stack, and each <code>pop()</code> pops both together. The top of the min stack is always
+      the answer.</li>
+    <li><strong>What's the space trade-off of that approach?</strong> O(n) extra space (a second
+      array the same size as the first) buys O(1) time on every single operation, instead of
+      O(1) extra space but an O(n) rescan every time <code>getMin()</code> is called. For a
+      structure whose whole point is fast repeated queries, that trade is almost always worth it.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the invariant before writing code —
+    "I'll use a stack because the most recently opened bracket has to close first, that's LIFO."
+    Then narrate each branch as you type it: "opener → push it. Closer → first check the stack
+    isn't empty, then check the top matches. At the very end, it's only valid if the stack is
+    also empty." Interviewers are listening for you to say the empty-stack guard and the
+    final-emptiness check out loud, not just for code that happens to pass the example they gave you.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Valid Parentheses <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/valid-parentheses/" target="_blank" rel="noopener">LeetCode: Valid Parentheses</a>)</span></h4>
+    <p>Given a string containing just <code>()[]{}"</code>, determine if the input string is
+      valid — today's core example, worked through above.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Think about which data structure naturally
+      "undoes" the most recent thing first. Then make sure you handle both edge cases: a closer
+      arriving with nothing on the stack, and openers still left on the stack after the string ends.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function isValid(s) {
+  const stack = [];
+  const pairs = { ')': '(', ']': '[', '}': '{' };
+  for (const ch of s) {
+    if (ch === '(' || ch === '[' || ch === '{') {
+      stack.push(ch);
+    } else {
+      if (stack.length === 0 || stack.pop() !== pairs[ch]) return false;
+    }
+  }
+  return stack.length === 0;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Min Stack <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/min-stack/" target="_blank" rel="noopener">LeetCode: Min Stack</a>)</span></h4>
+    <p>Design a stack that supports <code>push</code>, <code>pop</code>, <code>top</code>, and
+      retrieving the minimum element, all in O(1) time.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>O(1) getMin rules out scanning the whole
+      stack on every call. What if a second, parallel stack tracked the running minimum at each
+      level, updated at push time?</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>class MinStack {
+  constructor() {
+    this.stack = [];     // actual values
+    this.minStack = [];  // running min at each level
+  }
+  push(val) {
+    this.stack.push(val);
+    const currentMin = this.minStack.length === 0
+      ? val
+      : Math.min(val, this.minStack[this.minStack.length - 1]);
+    this.minStack.push(currentMin);
+  }
+  pop() {
+    this.stack.pop();
+    this.minStack.pop();
+  }
+  top() {
+    return this.stack[this.stack.length - 1];
+  }
+  getMin() {
+    return this.minStack[this.minStack.length - 1];
+  }
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Daily Temperatures <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/daily-temperatures/" target="_blank" rel="noopener">LeetCode: Daily Temperatures</a>)</span></h4>
+    <p>Given daily temperatures, return an array where <code>answer[i]</code> is the number of
+      days until a warmer temperature (0 if there isn't one).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>This isn't about matching brackets — it's
+      about finding the next warmer day. Keep a stack of indices whose temperatures are still
+      "waiting" for something warmer (a monotonically decreasing stack); when a new temperature
+      beats the top of the stack, that's the answer for it.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function dailyTemperatures(temperatures) {
+  const n = temperatures.length;
+  const answer = new Array(n).fill(0);
+  const stack = []; // indices, temperatures decreasing bottom to top
+
+  for (let i = 0; i < n; i++) {
+    while (stack.length && temperatures[i] > temperatures[stack[stack.length - 1]]) {
+      const idx = stack.pop();
+      answer[idx] = i - idx;
+    }
+    stack.push(i);
+  }
+  return answer;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="lifo" data-explain="A stack is Last In, First Out — the most recently pushed value is always the first one popped.">
+    <p class="q-text">1. What ordering principle describes a stack?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="lifo">LIFO — Last In, First Out</button>
+      <button class="btn dsa-quiz-option" data-value="fifo">FIFO — First In, First Out</button>
+      <button class="btn dsa-quiz-option" data-value="random">No fixed order — any element can be removed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="emptycheck" data-explain="Popping or peeking an empty stack has nothing to compare against — in JS it silently returns undefined instead of throwing, so skipping this check produces a wrong answer instead of a crash.">
+    <p class="q-text">2. In Valid Parentheses, what must you check before popping the stack when a closing bracket arrives?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="emptycheck">That the stack isn't empty</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">That the stack is sorted</button>
+      <button class="btn dsa-quiz-option" data-value="length3">That the string has at least 3 characters left</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="finalcheck" data-explain="A string like &quot;(()&quot; never triggers a mismatch mid-scan, but leaves an unclosed opener on the stack — only checking for emptiness after the loop ends catches that." >
+    <p class="q-text">3. Why must you check the stack is empty again AFTER the scan finishes, not just during it?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="finalcheck">Unclosed openers (e.g. "(()") never fail mid-scan, only a final emptiness check catches them</button>
+      <button class="btn dsa-quiz-option" data-value="perf">It's purely a performance optimization</button>
+      <button class="btn dsa-quiz-option" data-value="notneeded">It isn't necessary — the loop already guarantees correctness</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on_on" data-explain="Every character is pushed or popped at most once (O(n) time); the stack can hold up to n characters in the worst case, e.g. an all-openers string (O(n) space)." >
+    <p class="q-text">4. What are the time and space complexity of Valid Parentheses?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on_on">O(n) time, O(n) space</button>
+      <button class="btn dsa-quiz-option" data-value="on_o1">O(n) time, O(1) space</button>
+      <button class="btn dsa-quiz-option" data-value="on2_on">O(n²) time, O(n) space</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="parallelmin" data-explain="A second, parallel stack stores the running minimum at each level, updated on every push and popped alongside the value stack — the top of that min stack is always the O(1) answer, no scanning needed." >
+    <p class="q-text">5. How does Min Stack achieve O(1) getMin()?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="parallelmin">A parallel stack tracks the running minimum at each level as values are pushed</button>
+      <button class="btn dsa-quiz-option" data-value="sortalways">It keeps the whole stack sorted at all times</button>
+      <button class="btn dsa-quiz-option" data-value="rescan">It rescans the entire stack each time getMin() is called</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 17 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day16.html">← Day 16: Linked Lists II — Fast/Slow &amp; Reverse</a>
+    <a class="btn" href="day18.html">Day 18: Queues &amp; Deques →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 17;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: Valid Parentheses, character by character (string Bars + stack CallStack) ----
+  function buildValidParenSteps(str) {
+    const s = str.split('');
+    const pairs = { ')': '(', ']': '[', '}': '{' };
+    const opens = new Set(['(', '[', '{']);
+    const stack = []; // { ch, idx }
+    const steps = [];
+    const charStateMap = {};
+
+    function frames(overrideTopState) {
+      return stack.map((f, i) => ({
+        label: f.ch,
+        state: i === stack.length - 1 ? (overrideTopState || 'active') : 'default',
+      }));
+    }
+    function emit(narration, framesArr, extraCharStates) {
+      if (extraCharStates) Object.assign(charStateMap, extraCharStates);
+      steps.push({ narration, stringStates: Object.assign({}, charStateMap), stringValues: s, frames: framesArr });
+    }
+
+    emit(`Scan "${str || '(empty string)'}" left to right, using a stack to track open brackets.`, []);
+
+    let failed = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (opens.has(ch)) {
+        stack.push({ ch, idx: i });
+        emit(`Index ${i}: '${ch}' is an opener — push onto the stack.`, frames('active'), { [i]: 'pointer' });
+      } else {
+        if (stack.length === 0) {
+          emit(`Index ${i}: '${ch}' is a closer, but the stack is EMPTY — nothing to match. Invalid, stop.`, frames(), { [i]: 'swap' });
+          failed = true;
+          break;
+        }
+        const top = stack[stack.length - 1];
+        emit(`Index ${i}: '${ch}' is a closer — compare against top of stack '${top.ch}'.`, frames('compare'), { [i]: 'pointer' });
+        if (pairs[ch] === top.ch) {
+          emit(`'${top.ch}' matches '${ch}' — pop it.`, frames('sorted'), { [i]: 'sorted', [top.idx]: 'sorted' });
+          stack.pop();
+          emit(`Popped. Stack now has ${stack.length} frame(s) left.`, frames());
+        } else {
+          emit(`Top of stack is '${top.ch}', which does NOT match '${ch}' — invalid, stop.`, frames('swap'), { [i]: 'swap' });
+          failed = true;
+          break;
+        }
+      }
+    }
+
+    if (!failed) {
+      if (stack.length === 0) {
+        emit(`All characters scanned and the stack is empty — every bracket was matched. Valid!`, []);
+      } else {
+        const extra = {};
+        stack.forEach((f) => { extra[f.idx] = 'swap'; });
+        emit(`All characters scanned, but ${stack.length} opening bracket(s) were never closed — invalid.`, frames('swap'), extra);
+      }
+    }
+    return steps;
+  }
+
+  function randomParenString() {
+    const opens = ['(', '[', '{'];
+    const closesFor = { '(': ')', '[': ']', '{': '}' };
+    const len = 6 + Math.floor(Math.random() * 4); // 6-9 chars
+    const stackSim = [];
+    let str = '';
+    for (let i = 0; i < len; i++) {
+      const canClose = stackSim.length > 0;
+      if (canClose && Math.random() < 0.55) {
+        const top = stackSim[stackSim.length - 1];
+        if (Math.random() < 0.75) {
+          str += closesFor[top];
+          stackSim.pop();
+        } else {
+          const wrongCloses = Object.values(closesFor).filter((c) => c !== closesFor[top]);
+          str += wrongCloses[Math.floor(Math.random() * wrongCloses.length)];
+          stackSim.length = 0;
+        }
+      } else if (!canClose && Math.random() < 0.15) {
+        const c = Object.values(closesFor)[Math.floor(Math.random() * 3)];
+        str += c;
+      } else {
+        const o = opens[Math.floor(Math.random() * opens.length)];
+        str += o;
+        stackSim.push(o);
+      }
+    }
+    return str;
+  }
+
+  const viz1StringStage = document.getElementById('viz1StringStage');
+  const viz1StackStage = document.getElementById('viz1StackStage');
+  const bars1 = new DSA.Bars(viz1StringStage, { uniform: true });
+  const callStack1 = new DSA.CallStack(viz1StackStage);
+  const BASE1 = '{[()()]}';
+  bars1.setData(BASE1.split(''));
+  callStack1.render([]);
+  let steps1 = buildValidParenSteps(BASE1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 1100,
+    onStep(step) {
+      if (!step) { bars1.paint({}, BASE1.split('')); callStack1.render([]); return; }
+      bars1.paint(step.stringStates, step.stringValues);
+      callStack1.render(step.frames);
+    },
+    onShuffle() {
+      const s = randomParenString();
+      bars1.setData(s.split(''));
+      callStack1.render([]);
+      steps1 = buildValidParenSteps(s);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: Min Stack push/pop with running min (CallStack) ----
+  function buildMinStackSteps(ops) {
+    const trace = []; // { val, min }
+    const steps = [];
+    steps.push({ narration: 'Empty min-stack. Each frame will store (value, running min at that level).', frames: [] });
+    ops.forEach((op) => {
+      if (op.type === 'push') {
+        const currentMin = trace.length === 0 ? op.val : Math.min(op.val, trace[trace.length - 1].min);
+        trace.push({ val: op.val, min: currentMin });
+        const frames = trace.map((f, i) => ({ label: `${f.val}  (min ${f.min})`, state: i === trace.length - 1 ? 'active' : 'default' }));
+        steps.push({ narration: `push(${op.val}) — running min becomes ${currentMin}.`, frames });
+      } else {
+        const popped = trace.pop();
+        const frames = trace.map((f, i) => ({ label: `${f.val}  (min ${f.min})`, state: i === trace.length - 1 ? 'active' : 'default' }));
+        const newMin = trace.length ? trace[trace.length - 1].min : null;
+        const narration = trace.length
+          ? `pop() removes ${popped.val}. Top is now ${trace[trace.length - 1].val} — its stored min (${newMin}) is instantly correct again.`
+          : `pop() removes ${popped.val}. Stack is empty.`;
+        steps.push({ narration, frames });
+      }
+    });
+    return steps;
+  }
+
+  function randomMinStackOps() {
+    const ops = [];
+    let depth = 0;
+    const count = 6 + Math.floor(Math.random() * 3); // 6-8 ops
+    for (let i = 0; i < count; i++) {
+      if (depth > 0 && Math.random() < 0.35) {
+        ops.push({ type: 'pop' });
+        depth--;
+      } else {
+        ops.push({ type: 'push', val: 1 + Math.floor(Math.random() * 9) });
+        depth++;
+      }
+    }
+    return ops;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const callStack2 = new DSA.CallStack(viz2Stage);
+  callStack2.render([]);
+  const BASE_OPS2 = [
+    { type: 'push', val: 5 }, { type: 'push', val: 3 }, { type: 'push', val: 7 },
+    { type: 'pop' }, { type: 'push', val: 1 }, { type: 'pop' }, { type: 'push', val: 2 },
+  ];
+  let steps2 = buildMinStackSteps(BASE_OPS2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2, narrationEl: document.getElementById('viz2Narration'), counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'), stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'), shuffleBtn: document.getElementById('viz2Shuffle'), speed: 1100,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+    onShuffle() {
+      steps2 = buildMinStackSteps(randomMinStackOps());
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
