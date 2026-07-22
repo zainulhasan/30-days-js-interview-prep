@@ -592,6 +592,57 @@ build. Remaining open item: the SEO pass explicitly deferred by the user until a
 done (see the entry above — title/heading audit, meta descriptions, Core Web Vitals, structured
 data, sitemap.xml, robots.txt, GSC submission).
 
+## Done — SEO pass (the task deferred until all 30 lessons were complete)
+- **Meta descriptions**: audited every page's length (many were either <120 or >165 chars once
+  measured correctly — first audit pass had a script bug that included the `name="description"
+  content="` prefix in the char count, inflating every number by ~29; re-audited properly).
+  Rewrote 23 pages' descriptions into the ~127-154 char sweet spot.
+- **Titles**: shortened 3 lesson titles that ran past ~60 chars (Day 16, 24, 28) by dropping the
+  extended subtitle, keeping the curriculum's core title.
+- **Canonical + Open Graph + Twitter Card tags**: added to all 33 pages (index + 32 lessons),
+  pointing at the custom domain `https://dsa.itszain.tech/`.
+- **Structured data**: `Course` JSON-LD on `index.html` (generated from `js/curriculum.js` so it
+  can't drift from the real roadmap — `hasPart` lists all 30 days with name/url/position) plus
+  `BreadcrumbList` JSON-LD on every lesson page (Home > Day N).
+- **sitemap.xml** (33 URLs) and **robots.txt** (allow all, points at the sitemap) — both new files
+  at the repo root.
+- **Lighthouse**: ran a real audit (mobile, navigation mode) — SEO 100, Best Practices 100,
+  Agentic Browsing 100, Accessibility 95 (one real WCAG AA contrast failure: the theme's
+  `--text-dim` only hit 3.9:1 against the dark backgrounds, below the 4.5:1 minimum — fixed by
+  lightening it, see the typography entry below; Accessibility is 100 now).
+- **Not done — needs the user's own access**: Google Search Console submission (requires the
+  user's own GSC account / domain verification). Sitemap is ready to submit once GSC is set up.
+- **Known, not chased further**: Lighthouse also flagged CLS ≈0.13 ("needs improvement," not
+  "poor") on `index.html`, most likely from the JS-rendered roadmap list populating an initially-
+  empty `#roadmap` div after first paint. Not fixed this session — noted here in case it's worth
+  a `min-height` placeholder later.
+
+## Done — typography, code-block, and homepage redesign (user-directed, with reference images)
+- **Typography**: h1 32px/700, h2 24px, body text 16px/24px line-height, body text color lightened
+  to `#e2e3e7` (was `#ABB2BF`) — all via `css/tokens.css`/`css/style.css` so it cascades everywhere
+  with no per-lesson changes needed.
+- **Code blocks**: rewrote `js/engine.js`'s syntax highlighter from "one big highlighted string"
+  to a line-by-line tokenizer (`highlightLines`) that builds a real line-numbered, horizontally-
+  scrollable card (`buildCodeBlock`) with a copy-to-clipboard button. The button tries
+  `navigator.clipboard` first and falls back to `document.execCommand('copy')` for `file://`
+  contexts, where the Clipboard API has no secure context — this site must still work opened
+  directly, so the fallback isn't optional. Also disabled font ligatures site-wide
+  (`font-variant-ligatures: none`) after noticing `<=` was rendering as a single merged `≤`-style
+  glyph in some monospace fonts — bad for a teaching site where exact characters matter.
+- **Homepage roadmap**: replaced the flat card-row day list with a connected vertical timeline
+  (numbered circle badges linked by a line, larger titles, an icon+blurb meta line, a circular
+  chevron/checkmark on the right) matching a reference screenshot the user provided. Whole-row
+  click-to-navigate behavior unchanged.
+- **Found + fixed a real regression from the typography change**: SVG diagrams hardcode hex colors
+  directly (established project convention — SVG doesn't reliably inherit CSS custom properties),
+  so changing `--text`/`--text-dim` in tokens.css only updated HTML text, leaving every diagram's
+  dim/label text on the old grays — a visible mismatch the user caught by eye. Fixed with a
+  sitewide `sd` replacement (`#818896`→`#9198A6`, `#ABB2BF`→`#E2E3E7`) across 22 files. **Lesson for
+  next time a token color changes: grep for the old hex across `lessons/*.html` immediately, don't
+  assume the CSS var change is sufficient** — this is the same "sitewide fix silently didn't reach
+  everywhere" failure mode as the stale-favicon incident earlier in the project, just with diagram
+  colors instead of favicons.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
