@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 25: Dynamic Programming I — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Memoization and DP tables — fibonacci and climbing stairs, filled cell by cell." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 25 / 30 &middot; WEEK 4</p>
+  <h1>Dynamic Programming I</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Recognize the two conditions that make dynamic programming applicable: <strong>overlapping
+      subproblems</strong> (the same smaller question gets asked more than once) and
+      <strong>optimal substructure</strong> (the answer to the big question is built directly from
+      the answers to those smaller questions).</li>
+    <li>Tell top-down <strong>memoization</strong> (recursion + a cache) apart from bottom-up
+      <strong>tabulation</strong> (an iterative table filled in order) — two different
+      implementations of the exact same idea.</li>
+    <li>Take fibonacci from Day 9's exponential-blowup recursion all the way down to an O(n)-time,
+      O(1)-space loop, then recognize the identical pattern hiding inside a differently-worded
+      problem (Climbing Stairs).</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Imagine grading homework where the same sub-question ("what's 7×8?") shows up inside three
+    different problems. If you re-derive 7×8 from scratch every single time you see it, you're
+    wasting work — you already know the answer, you just forgot you'd already solved it. If
+    instead you write "7×8 = 56" on a sticky note the first time, every later occurrence is a
+    free lookup. That sticky note is the entire idea behind dynamic programming (DP): a problem
+    has <strong>overlapping subproblems</strong> when the same smaller question recurs, and it has
+    <strong>optimal substructure</strong> when the big answer can be assembled directly from those
+    smaller answers (no need to reconsider choices already made). When both hold, don't
+    recompute — cache.</p>
+  <p>Day 9 built naive recursive <code>fib(n)</code> and watched its call tree explode: every call
+    branches into two more calls, and — this is the important part — many of those calls ask the
+    <em>exact same question</em>. <code>fib(4)</code> calls <code>fib(2)</code> twice, from two
+    different branches, each time re-deriving it completely from scratch. That's wasted,
+    overlapping work, and it's exactly what DP is for.</p>
+  <p>There are two equivalent ways to apply the sticky note:</p>
+  <ul class="goal-list">
+    <li><strong>Memoization (top-down).</strong> Keep the same recursive structure from Day 9, but
+      before recursing, check a cache. If this exact input was already solved, return the cached
+      answer instantly instead of recursing again. Still recursion — just recursion that never
+      repeats itself.</li>
+    <li><strong>Tabulation (bottom-up).</strong> Throw recursion away entirely. Start from the
+      base cases and fill an iterative table in order, left to right, where each new cell is built
+      from cells that are already sitting in the table. No call stack, no cache-lookup overhead —
+      just a loop.</li>
+  </ul>
+  <p>Same idea, opposite direction: memoization starts at the big question and works its way down
+    to base cases as needed; tabulation starts at the base cases and works its way up to the big
+    question unconditionally.</p>
+
+  <h2>Diagram: naive recursion (Day 9) vs. memoized — same fib(4) call</h2>
+  <svg class="diagram" viewBox="0 0 620 470" role="img" aria-label="Two call trees for fib(4). The top tree is Day 9's naive recursion: 9 total calls, with the subproblem fib(2) computed twice from scratch (highlighted in amber) because nothing is cached. The bottom tree is the memoized version: the exact same shape, except the second fib(2) call hits a cache and returns immediately without re-expanding into fib(1) and fib(0) again.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">NAIVE — Day 9's fib(4), no cache (9 calls total)</text>
+
+    <!-- naive tree edges -->
+    <g stroke="#3E4452" stroke-width="1.5" fill="none">
+      <line x1="310" y1="43" x2="170" y2="62"/>
+      <line x1="310" y1="43" x2="450" y2="62"/>
+      <line x1="170" y1="88" x2="90" y2="107"/>
+      <line x1="170" y1="88" x2="250" y2="107"/>
+      <line x1="450" y1="88" x2="370" y2="107"/>
+      <line x1="450" y1="88" x2="530" y2="107"/>
+      <line x1="90" y1="133" x2="50" y2="152"/>
+      <line x1="90" y1="133" x2="130" y2="152"/>
+    </g>
+
+    <!-- naive tree nodes -->
+    <g font-size="11" text-anchor="middle">
+      <rect x="282" y="30" width="56" height="26" rx="5" fill="#2C313A" stroke="#DCDFE4"/>
+      <text x="310" y="47" fill="#DCDFE4">fib(4)</text>
+
+      <rect x="142" y="75" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="170" y="92" fill="#ABB2BF">fib(3)</text>
+      <rect x="422" y="75" width="56" height="26" rx="5" fill="#2C313A" stroke="#E6C07B" stroke-width="3"/>
+      <text x="450" y="92" fill="#E6C07B">fib(2)</text>
+
+      <rect x="62" y="120" width="56" height="26" rx="5" fill="#2C313A" stroke="#E6C07B" stroke-width="3"/>
+      <text x="90" y="137" fill="#E6C07B">fib(2)</text>
+      <rect x="222" y="120" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="137" fill="#ABB2BF">fib(1)</text>
+      <rect x="342" y="120" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="370" y="137" fill="#ABB2BF">fib(1)</text>
+      <rect x="502" y="120" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="530" y="137" fill="#ABB2BF">fib(0)</text>
+
+      <rect x="22" y="165" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="50" y="182" fill="#ABB2BF">fib(1)</text>
+      <rect x="102" y="165" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="130" y="182" fill="#ABB2BF">fib(0)</text>
+    </g>
+    <text x="20" y="212" font-size="12" fill="#DCDFE4">Both amber fib(2) boxes are the SAME subproblem, computed from scratch twice —</text>
+    <text x="20" y="229" font-size="12" fill="#DCDFE4">that's an overlapping subproblem. fib(1) recurs 3 times, fib(0) recurs 2 times.</text>
+
+    <text x="20" y="262" font-size="13" fill="#98C379" font-weight="bold">MEMOIZED — same fib(4) call, with a cache (7 calls, 1 is a cache hit)</text>
+
+    <!-- memoized tree edges (right fib(2) has no children — short-circuited) -->
+    <g stroke="#3E4452" stroke-width="1.5" fill="none">
+      <line x1="310" y1="287" x2="170" y2="306"/>
+      <line x1="310" y1="287" x2="450" y2="306"/>
+      <line x1="170" y1="332" x2="90" y2="351"/>
+      <line x1="170" y1="332" x2="250" y2="351"/>
+      <line x1="90" y1="377" x2="50" y2="396"/>
+      <line x1="90" y1="377" x2="130" y2="396"/>
+    </g>
+
+    <g font-size="11" text-anchor="middle">
+      <rect x="282" y="274" width="56" height="26" rx="5" fill="#2C313A" stroke="#DCDFE4"/>
+      <text x="310" y="291" fill="#DCDFE4">fib(4)</text>
+
+      <rect x="142" y="319" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="170" y="336" fill="#ABB2BF">fib(3)</text>
+      <rect x="422" y="319" width="70" height="26" rx="5" fill="#2C313A" stroke="#98C379" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="457" y="336" fill="#98C379">fib(2) ✓</text>
+
+      <rect x="62" y="364" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="90" y="381" fill="#ABB2BF">fib(2)</text>
+      <rect x="222" y="364" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="381" fill="#ABB2BF">fib(1)</text>
+
+      <rect x="22" y="409" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="50" y="426" fill="#ABB2BF">fib(1)</text>
+      <rect x="102" y="409" width="56" height="26" rx="5" fill="#2C313A" stroke="#3E4452"/>
+      <text x="130" y="426" fill="#ABB2BF">fib(0)</text>
+    </g>
+    <text x="325" y="336" font-size="10" fill="#98C379">cache hit —</text>
+    <text x="325" y="349" font-size="10" fill="#98C379">no recursion</text>
+    <text x="20" y="456" font-size="12" fill="#DCDFE4">The 2nd fib(2) call reuses the cache instead of expanding 2 more calls.</text>
+  </svg>
+
+  <h2>Diagram: filling a DP table left to right</h2>
+  <svg class="diagram" viewBox="0 0 620 195" role="img" aria-label="Climbing stairs DP table for n=8. dp[1] through dp[5] are already filled and confirmed in green. dp[6] is currently being computed in purple, drawing on dp[4] and dp[5] via two arrows. dp[7] and dp[8] are still empty and gray, not yet reached.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Climbing Stairs DP table (n=8) — dp[i] = dp[i-1] + dp[i-2]</text>
+    <g stroke="#61AEEE" stroke-width="2" fill="none">
+      <path d="M 280 95 Q 354 50 428 95"/>
+      <path d="M 354 95 Q 391 60 428 95"/>
+    </g>
+    <g font-size="10" text-anchor="middle" fill="#818896">
+      <text x="58" y="60">dp[1]</text><text x="132" y="60">dp[2]</text><text x="206" y="60">dp[3]</text>
+      <text x="280" y="60">dp[4]</text><text x="354" y="60">dp[5]</text><text x="428" y="60">dp[6]</text>
+      <text x="502" y="60">dp[7]</text><text x="576" y="60">dp[8]</text>
+    </g>
+    <g font-size="13" text-anchor="middle">
+      <rect x="25" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#98C379"/><text x="58" y="118" fill="#98C379">1</text>
+      <rect x="99" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#98C379"/><text x="132" y="118" fill="#98C379">2</text>
+      <rect x="173" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#98C379"/><text x="206" y="118" fill="#98C379">3</text>
+      <rect x="247" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#98C379"/><text x="280" y="118" fill="#98C379">5</text>
+      <rect x="321" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#98C379"/><text x="354" y="118" fill="#98C379">8</text>
+      <rect x="395" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#C678DD" stroke-width="3"/><text x="428" y="118" fill="#C678DD">?</text>
+      <rect x="469" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#3E4452"/><text x="502" y="118" fill="#818896">·</text>
+      <rect x="543" y="95" width="66" height="36" rx="5" fill="#2C313A" stroke="#3E4452"/><text x="576" y="118" fill="#818896">·</text>
+    </g>
+    <text x="20" y="155" font-size="12" fill="#DCDFE4">Green = filled and confirmed. Purple = computing now, pulling from the 2 boxes</text>
+    <text x="20" y="172" font-size="12" fill="#DCDFE4">it points to. Gray = not reached yet. dp[6] = dp[5] + dp[4] = 8 + 5 = 13.</text>
+  </svg>
+
+  <h2>Interactive visualization: filling the DP table</h2>
+  <p>Same recurrence, two differently-worded problems — watch both tables fill cell by cell.</p>
+  <div class="legend">
+    <span><i class="lg-sorted"></i> filled / confirmed</span>
+    <span><i class="lg-pointer"></i> source cell being read</span>
+    <span><i class="lg-active"></i> cell being computed now</span>
+  </div>
+
+  <h3>1. Fibonacci — bottom-up table</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. Climbing Stairs — the same recurrence, a different name</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// 1. NAIVE recursion (Day 9's version) — O(2^n), recomputes overlapping
+//    subproblems from scratch every time.
+function fibNaive(n) {
+  if (n &lt;= 1) return n;                          // base cases: fib(0)=0, fib(1)=1
+  return fibNaive(n - 1) + fibNaive(n - 2);        // recursive case
+}
+
+// 2. MEMOIZED (top-down) — same recursion, but a cache means every
+//    distinct subproblem is only ever solved once. O(n) time.
+function fibMemo(n, memo = {}) {
+  if (n in memo) return memo[n];                   // cache hit — return instantly
+  if (n &lt;= 1) return n;                            // base cases
+  memo[n] = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);
+  return memo[n];
+}
+
+// 3. TABULATED (bottom-up) — no recursion at all, fill an array in order.
+//    O(n) time, O(n) space for the table.
+function fibTab(n) {
+  if (n &lt;= 1) return n;
+  const dp = new Array(n + 1);
+  dp[0] = 0;
+  dp[1] = 1;
+  for (let i = 2; i &lt;= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+  return dp[n];
+}
+
+// 4. TABULATED with O(1) space — dp[i] only ever needs the LAST TWO
+//    values, so keep two rolling variables instead of a whole array.
+function fibOptimal(n) {
+  if (n &lt;= 1) return n;
+  let prev2 = 0, prev1 = 1;                        // dp[0], dp[1]
+  for (let i = 2; i &lt;= n; i++) {
+    const cur = prev1 + prev2;                     // dp[i] = dp[i-1] + dp[i-2]
+    prev2 = prev1;                                 // slide the window forward
+    prev1 = cur;
+  }
+  return prev1;
+}
+
+// Climbing Stairs (LC 70) — structurally identical recurrence to fibonacci,
+// just different base cases and a 1-indexed problem statement.
+function climbStairs(n) {
+  if (n &lt;= 2) return n;                            // ways(1)=1, ways(2)=2
+  let prev2 = 1, prev1 = 2;
+  for (let i = 3; i &lt;= n; i++) {
+    const cur = prev1 + prev2;                     // ways(i) = ways(i-1) + ways(i-2)
+    prev2 = prev1;
+    prev1 = cur;
+  }
+  return prev1;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>fibNaive</code> is exactly Day 9's function — no changes. It's included again so
+      the next three versions can be compared against it directly.</li>
+    <li><code>fibMemo</code> adds exactly one new idea: <code>if (n in memo) return memo[n]</code>
+      before doing any work. Every other line is identical to <code>fibNaive</code> — memoization
+      is a small, mechanical patch on top of existing recursion, not a rewrite.</li>
+    <li><code>fibTab</code> replaces recursion with a loop that walks forward from the base cases.
+      <code>dp[i]</code> is only ever computed once <code>dp[i-1]</code> and <code>dp[i-2]</code>
+      already exist in the array — that ordering guarantee is exactly what "bottom-up" means.</li>
+    <li><code>fibOptimal</code> notices that <code>dp[i]</code> only ever reads the two most
+      recent entries, never anything further back — so keeping a full array is wasted memory.
+      Two variables (<code>prev1</code>, <code>prev2</code>) slide forward instead, dropping space
+      from O(n) to O(1).</li>
+    <li><code>climbStairs</code> is <code>fibOptimal</code> with two things changed: the base
+      cases (<code>ways(1)=1</code>, <code>ways(2)=2</code> instead of <code>fib(0)=0</code>,
+      <code>fib(1)=1</code>) and the starting index of the loop (3 instead of 2, since the problem
+      is 1-indexed). The recurrence itself — "this cell is the sum of the two before it" — is
+      untouched.</li>
+  </ul>
+
+  <h3>Dry run: climbStairs(8) — bottom-up table fill</h3>
+  <div style="overflow-x:auto;">
+    <table class="dryrun-table">
+      <thead><tr><th>i</th><th>dp[i-1]</th><th>dp[i-2]</th><th>dp[i] = dp[i-1] + dp[i-2]</th></tr></thead>
+      <tbody>
+        <tr><td>1 (base)</td><td>—</td><td>—</td><td>dp[1] = 1 (one way: a single step)</td></tr>
+        <tr><td>2 (base)</td><td>—</td><td>—</td><td>dp[2] = 2 (two ways: 1+1, or 2)</td></tr>
+        <tr><td>3</td><td>dp[2] = 2</td><td>dp[1] = 1</td><td>dp[3] = 2 + 1 = 3</td></tr>
+        <tr><td>4</td><td>dp[3] = 3</td><td>dp[2] = 2</td><td>dp[4] = 3 + 2 = 5</td></tr>
+        <tr><td>5</td><td>dp[4] = 5</td><td>dp[3] = 3</td><td>dp[5] = 5 + 3 = 8</td></tr>
+        <tr><td>6</td><td>dp[5] = 8</td><td>dp[4] = 5</td><td>dp[6] = 8 + 5 = 13</td></tr>
+        <tr><td>7</td><td>dp[6] = 13</td><td>dp[5] = 8</td><td>dp[7] = 13 + 8 = 21</td></tr>
+        <tr><td>8</td><td>dp[7] = 21</td><td>dp[6] = 13</td><td>dp[8] = 21 + 13 = 34</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Final answer: 34 distinct ways to climb 8
+    stairs, taking 1 or 2 steps at a time. Each row only ever reads the two rows directly above
+    it — never anything earlier, and never anything recomputed.</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+    <table class="complexity-table">
+      <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Naive recursive</td><td>O(2^n)</td><td>O(n)</td><td>Every call branches into 2 more calls with no cache, so the call count roughly doubles per level of depth. Space is O(n) for the call stack (deepest chain of waiting frames), not the exponential call count itself.</td></tr>
+        <tr><td>Memoized (top-down)</td><td>O(n)</td><td>O(n)</td><td>Each of the n distinct subproblems (fib(0) through fib(n)) is computed exactly once and then cached; every later call for the same n is an O(1) lookup. Space is the cache (n entries) plus the O(n) call stack.</td></tr>
+        <tr><td>Tabulated (bottom-up)</td><td>O(n)</td><td>O(n)</td><td>A single loop from 0 to n, one O(1) step per cell — no recursion, no call stack, but the full table is kept, so space is still O(n).</td></tr>
+        <tr><td>Tabulated, rolling variables</td><td>O(n)</td><td>O(1)</td><td>Identical loop, but only the last 2 values are ever read, so 2 variables replace the whole array — the same optimization applied to climbStairs above.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">The blowup is real, not theoretical: for
+    fib(10), the naive version makes <strong>177</strong> calls where the memoized version makes
+    <strong>19</strong>. For fib(30), that gap widens to <strong>2,692,537</strong> naive calls
+    vs. just <strong>59</strong> memoized calls — verified by literally counting recursive calls,
+    not just citing Big-O.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What are "overlapping subproblems" and "optimal substructure," in your own
+      words?</strong> Overlapping subproblems: solving the big problem asks the same smaller
+      question more than once (fib(4) needs fib(2) twice). Optimal substructure: the big answer
+      is built directly from the smaller answers with no need to re-examine earlier choices
+      (fib(n) is just fib(n-1) + fib(n-2), full stop). A problem needs both properties before DP
+      is the right tool — overlapping subproblems alone, without optimal substructure, isn't
+      enough.</li>
+    <li><strong>Memoization vs. tabulation — when would you pick one over the other?</strong>
+      Memoization (top-down) is often less code to write when starting from an existing recursive
+      solution, and it's naturally lazy — it only computes the subproblems the input actually
+      needs. Tabulation (bottom-up) avoids call-stack depth entirely (no risk of the Day 9
+      stack-overflow problem on large n) and is usually what unlocks further space
+      optimization.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Which one would
+      you reach for first in an interview?" — start with memoization if you already have working
+      recursion, since it's a small patch; convert to tabulation afterward if you need to discuss
+      further space optimization.</span></li>
+    <li><strong>Why can fibonacci's O(n) table be shrunk to O(1) space, but that's not always
+      possible?</strong> The rolling-variable trick only works when each cell depends on a small,
+      constant number of previous cells (fibonacci and Climbing Stairs each only need the last 2).
+      If a problem's recurrence needs an arbitrary earlier cell, or the whole table so far — like
+      a 2D grid DP where dp[i][j] depends on an entire previous row — you can't discard old cells,
+      so the full table has to stay in memory.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> assuming
+      every DP problem can be squeezed to O(1) space just because fibonacci can. Always check
+      exactly which earlier cells the recurrence actually reads before deleting anything.</span></li>
+    <li><strong>How do you recognize that Climbing Stairs is "the same DP" as fibonacci?</strong>
+      Strip away the story and look at the recurrence: <code>dp[i] = dp[i-1] + dp[i-2]</code> in
+      both cases — only the base cases and indexing differ. Interviewers deliberately reword the
+      same underlying recurrence into different stories (counting paths, counting ways, minimum
+      cost) specifically to see whether you pattern-match the structure instead of the surface
+      wording.</li>
+    <li><strong>What's the most common way memoized/tabulated solutions break?</strong> Wrong or
+      missing base cases. If <code>fibMemo</code> forgot to seed <code>memo[0]</code> and
+      <code>memo[1]</code> (or checked <code>n === 0</code> instead of <code>n &lt;= 1</code>),
+      it either recurses forever on negative input or returns a silently wrong answer one index
+      off.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> an off-by-one
+      in the base case doesn't crash — it just quietly returns the wrong number, which is far
+      harder to notice than a crash. Always trace the smallest 2-3 inputs by hand before trusting
+      the loop.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the recurrence before writing any code
+    — "dp[i] depends on dp[i-1] and dp[i-2], so this is the fibonacci-shaped recurrence" — then
+    state the base cases explicitly, then say whether you're going top-down or bottom-up and why.
+    Interviewers are listening for whether you can identify overlapping subproblems and optimal
+    substructure on sight, not just whether the final code happens to work.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Climbing Stairs <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/climbing-stairs/" target="_blank" rel="noopener">LeetCode: Climbing Stairs</a>)</span></h4>
+    <p>You're climbing a staircase with <code>n</code> steps. Each move you can climb 1 or 2 steps.
+      Return the number of distinct ways to reach the top. Today's second worked example — the
+      code above is the real solution.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Write out ways(1), ways(2), ways(3) by hand
+      before coding — you'll notice ways(3) = ways(2) + ways(1) immediately. That's the whole
+      recurrence; today's fibonacci pattern applies directly, just with different base cases.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function climbStairs(n) {
+  if (n <= 2) return n;
+  let prev2 = 1, prev1 = 2;
+  for (let i = 3; i <= n; i++) {
+    const cur = prev1 + prev2;
+    prev2 = prev1;
+    prev1 = cur;
+  }
+  return prev1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Min Cost Climbing Stairs <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/min-cost-climbing-stairs/" target="_blank" rel="noopener">LeetCode: Min Cost Climbing Stairs</a>)</span></h4>
+    <p>Each stair <code>i</code> has a cost <code>cost[i]</code> to step on it. You may start from
+      step 0 or step 1, and from a step you can climb 1 or 2 steps. Return the minimum total cost
+      to reach the top (one step past the last index).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Same shape as Climbing Stairs, but now each
+      cell holds a minimum cost instead of a count, and it's a min of 2 options instead of a sum:
+      <code>dp[i] = min(dp[i-1] + cost[i-1], dp[i-2] + cost[i-2])</code>. dp[0] and dp[1] are both
+      0 — reaching the starting step itself is free.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function minCostClimbingStairs(cost) {
+  const n = cost.length;
+  let prev2 = 0, prev1 = 0; // dp[0] = dp[1] = 0 — starting is free
+  for (let i = 2; i <= n; i++) {
+    const cur = Math.min(prev1 + cost[i - 1], prev2 + cost[i - 2]);
+    prev2 = prev1;
+    prev1 = cur;
+  }
+  return prev1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Unique Paths <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/unique-paths/" target="_blank" rel="noopener">LeetCode: Unique Paths</a>)</span></h4>
+    <p>A robot sits at the top-left corner of an <code>m x n</code> grid and can only move right
+      or down. Return the number of distinct paths to the bottom-right corner. Same idea as
+      today's 1D recurrences, stretched to 2 dimensions — a preview of the grid DP shapes coming
+      up on Day 26.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>The number of ways to reach any cell is the
+      sum of the ways to reach the cell above it and the cell to its left:
+      <code>dp[r][c] = dp[r-1][c] + dp[r][c-1]</code>. The entire first row and first column are
+      base cases (only 1 way to reach them — straight line, no choices).</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function uniquePaths(m, n) {
+  const dp = new Array(n).fill(1); // first row: only 1 way to reach any cell in it
+  for (let r = 1; r < m; r++) {
+    for (let c = 1; c < n; c++) {
+      dp[c] = dp[c] + dp[c - 1]; // dp[c] (above) + dp[c-1] (left), rolled into 1 row
+    }
+  }
+  return dp[n - 1];
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="DP applies when both hold: overlapping subproblems (the same smaller question recurs) AND optimal substructure (the big answer is built directly from those smaller answers). Overlapping subproblems alone just means you're repeating work — DP needs the second property too, so the recurrence can actually assemble a correct answer.">
+    <p class="q-text">1. What two properties must a problem have for dynamic programming to apply?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">Overlapping subproblems AND optimal substructure</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">The input must already be sorted</button>
+      <button class="btn dsa-quiz-option" data-value="onlyoverlap">Overlapping subproblems alone is always sufficient</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="cache" data-explain="Memoization keeps Day 9's exact recursive structure and adds one new idea: check a cache before recursing, and store the result after computing it. It's a small patch on top of existing recursion, not a rewrite into a loop.">
+    <p class="q-text">2. What's the one core change memoization makes to naive recursion?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cache">Check a cache before recursing; store the answer after computing it</button>
+      <button class="btn dsa-quiz-option" data-value="loop">It replaces the recursion with a for loop</button>
+      <button class="btn dsa-quiz-option" data-value="sort">It sorts the inputs before recursing</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="exp" data-explain="Naive recursive fibonacci is O(2^n) — every call branches into 2 more with nothing cached, so the call count grows exponentially with n (177 calls for fib(10), 2,692,537 for fib(30)). Memoized and tabulated versions are both O(n)." >
+    <p class="q-text">3. What's the time complexity of naive recursive fib(n), with no memoization?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="exp">O(2^n)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">O(log n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="fewcells" data-explain="The O(1)-space rolling-variable trick only works when each cell depends on a small, constant number of previous cells (fibonacci and Climbing Stairs each need just the last 2). If a recurrence needs an arbitrary earlier cell or a whole previous row (common in 2D grid DP), the full table has to be kept.">
+    <p class="q-text">4. When can a tabulated DP be optimized from O(n) space down to O(1) with rolling variables?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="fewcells">Only when each cell depends on a small, constant number of earlier cells</button>
+      <button class="btn dsa-quiz-option" data-value="always">Always — every DP table can be shrunk to O(1) space</button>
+      <button class="btn dsa-quiz-option" data-value="never">Never — the full table must always be kept</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="samerecurrence" data-explain="Strip the story away and both have the identical recurrence dp[i] = dp[i-1] + dp[i-2] — only the base cases and indexing differ (fib(0)=0/fib(1)=1 vs. ways(1)=1/ways(2)=2). Recognizing the same recurrence under different wording is the actual skill being tested." >
+    <p class="q-text">5. Why is Climbing Stairs considered "the same DP" as fibonacci?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="samerecurrence">Both share the identical recurrence dp[i] = dp[i-1] + dp[i-2] — only base cases differ</button>
+      <button class="btn dsa-quiz-option" data-value="samecode">Because LeetCode copy-pasted the same solution code for both</button>
+      <button class="btn dsa-quiz-option" data-value="coincidence">It's a coincidence with no deeper pattern</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 25 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day24.html">← Day 24: Graphs II — Shortest Path &amp; Topo Sort</a>
+    <a class="btn" href="day26.html">Day 26: Dynamic Programming II →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 25;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: fibonacci bottom-up DP table fill (DSA.Grid) ----
+  function buildFibSteps(n) {
+    const values = new Array(n + 1).fill(undefined);
+    const states = {};
+    const steps = [];
+    values[0] = 0; states['0,0'] = 'sorted';
+    values[1] = 1; states['0,1'] = 'sorted';
+    steps.push({
+      narration: 'Base cases: dp[0] = 0 and dp[1] = 1 — these can’t be built from earlier cells, so they’re seeded directly.',
+      values: [values.slice()], states: Object.assign({}, states),
+    });
+    for (let i = 2; i <= n; i++) {
+      states['0,' + (i - 1)] = 'pointer';
+      states['0,' + (i - 2)] = 'pointer';
+      states['0,' + i] = 'active';
+      steps.push({
+        narration: `Computing dp[${i}]: needs dp[${i - 1}] (= ${values[i - 1]}) and dp[${i - 2}] (= ${values[i - 2]}).`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+      const val = values[i - 1] + values[i - 2];
+      values[i] = val;
+      states['0,' + (i - 1)] = 'sorted';
+      states['0,' + (i - 2)] = 'sorted';
+      states['0,' + i] = 'sorted';
+      steps.push({
+        narration: `dp[${i}] = ${values[i - 1]} + ${values[i - 2]} = ${val}. Filled — this cell is never recomputed again.`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+    }
+    steps.push({
+      narration: `Done. dp[${n}] = ${values[n]} — filled left to right in O(n) time.`,
+      values: [values.slice()], states: Object.assign({}, states),
+    });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const grid1 = new DSA.Grid(viz1Stage);
+  const N1 = 10;
+  grid1.setData(1, N1 + 1, [''], Array.from({ length: N1 + 1 }, (_, i) => 'dp[' + i + ']'));
+  let steps1 = buildFibSteps(N1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 900,
+    onStep(step) { if (!step) { grid1.paint([], {}); return; } grid1.paint(step.values, step.states); },
+    onShuffle() {
+      const n = 6 + Math.floor(Math.random() * 7); // 6..12
+      grid1.setData(1, n + 1, [''], Array.from({ length: n + 1 }, (_, i) => 'dp[' + i + ']'));
+      steps1 = buildFibSteps(n);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: climbing stairs bottom-up DP table fill (DSA.Grid) ----
+  function buildClimbSteps(n) {
+    const values = new Array(n).fill(undefined); // col c holds dp[c+1]
+    const states = {};
+    const steps = [];
+    const col = (i) => i - 1;
+    values[col(1)] = 1; states['0,' + col(1)] = 'sorted';
+    values[col(2)] = 2; states['0,' + col(2)] = 'sorted';
+    steps.push({
+      narration: 'Base cases: dp[1] = 1 way (a single step), dp[2] = 2 ways (1+1, or 2) — seeded directly.',
+      values: [values.slice()], states: Object.assign({}, states),
+    });
+    for (let i = 3; i <= n; i++) {
+      states['0,' + col(i - 1)] = 'pointer';
+      states['0,' + col(i - 2)] = 'pointer';
+      states['0,' + col(i)] = 'active';
+      steps.push({
+        narration: `Computing dp[${i}]: ways to reach stair ${i} = ways to reach ${i - 1} (dp[${i - 1}] = ${values[col(i - 1)]}) + ways to reach ${i - 2} (dp[${i - 2}] = ${values[col(i - 2)]}).`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+      const val = values[col(i - 1)] + values[col(i - 2)];
+      values[col(i)] = val;
+      states['0,' + col(i - 1)] = 'sorted';
+      states['0,' + col(i - 2)] = 'sorted';
+      states['0,' + col(i)] = 'sorted';
+      steps.push({
+        narration: `dp[${i}] = ${values[col(i - 1)]} + ${values[col(i - 2)]} = ${val}.`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+    }
+    steps.push({
+      narration: `Done — dp[${n}] = ${values[col(n)]} distinct ways to climb ${n} stairs. Same recurrence as fibonacci, different story.`,
+      values: [values.slice()], states: Object.assign({}, states),
+    });
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const grid2 = new DSA.Grid(viz2Stage);
+  const N2 = 8;
+  grid2.setData(1, N2, [''], Array.from({ length: N2 }, (_, i) => 'dp[' + (i + 1) + ']'));
+  let steps2 = buildClimbSteps(N2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2, narrationEl: document.getElementById('viz2Narration'), counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'), stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'), shuffleBtn: document.getElementById('viz2Shuffle'), speed: 900,
+    onStep(step) { if (!step) { grid2.paint([], {}); return; } grid2.paint(step.values, step.states); },
+    onShuffle() {
+      const n = 5 + Math.floor(Math.random() * 6); // 5..10
+      grid2.setData(1, n, [''], Array.from({ length: n }, (_, i) => 'dp[' + (i + 1) + ']'));
+      steps2 = buildClimbSteps(n);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
