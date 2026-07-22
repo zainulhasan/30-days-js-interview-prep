@@ -147,11 +147,25 @@ reusable by any future lesson that needs to show a string as boxes. Two interact
 visualizations. Reviewed and fixed (see above). Verified in-browser incl. the new uniform-bars
 rendering.
 
+## Done — Day 4 lesson (`lessons/day04.html`)
+Converging pointers (Two Sum II) + same-direction read/write pointers (Remove Duplicates from
+Sorted Array), each with its own diagram + interactive viz. Review pass caught a genuinely
+broken code sample (off-by-one in removeDuplicates that silently corrupted array contents —
+confirmed with `node`, not just reasoning) that was also duplicated into the practice-problem
+solution, plus a mislabeled difficulty (Two Sum II is Medium not Easy) and more diagram/dry-run
+target-value mismatches (caught one myself before browser-testing, review agent caught another).
+Fixed and re-verified, including re-running the corrected code through `node` on multiple test
+cases before trusting it.
+
 ## Not started yet
-- Lesson pages `lessons/day04.html` … `day30.html` — use Days 1-3 as the template, apply every
+- Lesson pages `lessons/day05.html` … `day30.html` — use Days 1-4 as the template, apply every
   point in "Lesson template" above, review each via `.docs/REVIEW-CHECKLIST.md` before moving
-  on. Build order per DECISIONS.md: rest of Week 1 (Days 4–7) next, then Weeks 2–4.
+  on. Build order per DECISIONS.md: rest of Week 1 (Days 5–7) next, then Weeks 2–4.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
+- **New standing practice going forward:** any lesson with a real, runnable code solution
+  (practice problems especially) should be executed via `node -e` on at least one test case
+  before being trusted, not just visually inspected — this is how the Day 4 removeDuplicates
+  bug was confirmed and how the fix was verified.
 
 ## Environment for local preview
 ```bash
