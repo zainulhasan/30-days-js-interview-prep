@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 15: Linked Lists — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Build a linked list from scratch and watch the node pointers move." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 15 / 30 &middot; WEEK 3</p>
+  <h1>Linked Lists</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Build a singly linked list from scratch with a real <code>Node</code> class, and see why
+      it's a chain of pointers scattered in memory — not a contiguous block like an array.</li>
+    <li>Implement insert-at-head, insert-at-tail, insert-at-position, and delete (by value or by
+      position), and know exactly which two pointers move for each one.</li>
+    <li>Understand why inserting/deleting once you're <em>already at</em> the right node is O(1)
+      — and why <em>reaching</em> that node in the first place is the part that actually costs
+      O(k), the same order of cost as shifting an array.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Every array lesson so far has relied on one fact: <code>arr[i]</code> is direct math — the
+    engine computes a memory address from the base address plus <code>i</code> times the element
+    size, in O(1). That direct math is exactly what makes inserting into the <em>middle</em> of an
+    array expensive: to open up a slot at index <code>i</code>, every element from <code>i</code>
+    onward has to physically shift over, which is O(n).</p>
+  <p>A <strong>linked list</strong> gives up direct math entirely. Each element (a <strong>node</strong>)
+    holds a value and a pointer to the <em>next</em> node — nothing tells you where node 3 lives
+    in memory until you've walked node 0 → node 1 → node 2 → node 3, one <code>.next</code> at a
+    time. There is no <code>arr[3]</code> shortcut.</p>
+  <p>That trade produces the headline claim of this lesson, stated carefully: <strong>if you
+    already have a pointer to the node just before where you want to insert or delete, the
+    operation itself is O(1)</strong> — you rewire two pointers and you're done, no shifting.
+    But if you only have an index or a value and have to find that node first, the traversal to
+    reach it costs O(k) (k = how far in), which is the same order of growth as an array shift.
+    The win isn't "linked lists are always faster" — it's "the splice itself is free once you're
+    there."</p>
+
+  <h2>Diagram: anatomy of a linked list</h2>
+  <svg class="diagram" viewBox="0 0 620 220" role="img" aria-label="A linked list of five nodes with values 10, 20, 30, 40, 50. Each node is split into a value half and a next-pointer half, connected by arrows to the next node. HEAD points at the first node; the last node's next pointer points to NULL.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Anatomy: 5 nodes, each holding a value and a pointer to the next</text>
+    <g font-size="13">
+      <line x1="55" y1="36" x2="55" y2="54" stroke="#61AEEE" stroke-width="2"/>
+      <text x="55" y="30" text-anchor="middle" fill="#61AEEE">HEAD</text>
+
+      <rect x="20" y="55" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <line x1="55" y1="55" x2="55" y2="91" stroke="#3E4452"/>
+      <text x="37" y="78" text-anchor="middle" fill="#DCDFE4">10</text>
+      <circle cx="72" cy="73" r="3" fill="#61AEEE"/>
+      <text x="110" y="68" text-anchor="middle" fill="#818896" font-size="14">→</text>
+
+      <rect x="130" y="55" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <line x1="165" y1="55" x2="165" y2="91" stroke="#3E4452"/>
+      <text x="147" y="78" text-anchor="middle" fill="#DCDFE4">20</text>
+      <circle cx="182" cy="73" r="3" fill="#61AEEE"/>
+      <text x="220" y="68" text-anchor="middle" fill="#818896" font-size="14">→</text>
+
+      <rect x="240" y="55" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <line x1="275" y1="55" x2="275" y2="91" stroke="#3E4452"/>
+      <text x="257" y="78" text-anchor="middle" fill="#DCDFE4">30</text>
+      <circle cx="292" cy="73" r="3" fill="#61AEEE"/>
+      <text x="330" y="68" text-anchor="middle" fill="#818896" font-size="14">→</text>
+
+      <rect x="350" y="55" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <line x1="385" y1="55" x2="385" y2="91" stroke="#3E4452"/>
+      <text x="367" y="78" text-anchor="middle" fill="#DCDFE4">40</text>
+      <circle cx="402" cy="73" r="3" fill="#61AEEE"/>
+      <text x="440" y="68" text-anchor="middle" fill="#818896" font-size="14">→</text>
+
+      <rect x="460" y="55" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <line x1="495" y1="55" x2="495" y2="91" stroke="#3E4452"/>
+      <text x="477" y="78" text-anchor="middle" fill="#DCDFE4">50</text>
+      <circle cx="512" cy="73" r="3" fill="#61AEEE"/>
+      <text x="548" y="68" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <text x="590" y="78" text-anchor="middle" fill="#818896">NULL</text>
+    </g>
+    <text x="37" y="105" text-anchor="middle" fill="#818896" font-size="10">value</text>
+    <text x="72" y="105" text-anchor="middle" fill="#818896" font-size="10">next</text>
+    <text x="20" y="140" font-size="12" fill="#DCDFE4">Each node stores a value and a pointer to the next node — nothing else.</text>
+    <text x="20" y="158" font-size="12" fill="#DCDFE4">There's no formula for "jump to index 3" like arr[3] — you must follow</text>
+    <text x="20" y="176" font-size="12" fill="#DCDFE4">.next four times from head to reach it. That walk IS the O(n) cost.</text>
+    <text x="20" y="196" font-size="11" class="dim">HEAD marks the first node. The last node's next points to NULL.</text>
+  </svg>
+
+  <h2>Diagram: insert order matters</h2>
+  <svg class="diagram" viewBox="0 0 620 330" role="img" aria-label="Storyboard showing why the order of pointer rewrites matters when inserting node 25 between node 20 and node 30: first set the new node's next pointer, then repoint the previous node's next pointer.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Insert 25 between 20 and 30 — do ① before ②</text>
+
+    <g font-size="13">
+      <text x="20" y="34" fill="#818896" font-size="11">Before:</text>
+      <rect x="40" y="40" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="75" y="63" text-anchor="middle" fill="#DCDFE4">20</text>
+      <line x1="110" y1="58" x2="250" y2="58" stroke="#3E4452" stroke-width="2"/>
+      <text x="178" y="52" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="250" y="40" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="285" y="63" text-anchor="middle" fill="#DCDFE4">30</text>
+
+      <text x="470" y="28" text-anchor="middle" fill="#818896" font-size="10">new — not linked</text>
+      <rect x="430" y="40" width="80" height="36" rx="4" fill="#2C313A" stroke="#C678DD" stroke-dasharray="4 3"/>
+      <text x="470" y="63" text-anchor="middle" fill="#C678DD">25</text>
+    </g>
+    <text x="20" y="95" font-size="12" fill="#DCDFE4">25 exists in memory, but nothing points to it yet.</text>
+
+    <g font-size="13">
+      <text x="20" y="134" fill="#818896" font-size="11">① new.next = prev.next:</text>
+      <rect x="40" y="140" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="75" y="163" text-anchor="middle" fill="#DCDFE4">20</text>
+      <line x1="110" y1="158" x2="250" y2="158" stroke="#3E4452" stroke-width="2"/>
+      <text x="178" y="152" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="250" y="140" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="285" y="163" text-anchor="middle" fill="#DCDFE4">30</text>
+
+      <rect x="430" y="140" width="80" height="36" rx="4" fill="#2C313A" stroke="#C678DD" stroke-dasharray="4 3"/>
+      <text x="470" y="163" text-anchor="middle" fill="#C678DD">25</text>
+      <line x1="430" y1="158" x2="320" y2="158" stroke="#C678DD" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="375" y="152" text-anchor="middle" fill="#C678DD" font-size="14">①</text>
+    </g>
+    <text x="20" y="195" font-size="12" fill="#DCDFE4">new.next now also points at 30 — saved BEFORE prev is touched.</text>
+    <text x="20" y="212" font-size="12" fill="#DCDFE4">Both 20 and 25 point at 30 for this one instant. That's fine.</text>
+
+    <g font-size="13">
+      <text x="20" y="234" fill="#818896" font-size="11">② prev.next = new:</text>
+      <rect x="40" y="240" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="75" y="263" text-anchor="middle" fill="#DCDFE4">20</text>
+      <line x1="110" y1="258" x2="250" y2="258" stroke="#98C379" stroke-width="2"/>
+      <text x="178" y="252" text-anchor="middle" fill="#98C379" font-size="14">→</text>
+      <rect x="250" y="240" width="70" height="36" rx="4" fill="#2C313A" stroke="#98C379"/>
+      <text x="285" y="263" text-anchor="middle" fill="#DCDFE4">25</text>
+      <line x1="320" y1="258" x2="460" y2="258" stroke="#3E4452" stroke-width="2"/>
+      <text x="388" y="252" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="460" y="240" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="495" y="263" text-anchor="middle" fill="#DCDFE4">30</text>
+    </g>
+    <text x="20" y="295" font-size="12" fill="#DCDFE4">prev.next = new — 20 now points at 25, then 25 at 30. Nothing lost.</text>
+    <text x="20" y="315" font-size="11" class="dim">Trap: reverse the order (② before ①) — the path to 30 is lost forever.</text>
+  </svg>
+
+  <h2>Diagram: delete order matters</h2>
+  <svg class="diagram" viewBox="0 0 620 330" role="img" aria-label="Storyboard showing why you must capture a reference to the node you are deleting before rewriting any pointers, using the example of deleting node 30 from a chain of 20, 30, 40.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Delete 30 from 20 → 30 → 40 — capture before you overwrite</text>
+
+    <g font-size="13">
+      <text x="20" y="34" fill="#818896" font-size="11">Before:</text>
+      <rect x="40" y="40" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="75" y="63" text-anchor="middle" fill="#DCDFE4">20</text>
+      <line x1="110" y1="58" x2="250" y2="58" stroke="#3E4452" stroke-width="2"/>
+      <text x="178" y="52" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="250" y="40" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="285" y="63" text-anchor="middle" fill="#DCDFE4">30</text>
+      <line x1="320" y1="58" x2="460" y2="58" stroke="#3E4452" stroke-width="2"/>
+      <text x="388" y="52" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="460" y="40" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="495" y="63" text-anchor="middle" fill="#DCDFE4">40</text>
+    </g>
+    <text x="20" y="95" font-size="12" fill="#DCDFE4">prev = 20, target = 30, prev.next.next = 40.</text>
+
+    <g font-size="13">
+      <text x="20" y="134" fill="#818896" font-size="11">① removed = prev.next:</text>
+      <rect x="40" y="140" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="75" y="163" text-anchor="middle" fill="#DCDFE4">20</text>
+      <line x1="110" y1="158" x2="250" y2="158" stroke="#3E4452" stroke-width="2"/>
+      <text x="178" y="152" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="250" y="140" width="70" height="36" rx="4" fill="#2C313A" stroke="#E06C75" stroke-width="2"/>
+      <text x="285" y="163" text-anchor="middle" fill="#E06C75">30</text>
+      <line x1="320" y1="158" x2="460" y2="158" stroke="#3E4452" stroke-width="2"/>
+      <text x="388" y="152" text-anchor="middle" fill="#818896" font-size="14">→</text>
+      <rect x="460" y="140" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="495" y="163" text-anchor="middle" fill="#DCDFE4">40</text>
+    </g>
+    <text x="20" y="195" font-size="12" fill="#DCDFE4">removed = prev.next — a reference to 30 is saved</text>
+    <text x="20" y="212" font-size="12" fill="#DCDFE4">before anything is rewritten. This is the safety net.</text>
+
+    <g font-size="13">
+      <text x="20" y="234" fill="#818896" font-size="11">② prev.next = removed.next:</text>
+      <rect x="40" y="240" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="75" y="263" text-anchor="middle" fill="#DCDFE4">20</text>
+      <line x1="110" y1="258" x2="250" y2="258" stroke="#98C379" stroke-width="2"/>
+      <text x="178" y="252" text-anchor="middle" fill="#98C379" font-size="14">→</text>
+      <rect x="250" y="240" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/>
+      <text x="285" y="263" text-anchor="middle" fill="#DCDFE4">40</text>
+
+      <text x="495" y="228" text-anchor="middle" fill="#818896" font-size="10">unreachable</text>
+      <rect x="460" y="240" width="70" height="36" rx="4" fill="#2C313A" stroke="#818896" stroke-dasharray="4 3"/>
+      <text x="495" y="263" text-anchor="middle" fill="#818896">30</text>
+    </g>
+    <text x="20" y="295" font-size="12" fill="#DCDFE4">prev.next = removed.next — 20 now points straight at 40.</text>
+    <text x="20" y="315" font-size="11" class="dim">Trap: skip ① and 30 becomes unreachable, its value lost forever.</text>
+  </svg>
+
+  <h2>Interactive visualization: insert at a given position</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> prev (traversal position)</span>
+    <span><i class="lg-active"></i> new node (not linked yet)</span>
+    <span><i class="lg-sorted"></i> spliced in / done</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: delete a node by value</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> prev (traversal position)</span>
+    <span><i class="lg-compare"></i> checking prev.next</span>
+    <span><i class="lg-swap"></i> marked for removal</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: a singly linked list</h2>
+  <pre><code>class Node {
+  constructor(val) {
+    this.val = val;
+    this.next = null;
+  }
+}
+
+class LinkedList {
+  constructor() {
+    this.head = null;
+    this.tail = null;
+    this.size = 0;
+  }
+
+  insertAtHead(val) {
+    const node = new Node(val);
+    node.next = this.head;      // save old head as new node's next FIRST
+    this.head = node;            // then repoint head
+    if (!this.tail) this.tail = node; // list was empty — new node is also the tail
+    this.size++;
+    return this;
+  }
+
+  insertAtTail(val) {
+    const node = new Node(val);
+    if (!this.head) {
+      this.head = node;
+      this.tail = node;
+    } else {
+      this.tail.next = node;
+      this.tail = node;
+    }
+    this.size++;
+    return this;
+  }
+
+  insertAt(index, val) {
+    if (index &lt;= 0 || !this.head) return this.insertAtHead(val);
+    if (index &gt;= this.size) return this.insertAtTail(val);
+    const node = new Node(val);
+    let prev = this.head;
+    for (let i = 0; i &lt; index - 1; i++) prev = prev.next; // walk to the node BEFORE index
+    node.next = prev.next;   // ① new node points at what prev used to point at
+    prev.next = node;         // ② now it's safe to repoint prev
+    this.size++;
+    return this;
+  }
+
+  deleteValue(val) {
+    if (!this.head) return false;
+    if (this.head.val === val) {
+      this.head = this.head.next;
+      if (!this.head) this.tail = null; // list is now empty — reset tail too
+      this.size--;
+      return true;
+    }
+    let prev = this.head;
+    while (prev.next && prev.next.val !== val) prev = prev.next;
+    if (!prev.next) return false; // reached the end — value not found
+    const removed = prev.next;    // ① capture the reference before touching it
+    prev.next = removed.next;      // ② now it's safe to bypass it
+    if (!prev.next) this.tail = prev; // removed the old tail — fix the tail pointer
+    this.size--;
+    return true;
+  }
+
+  toArray() {
+    const out = [];
+    let cur = this.head;
+    while (cur) {
+      out.push(cur.val);
+      cur = cur.next;
+    }
+    return out;
+  }
+}
+</code></pre>
+
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>Node</code> is deliberately tiny: a <code>val</code> and a <code>next</code> pointer,
+      initialized to <code>null</code> (meaning "nothing after this yet").</li>
+    <li><code>insertAtHead</code>: <code>node.next = this.head</code> must run <em>before</em>
+      <code>this.head = node</code> — if you reassigned <code>this.head</code> first, you'd have
+      already lost the only reference to the old head, and <code>node.next</code> would have
+      nothing to point at.</li>
+    <li><code>insertAtTail</code> keeps a dedicated <code>tail</code> pointer specifically so this
+      is O(1) — without it, "insert at the end" would require walking the whole list first to
+      find the last node, making it O(n).</li>
+    <li><code>insertAt</code>'s loop (<code>for (let i = 0; i &lt; index - 1; i++)</code>) walks
+      <code>prev</code> from <code>head</code> until it's sitting on the node <em>just before</em>
+      the target index — that walk is the O(k) part. The two lines after it are the actual splice,
+      and they're ordered on purpose: ① save what <code>prev</code> used to point at by handing it
+      to the new node first, ② only then overwrite <code>prev.next</code>.</li>
+    <li><code>deleteValue</code>'s <code>while</code> loop walks <code>prev</code> until
+      <code>prev.next</code> is the node we want gone (not <code>prev</code> itself — you always
+      need the node <em>before</em> the target in a singly linked list, since you can't go
+      backward). <code>const removed = prev.next</code> captures the reference before
+      <code>prev.next</code> gets overwritten — reverse those two lines and the rest of the list
+      past <code>removed</code> is unreachable, permanently.</li>
+    <li>Both <code>insertAtHead</code> and <code>deleteValue</code> handle the empty-list case
+      (<code>!this.head</code>) and the single-node case (deleting the only node resets
+      <em>both</em> <code>head</code> and <code>tail</code> to <code>null</code>) explicitly —
+      skipping either check throws on an empty list or leaves a stale <code>tail</code> pointer.</li>
+  </ul>
+
+  <h3>Dry run: insertAt(2, 25) on [10, 20, 30, 40, 50]</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>prev</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>index 0 (value 10)</td><td>prev = head — start the walk</td></tr>
+      <tr><td>2</td><td>index 1 (value 20)</td><td>i (0) &lt; index-1 (1) — prev = prev.next</td></tr>
+      <tr><td>3</td><td>index 1 (value 20)</td><td>i (1) is no longer &lt; index-1 (1) — loop stops here</td></tr>
+      <tr><td>4</td><td>—</td><td>Create new node, value 25 (not linked yet)</td></tr>
+      <tr><td>5</td><td>—</td><td>① new.next = prev.next → 25.next = node(30)</td></tr>
+      <tr><td>6</td><td>—</td><td>② prev.next = new → node(20).next = node(25)</td></tr>
+      <tr><td>7</td><td>—</td><td>Done: [10, 20, 25, 30, 40, 50]</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">The loop only ran once — that's the whole
+    O(k) traversal cost for k = 2. Everything from step 4 onward is O(1): two pointer writes,
+    regardless of whether the list had 5 nodes or 5 million.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Insert at head</td><td>O(1)</td><td>O(1)</td><td>Two pointer writes (new.next, head) — no traversal, regardless of list size.</td></tr>
+      <tr><td>Insert at tail (with tail pointer)</td><td>O(1)</td><td>O(1)</td><td>tail already references the last node — one pointer write, no walk needed.</td></tr>
+      <tr><td>Insert at position k</td><td>O(k)</td><td>O(1)</td><td>Walking from head to the node before position k dominates; the splice itself is O(1) once you're there.</td></tr>
+      <tr><td>Delete by value / position k</td><td>O(k)</td><td>O(1)</td><td>Same story as insert — finding the node before the target costs O(k); the rewire is O(1).</td></tr>
+      <tr><td>Search / traverse for a value</td><td>O(n)</td><td>O(1)</td><td>No random access — you must walk one .next at a time from head; worst case visits every node.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">k = how far the target position/value is
+    from head (worst case k = n, e.g. deleting the last node by value with no tail-ward search).
+    n = list size. Every operation above is O(1) extra space — nodes are rewired in place, nothing
+    is copied.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why is inserting/deleting at a known position "O(1)" for a linked list but O(n)
+      for an array?</strong> An array has to shift every element after the insertion/deletion
+      point to keep the block contiguous — O(n) moves. A linked list just rewires two pointers
+      (the new node's <code>.next</code>, and the previous node's <code>.next</code>) — the size
+      of the rest of the list doesn't matter, as long as you're already positioned at the right
+      node.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So is a linked
+      list always faster for inserting into the middle?" — No. If you don't already hold a
+      pointer to that spot, you have to traverse to find it first, and that traversal is O(k) —
+      the same order of cost as an array shift. The O(1) claim is specifically about the splice
+      itself once you're already there (e.g. you're handed the node, or you just visited it).</span></li>
+    <li><strong>What's the classic bug when rewiring <code>.next</code> pointers during insert or
+      delete?</strong> Overwriting a <code>.next</code> pointer before you've saved a reference to
+      what it used to point at.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> in delete,
+      writing <code>prev.next = something</code> before capturing <code>const removed =
+      prev.next</code> permanently severs access to everything past that point. The safe order is
+      always: read/save the pointer you still need, THEN overwrite.</span></li>
+    <li><strong>How do you delete a node when you're only given a reference to <em>that node
+      itself</em> — not the head, not the previous node?</strong> This is the classic "Delete Node
+      in a Linked List" trick: since a singly linked list can't be walked backward, copy the next
+      node's value into the current node, then skip over the next node
+      (<code>node.next = node.next.next</code>). You've effectively deleted "the next node's data"
+      while making the current node disappear from the caller's perspective.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this only
+      works if the given node is <em>not</em> the last node — there's no next node to copy from.
+      Say that constraint out loud even if the problem guarantees it.</span></li>
+    <li><strong>What has to be handled differently for an empty list or a single-node
+      list?</strong> Null-check <code>head</code> (and <code>tail</code>) before dereferencing
+      anything. Deleting the only node in the list must reset <em>both</em> <code>head</code> and
+      <code>tail</code> back to <code>null</code> — resetting only <code>head</code> leaves a
+      stale <code>tail</code> pointing at a node no longer reachable from <code>head</code>, which
+      silently corrupts the next <code>insertAtTail</code> call.</li>
+    <li><strong>What's the difference between "insert X after node Y" and "insert X before node
+      Y"?</strong> "After Y" is easy with just a reference to Y:
+      <code>newNode.next = Y.next; Y.next = newNode</code>. "Before Y" is not directly possible
+      with only a reference to Y — a singly linked list only lets you see forward, so you'd need
+      the node before Y (found by traversing from head), or a doubly linked list with a
+      <code>prev</code> pointer. Confirm which direction a problem means before writing any
+      pointer code.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> narrate three things, in order, before you
+    touch a pointer. First, which reference you need to save before you change anything — "I need
+    a pointer to the node just before where I'm inserting or deleting." Second, the rewire itself,
+    naming the exact order — "the new node's next first, then the previous node's next — never the
+    reverse, or I lose the rest of the list." Third, the two edge cases you're handling — empty
+    list, and single-node list. Interviewers watching a linked-list solution are listening
+    specifically for whether you say the rewire order out loud before you draw it, because that's
+    exactly where the classic bug lives.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Delete Node in a Linked List <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/delete-node-in-a-linked-list/" target="_blank" rel="noopener">LeetCode: Delete Node in a Linked List</a>)</span></h4>
+    <p>You're given a reference to a node (guaranteed not the tail) to delete — but no reference
+      to <code>head</code> and no way to reach the node before it.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>You can't reach backward in a singly linked
+      list, and you're not given <code>head</code>. But you don't have to remove <em>this</em>
+      node's memory to make it look deleted — you can borrow data from the node just ahead of it
+      instead.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function deleteNode(node) {
+  node.val = node.next.val;
+  node.next = node.next.next;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Remove Duplicates from Sorted List <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/remove-duplicates-from-sorted-list/" target="_blank" rel="noopener">LeetCode: Remove Duplicates from Sorted List</a>)</span></h4>
+    <p>Given the head of a sorted linked list, delete all duplicate values so each element appears
+      only once, and return the (still sorted) list.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>The list is sorted, so any duplicates are
+      always adjacent — you never need to look more than one node ahead. Compare a node to its
+      immediate next and decide whether to advance past it or skip over it.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function deleteDuplicates(head) {
+  let cur = head;
+  while (cur && cur.next) {
+    if (cur.val === cur.next.val) cur.next = cur.next.next;
+    else cur = cur.next;
+  }
+  return head;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Add Two Numbers <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/add-two-numbers/" target="_blank" rel="noopener">LeetCode: Add Two Numbers</a>)</span></h4>
+    <p>Two non-empty linked lists represent non-negative integers, one digit per node, digits
+      stored in <em>reverse</em> order. Add the two numbers and return the sum as a linked list in
+      the same format.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Reverse-order digits mean "head to tail" is
+      already "least significant to most significant" — add the same way you would on paper,
+      carrying overflow into the next position as you go. Build the result with a dummy head node
+      so the first digit isn't a special case.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function addTwoNumbers(l1, l2) {
+  const dummy = new Node(0);
+  let cur = dummy;
+  let carry = 0;
+  while (l1 || l2 || carry) {
+    const sum = (l1 ? l1.val : 0) + (l2 ? l2.val : 0) + carry;
+    carry = Math.floor(sum / 10);
+    cur.next = new Node(sum % 10);
+    cur = cur.next;
+    l1 = l1 ? l1.next : null;
+    l2 = l2 ? l2.next : null;
+  }
+  return dummy.next;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="rewire" data-explain="Arrays need O(n) shifts to keep the block contiguous; a linked list only rewires two pointers (new node's next, and head) — no shifting, regardless of list size.">
+    <p class="q-text">1. Why can inserting at the head of a linked list be O(1) while inserting at the front of an array is O(n)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="rewire">Arrays must shift every existing element to make room; a list only repoints two pointers, no shifting</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">Linked lists are always sorted, so the insertion spot is precomputed</button>
+      <button class="btn dsa-quiz-option" data-value="fixed">Arrays can't grow past a fixed size, so insertion is disallowed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="traversal" data-explain="Walking prev from head to the node just before the target index is O(index) — the actual splice (two pointer writes) is O(1) once you're there. The traversal is what actually costs time.">
+    <p class="q-text">2. In insertAt(index, val), what determines the real time cost of the operation?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="traversal">The traversal needed to reach the node just before index — the splice itself is O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="valsize">The size of the value being inserted</button>
+      <button class="btn dsa-quiz-option" data-value="alwaysone">It's always O(1) no matter what index is</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="capture" data-explain="Overwriting a .next pointer before saving the reference it holds permanently loses access to everything past that point — that's why deleteValue captures `removed = prev.next` before touching prev.next.">
+    <p class="q-text">3. Why must you capture a node's next pointer (or the node itself) before reassigning any pointer during a delete?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="capture">Overwriting a pointer before saving the reference it holds permanently loses everything after it</button>
+      <button class="btn dsa-quiz-option" data-value="gc">JavaScript garbage-collects nodes the instant you read them, so you must read first</button>
+      <button class="btn dsa-quiz-option" data-value="never">It isn't necessary — pointer order never matters in a singly linked list</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="Deleting the only node must reset both head and tail to null. Leaving tail stale means the next insertAtTail call writes into a node that's no longer reachable from head." >
+    <p class="q-text">4. What must be reset when the only node in a linked list is deleted?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">Both head and tail must be set to null</button>
+      <button class="btn dsa-quiz-option" data-value="headonly">Only head needs to reset — tail doesn't matter</button>
+      <button class="btn dsa-quiz-option" data-value="impossible">A size-1 list can't be fully emptied</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="copyskip" data-explain="With only a reference to the node (no head, no predecessor), you copy the next node's value into it, then skip over the next node (node.next = node.next.next) — this is the classic Delete Node in a Linked List trick, and it fails only if the given node is the last one." >
+    <p class="q-text">5. Given only a reference to a node (not head, not its predecessor), how does the classic "Delete Node in a Linked List" trick remove it?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="copyskip">Copy the next node's value into this node, then skip over the next node</button>
+      <button class="btn dsa-quiz-option" data-value="nullval">Set the node's val to null and leave next untouched</button>
+      <button class="btn dsa-quiz-option" data-value="traversefromhead">Traverse from head to find this node's predecessor, then delete normally</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 15 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day14.html">← Day 14: Week 2 Review</a>
+    <a class="btn" href="day16.html">Day 16: Linked Lists II — Fast/Slow &amp; Reverse →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 15;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- shared layout constants for both node/edge visualizations ----
+  const SLOT_X = (i) => 60 + i * 105;
+  const ROW_Y = 110;
+  const ABOVE_Y = 46;
+  const GRAPH_W = 720, GRAPH_H = 210;
+
+  function chainEdges(nodes) {
+    const edges = [];
+    for (let i = 0; i < nodes.length - 1; i++) edges.push({ from: nodes[i].id, to: nodes[i + 1].id, directed: true });
+    return edges;
+  }
+
+  function paintGraph(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {}, step.edgeStates || {});
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = graph.svg;
+    function addText(x, y, txt, fill, size) {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', x);
+      t.setAttribute('y', y);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', size || 11);
+      t.setAttribute('fill', fill || '#818896');
+      t.textContent = txt;
+      svg.appendChild(t);
+    }
+    const inChain = step.nodes.filter((n) => n.y === ROW_Y);
+    if (inChain.length) {
+      const head = inChain.reduce((a, b) => (a.x < b.x ? a : b));
+      const tail = inChain.reduce((a, b) => (a.x > b.x ? a : b));
+      addText(head.x, head.y - 30, 'HEAD', '#61AEEE', 11);
+      if (tail.id !== head.id) addText(tail.x, tail.y - 30, 'TAIL', '#61AEEE', 11);
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', tail.x + 18);
+      line.setAttribute('y1', tail.y);
+      line.setAttribute('x2', tail.x + 50);
+      line.setAttribute('y2', tail.y);
+      line.setAttribute('stroke', '#3E4452');
+      line.setAttribute('stroke-width', '2');
+      line.setAttribute('stroke-dasharray', '4 3');
+      svg.appendChild(line);
+      addText(tail.x + 70, tail.y + 4, 'NULL', '#818896', 11);
+    }
+    step.nodes.filter((n) => n.y === ABOVE_Y).forEach((f) => addText(f.x, f.y - 26, 'not linked yet', '#E6C07B', 10));
+  }
+
+  // ---- viz 1: insert at a given position ----
+  function buildInsertSteps(values, pos, newVal) {
+    let counter = 0;
+    const mk = (label, x, y) => ({ id: 'i' + counter++, label: String(label), x, y });
+    let chain = values.map((v, i) => mk(v, SLOT_X(i), ROW_Y));
+    const steps = [];
+    const snap = () => chain.map((n) => n.label).join(', ');
+
+    function pushStep(narration, states, extraNode, edgesOverride, edgeStates) {
+      const nodes = extraNode ? chain.concat([extraNode]) : chain.slice();
+      const edges = edgesOverride || chainEdges(chain);
+      steps.push({ narration, nodes: nodes.map((n) => Object.assign({}, n)), edges, states: states || {}, edgeStates: edgeStates || {} });
+    }
+
+    pushStep(`Start: [${snap()}]. Insert ${newVal} at position ${pos}.`);
+
+    if (pos <= 0) {
+      const created = mk(newVal, SLOT_X(0), ABOVE_Y);
+      pushStep(`Create new node ${newVal} — floating, not linked to anything yet.`, { [created.id]: 'active' }, created);
+      const edgesWithNew = chainEdges(chain).concat(chain.length ? [{ from: created.id, to: chain[0].id, directed: true }] : []);
+      pushStep(`new.next = head — the new node now also points at the old first node.`, { [created.id]: 'active' }, created, edgesWithNew, { [edgesWithNew.length - 1]: 'pointer' });
+      chain = [created].concat(chain);
+      chain.forEach((n, i) => { n.x = SLOT_X(i); n.y = ROW_Y; });
+      pushStep(`head = new — [${snap()}]. Insertion complete.`, { [created.id]: 'sorted' });
+      return steps;
+    }
+
+    for (let i = 0; i <= pos - 1; i++) {
+      if (i === 0) pushStep(`prev = head (index 0, value ${chain[0].label}).`, { [chain[0].id]: 'pointer' });
+      else pushStep(`Not at position ${pos - 1} yet — prev = prev.next (index ${i}, value ${chain[i].label}).`, { [chain[i].id]: 'pointer' });
+    }
+    const prevIdx = pos - 1;
+    pushStep(`prev is at index ${prevIdx} (value ${chain[prevIdx].label}) — one before the target position.`, { [chain[prevIdx].id]: 'pointer' });
+
+    const created = mk(newVal, SLOT_X(pos), ABOVE_Y);
+    pushStep(`Create new node ${newVal} — floating, not linked to the chain yet.`, { [chain[prevIdx].id]: 'pointer', [created.id]: 'active' }, created);
+
+    const oldNext = chain[pos];
+    const edgesWithNew = chainEdges(chain).concat(oldNext ? [{ from: created.id, to: oldNext.id, directed: true }] : []);
+    pushStep(
+      `new.next = prev.next — new node also points at ${oldNext ? 'value ' + oldNext.label : 'null'}, saved BEFORE we touch prev.`,
+      { [chain[prevIdx].id]: 'pointer', [created.id]: 'active' },
+      created,
+      edgesWithNew,
+      { [edgesWithNew.length - 1]: 'pointer' }
+    );
+
+    const before = chain.slice(0, pos);
+    const after = chain.slice(pos);
+    chain = before.concat([created], after);
+    chain.forEach((n, i) => { n.x = SLOT_X(i); n.y = ROW_Y; });
+    pushStep(`prev.next = new — [${snap()}]. Nothing was lost because new.next was set first.`, { [created.id]: 'sorted' });
+    pushStep(`Insertion complete: [${snap()}].`);
+
+    return steps;
+  }
+
+  function randomDistinct(n, min, max) {
+    const pool = [];
+    for (let v = min; v <= max; v++) pool.push(v);
+    return DSA.shuffleArray(pool).slice(0, n);
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const graph1 = new DSA.Graph(viz1Stage, { width: GRAPH_W, height: GRAPH_H });
+  let BASE1 = [10, 20, 30, 40, 50];
+  let POS1 = 2, NEWVAL1 = 25;
+  let steps1 = buildInsertSteps(BASE1, POS1, NEWVAL1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1100,
+    onStep(step) { paintGraph(graph1, step || steps1[0]); },
+    onShuffle() {
+      BASE1 = randomDistinct(5, 1, 89).sort((a, b) => a - b);
+      // keep pos in [0, length-1] — pos === length would hit insertAtTail's O(1) fast path
+      // in the real class (see insertAt's `index >= this.size` branch), which this animation
+      // doesn't model; restricting the range keeps the walk shown always match the real code.
+      POS1 = Math.floor(Math.random() * BASE1.length);
+      do { NEWVAL1 = 1 + Math.floor(Math.random() * 99); } while (BASE1.includes(NEWVAL1));
+      steps1 = buildInsertSteps(BASE1, POS1, NEWVAL1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: delete a node by value ----
+  function buildDeleteSteps(values, targetVal) {
+    let counter = 0;
+    const mk = (label, x, y) => ({ id: 'd' + counter++, label: String(label), x, y });
+    let chain = values.map((v, i) => mk(v, SLOT_X(i), ROW_Y));
+    const steps = [];
+    const snap = () => chain.map((n) => n.label).join(', ');
+
+    function pushStep(narration, states) {
+      steps.push({ narration, nodes: chain.map((n) => Object.assign({}, n)), edges: chainEdges(chain), states: states || {}, edgeStates: {} });
+    }
+
+    pushStep(`Start: [${snap()}]. Delete the node with value ${targetVal}.`);
+    const targetIdx = chain.findIndex((n) => n.label === String(targetVal));
+    if (targetIdx === -1) {
+      pushStep(`${targetVal} was never found — nothing to delete.`);
+      return steps;
+    }
+
+    if (targetIdx === 0) {
+      pushStep(`head.val === ${targetVal} — no traversal needed, this is the head.`, { [chain[0].id]: 'swap' });
+      chain = chain.slice(1);
+      chain.forEach((n, i) => { n.x = SLOT_X(i); n.y = ROW_Y; });
+      pushStep(`head = head.next — [${snap()}]. Deletion complete.`);
+      return steps;
+    }
+
+    let i = 0;
+    pushStep(`prev = head (index 0, value ${chain[0].label}).`, { [chain[0].id]: 'pointer' });
+    while (i < targetIdx - 1) {
+      pushStep(`prev.next.val is ${chain[i + 1].label}, not ${targetVal} — keep going.`, { [chain[i].id]: 'pointer', [chain[i + 1].id]: 'compare' });
+      i++;
+      pushStep(`prev = prev.next (index ${i}, value ${chain[i].label}).`, { [chain[i].id]: 'pointer' });
+    }
+    pushStep(`prev.next.val === ${targetVal} — found it. prev is at index ${i} (value ${chain[i].label}).`, { [chain[i].id]: 'pointer', [chain[targetIdx].id]: 'compare' });
+    pushStep(`Capture removed = prev.next BEFORE changing anything — this is the reference we must not lose.`, { [chain[i].id]: 'pointer', [chain[targetIdx].id]: 'swap' });
+
+    const removedNext = chain[targetIdx + 1];
+    pushStep(`prev.next = removed.next (${removedNext ? 'value ' + removedNext.label : 'null'}) — the target node is bypassed.`, { [chain[i].id]: 'pointer', [chain[targetIdx].id]: 'swap' });
+
+    chain = chain.filter((_, idx) => idx !== targetIdx);
+    chain.forEach((n, idx) => { n.x = SLOT_X(idx); n.y = ROW_Y; });
+    pushStep(`Deletion complete: [${snap()}].`);
+
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const graph2 = new DSA.Graph(viz2Stage, { width: GRAPH_W, height: GRAPH_H });
+  let BASE2 = [10, 20, 30, 40, 50];
+  let TARGET2 = 30;
+  let steps2 = buildDeleteSteps(BASE2, TARGET2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1100,
+    onStep(step) { paintGraph(graph2, step || steps2[0]); },
+    onShuffle() {
+      BASE2 = randomDistinct(5, 1, 89).sort((a, b) => a - b);
+      TARGET2 = BASE2[Math.floor(Math.random() * BASE2.length)];
+      steps2 = buildDeleteSteps(BASE2, TARGET2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>

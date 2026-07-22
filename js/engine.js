@@ -169,6 +169,7 @@ const DSA = (function () {
   class Graph {
     constructor(container, { width = 600, height = 300 } = {}) {
       this.container = container;
+      this.container.classList.add('dsa-graph-wrap');
       this.width = width;
       this.height = height;
       const ns = 'http://www.w3.org/2000/svg';

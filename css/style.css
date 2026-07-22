@@ -393,12 +393,27 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 }
 
 /* graph renderer */
+.dsa-graph-wrap {
+  width: 100%;
+}
 .dsa-graph-svg {
   width: 100%;
   height: auto;
   max-height: 340px;
 }
 .dsa-node-circle { stroke: var(--border); stroke-width: 2; fill: var(--c-neutral); }
+/* SVG shapes ignore CSS `background` (used by the div-based renderers above) — a circle
+   needs its color set via `fill`, so the shared state classes are re-applied here explicitly. */
+.dsa-node-circle.dsa-compare { fill: var(--c-compare) !important; }
+.dsa-node-circle.dsa-swap { fill: var(--c-swap) !important; }
+.dsa-node-circle.dsa-sorted { fill: var(--c-sorted) !important; }
+.dsa-node-circle.dsa-pointer { fill: var(--c-pointer) !important; }
+.dsa-node-circle.dsa-active { fill: var(--c-active) !important; }
+.dsa-node-circle.dsa-compare ~ .dsa-node-text { fill: var(--c-compare-text) !important; }
+.dsa-node-circle.dsa-swap ~ .dsa-node-text { fill: var(--c-swap-text) !important; }
+.dsa-node-circle.dsa-sorted ~ .dsa-node-text { fill: var(--c-sorted-text) !important; }
+.dsa-node-circle.dsa-pointer ~ .dsa-node-text { fill: var(--c-pointer-text) !important; }
+.dsa-node-circle.dsa-active ~ .dsa-node-text { fill: var(--c-active-text) !important; }
 .dsa-node-text {
   font-family: var(--font-head);
   font-size: 12px;
