@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Day 8: Bubble, Selection, Insertion Sort — 30 Days of DSA in JavaScript</title>
-<meta name="description" content="Three O(n²) sorting algorithms, animated bar-by-bar — how they differ, and why they're all the same complexity class." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<title>Day 8a: Bubble Sort — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Bubble sort, animated bar-by-bar: neighbors swap, the largest element sinks to the end each pass." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -15,75 +15,47 @@
 </header>
 
 <main class="container">
-  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 8 / 30 &middot; WEEK 2</p>
-  <h1>Bubble, Selection, Insertion Sort</h1>
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 8 / 30 &middot; WEEK 2 &middot; PART 1 OF 3</p>
+  <h1>Bubble Sort</h1>
+  <p style="color:var(--text-dim);font-size:0.9rem;">Day 8 covers three O(n²) sorts in three short
+    parts: <strong>Bubble Sort</strong> (here) → <a href="day08b.html">Selection Sort</a> →
+    <a href="day08c.html">Insertion Sort</a>.</p>
 
   <h2>Goal of the day</h2>
   <ul class="goal-list">
-    <li>Implement bubble sort, selection sort, and insertion sort from scratch.</li>
-    <li>Understand why all three are O(n²) despite doing very different things.</li>
-    <li>Recognize each one's visual "signature" — you'll be asked to name a sort from a description in interviews.</li>
+    <li>Implement bubble sort from scratch: compare neighbors, swap if out of order.</li>
+    <li>Understand why it's O(n²), and how one small optimization gives it an O(n) best case.</li>
+    <li>Recognize its visual "signature" — the largest unsorted value sinks to the end each pass.</li>
   </ul>
 
   <h2>Concept</h2>
-  <p>Three different ways to sort a hand of playing cards:</p>
-  <ul>
-    <li><strong>Bubble sort</strong> — repeatedly walk down the hand comparing neighbors, swapping
-      any pair that's out of order. Each full walk pushes the largest remaining card as far
-      right as it can go, like a bubble rising to the top.</li>
-    <li><strong>Selection sort</strong> — scan the whole unsorted portion to find the smallest
-      card, then swap it into the front position. Repeat, one position at a time.</li>
-    <li><strong>Insertion sort</strong> — how most people actually sort cards by hand: pick up
-      one new card at a time and slide it into its correct spot among the cards you've already
-      sorted.</li>
-  </ul>
-  <p>All three are O(n²) because all three compare roughly n elements against roughly n other
-    elements in the worst case — but they get there differently, and that difference matters:
-    insertion sort is fast (O(n)) when the data is already nearly sorted, while bubble and
-    selection sort don't get that same speed-up.</p>
+  <p>Imagine sorting a hand of playing cards by repeatedly walking down the hand comparing each
+    pair of neighbors, swapping any pair that's out of order. Every full walk pushes the largest
+    remaining card as far right as it can go — like a bubble rising to the surface, which is
+    where the name comes from. Walk the hand again, and the next-largest card sinks into place.
+    Repeat until a full walk makes zero swaps — at that point, everything is sorted.</p>
 
-  <h2>Diagram: three signatures</h2>
-  <svg class="diagram" viewBox="0 0 620 220" role="img" aria-label="Bubble sort pushes the largest element to the end each pass; selection sort finds the minimum and swaps it to the front; insertion sort grows a sorted prefix one element at a time">
-    <text x="20" y="20" font-size="13" fill="#e5534b" font-weight="bold">Bubble: neighbors swap, largest sinks to the end each pass</text>
+  <h2>Diagram</h2>
+  <svg class="diagram" viewBox="0 0 620 110" role="img" aria-label="Bubble sort compares neighboring elements and swaps them if out of order; the largest element sinks to the end of the array after one full pass">
+    <text x="20" y="20" font-size="13" fill="#D64545" font-weight="bold">Neighbors swap, largest sinks to the end each pass</text>
     <g font-size="12">
-      <rect x="20" y="30" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="38" y="50" text-anchor="middle" fill="#e6edf3">5</text>
-      <rect x="60" y="30" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="78" y="50" text-anchor="middle" fill="#e6edf3">2</text>
-      <rect x="100" y="30" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="118" y="50" text-anchor="middle" fill="#e6edf3">8</text>
-      <rect x="140" y="30" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="158" y="50" text-anchor="middle" fill="#e6edf3">1</text>
-      <rect x="180" y="30" width="36" height="30" rx="4" fill="#1c2330" stroke="#3fb950" stroke-width="2"/><text x="198" y="50" text-anchor="middle" fill="#3fb950">9</text>
+      <rect x="20" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#E7DDCC"/><text x="38" y="50" text-anchor="middle" fill="#1A312C">5</text>
+      <rect x="60" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#E7DDCC"/><text x="78" y="50" text-anchor="middle" fill="#1A312C">2</text>
+      <rect x="100" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#E7DDCC"/><text x="118" y="50" text-anchor="middle" fill="#1A312C">8</text>
+      <rect x="140" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#E7DDCC"/><text x="158" y="50" text-anchor="middle" fill="#1A312C">1</text>
+      <rect x="180" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#2F9E6F" stroke-width="2"/><text x="198" y="50" text-anchor="middle" fill="#2F9E6F">9</text>
     </g>
-    <text x="230" y="50" font-size="11" fill="#3fb950">← 9 is already the biggest, sinks here first</text>
-
-    <text x="20" y="88" font-size="13" fill="#58a6ff" font-weight="bold">Selection: scan for the minimum, swap it to the front</text>
-    <g font-size="12">
-      <rect x="20" y="98" width="36" height="30" rx="4" fill="#1c2330" stroke="#58a6ff" stroke-width="2"/><text x="38" y="118" text-anchor="middle" fill="#58a6ff">1</text>
-      <rect x="60" y="98" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="78" y="118" text-anchor="middle" fill="#e6edf3">2</text>
-      <rect x="100" y="98" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="118" y="118" text-anchor="middle" fill="#e6edf3">8</text>
-      <rect x="140" y="98" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="158" y="118" text-anchor="middle" fill="#e6edf3">5</text>
-      <rect x="180" y="98" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="198" y="118" text-anchor="middle" fill="#e6edf3">9</text>
-    </g>
-    <text x="230" y="118" font-size="11" fill="#58a6ff">← 1 found as the minimum, swapped to index 0</text>
-
-    <text x="20" y="156" font-size="13" fill="#d4a72c" font-weight="bold">Insertion: grow a sorted prefix, one element at a time</text>
-    <g font-size="12">
-      <rect x="20" y="166" width="36" height="30" rx="4" fill="#1c2330" stroke="#3fb950"/><text x="38" y="186" text-anchor="middle" fill="#3fb950">2</text>
-      <rect x="60" y="166" width="36" height="30" rx="4" fill="#1c2330" stroke="#3fb950"/><text x="78" y="186" text-anchor="middle" fill="#3fb950">5</text>
-      <rect x="100" y="166" width="36" height="30" rx="4" fill="#1c2330" stroke="#d4a72c" stroke-width="2"/><text x="118" y="186" text-anchor="middle" fill="#d4a72c">1</text>
-      <rect x="140" y="166" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="158" y="186" text-anchor="middle" fill="#e6edf3">8</text>
-      <rect x="180" y="166" width="36" height="30" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="198" y="186" text-anchor="middle" fill="#e6edf3">9</text>
-    </g>
-    <text x="230" y="186" font-size="11" fill="#d4a72c">← "1" is being inserted into [2,5], the sorted prefix</text>
+    <text x="230" y="50" font-size="11" fill="#2F9E6F">← 9 is already the biggest, sinks here first</text>
+    <text x="20" y="86" font-size="12" class="dim">Each pass needs one fewer comparison than the last — the sorted</text>
+    <text x="20" y="100" font-size="12" class="dim">tail never needs rechecking.</text>
   </svg>
 
-  <h2>Interactive visualizations</h2>
+  <h2>Interactive visualization</h2>
   <div class="legend">
     <span><i class="lg-compare"></i> comparing</span>
     <span><i class="lg-swap"></i> swapping</span>
     <span><i class="lg-sorted"></i> in final position</span>
-    <span><i class="lg-pointer"></i> current focus (min / key)</span>
   </div>
-
-  <h3>1. Bubble sort</h3>
   <div class="viz-panel">
     <div class="viz-stage"><div id="viz1Stage"></div></div>
     <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
@@ -96,35 +68,8 @@
     </div>
   </div>
 
-  <h3>2. Selection sort</h3>
-  <div class="viz-panel">
-    <div class="viz-stage"><div id="viz2Stage"></div></div>
-    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
-    <div class="viz-controls">
-      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
-      <button class="btn" id="viz2Step">Step ⏭</button>
-      <button class="btn" id="viz2Reset">⟲ Reset</button>
-      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
-      <span class="viz-counter" id="viz2Counter"></span>
-    </div>
-  </div>
-
-  <h3>3. Insertion sort</h3>
-  <div class="viz-panel">
-    <div class="viz-stage"><div id="viz3Stage"></div></div>
-    <div class="narration" id="viz3Narration">Press Play or Step to begin.</div>
-    <div class="viz-controls">
-      <button class="btn btn-primary" id="viz3Play">▶ Play</button>
-      <button class="btn" id="viz3Step">Step ⏭</button>
-      <button class="btn" id="viz3Reset">⟲ Reset</button>
-      <button class="btn" id="viz3Shuffle">🔀 Shuffle</button>
-      <span class="viz-counter" id="viz3Counter"></span>
-    </div>
-  </div>
-
   <h2>The code</h2>
-  <pre><code>// --- Bubble sort ---
-function bubbleSort(arr) {
+  <pre><code>function bubbleSort(arr) {
   for (let i = 0; i < arr.length - 1; i++) {
     let swapped = false;
     for (let j = 0; j < arr.length - 1 - i; j++) {
@@ -137,47 +82,15 @@ function bubbleSort(arr) {
   }
   return arr;
 }
-
-// --- Selection sort ---
-function selectionSort(arr) {
-  for (let i = 0; i < arr.length - 1; i++) {
-    let minIdx = i;
-    for (let j = i + 1; j < arr.length; j++) {
-      if (arr[j] < arr[minIdx]) minIdx = j;
-    }
-    if (minIdx !== i) [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
-  }
-  return arr;
-}
-
-// --- Insertion sort ---
-function insertionSort(arr) {
-  for (let i = 1; i < arr.length; i++) {
-    const key = arr[i];
-    let j = i - 1;
-    while (j >= 0 && arr[j] > key) {
-      arr[j + 1] = arr[j]; // shift bigger elements right
-      j--;
-    }
-    arr[j + 1] = key; // drop the key into its now-open slot
-  }
-  return arr;
-}
 </code></pre>
   <p><strong>Line by line:</strong></p>
   <ul>
-    <li><code>bubbleSort</code> — the inner loop's upper bound shrinks by one each pass
-      (<code>arr.length - 1 - i</code>) because the last <code>i</code> elements are already
-      guaranteed sorted from previous passes — no need to recheck them. The <code>swapped</code>
-      flag is what gives bubble sort its O(n) best case: on an already-sorted array, the first
-      pass makes zero swaps, so we <code>break</code> immediately instead of running n more
-      wasted passes.</li>
-    <li><code>selectionSort</code> — <code>minIdx</code> tracks the smallest value's position as
-      the inner loop scans. The swap happens at most once per outer-loop iteration, at the end —
-      this is why selection sort does far fewer swaps than bubble sort.</li>
-    <li><code>insertionSort</code> — no swapping at all. Bigger elements shift one slot right to
-      make room, and the key drops into the gap left behind. This is exactly the "sort cards in
-      your hand" motion.</li>
+    <li>The inner loop's upper bound shrinks by one each pass (<code>arr.length - 1 - i</code>)
+      because the last <code>i</code> elements are already guaranteed sorted from previous
+      passes — no need to recheck them.</li>
+    <li>The <code>swapped</code> flag is what gives bubble sort its O(n) best case: on an
+      already-sorted array, the first pass makes zero swaps, so we <code>break</code>
+      immediately instead of running n more wasted passes.</li>
   </ul>
 
   <h3>Dry run: bubbleSort([5, 2, 8, 1])</h3>
@@ -197,43 +110,38 @@ function insertionSort(arr) {
 
   <h2>Complexity</h2>
   <table class="complexity-table">
-    <thead><tr><th>Algorithm</th><th>Time (best)</th><th>Time (worst)</th><th>Space</th><th>Stable?</th></tr></thead>
+    <thead><tr><th>Time (best)</th><th>Time (worst)</th><th>Space</th><th>Stable?</th></tr></thead>
     <tbody>
-      <tr><td>Bubble sort</td><td>O(n) — with the swapped-flag early exit</td><td>O(n²)</td><td>O(1)</td><td>Yes</td></tr>
-      <tr><td>Selection sort</td><td>O(n²) — always fully scans</td><td>O(n²)</td><td>O(1)</td><td>No</td></tr>
-      <tr><td>Insertion sort</td><td>O(n) — already sorted, no shifts</td><td>O(n²)</td><td>O(1)</td><td>Yes</td></tr>
+      <tr><td>O(n) — with the swapped-flag early exit</td><td>O(n²)</td><td>O(1)</td><td>Yes</td></tr>
     </tbody>
   </table>
   <p style="color:var(--text-dim);font-size:0.85rem;">"Stable" means equal elements keep their
-    original relative order. Selection sort's swap-based approach can jump an element past an
-    equal one, breaking stability — bubble and insertion sort only ever move elements one slot
-    at a time, so equal elements never leapfrog each other.</p>
+    original relative order. Bubble sort only ever swaps <em>adjacent</em> elements, so two
+    equal values never leapfrog each other.</p>
 
   <h2>Interview corner</h2>
   <ul class="interview-list">
-    <li><strong>If all three are O(n²), why does it matter which one you pick?</strong> The
-      constant factors and best-case behavior differ a lot. Insertion sort on nearly-sorted data
-      is close to O(n) in practice — genuinely useful for small or mostly-sorted inputs (some
-      real sort implementations switch to insertion sort for small sub-arrays).<br>
-      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So why not
-      just always use insertion sort?" — its worst case (reverse-sorted data) is still O(n²)
-      with a lot of shifting, and for large, unpredictable data an O(n log n) sort (Day 10/11)
-      wins decisively.</span></li>
-    <li><strong>Which of these has the fewest swaps?</strong> Selection sort — exactly n−1 swaps
-      in the worst case, since it swaps at most once per outer-loop pass. Bubble sort can swap
-      on nearly every comparison.<br>
-      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> "fewest
-      swaps" doesn't mean "fastest" — selection sort still does O(n²) <em>comparisons</em>
-      regardless of how sorted the input already is, so it never gets insertion sort's
-      best-case speedup.</span></li>
     <li><strong>Is bubble sort ever actually used in production?</strong> Almost never — it's
       taught because the swap-neighbors mechanic is foundational, not because it's competitive.
       Being honest about this in an interview ("I know this isn't production-grade, but here's
-      why it's worth understanding") reads better than pretending it's a real choice.</li>
+      why it's worth understanding") reads better than pretending it's a real choice.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So what would
+      you actually use?" — Day 10/11's O(n log n) sorts, or for small/nearly-sorted inputs,
+      <a href="day08c.html">insertion sort</a> (up next after
+      <a href="day08b.html">selection sort</a>).</span></li>
+    <li><strong>What's bubble sort's worst case?</strong> A reverse-sorted array — every single
+      comparison results in a swap, for the full O(n²) comparisons and O(n²) swaps.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> the
+      swapped-flag optimization only helps the <em>best</em> case (already sorted). It does
+      nothing for the worst case — don't claim it changes bubble sort's fundamental O(n²)
+      classification.</span></li>
+    <li><strong>Why does bubble sort get its name?</strong> Larger values move toward the end of
+      the array one swap at a time, the way a bubble rises toward the surface of water — each
+      pass, the largest remaining value "bubbles up" (rightward) to its final position. It's a
+      mnemonic for the motion, not a technical property.</li>
   </ul>
-  <p><strong>How to talk through it out loud:</strong> name the invariant your sort maintains
-    after each pass — "after pass i, the last i elements are in their final sorted position" for
-    bubble sort, or "after step i, the first i elements are fully sorted" for insertion sort.
+  <p><strong>How to talk through it out loud:</strong> name the invariant bubble sort maintains
+    — "after pass i, the last i elements are guaranteed to be in their final sorted position."
     Stating the invariant is what proves you understand why the algorithm terminates correctly,
     not just that you memorized the loop structure.</p>
 
@@ -252,30 +160,26 @@ function insertionSort(arr) {
   // Simple O(n log n) version, appropriate for today's topic:
   return nums.map((n) => n * n).sort((a, b) => a - b);
 }
-// The O(n) two-pointer version (start from both ends, the largest
-// square is always at whichever end has the larger absolute value)
-// is genuinely Day 4 material — not repeated here, but worth
-// revisiting this problem once you've got that pattern down.</code></pre></div>
+// The O(n) two-pointer version is genuinely Day 4 material —
+// not repeated here, but worth revisiting once that pattern is solid.</code></pre></div>
   </div>
 
   <div class="problem">
-    <h4>2. Third Maximum Number <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/third-maximum-number/" target="_blank" rel="noopener">LeetCode: Third Maximum Number</a>)</span></h4>
-    <p>Given an array of integers, return the third distinct maximum value. If it doesn't exist,
-      return the maximum value.</p>
+    <h4>2. Check if Array Is Sorted and Rotated <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/check-if-array-is-sorted-and-rotated/" target="_blank" rel="noopener">LeetCode: Check if Array Is Sorted and Rotated</a>)</span></h4>
+    <p>Given an array, return true if it could have been produced by taking a sorted array and
+      rotating it some number of positions.</p>
     <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
-    <div class="dsa-reveal-panel" id="p2-hint" hidden>You don't need to sort the whole array —
-      track just the top 3 distinct values seen so far as you scan once, similar to selection
-      sort's "track the best so far" idea.</div>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Walk adjacent pairs, wrapping from the last
+      element back to the first — exactly the neighbor-comparison mechanic from today. How many
+      times can a sorted-and-rotated array "drop" (a value followed by a smaller one)?</div>
     <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
-    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function thirdMax(nums) {
-  const top = [-Infinity, -Infinity, -Infinity];
-  for (const n of nums) {
-    if (top.includes(n)) continue;
-    if (n > top[0]) { top[2] = top[1]; top[1] = top[0]; top[0] = n; }
-    else if (n > top[1]) { top[2] = top[1]; top[1] = n; }
-    else if (n > top[2]) { top[2] = n; }
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function check(nums) {
+  let drops = 0;
+  const n = nums.length;
+  for (let i = 0; i < n; i++) {
+    if (nums[i] > nums[(i + 1) % n]) drops++;
   }
-  return top[2] === -Infinity ? top[0] : top[2];
+  return drops <= 1;
 }</code></pre></div>
   </div>
 
@@ -300,18 +204,8 @@ function insertionSort(arr) {
 
   <h2>Quiz</h2>
 
-  <div class="dsa-quiz" data-answer="insertion" data-explain="Insertion sort's inner while loop barely runs at all when the array is already nearly sorted — close to O(n).">
-    <p class="q-text">1. Which sort has the best BEST-CASE time complexity on a nearly-sorted array?</p>
-    <div class="dsa-quiz-options">
-      <button class="btn dsa-quiz-option" data-value="bubble">Bubble sort — same as the others</button>
-      <button class="btn dsa-quiz-option" data-value="selection">Selection sort</button>
-      <button class="btn dsa-quiz-option" data-value="insertion">Insertion sort</button>
-    </div>
-    <p class="dsa-quiz-feedback" hidden></p>
-  </div>
-
   <div class="dsa-quiz" data-answer="sink" data-explain="Each full pass of neighbor-swapping pushes the largest remaining value as far right as it can go — the 'bubble rising' signature.">
-    <p class="q-text">2. Bubble sort's signature move each pass is:</p>
+    <p class="q-text">1. Bubble sort's signature move each pass is:</p>
     <div class="dsa-quiz-options">
       <button class="btn dsa-quiz-option" data-value="sink">The largest unsorted element sinks to its final position at the end</button>
       <button class="btn dsa-quiz-option" data-value="pick">The smallest element is found and moved to the front</button>
@@ -320,28 +214,8 @@ function insertionSort(arr) {
     <p class="dsa-quiz-feedback" hidden></p>
   </div>
 
-  <div class="dsa-quiz" data-answer="swaps" data-explain="Selection sort swaps at most once per outer-loop pass — n-1 swaps total in the worst case, far fewer than bubble sort's potentially O(n²) swaps.">
-    <p class="q-text">3. Compared to bubble sort, selection sort minimizes:</p>
-    <div class="dsa-quiz-options">
-      <button class="btn dsa-quiz-option" data-value="swaps">The number of swaps</button>
-      <button class="btn dsa-quiz-option" data-value="comparisons">The number of comparisons</button>
-      <button class="btn dsa-quiz-option" data-value="space">The space it uses</button>
-    </div>
-    <p class="dsa-quiz-feedback" hidden></p>
-  </div>
-
-  <div class="dsa-quiz" data-answer="bubbleinsertion" data-explain="Bubble and insertion sort only ever move elements one slot at a time, so equal elements never leapfrog each other — that's what makes a sort stable.">
-    <p class="q-text">4. Which of these are stable (equal elements keep their original order)?</p>
-    <div class="dsa-quiz-options">
-      <button class="btn dsa-quiz-option" data-value="bubbleinsertion">Bubble sort and insertion sort</button>
-      <button class="btn dsa-quiz-option" data-value="selectiononly">Selection sort only</button>
-      <button class="btn dsa-quiz-option" data-value="allthree">All three, always</button>
-    </div>
-    <p class="dsa-quiz-feedback" hidden></p>
-  </div>
-
-  <div class="dsa-quiz" data-answer="on2" data-explain="A reverse-sorted array forces maximum work out of all three — O(n²) comparisons/swaps/shifts in every case.">
-    <p class="q-text">5. What's the WORST-CASE time complexity shared by all three sorts?</p>
+  <div class="dsa-quiz" data-answer="on2" data-explain="A reverse-sorted array forces every comparison to result in a swap — O(n²) in the worst case.">
+    <p class="q-text">2. What's bubble sort's WORST-CASE time complexity?</p>
     <div class="dsa-quiz-options">
       <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
       <button class="btn dsa-quiz-option" data-value="onlogn">O(n log n)</button>
@@ -350,13 +224,42 @@ function insertionSort(arr) {
     <p class="dsa-quiz-feedback" hidden></p>
   </div>
 
+  <div class="dsa-quiz" data-answer="on" data-explain="The swapped-flag lets bubble sort break out after the first pass if nothing needed swapping — close to O(n)." >
+    <p class="q-text">3. What's bubble sort's BEST-CASE time complexity, with the swapped-flag optimization?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²) — the optimization doesn't help the best case</button>
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="stable" data-explain="Bubble sort only swaps adjacent elements, so two equal values are never moved past each other — that's what makes a sort stable.">
+    <p class="q-text">4. Is bubble sort stable (do equal elements keep their original order)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="stable">Yes — adjacent-only swaps never let equal elements leapfrog each other</button>
+      <button class="btn dsa-quiz-option" data-value="unstable">No — swapping always breaks original order</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="rare" data-explain="Bubble sort is taught for the foundational swap-neighbors mechanic, not because it's competitive with O(n log n) sorts in real systems.">
+    <p class="q-text">5. How commonly is bubble sort used in real production systems?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="rare">Almost never — it's mainly a teaching tool</button>
+      <button class="btn dsa-quiz-option" data-value="common">It's the default sort in most languages</button>
+      <button class="btn dsa-quiz-option" data-value="fastest">It's the fastest known sorting algorithm</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
   <div class="continue-row">
-    <button class="btn btn-primary" id="completeBtn">Mark Day 8 as complete</button>
+    <a class="btn btn-primary" href="day08b.html">Continue to Part 2: Selection Sort →</a>
   </div>
 
   <nav class="lesson-nav">
     <a class="btn" href="day07.html">← Day 7: Week 1 Review</a>
-    <a class="btn" href="day09.html">Day 9: Recursion & the Call Stack →</a>
+    <a class="btn" href="day08b.html">Part 2: Selection Sort →</a>
   </nav>
 </main>
 
@@ -368,10 +271,8 @@ function insertionSort(arr) {
 <script src="../js/progress.js"></script>
 <script src="../js/engine.js"></script>
 <script>
-  const THE_DAY = 8;
-  DSAProgress.setLastDay(THE_DAY);
+  DSAProgress.setLastDay(8);
 
-  // ---- viz 1: bubble sort ----
   function buildBubbleSteps(input) {
     const arr = input.slice();
     const steps = [{ narration: `Start: [${arr.join(', ')}].`, values: arr.slice(), states: {} }];
@@ -414,101 +315,8 @@ function insertionSort(arr) {
     onShuffle() { const a = DSA.randomArray(6, 1, 9); steps1 = buildBubbleSteps(a); bars1.setData(a); player1.setSteps(steps1); },
   });
 
-  // ---- viz 2: selection sort ----
-  function buildSelectionSteps(input) {
-    const arr = input.slice();
-    const steps = [{ narration: `Start: [${arr.join(', ')}].`, values: arr.slice(), states: {} }];
-    const n = arr.length;
-    for (let i = 0; i < n - 1; i++) {
-      let minIdx = i;
-      steps.push({ narration: `Pass ${i + 1}: assume index ${i} (${arr[i]}) is the minimum so far.`, values: arr.slice(), states: sortedHead(i, { [i]: 'pointer' }) });
-      for (let j = i + 1; j < n; j++) {
-        steps.push({ narration: `Check index ${j} (${arr[j]}) against current minimum ${arr[minIdx]}.`, values: arr.slice(), states: sortedHead(i, { [minIdx]: 'pointer', [j]: 'compare' }) });
-        if (arr[j] < arr[minIdx]) {
-          minIdx = j;
-          steps.push({ narration: `${arr[j]} is smaller — new minimum is index ${minIdx}.`, values: arr.slice(), states: sortedHead(i, { [minIdx]: 'pointer' }) });
-        }
-      }
-      if (minIdx !== i) {
-        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
-        steps.push({ narration: `Swap index ${i} and ${minIdx}: [${arr.join(', ')}].`, values: arr.slice(), states: sortedHead(i, { [i]: 'swap', [minIdx]: 'swap' }) });
-      }
-      steps.push({ narration: `Index ${i} (${arr[i]}) is now in its final position.`, values: arr.slice(), states: sortedHead(i + 1, {}) });
-    }
-    steps.push({ narration: `Done. Sorted: [${arr.join(', ')}].`, values: arr.slice(), states: sortedHead(n, {}) });
-    return steps;
-  }
-  function sortedHead(count, extra) {
-    const s = {};
-    for (let k = 0; k < count; k++) s[k] = 'sorted';
-    return Object.assign(s, extra);
-  }
-
-  const viz2Stage = document.getElementById('viz2Stage');
-  const BASE2 = [5, 2, 8, 1, 9, 3];
-  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: 10 });
-  bars2.setData(BASE2);
-  let steps2 = buildSelectionSteps(BASE2);
-  const player2 = new DSA.StepPlayer({
-    steps: steps2, narrationEl: document.getElementById('viz2Narration'), counterEl: document.getElementById('viz2Counter'),
-    playBtn: document.getElementById('viz2Play'), stepBtn: document.getElementById('viz2Step'),
-    resetBtn: document.getElementById('viz2Reset'), shuffleBtn: document.getElementById('viz2Shuffle'), speed: 900,
-    onStep(step) { if (!step) { bars2.paint({}, BASE2); return; } bars2.paint(step.states, step.values); },
-    onShuffle() { const a = DSA.randomArray(6, 1, 9); steps2 = buildSelectionSteps(a); bars2.setData(a); player2.setSteps(steps2); },
-  });
-
-  // ---- viz 3: insertion sort ----
-  function buildInsertionSteps(input) {
-    const arr = input.slice();
-    const steps = [{ narration: `Start: [${arr.join(', ')}]. Index 0 (${arr[0]}) counts as a sorted prefix of length 1.`, values: arr.slice(), states: { 0: 'sorted' } }];
-    const n = arr.length;
-    for (let i = 1; i < n; i++) {
-      const key = arr[i];
-      let j = i - 1;
-      steps.push({ narration: `Pick up index ${i} (key = ${key}) to insert into the sorted prefix.`, values: arr.slice(), states: sortedHead(i, { [i]: 'pointer' }) });
-      while (j >= 0 && arr[j] > key) {
-        steps.push({ narration: `${arr[j]} > ${key} — shift it one slot right.`, values: arr.slice(), states: sortedHead(i, { [j]: 'compare' }) });
-        arr[j + 1] = arr[j];
-        j--;
-        steps.push({ narration: `Array now [${arr.join(', ')}] (slot ${j + 1} freed up).`, values: arr.slice(), states: sortedHead(i, { [j + 1]: 'swap' }) });
-      }
-      arr[j + 1] = key;
-      steps.push({ narration: `Drop ${key} into slot ${j + 1}. Sorted prefix is now length ${i + 1}: [${arr.slice(0, i + 1).join(', ')}].`, values: arr.slice(), states: sortedHead(i + 1, {}) });
-    }
-    steps.push({ narration: `Done. Sorted: [${arr.join(', ')}].`, values: arr.slice(), states: sortedHead(n, {}) });
-    return steps;
-  }
-
-  const viz3Stage = document.getElementById('viz3Stage');
-  const BASE3 = [5, 2, 8, 1, 9, 3];
-  const bars3 = new DSA.Bars(viz3Stage, { min: 0, max: 10 });
-  bars3.setData(BASE3);
-  let steps3 = buildInsertionSteps(BASE3);
-  const player3 = new DSA.StepPlayer({
-    steps: steps3, narrationEl: document.getElementById('viz3Narration'), counterEl: document.getElementById('viz3Counter'),
-    playBtn: document.getElementById('viz3Play'), stepBtn: document.getElementById('viz3Step'),
-    resetBtn: document.getElementById('viz3Reset'), shuffleBtn: document.getElementById('viz3Shuffle'), speed: 900,
-    onStep(step) { if (!step) { bars3.paint({}, BASE3); return; } bars3.paint(step.states, step.values); },
-    onShuffle() { const a = DSA.randomArray(6, 1, 9); steps3 = buildInsertionSteps(a); bars3.setData(a); player3.setSteps(steps3); },
-  });
-
-  // ---- quiz + reveal wiring ----
   DSA.wireQuiz(document);
   DSA.wireReveals(document);
-
-  // ---- mark complete ----
-  const completeBtn = document.getElementById('completeBtn');
-  function refreshCompleteBtn() {
-    const done = DSAProgress.isDone(THE_DAY);
-    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
-    completeBtn.classList.toggle('btn-done', done);
-    completeBtn.classList.toggle('btn-primary', !done);
-  }
-  completeBtn.addEventListener('click', () => {
-    DSAProgress.toggle(THE_DAY);
-    refreshCompleteBtn();
-  });
-  refreshCompleteBtn();
 </script>
 </body>
 </html>

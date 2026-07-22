@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Day 3: Arrays & Strings — 30 Days of DSA in JavaScript</title>
 <meta name="description" content="Core string operations, why strings are immutable, and the #1 array mistake: mutating an array while you loop over it." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -47,27 +47,27 @@
   <svg class="diagram" viewBox="0 0 620 200" role="img" aria-label="Attempting str[0] = 'b' has no effect on a string; building a new string with slice and concatenation is the only way to change it">
     <text x="20" y="20" font-size="13" class="dim">str = "cat"</text>
     <g font-size="16">
-      <rect x="20" y="30" width="46" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="43" y="58" text-anchor="middle" fill="#e6edf3">c</text>
-      <rect x="70" y="30" width="46" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="93" y="58" text-anchor="middle" fill="#e6edf3">a</text>
-      <rect x="120" y="30" width="46" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="143" y="58" text-anchor="middle" fill="#e6edf3">t</text>
+      <rect x="20" y="30" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="43" y="58" text-anchor="middle" fill="#1A312C">c</text>
+      <rect x="70" y="30" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="93" y="58" text-anchor="middle" fill="#1A312C">a</text>
+      <rect x="120" y="30" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="143" y="58" text-anchor="middle" fill="#1A312C">t</text>
     </g>
-    <text x="190" y="58" font-size="20" fill="#e5534b">✗</text>
-    <text x="215" y="52" font-size="12" fill="#e5534b">str[0] = 'b'</text>
-    <text x="215" y="68" font-size="12" fill="#e5534b">no effect (or TypeError in strict mode)</text>
+    <text x="190" y="58" font-size="20" fill="#D64545">✗</text>
+    <text x="215" y="52" font-size="12" fill="#D64545">str[0] = 'b'</text>
+    <text x="215" y="68" font-size="12" fill="#D64545">no effect (or TypeError in strict mode)</text>
 
-    <line x1="20" y1="100" x2="600" y2="100" stroke="#2a3140" stroke-dasharray="4 4"/>
+    <line x1="20" y1="100" x2="600" y2="100" stroke="#E7DDCC" stroke-dasharray="4 4"/>
 
     <text x="20" y="122" font-size="13" class="dim">newStr = 'b' + str.slice(1)  (a brand new string)</text>
     <g font-size="16">
-      <rect x="20" y="132" width="46" height="44" rx="6" fill="#1c2330" stroke="#3fb950" stroke-dasharray="4 3"/>
-      <text x="43" y="160" text-anchor="middle" fill="#3fb950">b</text>
-      <rect x="70" y="132" width="46" height="44" rx="6" fill="#1c2330" stroke="#3fb950"/>
-      <text x="93" y="160" text-anchor="middle" fill="#3fb950">a</text>
-      <rect x="120" y="132" width="46" height="44" rx="6" fill="#1c2330" stroke="#3fb950"/>
-      <text x="143" y="160" text-anchor="middle" fill="#3fb950">t</text>
+      <rect x="20" y="132" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#2F9E6F" stroke-dasharray="4 3"/>
+      <text x="43" y="160" text-anchor="middle" fill="#2F9E6F">b</text>
+      <rect x="70" y="132" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="93" y="160" text-anchor="middle" fill="#2F9E6F">a</text>
+      <rect x="120" y="132" width="46" height="44" rx="6" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="143" y="160" text-anchor="middle" fill="#2F9E6F">t</text>
     </g>
     <text x="190" y="160" font-size="12" class="dim">str itself is still "cat" — completely unchanged.</text>
   </svg>
@@ -76,26 +76,26 @@
   <svg class="diagram" viewBox="0 0 620 170" role="img" aria-label="Removing even numbers from an array while looping over it with forEach and splice skips elements because indices shift">
     <text x="20" y="20" font-size="13" class="dim">Goal: remove every even number from [2, 4, 6, 8, 10] — expected result: []</text>
     <g font-size="14">
-      <rect x="20" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
-      <text x="42" y="58" text-anchor="middle" fill="#e6edf3">2</text>
-      <rect x="70" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
-      <text x="92" y="58" text-anchor="middle" fill="#e6edf3">4</text>
-      <rect x="120" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
-      <text x="142" y="58" text-anchor="middle" fill="#e6edf3">6</text>
-      <rect x="170" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
-      <text x="192" y="58" text-anchor="middle" fill="#e6edf3">8</text>
-      <rect x="220" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
-      <text x="242" y="58" text-anchor="middle" fill="#e6edf3">10</text>
+      <rect x="20" y="32" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="42" y="58" text-anchor="middle" fill="#1A312C">2</text>
+      <rect x="70" y="32" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="92" y="58" text-anchor="middle" fill="#1A312C">4</text>
+      <rect x="120" y="32" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="142" y="58" text-anchor="middle" fill="#1A312C">6</text>
+      <rect x="170" y="32" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="192" y="58" text-anchor="middle" fill="#1A312C">8</text>
+      <rect x="220" y="32" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="242" y="58" text-anchor="middle" fill="#1A312C">10</text>
     </g>
     <text x="290" y="58" font-size="18" class="dim">→</text>
-    <text x="320" y="52" font-size="13" fill="#e5534b">Buggy forEach+splice result:</text>
+    <text x="320" y="52" font-size="13" fill="#D64545">Buggy forEach+splice result:</text>
     <g font-size="14">
-      <rect x="320" y="60" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b"/>
-      <text x="342" y="86" text-anchor="middle" fill="#e5534b">4</text>
-      <rect x="370" y="60" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b"/>
-      <text x="392" y="86" text-anchor="middle" fill="#e5534b">8</text>
+      <rect x="320" y="60" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="342" y="86" text-anchor="middle" fill="#D64545">4</text>
+      <rect x="370" y="60" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545"/>
+      <text x="392" y="86" text-anchor="middle" fill="#D64545">8</text>
     </g>
-    <text x="425" y="86" font-size="12" fill="#e5534b">← left behind by accident!</text>
+    <text x="425" y="86" font-size="12" fill="#D64545">← left behind by accident!</text>
     <text x="20" y="130" font-size="12" class="dim">Every splice() shifts later elements left by one, but the loop's</text>
     <text x="20" y="147" font-size="12" class="dim">index keeps climbing — so every other element gets skipped.</text>
   </svg>

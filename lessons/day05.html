@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Day 5: Sliding Window Pattern — 30 Days of DSA in JavaScript</title>
 <meta name="description" content="Fixed-size and variable-size sliding windows — turn repeated resumming into O(n) by tracking what enters and leaves." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -46,19 +46,19 @@
   <svg class="diagram" viewBox="0 0 620 160" role="img" aria-label="A fixed-size window of 3 elements sliding right by one: the leaving element is subtracted and the entering element is added, instead of resumming the whole window">
     <text x="20" y="18" font-size="13" class="dim">[4, 2, 5, 1, 3] — window size k = 3, sliding right by one</text>
     <g font-size="14">
-      <rect x="20" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b" stroke-width="2"/>
-      <text x="42" y="56" text-anchor="middle" fill="#e5534b">4</text>
-      <rect x="70" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
-      <text x="92" y="56" text-anchor="middle" fill="#3fb950">2</text>
-      <rect x="120" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
-      <text x="142" y="56" text-anchor="middle" fill="#3fb950">5</text>
-      <rect x="170" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#58a6ff" stroke-width="2" stroke-dasharray="4 3"/>
-      <text x="192" y="56" text-anchor="middle" fill="#58a6ff">1</text>
-      <rect x="220" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="242" y="56" text-anchor="middle" fill="#e6edf3">3</text>
+      <rect x="20" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545" stroke-width="2"/>
+      <text x="42" y="56" text-anchor="middle" fill="#D64545">4</text>
+      <rect x="70" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="92" y="56" text-anchor="middle" fill="#2F9E6F">2</text>
+      <rect x="120" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="142" y="56" text-anchor="middle" fill="#2F9E6F">5</text>
+      <rect x="170" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#2E6DA4" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="192" y="56" text-anchor="middle" fill="#2E6DA4">1</text>
+      <rect x="220" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="242" y="56" text-anchor="middle" fill="#1A312C">3</text>
     </g>
-    <text x="20" y="86" font-size="12" fill="#e5534b">leaves (−4)</text>
-    <text x="170" y="86" font-size="12" fill="#58a6ff">enters (+1)</text>
+    <text x="20" y="86" font-size="12" fill="#D64545">leaves (−4)</text>
+    <text x="170" y="86" font-size="12" fill="#2E6DA4">enters (+1)</text>
     <text x="20" y="115" font-size="12" class="dim">Old window sum [4,2,5] = 11. New window [2,5,1] = 11 − 4 + 1 = 8 — one</text>
     <text x="20" y="132" font-size="12" class="dim">subtraction, one addition. No need to re-add 2 and 5, they never left the window.</text>
   </svg>
@@ -67,17 +67,17 @@
   <svg class="diagram" viewBox="0 0 620 185" role="img" aria-label="A variable-size window expanding to include new characters, then shrinking from the left when a duplicate breaks the no-repeat rule">
     <text x="20" y="18" font-size="13" class="dim">Longest substring without repeats, on "abca" — right hits a repeat</text>
     <g font-size="14">
-      <rect x="20" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b" stroke-width="2" stroke-dasharray="4 3"/>
-      <text x="42" y="56" text-anchor="middle" fill="#e5534b">a</text>
-      <rect x="70" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
-      <text x="92" y="56" text-anchor="middle" fill="#3fb950">b</text>
-      <rect x="120" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#3fb950"/>
-      <text x="142" y="56" text-anchor="middle" fill="#3fb950">c</text>
-      <rect x="170" y="30" width="44" height="40" rx="6" fill="#1c2330" stroke="#58a6ff" stroke-width="2"/>
-      <text x="192" y="56" text-anchor="middle" fill="#58a6ff">a</text>
+      <rect x="20" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#D64545" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="42" y="56" text-anchor="middle" fill="#D64545">a</text>
+      <rect x="70" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="92" y="56" text-anchor="middle" fill="#2F9E6F">b</text>
+      <rect x="120" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="142" y="56" text-anchor="middle" fill="#2F9E6F">c</text>
+      <rect x="170" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#2E6DA4" stroke-width="2"/>
+      <text x="192" y="56" text-anchor="middle" fill="#2E6DA4">a</text>
     </g>
-    <text x="20" y="86" font-size="12" fill="#e5534b">left (index 0)</text>
-    <text x="170" y="86" font-size="12" fill="#58a6ff">right (index 3) — "a" is already in the window!</text>
+    <text x="20" y="86" font-size="12" fill="#D64545">left (index 0)</text>
+    <text x="170" y="86" font-size="12" fill="#2E6DA4">right (index 3) — "a" is already in the window!</text>
     <text x="20" y="115" font-size="12" class="dim">Window "abc" was valid (length 3, our best so far).</text>
     <text x="20" y="132" font-size="12" class="dim">Adding this "a" would duplicate it — shrink from the left.</text>
     <text x="20" y="149" font-size="12" class="dim">Dropping just "a" (index 0) already clears the duplicate.</text>

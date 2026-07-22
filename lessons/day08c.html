@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 8c: Insertion Sort — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Insertion sort, animated bar-by-bar: grow a sorted prefix by inserting one new element at a time." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 8 / 30 &middot; WEEK 2 &middot; PART 3 OF 3</p>
+  <h1>Insertion Sort</h1>
+  <p style="color:var(--text-dim);font-size:0.9rem;"><a href="day08.html">Part 1: Bubble Sort</a>
+    &middot; <a href="day08b.html">Part 2: Selection Sort</a> &middot; Insertion Sort (here)</p>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Implement insertion sort from scratch: grow a sorted prefix one element at a time.</li>
+    <li>Understand why it's the only one of Day 8's three sorts with a genuine O(n) best case on nearly-sorted data.</li>
+    <li>Recognize its signature: no swapping — elements shift to make room, then the key drops into the gap.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>This is how most people actually sort a hand of playing cards: pick up one new card at a
+    time, and slide it into its correct spot among the cards you've already arranged. Everything
+    to the left of the card you're holding is already sorted — you just need to find where the
+    new one fits, shifting bigger cards one slot to the right to make room, and dropping the new
+    card into the gap. Repeat until every card has been picked up once.</p>
+
+  <h2>Diagram</h2>
+  <svg class="diagram" viewBox="0 0 620 110" role="img" aria-label="Insertion sort grows a sorted prefix by taking one element at a time and inserting it into its correct position among the already-sorted elements">
+    <text x="20" y="20" font-size="13" fill="#B8791F" font-weight="bold">Grow a sorted prefix, one element at a time</text>
+    <g font-size="12">
+      <rect x="20" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#2F9E6F"/><text x="38" y="50" text-anchor="middle" fill="#2F9E6F">2</text>
+      <rect x="60" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#2F9E6F"/><text x="78" y="50" text-anchor="middle" fill="#2F9E6F">5</text>
+      <rect x="100" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#B8791F" stroke-width="2"/><text x="118" y="50" text-anchor="middle" fill="#B8791F">1</text>
+      <rect x="140" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#E7DDCC"/><text x="158" y="50" text-anchor="middle" fill="#1A312C">8</text>
+      <rect x="180" y="30" width="36" height="30" rx="4" fill="#FFFFFF" stroke="#E7DDCC"/><text x="198" y="50" text-anchor="middle" fill="#1A312C">9</text>
+    </g>
+    <text x="230" y="50" font-size="11" fill="#B8791F">← "1" being inserted into [2,5], the sorted prefix</text>
+    <text x="20" y="86" font-size="12" class="dim">No swapping — 2 and 5 both shift one slot right to make room,</text>
+    <text x="20" y="100" font-size="12" class="dim">then 1 drops into the freed-up gap at index 0.</text>
+  </svg>
+
+  <h2>Interactive visualization</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> key being inserted</span>
+    <span><i class="lg-compare"></i> shifting right</span>
+    <span><i class="lg-swap"></i> slot just freed</span>
+    <span><i class="lg-sorted"></i> sorted prefix</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>function insertionSort(arr) {
+  for (let i = 1; i < arr.length; i++) {
+    const key = arr[i];
+    let j = i - 1;
+    while (j >= 0 && arr[j] > key) {
+      arr[j + 1] = arr[j]; // shift bigger elements right
+      j--;
+    }
+    arr[j + 1] = key; // drop the key into its now-open slot
+  }
+  return arr;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>No swapping at all. Bigger elements shift one slot right to make room, and the key drops
+      into the gap left behind — this is exactly the "sort cards in your hand" motion.</li>
+    <li>The <code>while</code> loop is what gives insertion sort its O(n) best case: on an
+      already-sorted array, <code>arr[j] &gt; key</code> is false immediately, so the loop never
+      runs and the key just stays where it is.</li>
+  </ul>
+
+  <h3>Dry run: insertionSort([5, 2, 8, 1])</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>key</th><th>Shifts</th><th>Array after</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2</td><td>5 shifts right</td><td>[2, 5, 8, 1]</td></tr>
+      <tr><td>2</td><td>8</td><td>none — 8 &gt; 5 is false immediately</td><td>[2, 5, 8, 1]</td></tr>
+      <tr><td>3</td><td>1</td><td>8, 5, 2 all shift right</td><td>[1, 2, 5, 8]</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">i=2 needed zero shifts because 8 was
+    already bigger than everything to its left — that's the O(n) best-case behavior showing up
+    even mid-array, not just for a fully-sorted input.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Time (best)</th><th>Time (worst)</th><th>Space</th><th>Stable?</th></tr></thead>
+    <tbody>
+      <tr><td>O(n) — already sorted, no shifts</td><td>O(n²)</td><td>O(1)</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Of Day 8's three sorts, insertion sort is
+    the one real sorting libraries actually reuse — many O(n log n) sorts (including some Day 10
+    merge sort implementations) switch to insertion sort for small sub-arrays, since its low
+    constant factor and O(n) best case make it faster in practice below a certain size.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why does insertion sort matter more than bubble sort in practice?</strong> Its
+      O(n) best case is genuinely useful for small or mostly-sorted inputs — some real sort
+      implementations switch to insertion sort for small sub-arrays inside a bigger O(n log n)
+      sort.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So why not
+      just always use insertion sort?" — its worst case (reverse-sorted data) is still O(n²)
+      with a lot of shifting, and for large, unpredictable data an O(n log n) sort (Day 10/11)
+      wins decisively.</span></li>
+    <li><strong>How is insertion sort different from selection sort
+      (<a href="day08b.html">Part 2</a>), given both build a sorted prefix?</strong> Selection
+      sort builds the prefix by repeatedly finding the global minimum of what's left. Insertion
+      sort builds it by taking the <em>next</em> element in original order and finding where it
+      belongs among what's already sorted — no scanning ahead required.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't
+      confuse "grows a sorted prefix" (true of both) with "does the same work" (false) —
+      insertion sort's cost depends on how unsorted the input already is; selection sort's
+      doesn't.</span></li>
+    <li><strong>What determines how many shifts a single insertion costs?</strong> How far the
+      key has to travel to reach its correct position among the already-sorted elements to its
+      left — a key that's already bigger than everything before it costs zero shifts; a key that
+      belongs all the way at the front costs a shift for every element in the sorted prefix.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> state the invariant — "after step i, the
+    first i elements are fully sorted relative to each other." Then connect it to the best case
+    explicitly: "if the array is already sorted, this invariant is trivially maintained with zero
+    shifts per step, which is where the O(n) best case comes from."</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Search Insert Position <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/search-insert-position/" target="_blank" rel="noopener">LeetCode: Search Insert Position</a>)</span></h4>
+    <p>Given a sorted array and a target, return the index where the target is found, or where
+      it would be inserted to keep the array sorted.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>This is literally "find where to insert" —
+      today's core operation. A simple linear scan works now; binary search (Day 12) gets this
+      to O(log n) once that pattern is in your toolkit.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>// O(n) version, appropriate for today. O(log n) binary search
+// version is Day 12 material — the array is already sorted here,
+// which is exactly what binary search needs.
+function searchInsert(nums, target) {
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] >= target) return i;
+  }
+  return nums.length;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Remove Element <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/remove-element/" target="_blank" rel="noopener">LeetCode: Remove Element</a>)</span></h4>
+    <p>Remove all occurrences of a value from an array in place, and return the new length.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>This is Day 4's read/write two-pointer
+      shape again — only write forward when the current element should be kept.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function removeElement(nums, val) {
+  let write = 0;
+  for (let read = 0; read < nums.length; read++) {
+    if (nums[read] !== val) {
+      nums[write] = nums[read];
+      write++;
+    }
+  }
+  return write;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Insertion Sort List <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/insertion-sort-list/" target="_blank" rel="noopener">LeetCode: Insertion Sort List</a>)</span></h4>
+    <p>Sort a linked list using insertion sort. (A preview — we build linked lists properly on
+      Day 15. For now, just think through the approach in terms of arrays.)</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Exactly today's algorithm — walk the input
+      one element at a time, and insert each into its correct position in a growing sorted
+      result. The "shift right" step looks different on a linked list (relink pointers instead
+      of moving array slots), but the core idea is identical.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>// Array-based sketch of the idea (real linked-list version on Day 15):
+function insertionSortArray(arr) {
+  const result = [];
+  for (const val of arr) {
+    let i = 0;
+    while (i < result.length && result[i] <= val) i++;
+    result.splice(i, 0, val); // insert val at position i
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="insertion" data-explain="Insertion sort's inner while loop barely runs at all when the array is already nearly sorted — close to O(n).">
+    <p class="q-text">1. Which sort has the best BEST-CASE time complexity on a nearly-sorted array?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bubble">Bubble sort — same as the others</button>
+      <button class="btn dsa-quiz-option" data-value="selection">Selection sort</button>
+      <button class="btn dsa-quiz-option" data-value="insertion">Insertion sort</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="noswap" data-explain="Insertion sort never swaps — bigger elements shift one slot right, and the key drops into the freed-up gap.">
+    <p class="q-text">2. How does insertion sort move elements out of the way?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="noswap">Shifting — no swapping at all</button>
+      <button class="btn dsa-quiz-option" data-value="swap">Swapping pairs, like bubble sort</button>
+      <button class="btn dsa-quiz-option" data-value="neither">It doesn't move any elements</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="stable" data-explain="Insertion sort only ever shifts elements one slot at a time and stops as soon as it finds an equal or smaller value — equal elements never leapfrog each other." >
+    <p class="q-text">3. Is insertion sort stable?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="stable">Yes</button>
+      <button class="btn dsa-quiz-option" data-value="unstable">No</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="subarray" data-explain="Insertion sort's low constant factor and O(n) best case make it faster than O(n log n) sorts below a certain size — a common real-world optimization." >
+    <p class="q-text">4. Where do real sorting libraries often still use insertion sort?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="subarray">As a fallback for small sub-arrays inside a bigger O(n log n) sort</button>
+      <button class="btn dsa-quiz-option" data-value="never">Nowhere — it's purely a teaching tool</button>
+      <button class="btn dsa-quiz-option" data-value="huge">As the primary sort for huge datasets</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="next" data-explain="Insertion sort takes elements in their original order and finds where each belongs among what's already sorted — no scanning ahead for a global minimum, unlike selection sort.">
+    <p class="q-text">5. How does insertion sort choose which element to place next, compared to selection sort?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="next">It just takes the next element in original order — no scanning ahead</button>
+      <button class="btn dsa-quiz-option" data-value="min">It scans ahead to find the global minimum, same as selection sort</button>
+      <button class="btn dsa-quiz-option" data-value="random">It picks randomly</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 8 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day08b.html">← Part 2: Selection Sort</a>
+    <a class="btn" href="day09.html">Day 9: Recursion & the Call Stack →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 8;
+  DSAProgress.setLastDay(THE_DAY);
+
+  function buildInsertionSteps(input) {
+    const arr = input.slice();
+    const steps = [{ narration: `Start: [${arr.join(', ')}]. Index 0 (${arr[0]}) counts as a sorted prefix of length 1.`, values: arr.slice(), states: { 0: 'sorted' } }];
+    const n = arr.length;
+    for (let i = 1; i < n; i++) {
+      const key = arr[i];
+      let j = i - 1;
+      steps.push({ narration: `Pick up index ${i} (key = ${key}) to insert into the sorted prefix.`, values: arr.slice(), states: sortedHead(i, { [i]: 'pointer' }) });
+      while (j >= 0 && arr[j] > key) {
+        steps.push({ narration: `${arr[j]} > ${key} — shift it one slot right.`, values: arr.slice(), states: sortedHead(i, { [j]: 'compare' }) });
+        arr[j + 1] = arr[j];
+        j--;
+        steps.push({ narration: `Array now [${arr.join(', ')}] (slot ${j + 1} freed up).`, values: arr.slice(), states: sortedHead(i, { [j + 1]: 'swap' }) });
+      }
+      arr[j + 1] = key;
+      steps.push({ narration: `Drop ${key} into slot ${j + 1}. Sorted prefix is now length ${i + 1}: [${arr.slice(0, i + 1).join(', ')}].`, values: arr.slice(), states: sortedHead(i + 1, {}) });
+    }
+    steps.push({ narration: `Done. Sorted: [${arr.join(', ')}].`, values: arr.slice(), states: sortedHead(n, {}) });
+    return steps;
+  }
+  function sortedHead(count, extra) {
+    const s = {};
+    for (let k = 0; k < count; k++) s[k] = 'sorted';
+    return Object.assign(s, extra);
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [5, 2, 8, 1, 9, 3];
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 10 });
+  bars1.setData(BASE1);
+  let steps1 = buildInsertionSteps(BASE1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 900,
+    onStep(step) { if (!step) { bars1.paint({}, BASE1); return; } bars1.paint(step.states, step.values); },
+    onShuffle() { const a = DSA.randomArray(6, 1, 9); steps1 = buildInsertionSteps(a); bars1.setData(a); player1.setSteps(steps1); },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>

@@ -1,48 +1,42 @@
 /* ==========================================================================
    30 Days of DSA in JavaScript — shared stylesheet
-   Dark theme, monospace headings, mobile-first, zero dependencies.
+   Calm, warm, light theme — JetBrains Mono for headings/code, mobile-first,
+   zero dependencies. Reader-friendly: no dark backgrounds, no pure black.
    Color legend (used identically everywhere):
      yellow = comparing   red = swap/remove   green = sorted/found
-     blue   = pointer/pivot   neutral = untouched
+     blue   = pointer/pivot   purple = active/current   neutral = untouched
    ========================================================================== */
 
 :root {
-  --bg: #0d1117;
-  --bg-raised: #161b22;
-  --bg-raised-2: #1c2330;
-  --border: #2a3140;
-  --text: #e6edf3;
-  --text-dim: #9aa7b8;
-  --accent: #58a6ff;
-  --accent-2: #7ee787;
+  --bg: #FFF4E1;          /* warm cream background */
+  --bg-raised: #FFFFFF;   /* card / navbar background */
+  --bg-raised-2: #FBF1DE; /* secondary surface — code blocks, table headers */
+  --border: #E7DDCC;
+  --text: #3A4A46;        /* body text */
+  --text-dim: #6B7280;    /* muted text */
+  --heading: #1A312C;     /* dark green — headings, logos, important labels */
+  --accent: #428475;      /* primary teal — buttons, links, nav highlights */
+  --accent-hover: #356A5E;
+  --accent-2: #89D7B7;    /* soft mint — progress, completed, secondary buttons */
+  --warn: #F4B860;
+  --error: #E57373;
 
-  --c-neutral: #30394a;
-  --c-neutral-text: #c9d1d9;
-  --c-compare: #d4a72c;   /* yellow */
-  --c-compare-text: #1a1400;
-  --c-swap: #e5534b;      /* red */
-  --c-swap-text: #ffffff;
-  --c-sorted: #3fb950;    /* green */
-  --c-sorted-text: #04210a;
-  --c-pointer: #58a6ff;   /* blue */
-  --c-pointer-text: #04101f;
-  --c-active: #a371f7;    /* purple, for "current" recursion frame etc */
-  --c-active-text: #ffffff;
+  --c-neutral: #F0E9D8;
+  --c-neutral-text: #3A4A46;
+  --c-compare: #F4B860;   /* yellow/amber */
+  --c-compare-text: #1A312C;
+  --c-swap: #D64545;      /* red */
+  --c-swap-text: #FFFFFF;
+  --c-sorted: #89D7B7;    /* mint green */
+  --c-sorted-text: #1A312C;
+  --c-pointer: #428475;   /* teal */
+  --c-pointer-text: #FFFFFF;
+  --c-active: #8B6FA8;    /* soft plum, for "current" recursion frame etc */
+  --c-active-text: #FFFFFF;
 
-  --radius: 8px;
+  --radius: 14px;
   --font-head: 'JetBrains Mono', 'Fira Code', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f6f8fa;
-    --bg-raised: #ffffff;
-    --bg-raised-2: #eef1f5;
-    --border: #d0d7de;
-    --text: #1f2328;
-    --text-dim: #57606a;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -53,7 +47,8 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-weight: 400;
+  line-height: 1.7;
 }
 
 body { padding-bottom: 4rem; }
@@ -61,6 +56,8 @@ body { padding-bottom: 4rem; }
 h1, h2, h3, h4, .mono {
   font-family: var(--font-head);
   letter-spacing: -0.01em;
+  color: var(--heading);
+  font-weight: 700;
 }
 
 h1 { font-size: 1.9rem; margin: 0 0 0.5rem; }
@@ -68,7 +65,7 @@ h2 { font-size: 1.4rem; margin-top: 2.5rem; border-bottom: 2px solid var(--borde
 h3 { font-size: 1.1rem; margin-top: 1.5rem; }
 
 a { color: var(--accent); }
-a:hover { text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: none; }
 
 code, pre {
   font-family: var(--font-head);
@@ -110,7 +107,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .site-header .brand {
   font-family: var(--font-head);
   font-weight: 700;
-  color: var(--text);
+  color: var(--heading);
   text-decoration: none;
   font-size: 1.05rem;
 }
@@ -132,16 +129,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 16px rgba(26, 49, 44, 0.06);
 }
 
 .hero-badge {
   display: inline-block;
   font-family: var(--font-head);
   font-size: 0.75rem;
-  color: var(--accent-2);
-  background: rgba(126, 231, 135, 0.1);
-  border: 1px solid rgba(126, 231, 135, 0.3);
+  color: var(--accent-hover);
+  background: rgba(137, 215, 183, 0.25);
+  border: 1px solid rgba(137, 215, 183, 0.6);
   border-radius: 999px;
   padding: 0.3rem 0.8rem;
   margin-bottom: 0.9rem;
@@ -150,19 +147,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 /* ---------- buttons -------------------------------------------------- */
 .btn {
   font-family: var(--font-head);
+  text-decoration: none;
+  display: inline-block;
   background: var(--bg-raised-2);
-  color: var(--text);
+  color: var(--heading);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.5rem 0.9rem;
+  padding: 0.55rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-primary { background: var(--accent); color: #04101f; border-color: var(--accent); font-weight: 600; }
-.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary { background: var(--accent); color: #FFFFFF; border-color: var(--accent); font-weight: 600; }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .btn-done { background: var(--c-sorted); color: var(--c-sorted-text); border-color: var(--c-sorted); font-weight: 600; }
 
 /* ---------- home page -------------------------------------------- */
@@ -235,7 +235,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .day-row:hover {
   border-color: var(--accent);
   transform: translateX(3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 6px 18px rgba(26, 49, 44, 0.1);
 }
 .day-row.done { border-color: var(--c-sorted); }
 
@@ -336,7 +336,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   margin: 0.75rem 0 1.25rem;
 }
 .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
-.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid rgba(26, 49, 44, 0.18); }
 .legend .lg-compare { background: var(--c-compare); }
 .legend .lg-swap { background: var(--c-swap); }
 .legend .lg-sorted { background: var(--c-sorted); }

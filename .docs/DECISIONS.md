@@ -69,11 +69,54 @@ player, not a separate animation system.
 
 | Color | Meaning |
 |---|---|
-| Yellow | comparing |
+| Amber/yellow | comparing |
 | Red | swapping / removing |
-| Green | sorted / found / success |
-| Blue | pointer / pivot / current position |
-| (default gray/neutral) | untouched / inactive |
+| Mint green | sorted / found / success |
+| Teal | pointer / pivot / current position |
+| Soft plum/purple | active / currently executing (e.g. call stack frame) |
+| (default warm neutral) | untouched / inactive |
+
+---
+
+## 2.5. Design pivot: light/cream theme replaces the original dark theme (post-Day-10)
+
+After Days 1–10 were built, reviewed, and shipped under the original dark theme (see §2 above,
+"dark background, monospace headings"), the user supplied a full replacement design spec: a
+calm, warm, light theme (cream `#FFF4E1` background, white cards, dark-green/teal/mint palette)
+for better long-session readability, explicitly ruling out dark backgrounds for lesson content.
+This **replaces** the dark theme as the site's only theme (no light/dark toggle — light is now
+the sole theme, matching the "never use dark backgrounds" rule).
+
+**What changed:**
+- `css/style.css` `:root` — full palette swap (see the file for exact hex values), border radius
+  bumped from 8px to 14px, box shadows softened (were tuned for a dark background), and a
+  `.btn` fix (`text-decoration: none`, `display: inline-block`) for anchor-tag buttons.
+- **Every already-built lesson's inline SVG diagrams** — these hard-code hex colors directly
+  (they don't read CSS variables), so the palette swap required a **sitewide find-replace**
+  across `lessons/*.html`, mapping each of the ~11 distinct dark-theme hex constants used
+  throughout to a corresponding light-theme hex (done via `sd`, verified safe first because the
+  site only ever used a small, consistent palette — confirmed via `grep -oE '#[0-9a-fA-F]{6}'`
+  before touching anything). Favicons (percent-encoded hex inside the data-URI, so *not* caught
+  by the plain-hex find-replace) needed a separate pass.
+- Day 2's growth-chart `SERIES` color definitions (JS, not CSS) were covered by the same
+  lessons/*.html pass since that chart's colors are defined inline in `<script>`.
+- Legend swatches (`.legend i`) got a subtle border added — the new neutral fill color
+  (`#F0E9D8`) is close enough to the cream page background that an unbordered swatch was nearly
+  invisible; the border makes every legend chip readable regardless of exact fill/background
+  contrast.
+
+**Font:** JetBrains Mono was already first in the `--font-head` stack (headings/code), unchanged
+by this pivot. Body paragraph text stays a readable sans-serif system stack, not monospace —
+full-monospace body text would work against the "highly readable for long study sessions" goal
+in the same design brief. **Not yet vendored** — JetBrains Mono isn't bundled as a font file, so
+most readers see a system monospace fallback (Menlo/Consolas/etc.), not literal JetBrains Mono.
+Vendoring the actual font (self-hosted, offline-safe, OFL-licensed) is a candidate follow-up if
+the user wants guaranteed-consistent rendering — flagged, not yet actioned.
+
+**Process note for any FUTURE lesson (Day 11 onward):** every new lesson must be written
+directly in the new light-theme hex palette from the start — do not reuse the old dark-theme
+hex values. See `css/style.css`'s `:root` block for the canonical values, or the color legend
+table above.
 
 ---
 

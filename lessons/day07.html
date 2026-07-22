@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Day 7: Week 1 Review — 30 Days of DSA in JavaScript</title>
 <meta name="description" content="Week 1 cheat sheet: JS essentials, Big-O, two-pointer, sliding window, hash maps — and how to decide which pattern to reach for." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -38,43 +38,43 @@
   <h2>Diagram: which pattern do I reach for?</h2>
   <svg class="diagram" viewBox="0 0 620 300" role="img" aria-label="Decision checklist for Week 1 patterns: contiguous range questions use sliding window, in-place compaction uses read/write two pointers, sorted-array pair questions use converging two pointers, and have-I-seen-this questions use a hash map or set">
     <defs>
-      <marker id="arr7" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#9aa7b8"/></marker>
+      <marker id="arr7" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6B7280"/></marker>
     </defs>
 
     <g font-size="13">
-      <rect x="20" y="15" width="330" height="46" rx="8" fill="#1c2330" stroke="#d4a72c"/>
-      <text x="35" y="34" fill="#e6edf3">Max/min/target over a CONTIGUOUS</text>
-      <text x="35" y="52" fill="#e6edf3">range (subarray/substring)?</text>
+      <rect x="20" y="15" width="330" height="46" rx="8" fill="#FFFFFF" stroke="#B8791F"/>
+      <text x="35" y="34" fill="#1A312C">Max/min/target over a CONTIGUOUS</text>
+      <text x="35" y="52" fill="#1A312C">range (subarray/substring)?</text>
     </g>
-    <path d="M355,38 L400,38" stroke="#d4a72c" stroke-width="2" marker-end="url(#arr7)"/>
-    <text x="410" y="34" fill="#d4a72c" font-weight="bold" font-size="14">Sliding Window</text>
+    <path d="M355,38 L400,38" stroke="#B8791F" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="34" fill="#B8791F" font-weight="bold" font-size="14">Sliding Window</text>
     <text x="410" y="50" font-size="11" class="dim">(Day 5)</text>
 
     <g font-size="13">
-      <rect x="20" y="80" width="330" height="46" rx="8" fill="#1c2330" stroke="#3fb950"/>
-      <text x="35" y="99" fill="#e6edf3">Compact / dedupe an array,</text>
-      <text x="35" y="117" fill="#e6edf3">IN PLACE?</text>
+      <rect x="20" y="80" width="330" height="46" rx="8" fill="#FFFFFF" stroke="#2F9E6F"/>
+      <text x="35" y="99" fill="#1A312C">Compact / dedupe an array,</text>
+      <text x="35" y="117" fill="#1A312C">IN PLACE?</text>
     </g>
-    <path d="M355,103 L400,103" stroke="#3fb950" stroke-width="2" marker-end="url(#arr7)"/>
-    <text x="410" y="99" fill="#3fb950" font-weight="bold" font-size="14">Two Pointer</text>
+    <path d="M355,103 L400,103" stroke="#2F9E6F" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="99" fill="#2F9E6F" font-weight="bold" font-size="14">Two Pointer</text>
     <text x="410" y="117" font-size="11" class="dim">read/write (Day 4)</text>
 
     <g font-size="13">
-      <rect x="20" y="145" width="330" height="46" rx="8" fill="#1c2330" stroke="#58a6ff"/>
-      <text x="35" y="164" fill="#e6edf3">SORTED array,</text>
-      <text x="35" y="182" fill="#e6edf3">looking for a pair?</text>
+      <rect x="20" y="145" width="330" height="46" rx="8" fill="#FFFFFF" stroke="#2E6DA4"/>
+      <text x="35" y="164" fill="#1A312C">SORTED array,</text>
+      <text x="35" y="182" fill="#1A312C">looking for a pair?</text>
     </g>
-    <path d="M355,168 L400,168" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr7)"/>
-    <text x="410" y="164" fill="#58a6ff" font-weight="bold" font-size="14">Two Pointer</text>
+    <path d="M355,168 L400,168" stroke="#2E6DA4" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="164" fill="#2E6DA4" font-weight="bold" font-size="14">Two Pointer</text>
     <text x="410" y="182" font-size="11" class="dim">converging (Day 4)</text>
 
     <g font-size="13">
-      <rect x="20" y="210" width="330" height="46" rx="8" fill="#1c2330" stroke="#a371f7"/>
-      <text x="35" y="229" fill="#e6edf3">"Have I seen this?" / count</text>
-      <text x="35" y="247" fill="#e6edf3">occurrences, ANY order?</text>
+      <rect x="20" y="210" width="330" height="46" rx="8" fill="#FFFFFF" stroke="#7A5A96"/>
+      <text x="35" y="229" fill="#1A312C">"Have I seen this?" / count</text>
+      <text x="35" y="247" fill="#1A312C">occurrences, ANY order?</text>
     </g>
-    <path d="M355,233 L400,233" stroke="#a371f7" stroke-width="2" marker-end="url(#arr7)"/>
-    <text x="410" y="229" fill="#a371f7" font-weight="bold" font-size="14">Hash Map / Set</text>
+    <path d="M355,233 L400,233" stroke="#7A5A96" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="229" fill="#7A5A96" font-weight="bold" font-size="14">Hash Map / Set</text>
     <text x="410" y="247" font-size="11" class="dim">(Day 6)</text>
 
     <text x="20" y="285" font-size="12" class="dim">Check these top to bottom — the first "yes" is usually your pattern.</text>
@@ -356,7 +356,7 @@ for (let i = 0; i < arr.length; i++) {
 
   <nav class="lesson-nav">
     <a class="btn" href="day06.html">← Day 6: Hash Maps & Sets</a>
-    <a class="btn" href="day08.html">Day 8: Bubble / Selection / Insertion Sort →</a>
+    <a class="btn" href="day08.html">Day 8: Bubble Sort (part 1 of 3) →</a>
   </nav>
 </main>
 

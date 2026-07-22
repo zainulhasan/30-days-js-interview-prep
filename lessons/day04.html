@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Day 4: Two-Pointer Pattern — 30 Days of DSA in JavaScript</title>
 <meta name="description" content="Turn O(n²) brute-force pair searches into O(n) scans with two pointers — the converging shape and the same-direction shape." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFF4E1'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23428475'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -47,19 +47,19 @@
   <svg class="diagram" viewBox="0 0 620 180" role="img" aria-label="Two pointers starting at opposite ends of a sorted array and moving toward each other based on whether the sum is too big or too small">
     <text x="20" y="18" font-size="13" class="dim">Sorted array, target sum = 12. Pointers start at both ends.</text>
     <g font-size="14">
-      <rect x="20" y="30" width="46" height="42" rx="6" fill="#1c2330" stroke="#58a6ff" stroke-width="2"/>
-      <text x="43" y="57" text-anchor="middle" fill="#58a6ff">2</text>
-      <rect x="70" y="30" width="46" height="42" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="93" y="57" text-anchor="middle" fill="#e6edf3">4</text>
-      <rect x="120" y="30" width="46" height="42" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="143" y="57" text-anchor="middle" fill="#e6edf3">5</text>
-      <rect x="170" y="30" width="46" height="42" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="193" y="57" text-anchor="middle" fill="#e6edf3">7</text>
-      <rect x="220" y="30" width="46" height="42" rx="6" fill="#1c2330" stroke="#d4a72c" stroke-width="2"/>
-      <text x="243" y="57" text-anchor="middle" fill="#d4a72c">9</text>
+      <rect x="20" y="30" width="46" height="42" rx="6" fill="#FFFFFF" stroke="#2E6DA4" stroke-width="2"/>
+      <text x="43" y="57" text-anchor="middle" fill="#2E6DA4">2</text>
+      <rect x="70" y="30" width="46" height="42" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="93" y="57" text-anchor="middle" fill="#1A312C">4</text>
+      <rect x="120" y="30" width="46" height="42" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="143" y="57" text-anchor="middle" fill="#1A312C">5</text>
+      <rect x="170" y="30" width="46" height="42" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="193" y="57" text-anchor="middle" fill="#1A312C">7</text>
+      <rect x="220" y="30" width="46" height="42" rx="6" fill="#FFFFFF" stroke="#B8791F" stroke-width="2"/>
+      <text x="243" y="57" text-anchor="middle" fill="#B8791F">9</text>
     </g>
-    <text x="30" y="90" font-size="12" fill="#58a6ff">left</text>
-    <text x="225" y="90" font-size="12" fill="#d4a72c">right</text>
+    <text x="30" y="90" font-size="12" fill="#2E6DA4">left</text>
+    <text x="225" y="90" font-size="12" fill="#B8791F">right</text>
     <text x="20" y="120" font-size="12" class="dim">2 + 9 = 11, too small → move left pointer inward (need a bigger number).</text>
     <text x="20" y="140" font-size="12" class="dim">If the sum were too big, we'd move right inward instead (need a smaller number).</text>
     <text x="20" y="160" font-size="12" class="dim">Each move rules out one element for good — that's the whole O(n) budget, spent once each.</text>
@@ -69,19 +69,19 @@
   <svg class="diagram" viewBox="0 0 620 170" role="img" aria-label="A slow write pointer and a fast read pointer moving the same direction to compact duplicates out of a sorted array in place">
     <text x="20" y="18" font-size="13" class="dim">Remove duplicates from a sorted array, in place: [1, 1, 2, 2, 3]</text>
     <g font-size="14">
-      <rect x="20" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="42" y="56" text-anchor="middle" fill="#e6edf3">1</text>
-      <rect x="70" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="92" y="56" text-anchor="middle" fill="#e6edf3">1</text>
-      <rect x="120" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="142" y="56" text-anchor="middle" fill="#e6edf3">2</text>
-      <rect x="170" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="192" y="56" text-anchor="middle" fill="#e6edf3">2</text>
-      <rect x="220" y="30" width="44" height="40" rx="6" fill="#30394a" stroke="#2a3140"/>
-      <text x="242" y="56" text-anchor="middle" fill="#e6edf3">3</text>
+      <rect x="20" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="42" y="56" text-anchor="middle" fill="#1A312C">1</text>
+      <rect x="70" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="92" y="56" text-anchor="middle" fill="#1A312C">1</text>
+      <rect x="120" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="142" y="56" text-anchor="middle" fill="#1A312C">2</text>
+      <rect x="170" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="192" y="56" text-anchor="middle" fill="#1A312C">2</text>
+      <rect x="220" y="30" width="44" height="40" rx="6" fill="#FFFFFF" stroke="#E7DDCC"/>
+      <text x="242" y="56" text-anchor="middle" fill="#1A312C">3</text>
     </g>
-    <text x="70" y="88" font-size="11" fill="#d4a72c">write (slow) — index 1</text>
-    <text x="220" y="88" font-size="11" fill="#58a6ff">read (fast) — index 4</text>
+    <text x="70" y="88" font-size="11" fill="#B8791F">write (slow) — index 1</text>
+    <text x="220" y="88" font-size="11" fill="#2E6DA4">read (fast) — index 4</text>
     <text x="20" y="115" font-size="12" class="dim">read scans every element; write only advances (and copies) when read finds</text>
     <text x="20" y="132" font-size="12" class="dim">a value different from what's already written. Duplicates get overwritten.</text>
     <text x="20" y="153" font-size="12" class="dim">Result after the scan: [1, 2, 3, ...] — the first (write+1) slots are the answer.</text>
