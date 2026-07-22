@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 7: Week 1 Review — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Week 1 cheat sheet: JS essentials, Big-O, two-pointer, sliding window, hash maps — and how to decide which pattern to reach for." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 7 / 30 &middot; WEEK 1 REVIEW</p>
+  <h1>Week 1 Review</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Connect Days 1–6 into one decision process: given a new problem, know which pattern to reach for first.</li>
+    <li>Solve 5 mixed practice problems that draw on more than one pattern from this week.</li>
+    <li>Walk away with a one-page cheat sheet of every template and complexity from Week 1.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Think back to the four analogies from this week: the librarians walking toward each other
+    on a sorted shelf, the picture frame sliding along a strip of numbers, the coat-check
+    ticket that jumps straight to your coat. Different pictures, but the <em>same move</em>
+    every time: a brute-force nested loop (O(n²)) collapsed to one pass (O(n)) by remembering
+    something as you go — a running number, two positions, or a full lookup table. The skill
+    that actually matters in an interview isn't memorizing five templates — it's
+    <strong>recognizing which thing you need to remember</strong> for the problem in front of
+    you. That recognition is what today trains.</p>
+
+  <h2>Diagram: which pattern do I reach for?</h2>
+  <svg class="diagram" viewBox="0 0 620 300" role="img" aria-label="Decision checklist for Week 1 patterns: contiguous range questions use sliding window, in-place compaction uses read/write two pointers, sorted-array pair questions use converging two pointers, and have-I-seen-this questions use a hash map or set">
+    <defs>
+      <marker id="arr7" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#9aa7b8"/></marker>
+    </defs>
+
+    <g font-size="13">
+      <rect x="20" y="15" width="330" height="46" rx="8" fill="#1c2330" stroke="#d4a72c"/>
+      <text x="35" y="34" fill="#e6edf3">Max/min/target over a CONTIGUOUS</text>
+      <text x="35" y="52" fill="#e6edf3">range (subarray/substring)?</text>
+    </g>
+    <path d="M355,38 L400,38" stroke="#d4a72c" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="34" fill="#d4a72c" font-weight="bold" font-size="14">Sliding Window</text>
+    <text x="410" y="50" font-size="11" class="dim">(Day 5)</text>
+
+    <g font-size="13">
+      <rect x="20" y="80" width="330" height="46" rx="8" fill="#1c2330" stroke="#3fb950"/>
+      <text x="35" y="99" fill="#e6edf3">Compact / dedupe an array,</text>
+      <text x="35" y="117" fill="#e6edf3">IN PLACE?</text>
+    </g>
+    <path d="M355,103 L400,103" stroke="#3fb950" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="99" fill="#3fb950" font-weight="bold" font-size="14">Two Pointer</text>
+    <text x="410" y="117" font-size="11" class="dim">read/write (Day 4)</text>
+
+    <g font-size="13">
+      <rect x="20" y="145" width="330" height="46" rx="8" fill="#1c2330" stroke="#58a6ff"/>
+      <text x="35" y="164" fill="#e6edf3">SORTED array,</text>
+      <text x="35" y="182" fill="#e6edf3">looking for a pair?</text>
+    </g>
+    <path d="M355,168 L400,168" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="164" fill="#58a6ff" font-weight="bold" font-size="14">Two Pointer</text>
+    <text x="410" y="182" font-size="11" class="dim">converging (Day 4)</text>
+
+    <g font-size="13">
+      <rect x="20" y="210" width="330" height="46" rx="8" fill="#1c2330" stroke="#a371f7"/>
+      <text x="35" y="229" fill="#e6edf3">"Have I seen this?" / count</text>
+      <text x="35" y="247" fill="#e6edf3">occurrences, ANY order?</text>
+    </g>
+    <path d="M355,233 L400,233" stroke="#a371f7" stroke-width="2" marker-end="url(#arr7)"/>
+    <text x="410" y="229" fill="#a371f7" font-weight="bold" font-size="14">Hash Map / Set</text>
+    <text x="410" y="247" font-size="11" class="dim">(Day 6)</text>
+
+    <text x="20" y="285" font-size="12" class="dim">Check these top to bottom — the first "yes" is usually your pattern.</text>
+  </svg>
+
+  <h2>Interactive visualization: combining two patterns</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Subarray Sum Equals K blends this week's
+    two biggest ideas: a running sum (like sliding window) AND a hash map of sums seen so far
+    (like Day 6) — this is what "mixed" problems look like in real interviews.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current element</span>
+    <span><i class="lg-sorted"></i> match found — counts a subarray</span>
+    <span><i class="lg-neutral"></i> not the current element</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Week 1 cheat sheet — code templates</h2>
+  <pre><code>// ARRAY BASICS (Day 1): push/pop O(1) end, unshift/shift O(n) front
+arr.push(x); arr.pop(); arr.unshift(x); arr.shift();
+
+// STRINGS (Day 3): immutable — always build a new one
+const newStr = 'x' + str.slice(1);
+
+// TWO POINTER — converging (Day 4): array must be SORTED
+let left = 0, right = arr.length - 1;
+while (left < right) {
+  const sum = arr[left] + arr[right];
+  if (sum === target) { /* found */ break; }
+  else if (sum < target) left++;
+  else right--;
+}
+
+// TWO POINTER — read/write (Day 4): in-place compaction
+let write = 0;
+for (let read = 1; read < arr.length; read++) {
+  if (arr[read] !== arr[write]) { write++; arr[write] = arr[read]; }
+}
+
+// SLIDING WINDOW — fixed size (Day 5)
+let windowSum = 0;
+for (let i = 0; i < k; i++) windowSum += arr[i];
+for (let i = k; i < arr.length; i++) windowSum += arr[i] - arr[i - k];
+
+// SLIDING WINDOW — variable size (Day 5)
+let left = 0;
+for (let right = 0; right < arr.length; right++) {
+  // expand: fold arr[right] into your running state
+  while (/* window invalid */ false) { left++; /* shrink */ }
+}
+
+// HASH MAP — "have I seen this?" (Day 6)
+const seen = new Map();
+for (let i = 0; i < arr.length; i++) {
+  const complement = target - arr[i];
+  if (seen.has(complement)) { /* found pair */ }
+  seen.set(arr[i], i);
+}
+</code></pre>
+
+  <h3>Dry run: subarraySum([1, 2, 3], k = 3)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>num</th><th>sum</th><th>sum − k</th><th>In map?</th><th>count</th></tr></thead>
+    <tbody>
+      <tr><td>—</td><td>—</td><td>0</td><td>—</td><td>map = {0: 1}</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>−2</td><td>No</td><td>0</td></tr>
+      <tr><td>1</td><td>2</td><td>3</td><td>0</td><td>Yes (count 1)</td><td>1</td></tr>
+      <tr><td>2</td><td>3</td><td>6</td><td>3</td><td>Yes (count 1)</td><td>2</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Two subarrays sum to 3: <code>[1,2]</code>
+    and <code>[3]</code> — found by checking, at each point, whether the running sum minus k has
+    been seen before. The <code>{0: 1}</code> starting entry handles subarrays that start at
+    index 0 exactly.</p>
+
+  <h2>Complexity — everything from Week 1, at a glance</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Pattern</th><th>Time</th><th>Space</th><th>Replaces</th></tr></thead>
+    <tbody>
+      <tr><td>Array index / push / pop</td><td>O(1)</td><td>O(1)</td><td>—</td></tr>
+      <tr><td>Array unshift / shift / splice(middle)</td><td>O(n)</td><td>O(1)</td><td>—</td></tr>
+      <tr><td>Two pointer (either shape)</td><td>O(n)</td><td>O(1)</td><td>O(n²) nested loop</td></tr>
+      <tr><td>Sliding window, fixed size</td><td>O(n)</td><td>O(1)</td><td>O(n·k) resumming</td></tr>
+      <tr><td>Sliding window, variable size</td><td>O(n)</td><td>O(1) or O(window)</td><td>O(n²) or worse substring checks</td></tr>
+      <tr><td>Hash map / set lookup</td><td>O(1) average</td><td>O(n)</td><td>O(n) linear scan per lookup</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What's the single most common Week 1 mistake?</strong> Reaching for two-pointer
+      (converging) on data that isn't sorted, or forgetting a variable window needs a
+      <code>while</code> — not an <code>if</code> — to shrink correctly. Both fail silently,
+      not loudly.</li>
+    <li><strong>If a problem could use either sliding window or a hash map, which do you
+      pick?</strong> If the question is about a <em>contiguous</em> range, sliding window is
+      usually leaner (often O(1) extra space). If order/contiguity doesn't matter — just "have I
+      seen this" — a hash map is the more direct tool.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Can this
+      problem use both?" — Subarray Sum Equals K, above, is exactly that: a running-sum idea
+      from sliding window, combined with a hash map to make lookups O(1).</span></li>
+    <li><strong>How do you avoid freezing when you don't recognize a problem instantly?</strong>
+      Work backwards from the brute force. State the O(n²) or O(n³) solution out loud first —
+      it's always a safe starting point — then ask "what am I recomputing that I could
+      remember instead?" That question leads you to whichever pattern fits.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't skip
+      straight to guessing a pattern name. Interviewers can tell the difference between pattern
+      recognition and pattern <em>matching by keyword</em> — always justify why.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> on a review problem, narrate the
+    elimination, not just the answer — "this isn't sorted, so converging two-pointer is out;
+    it's asking about a contiguous range, so I'll reach for sliding window first." Showing the
+    patterns you <em>ruled out</em>, and why, proves you're recognizing the problem rather than
+    pattern-matching a keyword you memorized.</p>
+
+  <h2>5 mixed practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Move Zeroes <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/move-zeroes/" target="_blank" rel="noopener">LeetCode: Move Zeroes</a>)</span></h4>
+    <p>Move all zeroes in an array to the end, in place, while keeping the relative order of the
+      non-zero elements.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>This is Day 4's read/write pattern —
+      but instead of overwriting, swap the read and write slots.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function moveZeroes(nums) {
+  let write = 0;
+  for (let read = 0; read < nums.length; read++) {
+    if (nums[read] !== 0) {
+      [nums[write], nums[read]] = [nums[read], nums[write]];
+      write++;
+    }
+  }
+  return nums;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Missing Number <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/missing-number/" target="_blank" rel="noopener">LeetCode: Missing Number</a>)</span></h4>
+    <p>Given an array containing n distinct numbers from 0 to n, find the one number missing
+      from the range.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>You don't need a hash set here — the sum
+      of 0..n has a closed-form formula. What's left over after subtracting the actual sum?</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function missingNumber(nums) {
+  const n = nums.length;
+  const expected = (n * (n + 1)) / 2;
+  const actual = nums.reduce((a, b) => a + b, 0);
+  return expected - actual;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Intersection of Two Arrays <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/intersection-of-two-arrays/" target="_blank" rel="noopener">LeetCode: Intersection of Two Arrays</a>)</span></h4>
+    <p>Given two arrays, return their intersection — each element in the result must be unique.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Put one array's values in a Set for O(1)
+      lookup, then scan the other array checking membership.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function intersection(nums1, nums2) {
+  const set1 = new Set(nums1);
+  const result = new Set();
+  for (const n of nums2) if (set1.has(n)) result.add(n);
+  return [...result];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>4. Longest Repeating Character Replacement <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/longest-repeating-character-replacement/" target="_blank" rel="noopener">LeetCode: Longest Repeating Character Replacement</a>)</span></h4>
+    <p>Given a string and an integer k, you may replace up to k characters with any other
+      character. Find the length of the longest substring of a single repeated character you
+      can achieve.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p4-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p4-hint" hidden>Variable window + frequency map, combined.
+      A window is valid if (window length − count of its most frequent character) ≤ k — that's
+      exactly how many characters you'd need to replace.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p4-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p4-sol" hidden><pre><code>function characterReplacement(s, k) {
+  const counts = {};
+  let left = 0, maxCount = 0, best = 0;
+  for (let right = 0; right < s.length; right++) {
+    counts[s[right]] = (counts[s[right]] || 0) + 1;
+    maxCount = Math.max(maxCount, counts[s[right]]);
+    while ((right - left + 1) - maxCount > k) {
+      counts[s[left]]--;
+      left++;
+    }
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>5. Subarray Sum Equals K <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank" rel="noopener">LeetCode: Subarray Sum Equals K</a>)</span></h4>
+    <p>Given an array of integers and an integer k, return the total number of contiguous
+      subarrays whose sum equals k.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p5-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p5-hint" hidden>This is today's interactive visualization,
+      exactly. Track a running sum and a map of "how many times has each running sum occurred?"</div>
+    <button class="btn dsa-reveal-toggle" data-target="p5-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p5-sol" hidden><pre><code>function subarraySum(nums, k) {
+  const seenSums = new Map([[0, 1]]);
+  let sum = 0, count = 0;
+  for (const n of nums) {
+    sum += n;
+    if (seenSums.has(sum - k)) count += seenSums.get(sum - k);
+    seenSums.set(sum, (seenSums.get(sum) || 0) + 1);
+  }
+  return count;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="window" data-explain="A contiguous-range question, with no sortedness requirement, is the classic sliding-window signal.">
+    <p class="q-text">1. "Find the longest substring with at most 2 distinct characters" is a signal for which pattern?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="window">Sliding window</button>
+      <button class="btn dsa-quiz-option" data-value="converge">Converging two pointer</button>
+      <button class="btn dsa-quiz-option" data-value="none">None of this week's patterns apply</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="hash" data-explain="Order doesn't matter here — you just need O(1) membership checks, which is exactly what a hash set gives you.">
+    <p class="q-text">2. "Does this array contain any duplicate values?" is best solved with:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="hash">A hash set</button>
+      <button class="btn dsa-quiz-option" data-value="window">A sliding window</button>
+      <button class="btn dsa-quiz-option" data-value="sort">There's no way to do this in less than O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sorted" data-explain="Converging two pointers relies on knowing which direction to move — that guarantee only holds on sorted data.">
+    <p class="q-text">3. Converging two pointers for a pair-sum problem requires the input to be:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sorted">Sorted</button>
+      <button class="btn dsa-quiz-option" data-value="unique">All distinct values</button>
+      <button class="btn dsa-quiz-option" data-value="any">No requirement — works on anything</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="Subarray Sum Equals K tracks a running sum (a sliding-window-style idea) inside a hash map of sums seen so far — a genuine combination of two patterns.">
+    <p class="q-text">4. Subarray Sum Equals K (today's visualization) combines which two ideas?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">A running sum + a hash map</button>
+      <button class="btn dsa-quiz-option" data-value="twoptr">Two pointers only</button>
+      <button class="btn dsa-quiz-option" data-value="sortonly">Sorting only</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="bruteforce" data-explain="Stating the brute force out loud first is always safe, and 'what am I recomputing?' is what leads you to the right pattern.">
+    <p class="q-text">5. When you don't instantly recognize a problem's pattern, what's the safest first move?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bruteforce">State the brute-force solution out loud, then ask what you're recomputing</button>
+      <button class="btn dsa-quiz-option" data-value="guess">Guess a pattern name and hope it fits</button>
+      <button class="btn dsa-quiz-option" data-value="giveup">Say the problem is impossible</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 7 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day06.html">← Day 6: Hash Maps & Sets</a>
+    <a class="btn" href="day08.html">Day 8: Bubble / Selection / Insertion Sort →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 7;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: Subarray Sum Equals K ----
+  function buildSubarraySumSteps(nums, k) {
+    const steps = [{ narration: `nums = [${nums.join(', ')}], k = ${k}. Running sum = 0. Map starts as {0: 1} (an empty prefix counts once).`, states: {}, sum: 0, count: 0, map: [[0, 1]] }];
+    const seenSums = new Map([[0, 1]]);
+    let sum = 0, count = 0;
+    for (let i = 0; i < nums.length; i++) {
+      sum += nums[i];
+      const need = sum - k;
+      if (seenSums.has(need)) {
+        const add = seenSums.get(need);
+        count += add;
+        steps.push({
+          narration: `i=${i}: num=${nums[i]}, running sum=${sum}. sum−k=${need} IS in the map (seen ${add} time${add > 1 ? 's' : ''}) — that's ${add} new subarray${add > 1 ? 's' : ''} ending here! count=${count}.`,
+          states: { [i]: 'sorted' },
+          sum, count, map: [...seenSums],
+        });
+      } else {
+        steps.push({
+          narration: `i=${i}: num=${nums[i]}, running sum=${sum}. sum−k=${need} not in the map yet.`,
+          states: { [i]: 'pointer' },
+          sum, count, map: [...seenSums],
+        });
+      }
+      seenSums.set(sum, (seenSums.get(sum) || 0) + 1);
+    }
+    steps.push({ narration: `Done. ${count} subarray${count === 1 ? '' : 's'} of [${nums.join(', ')}] sum to ${k}.`, states: {}, sum, count, map: [...seenSums] });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [1, 2, 3];
+  const K1 = 3;
+  const bars1 = new DSA.Bars(viz1Stage, { min: -5, max: 5 });
+  bars1.setData(BASE1);
+  const infoLine1 = document.createElement('div');
+  infoLine1.className = 'narration';
+  infoLine1.style.marginTop = '0.5rem';
+  infoLine1.style.fontSize = '0.85rem';
+  document.getElementById('viz1Narration').after(infoLine1);
+
+  let steps1 = buildSubarraySumSteps(BASE1, K1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1700,
+    onStep(step) {
+      if (!step) { bars1.paint({}, bars1.data); infoLine1.textContent = 'sum = 0, count = 0, map = { 0→1 }'; return; }
+      bars1.paint(step.states, bars1.data);
+      const mapText = step.map.map(([k2, v]) => `${k2}→${v}`).join(', ');
+      infoLine1.textContent = `sum = ${step.sum}, count = ${step.count}, map = { ${mapText} }`;
+    },
+    onShuffle() {
+      const a = DSA.randomArray(5, -3, 4);
+      const k = 1 + Math.floor(Math.random() * 4);
+      steps1 = buildSubarraySumSteps(a, k);
+      bars1.setData(a);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
