@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 10: Merge Sort — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Divide, conquer, and merge — how splitting a problem in half repeatedly gets you O(n log n) sorting." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 10 / 30 &middot; WEEK 2</p>
+  <h1>Merge Sort</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Implement merge sort: divide the array in half recursively, then merge sorted halves back together.</li>
+    <li>Understand why splitting in half repeatedly gives O(n log n) — genuinely faster than Day 8's O(n²) sorts.</li>
+    <li>Merge two already-sorted arrays using the two-pointer technique from Day 4.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Split a deck of cards in half. Then split each half in half again. Keep going until every
+    pile has exactly one card — a pile of one card is trivially "sorted." Now merge piles back
+    together two at a time: look at the top card of each pile, take the smaller one, repeat.
+    Merging two already-sorted piles into one sorted pile only takes one pass through both —
+    that's Day 4's two-pointer merge, reused here as the combining step.</p>
+  <p>The splitting takes <strong>log n</strong> levels (each split halves the size, and you can
+    only halve n about log₂n times before reaching size 1). At <em>every</em> level, merging
+    all the pieces back together costs O(n) total work. log n levels × O(n) work per level =
+    <strong>O(n log n)</strong> — the same shape of growth curve you saw on Day 2, and
+    genuinely faster than O(n²) for any reasonably large input.</p>
+
+  <h2>Diagram</h2>
+  <svg class="diagram" viewBox="0 0 620 230" role="img" aria-label="Merge sort splits the array in half recursively down to single elements, then merges sorted halves back together two at a time">
+    <text x="20" y="18" font-size="13" fill="#58a6ff" font-weight="bold">Split (recursion goes down)</text>
+    <g font-size="11">
+      <rect x="230" y="26" width="160" height="26" rx="4" fill="#1c2330" stroke="#58a6ff"/><text x="310" y="44" text-anchor="middle" fill="#58a6ff">[5, 2, 8, 1]</text>
+      <rect x="130" y="60" width="120" height="26" rx="4" fill="#1c2330" stroke="#58a6ff"/><text x="190" y="78" text-anchor="middle" fill="#58a6ff">[5, 2]</text>
+      <rect x="370" y="60" width="120" height="26" rx="4" fill="#1c2330" stroke="#58a6ff"/><text x="430" y="78" text-anchor="middle" fill="#58a6ff">[8, 1]</text>
+      <rect x="80" y="94" width="70" height="26" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="115" y="112" text-anchor="middle" fill="#e6edf3">[5]</text>
+      <rect x="230" y="94" width="70" height="26" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="265" y="112" text-anchor="middle" fill="#e6edf3">[2]</text>
+      <rect x="320" y="94" width="70" height="26" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="355" y="112" text-anchor="middle" fill="#e6edf3">[8]</text>
+      <rect x="470" y="94" width="70" height="26" rx="4" fill="#1c2330" stroke="#2a3140"/><text x="505" y="112" text-anchor="middle" fill="#e6edf3">[1]</text>
+    </g>
+    <path d="M290,52 L190,60 M310,52 L310,60 M330,52 L430,60" stroke="#2a3140" fill="none"/>
+    <path d="M170,86 L115,94 M190,86 L265,94 M390,86 L355,94 M410,86 L505,94" stroke="#2a3140" fill="none"/>
+
+    <text x="20" y="150" font-size="13" fill="#3fb950" font-weight="bold">Merge (recursion returns back up)</text>
+    <g font-size="11">
+      <rect x="80" y="158" width="70" height="26" rx="4" fill="#1c2330" stroke="#3fb950"/><text x="115" y="176" text-anchor="middle" fill="#3fb950">[5]</text>
+      <rect x="230" y="158" width="70" height="26" rx="4" fill="#1c2330" stroke="#3fb950"/><text x="265" y="176" text-anchor="middle" fill="#3fb950">[2]</text>
+      <text x="200" y="176" font-size="14" fill="#9aa7b8">→</text>
+      <rect x="130" y="192" width="120" height="26" rx="4" fill="#1c2330" stroke="#3fb950" stroke-width="2"/><text x="190" y="210" text-anchor="middle" fill="#3fb950">[2, 5]</text>
+    </g>
+    <text x="330" y="176" font-size="12" class="dim">...and so on, all the way back up to</text>
+    <text x="330" y="192" font-size="12" class="dim">[1, 2, 5, 8] — one merge per level.</text>
+  </svg>
+
+  <h2>Interactive visualization: full sort, split + merge</h2>
+  <div class="legend">
+    <span><i class="lg-compare"></i> being merged (this level)</span>
+    <span><i class="lg-pointer"></i> just placed</span>
+    <span><i class="lg-sorted"></i> fully merged, this range done</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>function mergeSort(arr) {
+  if (arr.length <= 1) return arr; // base case: 1 element is already sorted
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));   // recursively sort left half
+  const right = mergeSort(arr.slice(mid));     // recursively sort right half
+  return merge(left, right);                   // combine two sorted halves
+}
+
+function merge(left, right) {
+  const result = [];
+  let i = 0, j = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) result.push(left[i++]);
+    else result.push(right[j++]);
+  }
+  while (i < left.length) result.push(left[i++]);   // leftover left elements
+  while (j < right.length) result.push(right[j++]); // leftover right elements
+  return result;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>mergeSort</code>'s base case is an array of 0 or 1 elements — trivially sorted,
+      nothing to do. This is Day 9's recursion pattern applied to sorting.</li>
+    <li>Both halves are fully sorted <em>before</em> <code>merge</code> is ever called — that's
+      what guarantees <code>merge</code> can just walk both arrays once with two pointers,
+      exactly like Day 4's converging two-pointer pattern.</li>
+    <li>The two trailing <code>while</code> loops handle leftovers when one side runs out
+      before the other — easy to forget, and the #1 source of merge-sort bugs.</li>
+  </ul>
+
+  <h3>Dry run: merge([2, 5], [1, 8])</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>j</th><th>left[i]</th><th>right[j]</th><th>Action</th><th>result</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>2</td><td>1</td><td>1 &lt; 2 → take right</td><td>[1]</td></tr>
+      <tr><td>0</td><td>1</td><td>2</td><td>8</td><td>2 &lt; 8 → take left</td><td>[1, 2]</td></tr>
+      <tr><td>1</td><td>1</td><td>5</td><td>8</td><td>5 &lt; 8 → take left</td><td>[1, 2, 5]</td></tr>
+      <tr><td>2</td><td>1</td><td>—</td><td>8</td><td>left exhausted → take remaining right</td><td>[1, 2, 5, 8]</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Merge sort</td><td>O(n log n)</td><td>O(n)</td><td>log n levels of splitting, O(n) work merging at each level; needs extra arrays to merge into.</td></tr>
+      <tr><td>Bubble/Selection/Insertion (Day 8)</td><td>O(n²)</td><td>O(1)</td><td>No splitting — comparisons scale with n², not n log n.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Merge sort trades space for time: it needs
+    O(n) extra memory for the merge step, but its time complexity is a full complexity <em>class</em>
+    better than Day 8's sorts — the gap between O(n log n) and O(n²) that Day 2's growth chart
+    showed becomes very real for large inputs.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why is merge sort O(n log n) and not O(n²)?</strong> The array is split in half
+      log n times (that's the "log n" part), and merging everything back together at each of
+      those log n levels costs O(n) total (that's the "n" part) — multiply them together.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Prove the
+      merging at each level is O(n)." Every element gets compared and placed exactly once per
+      level, regardless of how many sub-arrays that level is split into — so each level costs
+      O(n) total, not more.</span></li>
+    <li><strong>Is merge sort stable?</strong> Yes — the merge step's <code>left[i] &lt;=
+      right[j]</code> comparison (using <code>&lt;=</code>, not <code>&lt;</code>) always
+      prefers the left element on ties, preserving original relative order.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> flip that
+      to strict <code>&lt;</code> and stability quietly breaks — equal elements from the right
+      half can jump ahead of equal elements from the left half. Always double check the
+      comparison operator when asked about stability.</span></li>
+    <li><strong>Can you merge sort in place, without the O(n) extra space?</strong> Not easily —
+      true in-place merging exists but is significantly more complex and slower in practice.
+      Most real implementations accept the O(n) space cost. Knowing this trade-off exists (and
+      why nobody bothers with the complex in-place version) is worth mentioning if asked.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> narrate the three-part shape of every
+    divide-and-conquer solution — "split the problem in half, recursively solve each half, then
+    combine the two answers." Naming which part is the <em>base case</em>, which is the
+    <em>divide</em> step, and which is the <em>combine</em> step shows structural understanding,
+    not just a memorized implementation.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Merge Sorted Array <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/merge-sorted-array/" target="_blank" rel="noopener">LeetCode: Merge Sorted Array</a>)</span></h4>
+    <p>Merge two sorted arrays into the first one, in place (the first array has extra trailing
+      space to hold the result).</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Merging from the front (like today's
+      lesson) means shifting elements out of the way. What happens if you merge from the
+      <em>back</em> instead, comparing the largest remaining elements first?</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function merge(nums1, m, nums2, n) {
+  let i = m - 1, j = n - 1, k = m + n - 1;
+  while (j >= 0) {
+    if (i >= 0 && nums1[i] > nums2[j]) nums1[k--] = nums1[i--];
+    else nums1[k--] = nums2[j--];
+  }
+  return nums1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Sort an Array <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/sort-an-array/" target="_blank" rel="noopener">LeetCode: Sort an Array</a>)</span></h4>
+    <p>Sort an array of integers in ascending order — implement the sort yourself.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>The array sizes in this problem's
+      constraints are big enough that Day 8's O(n²) sorts will time out — you need something
+      that scales as O(n log n) instead. What did you just build?</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function sortArray(nums) {
+  if (nums.length <= 1) return nums;
+  const mid = Math.floor(nums.length / 2);
+  const left = sortArray(nums.slice(0, mid));
+  const right = sortArray(nums.slice(mid));
+  return merge(left, right);
+}
+function merge(left, right) {
+  const result = [];
+  let i = 0, j = 0;
+  while (i < left.length && j < right.length) {
+    result.push(left[i] <= right[j] ? left[i++] : right[j++]);
+  }
+  return result.concat(left.slice(i)).concat(right.slice(j));
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Merge k Sorted Lists <span class="leetcode-link">(Hard — <a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank" rel="noopener">LeetCode: Merge k Sorted Lists</a>)</span></h4>
+    <p>Given k sorted linked lists, merge them into one sorted list. (A preview — we build
+      linked lists properly on Day 15. For now, just think through the approach in terms of
+      arrays.)</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>You already know how to merge 2 sorted
+      lists in one pass. Merge k lists the same way merge sort merges sub-arrays: pair them up
+      and merge two at a time, then merge those results, repeating until one list remains.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>// Array-based sketch of the idea (real linked-list version on Day 15):
+function mergeKSorted(lists) {
+  if (lists.length === 0) return [];
+  if (lists.length === 1) return lists[0];
+  const mid = Math.floor(lists.length / 2);
+  const left = mergeKSorted(lists.slice(0, mid));
+  const right = mergeKSorted(lists.slice(mid));
+  return merge(left, right); // same merge() from today
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="onlogn" data-explain="log n levels of splitting, each doing O(n) total work to merge — multiply them together for O(n log n).">
+    <p class="q-text">1. What's the time complexity of merge sort?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onlogn">O(n log n)</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="Both halves are recursively sorted first — merge only works correctly on two already-sorted inputs." >
+    <p class="q-text">2. Before calling merge(left, right), what must be true?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">Both left and right are already fully sorted</button>
+      <button class="btn dsa-quiz-option" data-value="samelen">left and right must be the same length</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — merge works on any two arrays</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="Merging needs a new array to write results into as it walks both sorted halves." >
+    <p class="q-text">3. What's the extra space complexity of merge sort?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">O(log n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="lte" data-explain="Using <= (not strict <) means the left element wins ties, preserving the original relative order of equal elements — that's what makes merge sort stable.">
+    <p class="q-text">4. Which comparison in merge() keeps merge sort stable?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="lte">left[i] &lt;= right[j] (prefer left on ties)</button>
+      <button class="btn dsa-quiz-option" data-value="lt">left[i] &lt; right[j] (strict, no tie preference)</button>
+      <button class="btn dsa-quiz-option" data-value="neither">Neither — merge sort is never stable</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="log" data-explain="Each split halves the array's size — you can only halve n about log2(n) times before reaching size 1." >
+    <p class="q-text">5. Why does splitting an array in half repeatedly take log n levels?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="log">Halving the size each time means only ~log2(n) splits reach size 1</button>
+      <button class="btn dsa-quiz-option" data-value="linear">It always takes exactly n splits</button>
+      <button class="btn dsa-quiz-option" data-value="constant">It's always exactly 2 splits, regardless of n</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 10 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day09.html">← Day 9: Recursion & the Call Stack</a>
+    <a class="btn" href="day11.html">Day 11: Quick Sort →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 10;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: full merge sort, split + merge ----
+  function buildMergeSortSteps(input) {
+    const a = input.slice();
+    const steps = [{ narration: `Start: [${a.join(', ')}]. We'll split down to single elements, then merge back up.`, values: a.slice(), states: {} }];
+
+    function rangeStates(lo, hi, state, extra) {
+      const s = {};
+      for (let i = lo; i < hi; i++) s[i] = state;
+      return Object.assign(s, extra || {});
+    }
+    function placedSoFar(lo, k) {
+      // 'pointer' (blue) = placed within THIS merge but not yet the final done-merging step —
+      // keeps blue and green from meaning the same thing (see legend).
+      const s = {};
+      for (let i = lo; i < k; i++) s[i] = 'pointer';
+      return s;
+    }
+
+    function sort(lo, hi) {
+      if (hi - lo <= 1) return;
+      const mid = Math.floor((lo + hi) / 2);
+      sort(lo, mid);
+      sort(mid, hi);
+      merge(lo, mid, hi);
+    }
+
+    function merge(lo, mid, hi) {
+      const left = a.slice(lo, mid);
+      const right = a.slice(mid, hi);
+      steps.push({
+        narration: `Merge [${left.join(', ')}] and [${right.join(', ')}] — both already sorted internally.`,
+        values: a.slice(),
+        states: rangeStates(lo, hi, 'compare'),
+      });
+      let i = 0, j = 0, k = lo;
+      while (i < left.length && j < right.length) {
+        const isTie = left[i] === right[j];
+        const takeLeft = left[i] <= right[j];
+        const val = takeLeft ? left[i] : right[j];
+        if (takeLeft) i++; else j++;
+        a[k] = val;
+        k++;
+        const reason = isTie ? `${val} ties — left goes first (keeps the sort stable)` : `${val} is smaller`;
+        steps.push({
+          narration: `${reason} — place it at index ${k - 1}.`,
+          values: a.slice(),
+          states: rangeStates(lo, hi, 'compare', placedSoFar(lo, k)),
+        });
+      }
+      while (i < left.length) {
+        a[k] = left[i++];
+        steps.push({ narration: `Left side has leftovers — place ${a[k]} at index ${k}.`, values: a.slice(), states: rangeStates(lo, hi, 'compare', placedSoFar(lo, k + 1)) });
+        k++;
+      }
+      while (j < right.length) {
+        a[k] = right[j++];
+        steps.push({ narration: `Right side has leftovers — place ${a[k]} at index ${k}.`, values: a.slice(), states: rangeStates(lo, hi, 'compare', placedSoFar(lo, k + 1)) });
+        k++;
+      }
+      steps.push({ narration: `Done merging — [${a.slice(lo, hi).join(', ')}] is fully sorted.`, values: a.slice(), states: rangeStates(lo, hi, 'sorted') });
+    }
+
+    sort(0, a.length);
+    steps.push({ narration: `Done. Sorted: [${a.join(', ')}].`, values: a.slice(), states: rangeStates(0, a.length, 'sorted') });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [5, 2, 8, 1, 9, 3];
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 10 });
+  bars1.setData(BASE1);
+  let steps1 = buildMergeSortSteps(BASE1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 700,
+    onStep(step) { if (!step) { bars1.paint({}, BASE1); return; } bars1.paint(step.states, step.values); },
+    onShuffle() { const a = DSA.randomArray(6, 1, 9); steps1 = buildMergeSortSteps(a); bars1.setData(a); player1.setSteps(steps1); },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
