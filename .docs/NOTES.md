@@ -530,6 +530,26 @@ just on Day 25 being done, so they built simultaneously.
   swatch, overlapping it — same recurring "adjacent same-row text collision" bug class as before;
   fixed by stacking the two legend rows vertically instead of guessing at horizontal spacing.
 
+## Done — Day 28 (Pattern Recognition Masterclass)
+Built solo (needs full-curriculum awareness across all 27 prior days, not a fit for the parallel-
+agent pattern). A meta-lesson, not a new-algorithm lesson: master dispatch flowchart (6 rows, same
+proven geometry as Day 7/14/21's diagrams) that routes to Day 7/14/21's existing sub-flowcharts
+for Weeks 1-3, plus new dispatch rows for the Week 4 topics that never got a review day (Heap,
+Graph, DP-vs-Greedy). A signal-words reference table (problem phrasing → pattern → day) replaces
+what would otherwise be a second risky SVG diagram. The "interactive visualization" slot is
+repurposed as an 8-question pattern-recognition drill built from the existing `.dsa-quiz`/
+`DSA.wireQuiz` machinery (no new JS needed) — genuinely interactive, on-topic for a meta lesson,
+and zero new bug surface. "The code" section is a combined reference cheat sheet (one skeleton per
+pattern) instead of a single new algorithm. Practice problems chosen specifically to test
+recognition over rote keyword-matching: Product of Array Except Self (the word "array" doesn't
+mean hash map here), 3Sum Closest (same shape as Day 11's 3Sum, different termination), Word
+Search (DFS/backtracking on a grid never labeled a "graph"). Node-verified all 3 solutions plus
+the worked recognition example (`canFormPalindrome`, using the "at most one odd-count character"
+palindrome-rearrangement rule) before writing them into the lesson. Browser-tested clean — zero
+console errors, zero mobile overflow, all 13 quiz blocks (8 drill + 5 formal) verified working,
+mark-complete and reveal panels confirmed, diagram screenshot showed no overlap/clipping. No bugs
+found.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
