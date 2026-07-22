@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 14: Week 2 Review — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Week 2 cheat sheet: every sort and binary search template, a pattern decision checklist, and quickselect — the synthesis of sorting and binary search." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 14 / 30 &middot; WEEK 2 REVIEW</p>
+  <h1>Week 2 Review</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Connect Days 8–13 into one decision process: given a new problem, know whether you need
+      to sort, search, or recurse — and which specific algorithm fits the constraints.</li>
+    <li>Solve 5 mixed practice problems that draw on more than one Week 2 idea at once.</li>
+    <li>Walk away with a one-page cheat sheet of every sort/search template and complexity from
+      Week 2.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Week 2 looks like six separate topics, but almost everything reduces to one move: take a
+    problem of size n and shrink it, every step, by throwing away work you can prove doesn't
+    matter. Merge sort shrinks by splitting in half and recombining (Day 10). Quick sort shrinks
+    by partitioning around a pivot so one side never needs to be touched again relative to the
+    other (Day 11). Binary search shrinks by halving a sorted range using one comparison (Day 12),
+    and its variations shrink toward a boundary instead of an exact match (Day 13). Recursion (Day
+    9) is the mechanism that makes "shrink and repeat" possible without a hand-written loop stack.
+    Even the three O(n²) sorts from Day 8 fit this frame in miniature — they just shrink the
+    unsorted region by one element per pass instead of by half.</p>
+  <p>The skill this review trains: given a new problem, recognize <em>which kind</em> of shrinking
+    it needs — half the array (search), one side of a partition (quick sort family), or the whole
+    thing split and remerged (merge sort family) — before you write a single line.</p>
+
+  <h2>Diagram: which Week 2 approach do I reach for?</h2>
+  <svg class="diagram" viewBox="0 0 620 460" role="img" aria-label="Decision checklist for Week 2: an exact-match search on a sorted array uses binary search, finding a first/last occurrence or a monotonic value uses search on answer, a problem that splits into identical subproblems uses recursion, needing guaranteed O(n log n) plus stability uses merge sort, needing in-place average-case speed uses quick sort, and a small or nearly-sorted array favors the simple O(n squared) sorts.">
+    <defs>
+      <marker id="arr14" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#818896"/></marker>
+    </defs>
+
+    <g font-size="13">
+      <rect x="20" y="15" width="330" height="46" rx="8" fill="#2C313A" stroke="#61AEEE"/>
+      <text x="35" y="34" fill="#DCDFE4">Sorted array, need an exact</text>
+      <text x="35" y="52" fill="#DCDFE4">match search?</text>
+    </g>
+    <path d="M355,38 L400,38" stroke="#61AEEE" stroke-width="2" marker-end="url(#arr14)"/>
+    <text x="410" y="34" fill="#61AEEE" font-weight="bold" font-size="14">Binary Search</text>
+    <text x="410" y="50" font-size="11" class="dim">(Day 12)</text>
+
+    <g font-size="13">
+      <rect x="20" y="80" width="330" height="46" rx="8" fill="#2C313A" stroke="#C678DD"/>
+      <text x="35" y="99" fill="#DCDFE4">Need FIRST/LAST occurrence,</text>
+      <text x="35" y="117" fill="#DCDFE4">or a monotonic value check?</text>
+    </g>
+    <path d="M355,103 L400,103" stroke="#C678DD" stroke-width="2" marker-end="url(#arr14)"/>
+    <text x="410" y="99" fill="#C678DD" font-weight="bold" font-size="14">Search on Answer</text>
+    <text x="410" y="117" font-size="11" class="dim">(Day 13)</text>
+
+    <g font-size="13">
+      <rect x="20" y="145" width="330" height="46" rx="8" fill="#2C313A" stroke="#4D96D9"/>
+      <text x="35" y="164" fill="#DCDFE4">Problem splits into smaller</text>
+      <text x="35" y="182" fill="#DCDFE4">identical subproblems?</text>
+    </g>
+    <path d="M355,168 L400,168" stroke="#4D96D9" stroke-width="2" marker-end="url(#arr14)"/>
+    <text x="410" y="164" fill="#4D96D9" font-weight="bold" font-size="14">Recursion</text>
+    <text x="410" y="182" font-size="11" class="dim">(Day 9)</text>
+
+    <g font-size="13">
+      <rect x="20" y="210" width="330" height="46" rx="8" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="35" y="229" fill="#DCDFE4">Need guaranteed O(n log n)</text>
+      <text x="35" y="247" fill="#DCDFE4">AND stable order for ties?</text>
+    </g>
+    <path d="M355,233 L400,233" stroke="#E6C07B" stroke-width="2" marker-end="url(#arr14)"/>
+    <text x="410" y="229" fill="#E6C07B" font-weight="bold" font-size="14">Merge Sort</text>
+    <text x="410" y="247" font-size="11" class="dim">(Day 10)</text>
+
+    <g font-size="13">
+      <rect x="20" y="275" width="330" height="46" rx="8" fill="#2C313A" stroke="#E06C75"/>
+      <text x="35" y="294" fill="#DCDFE4">Need in-place sorting,</text>
+      <text x="35" y="312" fill="#DCDFE4">average-case speed over worst?</text>
+    </g>
+    <path d="M355,298 L400,298" stroke="#E06C75" stroke-width="2" marker-end="url(#arr14)"/>
+    <text x="410" y="294" fill="#E06C75" font-weight="bold" font-size="14">Quick Sort</text>
+    <text x="410" y="312" font-size="11" class="dim">(Day 11)</text>
+
+    <g font-size="13">
+      <rect x="20" y="340" width="330" height="46" rx="8" fill="#2C313A" stroke="#98C379"/>
+      <text x="35" y="359" fill="#DCDFE4">Small or nearly-sorted array,</text>
+      <text x="35" y="377" fill="#DCDFE4">simplicity over raw speed?</text>
+    </g>
+    <path d="M355,363 L400,363" stroke="#98C379" stroke-width="2" marker-end="url(#arr14)"/>
+    <text x="410" y="359" fill="#98C379" font-weight="bold" font-size="14">Bubble/Selection/</text>
+    <text x="410" y="377" font-size="13" fill="#98C379" font-weight="bold">Insertion Sort</text>
+    <text x="410" y="393" font-size="11" class="dim">(Day 8)</text>
+
+    <text x="20" y="420" font-size="12" class="dim">Check these top to bottom — the first "yes" is usually your pattern.</text>
+    <text x="20" y="438" font-size="12" class="dim">Rows 4-6 assume sorting is actually needed, not just searching.</text>
+  </svg>
+
+  <h2>Interactive visualization: quickselect — sorting and searching combined</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Finding the kth largest element blends this
+    week's two biggest ideas: Day 11's partition step (split around a pivot) AND Day 12/13's
+    halving discipline (only chase the ONE side that can contain the answer, throw the rest away
+    without ever recursing into it). That combination drops the average time from quick sort's
+    O(n log n) down to O(n) — you never sort the side you don't need.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current range [lo, hi]</span>
+    <span><i class="lg-active"></i> pivot</span>
+    <span><i class="lg-compare"></i> comparing to pivot</span>
+    <span><i class="lg-swap"></i> swapped, or eliminated once a round ends</span>
+    <span><i class="lg-sorted"></i> found — the answer</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>Dry run: 2nd largest of [9, 3, 7, 1, 8, 4, 2]</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Round</th><th>lo</th><th>hi</th><th>pivot</th><th>Pivot's final index</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>0</td><td>6</td><td>2</td><td>1</td><td>1 &lt; target(5) → discard indices 0–1, lo=2</td></tr>
+      <tr><td>2</td><td>2</td><td>6</td><td>3</td><td>2</td><td>2 &lt; target(5) → discard index 2, lo=3</td></tr>
+      <tr><td>3</td><td>3</td><td>6</td><td>7</td><td>4</td><td>4 &lt; target(5) → discard indices 3–4, lo=5</td></tr>
+      <tr><td>4</td><td>5</td><td>6</td><td>8</td><td>5</td><td>5 === target(5) → found! Answer = 8</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Target index = 7 elements − k(2) = index 5 in
+    ascending sorted order. Four partition rounds, but each round only ever recurses into ONE
+    side — exactly the halving discipline from binary search, just applied to an unsorted
+    partition boundary instead of a sorted midpoint.</p>
+
+  <h2>Week 2 cheat sheet — code templates</h2>
+  <pre><code>// BUBBLE SORT (Day 8) — O(n) best / O(n²) worst, O(1) space, stable
+function bubbleSort(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < arr.length - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        swapped = true;
+      }
+    }
+    if (!swapped) break; // already sorted — stop early
+  }
+  return arr;
+}
+
+// SELECTION SORT (Day 8b) — O(n²) always, O(1) space, NOT stable
+function selectionSort(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    let minIdx = i;
+    for (let j = i + 1; j < arr.length; j++) {
+      if (arr[j] < arr[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+  }
+  return arr;
+}
+
+// INSERTION SORT (Day 8c) — O(n) best / O(n²) worst, O(1) space, stable
+function insertionSort(arr) {
+  for (let i = 1; i < arr.length; i++) {
+    const key = arr[i];
+    let j = i - 1;
+    while (j >= 0 && arr[j] > key) { arr[j + 1] = arr[j]; j--; }
+    arr[j + 1] = key;
+  }
+  return arr;
+}
+
+// MERGE SORT (Day 10) — O(n log n) always, O(n) space, stable
+function mergeSort(arr) {
+  if (arr.length <= 1) return arr;
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+  return merge(left, right);
+}
+function merge(left, right) {
+  const result = [];
+  let i = 0, j = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) result.push(left[i++]);
+    else result.push(right[j++]);
+  }
+  while (i < left.length) result.push(left[i++]);
+  while (j < right.length) result.push(right[j++]);
+  return result;
+}
+
+// QUICK SORT (Day 11) — O(n log n) avg / O(n²) worst, O(log n) space, NOT stable
+function quickSort(arr, lo = 0, hi = arr.length - 1) {
+  if (lo < hi) {
+    const p = partition(arr, lo, hi);
+    quickSort(arr, lo, p - 1);
+    quickSort(arr, p + 1, hi);
+  }
+  return arr;
+}
+function partition(arr, lo, hi) {
+  const pivot = arr[hi];
+  let i = lo - 1;
+  for (let j = lo; j < hi; j++) {
+    if (arr[j] <= pivot) { i++; [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  }
+  [arr[i + 1], arr[hi]] = [arr[hi], arr[i + 1]];
+  return i + 1;
+}
+
+// BINARY SEARCH — exact match (Day 12) — O(log n), O(1)
+function search(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo &lt;= hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (nums[mid] === target) return mid;
+    else if (nums[mid] &lt; target) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return -1;
+}
+
+// BINARY SEARCH — narrowing/boundary (Day 13) — O(log n), O(1)
+function findBound(nums, target, isFirst) {
+  let lo = 0, hi = nums.length - 1, result = -1;
+  while (lo &lt;= hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (nums[mid] === target) {
+      result = mid;                     // record, then keep narrowing
+      if (isFirst) hi = mid - 1; else lo = mid + 1;
+    } else if (nums[mid] &lt; target) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return result;
+}
+</code></pre>
+
+  <h2>Complexity — everything from Week 2, at a glance</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Bubble / Insertion Sort (Day 8/8c)</td><td>O(n) best, O(n²) worst</td><td>O(1)</td><td>Stable — early-exits on already-sorted input.</td></tr>
+      <tr><td>Selection Sort (Day 8b)</td><td>O(n²) always</td><td>O(1)</td><td>Not stable — always fully scans, no fast path.</td></tr>
+      <tr><td>Merge Sort (Day 10)</td><td>O(n log n) always</td><td>O(n)</td><td>Stable, but needs auxiliary arrays to merge into.</td></tr>
+      <tr><td>Quick Sort (Day 11)</td><td>O(n log n) avg, O(n²) worst</td><td>O(log n)</td><td>In-place, not stable; space is recursion depth.</td></tr>
+      <tr><td>Binary Search — exact match (Day 12)</td><td>O(log n)</td><td>O(1)</td><td>Needs a sorted array (or a monotonic predicate).</td></tr>
+      <tr><td>Binary Search — boundary / search on answer (Day 13)</td><td>O(log n) or O(n log m)</td><td>O(1)</td><td>Narrows to a boundary instead of stopping at a match.</td></tr>
+      <tr><td>Quickselect (today's synthesis)</td><td>O(n) avg, O(n²) worst</td><td>O(1) extra</td><td>Recurses into only the side containing the answer.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>If you can only remember one sort for an interview, which one — and why?</strong>
+      Merge sort. It's the only one of Week 2's sorts that guarantees O(n log n) in the
+      <em>worst</em> case AND is stable — quick sort can degrade to O(n²) on unlucky pivots, and
+      the O(n²) sorts don't scale. The tradeoff you should be ready to name is merge sort's O(n)
+      auxiliary space, versus quick sort's in-place O(log n).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "When would you
+      pick quick sort anyway?" — when average-case speed and in-place memory matter more than a
+      worst-case guarantee, e.g. sorting large in-memory arrays where you control (or can
+      randomize) the pivot choice to make the O(n²) case unlikely.</span></li>
+    <li><strong>How is quickselect different from running quick sort and reading off an
+      index?</strong> Quick sort recurses into <em>both</em> sides of every partition to fully
+      sort the array — O(n log n) average. Quickselect partitions once, checks which side the
+      target index falls in, and recurses into <em>only that one side</em> — the other side is
+      thrown away unsorted, because you never needed it. That single change is what drops the
+      average time to O(n).</li>
+    <li><strong>Does "binary search needs a sorted array" still hold this week?</strong> Not as an
+      absolute rule. Day 13's search-on-answer problems run binary search over a range of
+      candidate <em>answers</em>, not over a literal array — the real requirement is a monotonic
+      predicate (false-then-true, or vice versa) with exactly one flip point.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't
+      dismiss binary search just because the input "isn't sorted" — check whether there's a
+      monotonic yes/no question hiding underneath, the way Koko Eating Bananas (Day 13) and
+      quickselect's partition boundary (today) both do.</span></li>
+    <li><strong>Why does recursion show up in merge sort and quick sort, but not in bubble,
+      selection, or insertion sort?</strong> Merge and quick sort both work by splitting the
+      problem into smaller versions of itself (a sub-array to sort) — that's exactly what
+      recursion (Day 9) is for. The O(n²) sorts never break the problem into a smaller
+      <em>independent</em> subproblem; they just do one more linear pass over a slightly smaller
+      range, which a simple loop already expresses cleanly.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> on a mixed problem, name the constraint that
+    decides your algorithm before you name the algorithm — "this needs the array sorted first, and
+    since I also need stability for ties, that pushes me toward merge sort over quick sort" or
+    "this is asking for a boundary, not an exact match, so I need Day 13's narrowing template, not
+    Day 12's." Interviewers are listening for the reasoning chain from constraint to choice, not a
+    memorized algorithm name — that's exactly what separates "I've seen this before" from "I know
+    why this is the right tool."</p>
+
+  <h2>5 mixed practice problems</h2>
+
+  <div class="problem">
+    <h4>1. First Bad Version <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/first-bad-version/" target="_blank" rel="noopener">LeetCode: First Bad Version</a>)</span></h4>
+    <p>You're given <code>n</code> versions <code>[1, 2, ..., n]</code> and an API
+      <code>isBadVersion(version)</code>. Once a version is bad, every version after it is also
+      bad. Find the first bad version using as few API calls as possible.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>This is Day 13's search-on-answer idea in
+      miniature — <code>isBadVersion</code> is exactly the monotonic false-then-true check.
+      Binary search over the version numbers directly, using the narrowing/boundary template, not
+      the exact-match one.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>var solution = function(isBadVersion) {
+  return function(n) {
+    let lo = 1, hi = n;
+    while (lo < hi) {
+      const mid = lo + Math.floor((hi - lo) / 2);
+      if (isBadVersion(mid)) hi = mid;      // mid is bad — answer is at or before mid
+      else lo = mid + 1;                    // mid is good — answer is after mid
+    }
+    return lo;
+  };
+};</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Intersection of Two Arrays II <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/intersection-of-two-arrays-ii/" target="_blank" rel="noopener">LeetCode: Intersection of Two Arrays II</a>)</span></h4>
+    <p>Given two integer arrays, return their intersection — unlike Day 7's version, each shared
+      value must appear in the result as many times as it appears in <em>both</em> arrays.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Sort both arrays, then walk them with two
+      pointers — the exact same "advance whichever side is smaller" move as Day 10's
+      <code>merge()</code> step, just collecting matches instead of merging everything.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function intersect(nums1, nums2) {
+  const a = nums1.slice().sort((x, y) => x - y);
+  const b = nums2.slice().sort((x, y) => x - y);
+  let i = 0, j = 0;
+  const result = [];
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { result.push(a[i]); i++; j++; }
+    else if (a[i] < b[j]) i++;
+    else j++;
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Search a 2D Matrix <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/search-a-2d-matrix/" target="_blank" rel="noopener">LeetCode: Search a 2D Matrix</a>)</span></h4>
+    <p>Each row of an m x n matrix is sorted ascending, and the first value of each row is greater
+      than the last value of the previous row. Determine if a target exists, in
+      O(log(m·n)) time.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>The whole matrix is really one sorted array
+      of m·n elements in disguise. Binary search a single index from 0 to m·n − 1 using Day 12's
+      exact template unchanged, and only convert that one index into (row, col) —
+      <code>row = Math.floor(mid / n)</code>, <code>col = mid % n</code> — right before reading
+      the value.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function searchMatrix(matrix, target) {
+  const m = matrix.length, n = matrix[0].length;
+  let lo = 0, hi = m * n - 1;
+  while (lo <= hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    const row = Math.floor(mid / n), col = mid % n;
+    const val = matrix[row][col];
+    if (val === target) return true;
+    else if (val < target) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return false;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>4. H-Index <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/h-index/" target="_blank" rel="noopener">LeetCode: H-Index</a>)</span></h4>
+    <p>Given a researcher's citation counts, return their h-index: the largest <code>h</code> such
+      that at least <code>h</code> papers have each been cited at least <code>h</code> times.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p4-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p4-hint" hidden>Sort the citations in descending order first
+      (any Week 2 sort works). Then walk the sorted list looking for the crossover point where the
+      citation count drops below its 1-indexed position — that position is the h-index.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p4-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p4-sol" hidden><pre><code>function hIndex(citations) {
+  const sorted = citations.slice().sort((a, b) => b - a);
+  let h = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i] >= i + 1) h = i + 1;
+    else break; // citations only get smaller from here — no point continuing
+  }
+  return h;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>5. Kth Smallest Element in a Sorted Matrix <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/" target="_blank" rel="noopener">LeetCode: Kth Smallest Element in a Sorted Matrix</a>)</span></h4>
+    <p>Given an n x n matrix where every row and every column is sorted ascending, find the kth
+      smallest element in the whole matrix.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p5-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p5-hint" hidden>This is search on answer again (Day 13), but
+      the answer space is <em>values</em>, not indices — binary search the value range from
+      <code>matrix[0][0]</code> to <code>matrix[n-1][n-1]</code>. Your feasibility check counts
+      how many entries are ≤ a candidate value in O(n) (walk each row from the last column
+      backward, like a staircase), then narrow toward the smallest value where that count ≥ k.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p5-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p5-sol" hidden><pre><code>function kthSmallest(matrix, k) {
+  const n = matrix.length;
+  let lo = matrix[0][0], hi = matrix[n - 1][n - 1];
+
+  function countLessEqual(x) {
+    let count = 0, col = n - 1;
+    for (let row = 0; row < n; row++) {
+      while (col >= 0 && matrix[row][col] > x) col--;
+      count += col + 1; // every entry in this row up to `col` is <= x
+    }
+    return count;
+  }
+
+  while (lo < hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (countLessEqual(mid) < k) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="merge" data-explain="Quick sort's worst case is O(n²) and its in-place partition isn't stable; merge sort is the only Week 2 sort with both a worst-case O(n log n) guarantee and stability.">
+    <p class="q-text">1. Which Week 2 sort is both stable AND guarantees O(n log n) even in the worst case?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="merge">Merge sort</button>
+      <button class="btn dsa-quiz-option" data-value="quick">Quick sort</button>
+      <button class="btn dsa-quiz-option" data-value="insertion">Insertion sort</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="oneside" data-explain="Recursing into only the side of the partition that contains the target index — throwing the other side away unsorted — is what drops quickselect's average time to O(n), below quick sort's O(n log n).">
+    <p class="q-text">2. Quickselect gets its average O(n) time (versus quick sort's O(n log n)) by:</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="oneside">Recursing into only the one side of the partition that contains the answer</button>
+      <button class="btn dsa-quiz-option" data-value="fullsort">Fully sorting the array first, then indexing directly</button>
+      <button class="btn dsa-quiz-option" data-value="hashmap">Using a hash map to skip comparisons</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="keepgoing" data-explain="Both search() and findBound() use the same lo <= hi loop shape and check for an exact match at mid — the real difference is what happens on a match: search() returns immediately, findBound() saves it as a candidate and keeps narrowing toward the boundary instead of stopping." >
+    <p class="q-text">3. What's the key structural difference between Day 12's search() and Day 13's findBound()?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="keepgoing">findBound() doesn't return immediately on a match — it saves the result and keeps narrowing</button>
+      <button class="btn dsa-quiz-option" data-value="nomid">findBound() doesn't compute a mid at all</button>
+      <button class="btn dsa-quiz-option" data-value="same">There's no real difference — they're interchangeable</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="insertion" data-explain="Insertion sort's inner while loop does almost no shifting when the array is already close to sorted, giving it a genuine O(n) best case. Selection sort always fully scans the remaining range regardless of input order." >
+    <p class="q-text">4. For a small, nearly-sorted array where simplicity matters most, which Day 8 sort is the best fit?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="insertion">Insertion sort</button>
+      <button class="btn dsa-quiz-option" data-value="selection">Selection sort</button>
+      <button class="btn dsa-quiz-option" data-value="same">All three perform identically on nearly-sorted input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="monotonic" data-explain="A search-on-answer feasibility check must be monotonic — false for every candidate below some threshold, true for every candidate at or above it (or vice versa) — exactly one flip point across the answer space." >
+    <p class="q-text">5. What property must a "search on answer" feasibility check have — whether it's Koko Eating Bananas or today's Kth Smallest in a Sorted Matrix?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="monotonic">It must be monotonic — false-then-true (or vice versa) with a single flip point</button>
+      <button class="btn dsa-quiz-option" data-value="constant">It must run in O(1) time</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">The underlying array must already be fully sorted</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 14 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day13.html">← Day 13: Binary Search Variations</a>
+    <a class="btn" href="day15.html">Day 15: Linked Lists →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 14;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: quickselect — partition (Day 11) + one-side narrowing (Day 12/13) ----
+  function ordinal(n) {
+    const suffixes = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+  }
+
+  function buildQuickselectSteps(input, k) {
+    const a = input.slice();
+    const target = a.length - k;
+    const steps = [{
+      narration: `Find the ${ordinal(k)} largest in [${a.join(', ')}] — that's index ${target} in ascending sorted order. Only recurse into the side that contains it, never both.`,
+      values: a.slice(),
+      states: {},
+    }];
+    let lo = 0, hi = a.length - 1;
+    const eliminated = new Set();
+
+    function rangeStates(extra) {
+      const s = {};
+      eliminated.forEach((idx) => { s[idx] = 'swap'; });
+      for (let i = lo; i <= hi; i++) if (!eliminated.has(i)) s[i] = 'pointer';
+      return Object.assign(s, extra);
+    }
+
+    let answerIdx = -1;
+    while (answerIdx === -1) {
+      const pivotVal = a[hi];
+      steps.push({ narration: `Partition [lo=${lo}..hi=${hi}] — pivot = ${pivotVal} (last element), just like Day 11.`, values: a.slice(), states: rangeStates({ [hi]: 'active' }) });
+      let i = lo - 1;
+      for (let j = lo; j < hi; j++) {
+        const isSmaller = a[j] <= pivotVal;
+        steps.push({ narration: `Compare ${a[j]} to pivot ${pivotVal} — ${isSmaller ? 'smaller/equal, belongs left' : 'bigger, stays right for now'}.`, values: a.slice(), states: rangeStates({ [hi]: 'active', [j]: 'compare' }) });
+        if (isSmaller) {
+          i++;
+          if (i !== j) {
+            [a[i], a[j]] = [a[j], a[i]];
+            steps.push({ narration: `Swap index ${i} and ${j}.`, values: a.slice(), states: rangeStates({ [hi]: 'active', [i]: 'swap' }) });
+          }
+        }
+      }
+      [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+      const p = i + 1;
+      steps.push({ narration: `Pivot lands at index ${p} — its final sorted position.`, values: a.slice(), states: rangeStates({ [p]: 'active' }) });
+
+      if (p === target) {
+        answerIdx = p;
+        steps.push({ narration: `index ${p} === target index ${target} — found it! ${a[p]} is the ${ordinal(k)} largest.`, values: a.slice(), states: rangeStates({ [p]: 'sorted' }) });
+      } else if (p < target) {
+        steps.push({ narration: `${p} < target ${target} — the answer is to the RIGHT. Like binary search, discard the whole left side including the pivot — no recursion there.`, values: a.slice(), states: rangeStates({ [p]: 'swap' }) });
+        for (let idx = lo; idx <= p; idx++) eliminated.add(idx);
+        lo = p + 1;
+      } else {
+        steps.push({ narration: `${p} > target ${target} — the answer is to the LEFT. Discard the whole right side including the pivot.`, values: a.slice(), states: rangeStates({ [p]: 'swap' }) });
+        for (let idx = p; idx <= hi; idx++) eliminated.add(idx);
+        hi = p - 1;
+      }
+    }
+
+    const finalStates = {};
+    for (let idx = 0; idx < a.length; idx++) finalStates[idx] = idx === answerIdx ? 'sorted' : 'swap';
+    steps.push({ narration: `Done — average O(n), not O(n log n): only one side was ever recursed into, each round.`, values: a.slice(), states: finalStates });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [9, 3, 7, 1, 8, 4, 2];
+  const K1 = 2;
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 10 });
+  bars1.setData(BASE1);
+  let steps1 = buildQuickselectSteps(BASE1, K1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1300,
+    onStep(step) { if (!step) { bars1.paint({}, BASE1); return; } bars1.paint(step.states, step.values); },
+    onShuffle() {
+      const a = DSA.randomArray(7, 1, 9);
+      const k = 1 + Math.floor(Math.random() * a.length);
+      steps1 = buildQuickselectSteps(a, k);
+      bars1.setData(a);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
