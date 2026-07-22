@@ -245,7 +245,8 @@
   <h2>Practice problems</h2>
   <p style="color:var(--text-dim);font-size:0.88rem;">Note: problem 3 (Sliding Window Maximum) is
     LeetCode Hard and is today's own core algorithm, not a step up in difficulty from problems 1-2
-    — same intentional exception to the usual easy→medium ramp used on Days 10 and 11, since it's
+    — same intentional exception to the usual easy→medium ramp used on Day 10 (Merge k Sorted
+    Lists), since it's
     the natural, direct application of what this lesson just taught.</p>
 
   <div class="problem">
@@ -464,8 +465,8 @@
     function barStates(i, extra) {
       const s = {};
       deque.forEach((idx) => { s[idx] = 'active'; });
-      if (extra) Object.assign(s, extra);
       if (i !== null) s[i] = 'pointer';
+      if (extra) Object.assign(s, extra); // explicit overrides (sorted/swap/compare) always win over the default pointer
       return s;
     }
     function gridStates(extra) { return Object.assign({}, confirmed, extra || {}); }
