@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 29: Mock Interview Day — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="4 timed mock-interview problems with a real countdown timer, then full solutions and walkthroughs — practice the clock, not just the code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 29 / 30 &middot; WEEK 4</p>
+  <h1>Mock Interview Day</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Practice under real time pressure — 4 problems, each with a countdown timer, simulating the
+      clock of an actual interview instead of the untimed comfort of a normal practice session.</li>
+    <li>Rehearse the discipline from Day 28: state the brute force and its complexity out loud first,
+      name the pattern you're reaching for and why, <em>then</em> write code.</li>
+    <li>Compare your attempt against a full solution and walkthrough for each problem, honestly —
+      the timer is a practice tool, not a pass/fail gate.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Every pattern in this course has been taught untimed, one at a time, with the day's title
+    already telling you the answer. A real interview gives you none of that — a problem, a blank
+    editor, and a clock that's usually somewhere between 20 and 45 minutes for a single question,
+    onsite rounds sometimes tighter. The skill this builds isn't new algorithm knowledge; it's
+    calibrating how much time each phase of solving actually takes when someone is watching and the
+    clock is real.</p>
+  <p>Use each timer exactly like a real interview: press Start, then say your plan out loud (even
+    alone, actually say it) before typing anything. If the buzzer hits zero before you're done, that's
+    useful data, not a failure — note which phase ate the time (usually either clarifying too long, or
+    debugging code that skipped the "trace it by hand first" step) and keep going anyway. The full
+    solution and walkthrough are available any time via the reveal buttons, timer running or not.</p>
+
+  <h2>Diagram: how to spend a 25-minute clock</h2>
+  <svg class="diagram" viewBox="0 0 640 320" role="img" aria-label="A horizontal timeline of a 25-minute interview problem: 2 minutes to clarify the problem and constraints, 3 minutes to state a brute-force approach and its complexity, 5 minutes to identify the actual pattern and approach, 10 minutes to write the code, and 5 minutes to trace through a test case and check edge cases.">
+    <text x="20" y="28" font-size="13" fill="#61AEEE" font-weight="bold">A 25-minute problem, budgeted by phase</text>
+
+    <g font-size="10" fill="#818896" text-anchor="middle">
+      <text x="43" y="66">2m</text>
+      <text x="101" y="66">3m</text>
+      <text x="194" y="66">5m</text>
+      <text x="368" y="66">10m</text>
+      <text x="542" y="66">5m</text>
+    </g>
+
+    <g stroke="#21252B" stroke-width="1">
+      <rect x="20" y="70" width="46" height="50" fill="#61AEEE"/>
+      <rect x="66" y="70" width="70" height="50" fill="#E6C07B"/>
+      <rect x="136" y="70" width="116" height="50" fill="#C678DD"/>
+      <rect x="252" y="70" width="232" height="50" fill="#98C379"/>
+      <rect x="484" y="70" width="116" height="50" fill="#E06C75"/>
+    </g>
+
+    <g font-size="12" fill="#DCDFE4">
+      <rect x="20" y="150" width="12" height="12" rx="2" fill="#61AEEE"/>
+      <text x="40" y="160">Clarify the problem and constraints out loud</text>
+      <rect x="20" y="174" width="12" height="12" rx="2" fill="#E6C07B"/>
+      <text x="40" y="184">State a brute-force approach and its complexity</text>
+      <rect x="20" y="198" width="12" height="12" rx="2" fill="#C678DD"/>
+      <text x="40" y="208">Identify the actual pattern, name it, explain why</text>
+      <rect x="20" y="222" width="12" height="12" rx="2" fill="#98C379"/>
+      <text x="40" y="232">Write the code</text>
+      <rect x="20" y="246" width="12" height="12" rx="2" fill="#E06C75"/>
+      <text x="40" y="256">Trace a test case by hand, check edge cases</text>
+    </g>
+
+    <text x="20" y="280" font-size="12" fill="#DCDFE4">Scale this to whatever time you're actually given — the ratios matter more</text>
+    <text x="20" y="298" font-size="12" fill="#DCDFE4">than the minutes.</text>
+  </svg>
+
+  <h2>4 timed mock-interview problems</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Press Start, then work the problem for real
+    before revealing anything. All 4 are Medium — the typical difficulty of a real onsite round.</p>
+
+  <div class="problem">
+    <h4>1. Longest Palindromic Substring <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/longest-palindromic-substring/" target="_blank" rel="noopener">LeetCode: Longest Palindromic Substring</a>)</span></h4>
+    <p>Given a string, return its longest palindromic substring. Suggested time: <strong>20
+      minutes</strong>.</p>
+    <div class="viz-panel">
+      <div id="timer1Display" style="font-family:var(--font-head);font-size:2.4rem;font-weight:700;text-align:center;color:var(--heading);">20:00</div>
+      <div class="viz-controls" style="justify-content:center;">
+        <button class="btn btn-primary" id="timer1Start">▶ Start</button>
+        <button class="btn" id="timer1Pause">⏸ Pause</button>
+        <button class="btn" id="timer1Reset">⟲ Reset</button>
+      </div>
+      <p class="narration" id="timer1Status" style="text-align:center;">Press Start when you begin working the problem.</p>
+    </div>
+    <button class="btn dsa-reveal-toggle" data-target="m1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="m1-hint" hidden>Every palindrome has a center — either a single
+      character (odd length) or a gap between two characters (even length). Try every possible center
+      and expand outward while both sides match. O(n) centers, O(n) expansion each, O(n²) total — no
+      DP table needed.</div>
+    <button class="btn dsa-reveal-toggle" data-target="m1-sol" data-hide-label="Hide full solution">Show full solution</button>
+    <div class="dsa-reveal-panel" id="m1-sol" hidden>
+      <pre><code>function longestPalindrome(s) {
+  if (s.length < 2) return s;
+  let start = 0, maxLen = 1;
+
+  function expand(l, r) {
+    while (l >= 0 && r < s.length && s[l] === s[r]) { l--; r++; }
+    return [l + 1, r - 1];             // the last valid palindrome bounds
+  }
+
+  for (let i = 0; i < s.length; i++) {
+    const [l1, r1] = expand(i, i);     // odd-length center at i
+    if (r1 - l1 + 1 > maxLen) { start = l1; maxLen = r1 - l1 + 1; }
+    const [l2, r2] = expand(i, i + 1); // even-length center between i and i+1
+    if (r2 - l2 + 1 > maxLen) { start = l2; maxLen = r2 - l2 + 1; }
+  }
+  return s.substring(start, start + maxLen);
+}</code></pre>
+      <p style="color:var(--text-dim);font-size:0.88rem;"><strong>Walkthrough:</strong> every index is
+        tried as both an odd-length center (single character) and an even-length center (gap between
+        two characters) — that covers every possible palindrome shape. <code>expand</code> grows
+        outward while the characters on both sides keep matching, and returns the bounds of the last
+        valid match. Whichever expansion produces a longer palindrome than anything seen so far
+        updates <code>start</code>/<code>maxLen</code>. Time O(n²) (n centers, up to O(n) expansion
+        each), space O(1) beyond the output.</p>
+    </div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Merge Intervals <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/merge-intervals/" target="_blank" rel="noopener">LeetCode: Merge Intervals</a>)</span></h4>
+    <p>Given a list of intervals, merge all overlapping intervals and return the merged list.
+      Suggested time: <strong>20 minutes</strong>.</p>
+    <div class="viz-panel">
+      <div id="timer2Display" style="font-family:var(--font-head);font-size:2.4rem;font-weight:700;text-align:center;color:var(--heading);">20:00</div>
+      <div class="viz-controls" style="justify-content:center;">
+        <button class="btn btn-primary" id="timer2Start">▶ Start</button>
+        <button class="btn" id="timer2Pause">⏸ Pause</button>
+        <button class="btn" id="timer2Reset">⟲ Reset</button>
+      </div>
+      <p class="narration" id="timer2Status" style="text-align:center;">Press Start when you begin working the problem.</p>
+    </div>
+    <button class="btn dsa-reveal-toggle" data-target="m2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="m2-hint" hidden>Sort by start time first — same opening move as
+      Day 27's interval greedy, just sorted by the other endpoint. Then walk left to right: if the
+      current interval's start is within the last merged interval's end, extend that interval's end
+      instead of starting a new one.</div>
+    <button class="btn dsa-reveal-toggle" data-target="m2-sol" data-hide-label="Hide full solution">Show full solution</button>
+    <div class="dsa-reveal-panel" id="m2-sol" hidden>
+      <pre><code>function mergeIntervals(intervals) {
+  if (intervals.length === 0) return [];
+  const sorted = intervals.slice().sort((a, b) => a[0] - b[0]);
+  const result = [sorted[0].slice()];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const last = result[result.length - 1];
+    const [start, end] = sorted[i];
+    if (start <= last[1]) {
+      last[1] = Math.max(last[1], end);  // overlaps — extend the last merged interval
+    } else {
+      result.push([start, end]);         // no overlap — starts a new merged interval
+    }
+  }
+  return result;
+}</code></pre>
+      <p style="color:var(--text-dim);font-size:0.88rem;"><strong>Walkthrough:</strong> sorting by
+        start time means every interval that could possibly overlap the one currently being built is
+        guaranteed to be checked before we move past it. <code>start &lt;= last[1]</code> is the
+        overlap test — note it's <code>&lt;=</code>, not <code>&lt;</code>, since touching intervals
+        like <code>[1,4]</code> and <code>[4,5]</code> should still merge into <code>[1,5]</code>.
+        Time O(n log n), dominated by the sort; space O(n) for the output.</p>
+    </div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Rotting Oranges <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/rotting-oranges/" target="_blank" rel="noopener">LeetCode: Rotting Oranges</a>)</span></h4>
+    <p>Given a grid where each cell is empty (0), a fresh orange (1), or a rotten orange (2), and
+      every minute a rotten orange rots its fresh orange neighbors, return the minimum minutes until
+      no fresh orange remains, or -1 if that's impossible. Suggested time: <strong>20
+      minutes</strong>.</p>
+    <div class="viz-panel">
+      <div id="timer3Display" style="font-family:var(--font-head);font-size:2.4rem;font-weight:700;text-align:center;color:var(--heading);">20:00</div>
+      <div class="viz-controls" style="justify-content:center;">
+        <button class="btn btn-primary" id="timer3Start">▶ Start</button>
+        <button class="btn" id="timer3Pause">⏸ Pause</button>
+        <button class="btn" id="timer3Reset">⟲ Reset</button>
+      </div>
+      <p class="narration" id="timer3Status" style="text-align:center;">Press Start when you begin working the problem.</p>
+    </div>
+    <button class="btn dsa-reveal-toggle" data-target="m3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="m3-hint" hidden>Every rotten orange rots its neighbors
+      simultaneously, every minute — that's multi-source BFS, exactly like Day 24's 01 Matrix, except
+      the queue seeds with every ALREADY-rotten cell instead of every 0-cell. Track elapsed minutes
+      per queue entry, and count remaining fresh oranges to know if any are unreachable.</div>
+    <button class="btn dsa-reveal-toggle" data-target="m3-sol" data-hide-label="Hide full solution">Show full solution</button>
+    <div class="dsa-reveal-panel" id="m3-sol" hidden>
+      <pre><code>function orangesRotting(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  const queue = [];
+  let fresh = 0;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] === 2) queue.push([r, c, 0]);  // seed with EVERY already-rotten cell
+      else if (grid[r][c] === 1) fresh++;
+    }
+  }
+
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  let minutes = 0;
+  let qi = 0;
+  while (qi < queue.length) {
+    const [r, c, t] = queue[qi++];
+    minutes = Math.max(minutes, t);
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc] === 1) {
+        grid[nr][nc] = 2;
+        fresh--;
+        queue.push([nr, nc, t + 1]);
+      }
+    }
+  }
+  return fresh === 0 ? minutes : -1;
+}</code></pre>
+      <p style="color:var(--text-dim);font-size:0.88rem;"><strong>Walkthrough:</strong> seeding the
+        queue with every rotten cell at once (not just one) is what makes this multi-source BFS — the
+        same trick Day 24's 01 Matrix used for "distance to nearest 0-cell." Every cell's <code>t</code>
+        is exactly how many minutes it took to rot, so the answer is the largest <code>t</code>
+        reached. Any fresh orange never visited means it was unreachable — the <code>fresh</code>
+        counter catches that and returns -1 instead of a wrong number. Time O(rows &times; cols),
+        space O(rows &times; cols) for the queue in the worst case.</p>
+    </div>
+  </div>
+
+  <div class="problem">
+    <h4>4. Longest Common Subsequence <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/longest-common-subsequence/" target="_blank" rel="noopener">LeetCode: Longest Common Subsequence</a>)</span></h4>
+    <p>Given two strings, return the length of their longest common subsequence (not necessarily
+      contiguous in either string, but in the same relative order in both). Suggested time:
+      <strong>25 minutes</strong> — the first 2D DP table in the course, budget extra time to set up
+      the grid correctly.</p>
+    <div class="viz-panel">
+      <div id="timer4Display" style="font-family:var(--font-head);font-size:2.4rem;font-weight:700;text-align:center;color:var(--heading);">25:00</div>
+      <div class="viz-controls" style="justify-content:center;">
+        <button class="btn btn-primary" id="timer4Start">▶ Start</button>
+        <button class="btn" id="timer4Pause">⏸ Pause</button>
+        <button class="btn" id="timer4Reset">⟲ Reset</button>
+      </div>
+      <p class="narration" id="timer4Status" style="text-align:center;">Press Start when you begin working the problem.</p>
+    </div>
+    <button class="btn dsa-reveal-toggle" data-target="m4-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="m4-hint" hidden>Build a 2D table where <code>dp[i][j]</code> is
+      the LCS length using the first <code>i</code> characters of text1 and the first <code>j</code>
+      characters of text2. If those two characters match, extend the diagonal
+      (<code>dp[i-1][j-1] + 1</code>); if they don't, take the best of dropping one character from
+      either string (<code>max(dp[i-1][j], dp[i][j-1])</code>).</div>
+    <button class="btn dsa-reveal-toggle" data-target="m4-sol" data-hide-label="Hide full solution">Show full solution</button>
+    <div class="dsa-reveal-panel" id="m4-sol" hidden>
+      <pre><code>function longestCommonSubsequence(text1, text2) {
+  const m = text1.length, n = text2.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (text1[i - 1] === text2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;              // characters match — extend the diagonal
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]); // no match — best of dropping either side
+      }
+    }
+  }
+  return dp[m][n];
+}</code></pre>
+      <p style="color:var(--text-dim);font-size:0.88rem;"><strong>Walkthrough:</strong> row 0 and
+        column 0 are implicit base cases — an empty string has an LCS of length 0 with anything, which
+        is exactly what <code>.fill(0)</code> already gives every cell before the loop runs.
+        <code>dp[i][j]</code> only ever depends on the cell diagonally above-left, directly above, or
+        directly left — every one of those is guaranteed already filled by the time row-major order
+        reaches <code>(i, j)</code>. This is the same "cache overlapping subproblems" idea as Days
+        25-26, just stretched across 2 dimensions instead of 1. Time O(m &times; n), space O(m &times;
+        n) for the table.</p>
+    </div>
+  </div>
+
+  <h2>Complexity — all 4 problems</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Problem</th><th>Time</th><th>Space</th><th>Pattern</th></tr></thead>
+    <tbody>
+      <tr><td>Longest Palindromic Substring</td><td>O(n&sup2;)</td><td>O(1)</td><td>Expand around center (two-pointer variant)</td></tr>
+      <tr><td>Merge Intervals</td><td>O(n log n)</td><td>O(n)</td><td>Sort + one linear pass</td></tr>
+      <tr><td>Rotting Oranges</td><td>O(rows &times; cols)</td><td>O(rows &times; cols)</td><td>Multi-source BFS</td></tr>
+      <tr><td>Longest Common Subsequence</td><td>O(m &times; n)</td><td>O(m &times; n)</td><td>2D Dynamic Programming</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What do you do if you finish with time still on the clock?</strong> Don't stop —
+      trace your code against the given example out loud, then think of an edge case the example
+      doesn't cover (empty input, all-identical elements, a single element) and trace that too.
+      Finishing early and using the remaining time to verify is a stronger signal than finishing early
+      and going quiet.</li>
+    <li><strong>What do you do if the timer runs out before you're done?</strong> Keep going — say so
+      out loud ("I'm past my time budget, let me finish this last piece"), and finish the thought.
+      Afterward, honestly identify which phase ate the extra time (usually clarifying too long, or
+      debugging code that was never hand-traced first) so the next mock session budgets it better.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> panicking and
+      abandoning a mostly-correct approach to try something completely different with 5 minutes left
+      is almost always worse than finishing the original plan a few minutes late.</span></li>
+    <li><strong>What should "talking while coding" actually sound like?</strong> Short, present-tense
+      narration of what you're about to type and why — "I'm sorting by end time here because that's
+      what makes the greedy choice safe" — not a monologue explaining the whole algorithm before
+      you've written a line, and not silence. Interviewers are listening for your reasoning to stay
+      visible the entire time, not just at the start.</li>
+    <li><strong>Why do multiple timed mock sessions matter more than one long untimed one?</strong>
+      Time pressure calibration is a skill with its own learning curve, separate from knowing the
+      algorithms — the first few timed attempts are almost always slower than expected, purely from
+      the unfamiliar pressure of narrating out loud while a clock runs. That gap closes with
+      repetition, the same way any timed skill improves with practice under the actual constraint, not
+      practice without it.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How many mock
+      sessions before it stops feeling this awkward?" — there's no universal number, but most people
+      notice a real difference by their 4th or 5th timed attempt. Re-run today's 4 problems again in a
+      few days once the solutions have faded from memory.</span></li>
+  </ul>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="clarifybrute" data-explain="The recommended order is: clarify the problem and constraints, state a brute-force approach and its complexity out loud, identify the actual pattern, write the code, then trace a test case. Skipping straight to code without naming the brute force first is one of the most common ways candidates lose interviewer confidence early.">
+    <p class="q-text">1. What's the recommended first move when a timer starts on a new problem?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="clarifybrute">Clarify the problem and constraints, then state a brute-force approach and its complexity</button>
+      <button class="btn dsa-quiz-option" data-value="codefirst">Start writing code immediately to save time</button>
+      <button class="btn dsa-quiz-option" data-value="silent">Work silently until you have the complete optimal solution</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="signal" data-explain="Naming the brute force and its complexity out loud — even if you never write it — proves you understand the problem's baseline and gives the interviewer a concrete starting point to follow your reasoning from, before you jump to something cleverer.">
+    <p class="q-text">2. Why state a brute-force approach out loud even if you're not going to code it?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="signal">It proves you understand the problem's baseline and gives the interviewer a concrete starting point to follow</button>
+      <button class="btn dsa-quiz-option" data-value="waste">It's a waste of time and should always be skipped</button>
+      <button class="btn dsa-quiz-option" data-value="required">LeetCode requires a brute-force submission before an optimal one</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="keepgoing" data-explain="Keep going and finish the thought, saying out loud that you're past the time budget — abandoning a mostly-correct approach for something completely new with little time left is almost always the worse move." >
+    <p class="q-text">3. If the countdown timer hits zero and you're not done, what should you do?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="keepgoing">Keep going, say so out loud, and finish the thought</button>
+      <button class="btn dsa-quiz-option" data-value="restart">Immediately restart with a completely different approach</button>
+      <button class="btn dsa-quiz-option" data-value="stop">Stop entirely — the attempt no longer counts</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="tracetest" data-explain="Extra time is best spent tracing your code against the given example out loud, then testing an edge case the example doesn't cover (empty input, all-identical elements, a single element) — that's a stronger signal than finishing and going silent." >
+    <p class="q-text">4. If you finish a problem with time remaining, what's the best use of the rest of the clock?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="tracetest">Trace your code against the example, then test an edge case it doesn't cover</button>
+      <button class="btn dsa-quiz-option" data-value="silent">Stay quiet and wait for the interviewer to speak</button>
+      <button class="btn dsa-quiz-option" data-value="rewrite">Rewrite the entire solution from scratch in a different language</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="repetition" data-explain="Time-pressure calibration is its own skill, separate from knowing the algorithms — it improves with repeated timed practice, the same way any skill performed under a real constraint improves faster than the same skill practiced without that constraint." >
+    <p class="q-text">5. Why does repeating timed mock interviews matter more than one long untimed practice session?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="repetition">Time-pressure calibration is its own skill that improves specifically through repeated timed practice</button>
+      <button class="btn dsa-quiz-option" data-value="notimportant">It doesn't matter — untimed practice is exactly as effective</button>
+      <button class="btn dsa-quiz-option" data-value="memorize">The only benefit is memorizing the specific 4 problems used today</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 29 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day28.html">← Day 28: Pattern Recognition Masterclass</a>
+    <a class="btn" href="day30.html">Day 30: Final Review &amp; Cheat Sheet →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 29;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- countdown timer factory — used for all 4 mock-interview problems ----
+  function createTimer({ displayEl, startBtn, pauseBtn, resetBtn, statusEl, seconds }) {
+    let remaining = seconds;
+    let intervalId = null;
+
+    function format(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+    function render() {
+      displayEl.textContent = format(Math.max(0, remaining));
+      displayEl.style.color = remaining <= 0 ? 'var(--error)' : (remaining <= 60 ? 'var(--warn)' : 'var(--heading)');
+    }
+    function tick() {
+      remaining--;
+      if (remaining <= 0) {
+        remaining = 0;
+        stop();
+        statusEl.textContent = "Time's up — that's fine, keep working or check the solution when ready.";
+      }
+      render();
+    }
+    function start() {
+      if (intervalId) return; // already running — don't double-start
+      intervalId = setInterval(tick, 1000);
+      statusEl.textContent = 'Working — talk through your approach out loud as you go.';
+    }
+    function stop() {
+      if (intervalId) { clearInterval(intervalId); intervalId = null; }
+    }
+    function reset() {
+      stop();
+      remaining = seconds;
+      statusEl.textContent = 'Press Start when you begin working the problem.';
+      render();
+    }
+
+    startBtn.addEventListener('click', start);
+    pauseBtn.addEventListener('click', stop);
+    resetBtn.addEventListener('click', reset);
+    render();
+    return { start, stop, reset };
+  }
+
+  createTimer({
+    displayEl: document.getElementById('timer1Display'),
+    startBtn: document.getElementById('timer1Start'),
+    pauseBtn: document.getElementById('timer1Pause'),
+    resetBtn: document.getElementById('timer1Reset'),
+    statusEl: document.getElementById('timer1Status'),
+    seconds: 20 * 60,
+  });
+  createTimer({
+    displayEl: document.getElementById('timer2Display'),
+    startBtn: document.getElementById('timer2Start'),
+    pauseBtn: document.getElementById('timer2Pause'),
+    resetBtn: document.getElementById('timer2Reset'),
+    statusEl: document.getElementById('timer2Status'),
+    seconds: 20 * 60,
+  });
+  createTimer({
+    displayEl: document.getElementById('timer3Display'),
+    startBtn: document.getElementById('timer3Start'),
+    pauseBtn: document.getElementById('timer3Pause'),
+    resetBtn: document.getElementById('timer3Reset'),
+    statusEl: document.getElementById('timer3Status'),
+    seconds: 20 * 60,
+  });
+  createTimer({
+    displayEl: document.getElementById('timer4Display'),
+    startBtn: document.getElementById('timer4Start'),
+    pauseBtn: document.getElementById('timer4Pause'),
+    resetBtn: document.getElementById('timer4Reset'),
+    statusEl: document.getElementById('timer4Status'),
+    seconds: 25 * 60,
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
