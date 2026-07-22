@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 23: Graphs — BFS & DFS — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Represent a graph as an adjacency list, then traverse it with BFS and DFS — using a visited set to survive cycles that would trap Day 19's tree traversal in an infinite loop." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 23 / 30 &middot; WEEK 4</p>
+  <h1>Graphs — BFS &amp; DFS</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Represent a graph two ways — adjacency list (the one you'll actually write in an
+      interview) and adjacency matrix (know it exists, know its trade-off) — and see why the
+      list wins for most real-world graphs.</li>
+    <li>Traverse a graph with BFS (queue) and DFS (recursion), both built on the same adjacency
+      list, and see how their visiting orders differ on the exact same graph.</li>
+    <li>Understand why a <strong>visited set</strong> is mandatory here in a way it never was for
+      Day 19's tree traversal — a general graph can have cycles and multiple paths between two
+      nodes, so without tracking what's already been seen, BFS/DFS would loop forever.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A <strong>tree</strong> (Day 19) is actually a special, restricted kind of graph: no cycles,
+    and exactly one path between any two nodes. That's precisely why tree BFS/DFS never needed to
+    track visited nodes — walking "down" from a parent to its children could never lead back to a
+    node you'd already seen, because there's no path back up except the one you just came from.</p>
+  <p>A <strong>general graph</strong> drops that restriction. Nodes can have multiple neighbors
+    that lead to each other in loops — <strong>cycles</strong> — and there can be more than one
+    path between two nodes. Think of a road map: City A connects to City B, City B connects to
+    City C, and City C connects right back to City A. Or a social network: you're friends with
+    Sam, Sam is friends with Priya, and Priya is friends with you too. Follow those connections
+    without remembering where you've been, and you'll walk A → B → C → A → B → C forever — the
+    traversal never terminates.</p>
+  <p>That's the one genuinely new idea in this lesson: a <strong>visited set</strong> (a
+    <code>Set</code> or a plain object used as a hash set) that records every node the instant
+    it's been discovered, so BFS/DFS never re-processes — and never re-queues or re-recurses
+    into — a node twice. Everything else (the queue for BFS, the call stack or recursion for DFS)
+    is exactly what you already know from Day 19; the visited set is the only new moving part,
+    and it's the difference between a traversal that finishes and one that hangs forever.</p>
+
+  <h2>Diagram: graph structure and its adjacency list</h2>
+  <svg class="diagram" viewBox="0 0 900 400" role="img" aria-label="A 7-node undirected graph with nodes A through G. Edges: A-B, A-C, B-D, C-D, D-E, E-F, D-G. The four nodes A, B, C, D form a cycle. Beside the graph, an adjacency list shows each node's neighbor array: A maps to B and C, B maps to A and D, C maps to A and D, D maps to B, C, E, and G, E maps to D and F, F maps to E, G maps to D.">
+    <text x="20" y="22" font-size="13" fill="#61AEEE" font-weight="bold">7 nodes, one cycle (A-B-D-C-A) — adjacency list on the right</text>
+    <g font-size="13">
+      <line x1="90" y1="70" x2="250" y2="70" stroke="#3E4452" stroke-width="2"/>
+      <line x1="90" y1="70" x2="90" y2="190" stroke="#3E4452" stroke-width="2"/>
+      <line x1="250" y1="70" x2="250" y2="190" stroke="#3E4452" stroke-width="2"/>
+      <line x1="90" y1="190" x2="250" y2="190" stroke="#3E4452" stroke-width="2"/>
+      <line x1="250" y1="190" x2="380" y2="130" stroke="#3E4452" stroke-width="2"/>
+      <line x1="380" y1="130" x2="460" y2="130" stroke="#3E4452" stroke-width="2"/>
+      <line x1="250" y1="190" x2="250" y2="300" stroke="#3E4452" stroke-width="2"/>
+
+      <circle cx="90" cy="70" r="18" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="90" y="75" text-anchor="middle" fill="#DCDFE4">A</text>
+      <circle cx="250" cy="70" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="75" text-anchor="middle" fill="#DCDFE4">B</text>
+      <circle cx="90" cy="190" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="90" y="195" text-anchor="middle" fill="#DCDFE4">C</text>
+      <circle cx="250" cy="190" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="195" text-anchor="middle" fill="#DCDFE4">D</text>
+      <circle cx="380" cy="130" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="380" y="135" text-anchor="middle" fill="#DCDFE4">E</text>
+      <circle cx="460" cy="130" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="460" y="135" text-anchor="middle" fill="#DCDFE4">F</text>
+      <circle cx="250" cy="300" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="305" text-anchor="middle" fill="#DCDFE4">G</text>
+    </g>
+    <text x="560" y="45" font-size="12" fill="#818896">Adjacency list (undirected):</text>
+    <g font-size="13" font-family="monospace" fill="#ABB2BF">
+      <text x="560" y="75">A: [B, C]</text>
+      <text x="560" y="103">B: [A, D]</text>
+      <text x="560" y="131">C: [A, D]</text>
+      <text x="560" y="159">D: [B, C, E, G]</text>
+      <text x="560" y="187">E: [D, F]</text>
+      <text x="560" y="215">F: [E]</text>
+      <text x="560" y="243">G: [D]</text>
+    </g>
+    <text x="20" y="345" font-size="12" fill="#DCDFE4">Each undirected edge is stored twice — once in each endpoint's list.</text>
+    <text x="20" y="365" font-size="12" fill="#DCDFE4">This is exactly the representation BFS and DFS will walk in the code below.</text>
+  </svg>
+
+  <h2>Diagram: why a cycle needs a visited set</h2>
+  <svg class="diagram" viewBox="0 0 700 300" role="img" aria-label="A 3-node cycle X, Y, Z, X connected back to itself. Without a visited set, following the edges repeats X to Y to Z to X forever. With a visited set, each node is marked the first time it is reached, so the walk stops after visiting all three nodes exactly once.">
+    <text x="20" y="22" font-size="13" fill="#61AEEE" font-weight="bold">A pure 3-node cycle: X - Y - Z - X</text>
+    <g font-size="13">
+      <line x1="350" y1="60" x2="240" y2="170" stroke="#3E4452" stroke-width="2"/>
+      <line x1="240" y1="170" x2="460" y2="170" stroke="#3E4452" stroke-width="2"/>
+      <line x1="460" y1="170" x2="350" y2="60" stroke="#3E4452" stroke-width="2"/>
+      <circle cx="350" cy="60" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="350" y="65" text-anchor="middle" fill="#DCDFE4">X</text>
+      <circle cx="240" cy="170" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="240" y="175" text-anchor="middle" fill="#DCDFE4">Y</text>
+      <circle cx="460" cy="170" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="460" y="175" text-anchor="middle" fill="#DCDFE4">Z</text>
+    </g>
+    <text x="20" y="215" font-size="12" fill="#E06C75">Without a visited set: X → Y → Z → X → Y → Z → ⋯ (never stops) —</text>
+    <text x="20" y="235" font-size="12" fill="#E06C75">the walk keeps re-visiting the same 3 nodes forever.</text>
+    <text x="20" y="260" font-size="12" fill="#98C379">With a visited set: mark each node visited on first arrival —</text>
+    <text x="20" y="282" font-size="12" fill="#98C379">X → Y → Z, then stop. All 3 nodes visited exactly once.</text>
+  </svg>
+
+  <h2>Interactive visualization: BFS traversal</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> in the queue (discovered, waiting)</span>
+    <span><i class="lg-active"></i> dequeued, checking neighbors now</span>
+    <span><i class="lg-sorted"></i> fully processed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: DFS traversal</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> on the call stack (ancestor, waiting)</span>
+    <span><i class="lg-active"></i> current call, checking neighbors now</span>
+    <span><i class="lg-sorted"></i> finished, returned</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: BFS and DFS on an adjacency list</h2>
+  <pre><code>function bfs(graph, start) {
+  const visited = new Set([start]);   // mark the start visited immediately
+  const queue = [start];
+  const order = [];
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+    order.push(node);
+    for (const neighbor of graph[node]) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);        // mark visited when ENQUEUED, not when dequeued
+        queue.push(neighbor);
+      }
+    }
+  }
+  return order;
+}
+
+function dfs(graph, start, visited = new Set(), order = []) {
+  visited.add(start);                  // mark visited the instant we enter
+  order.push(start);
+  for (const neighbor of graph[start]) {
+    if (!visited.has(neighbor)) {
+      dfs(graph, neighbor, visited, order);
+    }
+  }
+  return order;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>bfs</code>: <code>visited</code> starts with <code>start</code> already in it, and
+      <code>queue</code> starts holding just <code>start</code>. Each loop iteration dequeues one
+      node, records it in <code>order</code>, then scans its neighbors.</li>
+    <li>The critical line is <code>visited.add(neighbor)</code> happening <em>before</em>
+      <code>queue.push(neighbor)</code> — a node is marked visited the moment it's discovered
+      (enqueued), not when it's finally dequeued and processed. Skipping this, or marking visited
+      only at dequeue time, is a real bug — see the trap in Interview Corner below.</li>
+    <li><code>dfs</code> is recursive: it marks <code>start</code> visited and records it
+      immediately on entry, then loops over its neighbors, recursing into any that aren't visited
+      yet. <code>visited</code> and <code>order</code> are threaded through the recursive calls as
+      default parameters so every call shares the same two collections instead of each getting its
+      own empty ones.</li>
+    <li>Both functions check <code>graph[node]</code> — an adjacency list, exactly the
+      representation from the diagram above. Neither would work directly against an adjacency
+      matrix without first converting each row into a list of neighbor indices.</li>
+    <li>The interactive DFS visualization above simulates this exact recursion with an explicit
+      array of call frames (one frame per node currently "on the stack") so you can watch nodes
+      go active → wait as an ancestor → finish and pop, without needing a separate call-stack
+      panel — the traversal order it produces is identical to calling <code>dfs</code> for real.</li>
+  </ul>
+
+  <h3>Dry run: BFS from A</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Queue (before)</th><th>Dequeue</th><th>Neighbor checks</th><th>Visited set (after)</th></tr></thead>
+    <tbody>
+      <tr><td>[A]</td><td>A</td><td>B new → enqueue; C new → enqueue</td><td>{A, B, C}</td></tr>
+      <tr><td>[B, C]</td><td>B</td><td>A visited, skip; D new → enqueue</td><td>{A, B, C, D}</td></tr>
+      <tr><td>[C, D]</td><td>C</td><td>A visited, skip; D visited, skip</td><td>{A, B, C, D}</td></tr>
+      <tr><td>[D]</td><td>D</td><td>B, C visited, skip; E new → enqueue; G new → enqueue</td><td>{A, B, C, D, E, G}</td></tr>
+      <tr><td>[E, G]</td><td>E</td><td>D visited, skip; F new → enqueue</td><td>{A, B, C, D, E, F, G}</td></tr>
+      <tr><td>[G, F]</td><td>G</td><td>D visited, skip</td><td>{A, B, C, D, E, F, G}</td></tr>
+      <tr><td>[F]</td><td>F</td><td>E visited, skip</td><td>{A, B, C, D, E, F, G}</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">BFS order: A → B → C → D → E → G → F. Notice
+    C and D both get checked as neighbors of two different nodes (B and D check each other's
+    territory) — without the visited set, C would enqueue D a second time, and the 4-node cycle
+    A-B-D-C-A would never let the queue empty out.</p>
+
+  <h3>Dry run: DFS from A</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Call stack (path from A)</th><th>Action</th><th>Visited set (after)</th></tr></thead>
+    <tbody>
+      <tr><td>[A]</td><td>Visit A (start)</td><td>{A}</td></tr>
+      <tr><td>[A, B]</td><td>A → B unvisited, recurse</td><td>{A, B}</td></tr>
+      <tr><td>[A, B, D]</td><td>B → A visited skip; B → D unvisited, recurse</td><td>{A, B, D}</td></tr>
+      <tr><td>[A, B, D, C]</td><td>D → B, C: C unvisited, recurse (B was skipped)</td><td>{A, B, D, C}</td></tr>
+      <tr><td>[A, B, D]</td><td>C → A, D both visited — backtrack out of C</td><td>{A, B, D, C}</td></tr>
+      <tr><td>[A, B, D, E]</td><td>D → C visited skip; D → E unvisited, recurse</td><td>{A, B, D, C, E}</td></tr>
+      <tr><td>[A, B, D, E, F]</td><td>E → D visited skip; E → F unvisited, recurse</td><td>{..., F}</td></tr>
+      <tr><td>[A, B, D, E] → [A, B, D]</td><td>F → E visited — backtrack out of F, then out of E</td><td>{..., F}</td></tr>
+      <tr><td>[A, B, D, G]</td><td>D → G unvisited, recurse</td><td>{..., G}</td></tr>
+      <tr><td>[] (empty)</td><td>G, D, B, A all exhausted — backtrack all the way out</td><td>{A, B, C, D, E, F, G}</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">DFS order: A → B → D → C → E → F → G — a
+    genuinely different order from BFS on the exact same graph, because DFS commits to one
+    neighbor's whole subtree before backtracking to try the next one.</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>BFS traversal</td><td>O(V + E)</td><td>O(V)</td><td>The visited set guarantees every vertex is enqueued and processed exactly once — O(V). Every edge is examined once from each endpoint it touches, so O(E) for undirected (O(2E), same order of growth) or O(E) for directed.</td></tr>
+      <tr><td>DFS traversal</td><td>O(V + E)</td><td>O(V)</td><td>Same reasoning as BFS — the visited set bounds vertex visits to V, edge checks to E. Space is the recursion depth (or explicit stack size), worst case O(V) for a graph that's one long path.</td></tr>
+      <tr><td>Adjacency list (representation)</td><td>O(1) average to list a node's neighbors</td><td>O(V + E)</td><td>Most common in interviews — compact for sparse graphs, and it's exactly what BFS/DFS above iterate over.</td></tr>
+      <tr><td>Adjacency matrix (representation)</td><td>O(1) to check if a specific edge exists</td><td>O(V squared)</td><td>Simple lookups for "are u and v connected", but wastes space on sparse graphs — a graph with 1000 nodes and 2000 edges still allocates 1,000,000 matrix cells.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why didn't Day 19's tree traversal need a visited set, but graph traversal
+      does?</strong> A tree is a graph with no cycles and exactly one path between any two nodes —
+      walking from a parent to a child can never loop back to an ancestor. A general graph drops
+      both guarantees: cycles exist, and a node can be reached from more than one direction. Without
+      tracking what's already been seen, BFS/DFS on a cyclic graph never terminates.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> forgetting the
+      visited set entirely doesn't just produce a wrong answer — on any graph with a cycle, it's an
+      infinite loop. Always ask "does this graph guarantee no cycles?" before assuming you can skip
+      it; if you're not certain, add the visited set.</span></li>
+    <li><strong>In BFS, does it matter whether you mark a node visited when it's ENQUEUED or when
+      it's DEQUEUED?</strong> Yes — mark at enqueue time. If you instead wait until a node is
+      dequeued to mark it visited, the same node can be discovered by multiple neighbors and pushed
+      onto the queue several times before it's ever processed, wasting work and — in variants that
+      track "distance from start" per node — potentially overwriting a correct shorter distance
+      with a later, wrong one.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this is a
+      subtle bug because the traversal still eventually terminates and often still visits every
+      reachable node — it just does extra, wasted work, and can silently corrupt any
+      per-node bookkeeping (like distances) that assumes each node is only ever enqueued once.</span></li>
+    <li><strong>What if the graph is disconnected — some nodes aren't reachable from your starting
+      point at all?</strong> A single BFS or DFS call only reaches whatever's connected to its
+      start node. To visit every node in a disconnected graph, loop over all nodes in the graph and
+      kick off a fresh traversal from any node that's still unvisited after the previous ones
+      finished — not just from one starting point.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How would you
+      count the number of separate connected components?" — count how many times you have to start
+      a fresh traversal from an unvisited node; that count is the number of components.</span></li>
+    <li><strong>When would you reach for an adjacency matrix instead of an adjacency list?</strong>
+      When the graph is dense (edge count close to V²) or you need O(1) "is there an edge between u
+      and v" checks and can afford O(V²) space. For the sparse graphs typical of interview problems
+      (grids, small explicit graphs), the adjacency list's O(V + E) space is almost always the
+      better default.</li>
+    <li><strong>BFS or DFS — how do you pick?</strong> If you need the shortest path in an
+      unweighted graph, or need to explore level by level, BFS is the right shape (more on this Day
+      24). If you just need to know reachability, explore every path, or the recursion naturally
+      matches the problem (e.g. flood fill, counting components, cloning a graph), DFS is usually
+      simpler to write and uses less peak memory on a wide, shallow graph.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the representation first — "I'll model
+    this as an adjacency list, node to array of neighbors" — then name the traversal and its
+    engine — "BFS with a queue" or "DFS with recursion" — and immediately say the visited-set rule
+    out loud: "I'll mark each node visited the moment I discover it, not when I finish processing
+    it, so I never enqueue or recurse into the same node twice even if the graph has cycles."
+    Interviewers on a graph problem are listening specifically for whether you treat the visited
+    set as a first-class, load-bearing part of the algorithm — not an afterthought bolted on after
+    your code infinite-loops on their test case.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Find if Path Exists in Graph <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/find-if-path-exists-in-graph/" target="_blank" rel="noopener">LeetCode: Find if Path Exists in Graph</a>)</span></h4>
+    <p>Given a graph as an edge list, a source, and a destination, return whether there's a path
+      from source to destination. Today's traversal, with an early exit.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Build an adjacency list from the edge list
+      first (remember: undirected, so add both directions). Then run BFS or DFS from source and
+      check whether destination ever gets visited — you can even return true the moment you
+      dequeue/visit it.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function validPath(n, edges, source, destination) {
+  const adj = Array.from({ length: n }, () => []);
+  for (const [a, b] of edges) {
+    adj[a].push(b);
+    adj[b].push(a);
+  }
+  const visited = new Set([source]);
+  const queue = [source];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    if (node === destination) return true;
+    for (const neighbor of adj[node]) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push(neighbor);
+      }
+    }
+  }
+  return false;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Number of Islands <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/number-of-islands/" target="_blank" rel="noopener">LeetCode: Number of Islands</a>)</span></h4>
+    <p>Given a 2D grid of <code>'1'</code> (land) and <code>'0'</code> (water), count the number
+      of islands — a grid is a graph in disguise, where each cell is a node connected to its
+      up / down / left / right neighbors.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Scan every cell. Whenever you find an
+      unvisited <code>'1'</code>, that's a brand-new island — increment your count, then flood-fill
+      outward from it with BFS or DFS, marking every connected land cell visited so the outer scan
+      never counts it again. This is exactly today's "disconnected graph" trap, applied
+      deliberately — each island is its own connected component.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function numIslands(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  const visited = Array.from({ length: rows }, () => new Array(cols).fill(false));
+  let count = 0;
+
+  function floodFill(r, c) {
+    const queue = [[r, c]];
+    visited[r][c] = true;
+    while (queue.length > 0) {
+      const [row, col] = queue.shift();
+      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (const [dr, dc] of dirs) {
+        const nr = row + dr, nc = col + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && grid[nr][nc] === '1') {
+          visited[nr][nc] = true;
+          queue.push([nr, nc]);
+        }
+      }
+    }
+  }
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] === '1' && !visited[r][c]) {
+        count++;
+        floodFill(r, c);
+      }
+    }
+  }
+  return count;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Clone Graph <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/clone-graph/" target="_blank" rel="noopener">LeetCode: Clone Graph</a>)</span></h4>
+    <p>Given a reference node in a connected undirected graph, return a deep copy of the whole
+      graph. The graph can contain cycles, so the visited set has to double as a map from
+      original node to its clone.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Use a <code>Map</code> instead of a
+      <code>Set</code> for "visited" — key is the original node, value is its clone. Traverse
+      (BFS or DFS) as usual, but the first time you see a node, create its clone and store it in
+      the map immediately, before recursing / enqueuing into its neighbors — that's what lets a
+      cycle safely point back to a clone that already exists instead of cloning it twice.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function cloneGraph(node) {
+  if (!node) return null;
+  const visited = new Map(); // original node -> its clone
+
+  function walk(n) {
+    if (visited.has(n)) return visited.get(n);
+    const clone = new Node(n.val);
+    visited.set(n, clone);       // store the clone BEFORE recursing — breaks the cycle
+    for (const neighbor of n.neighbors) {
+      clone.neighbors.push(walk(neighbor));
+    }
+    return clone;
+  }
+
+  return walk(node);
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="cycles" data-explain="A tree has no cycles and exactly one path between any two nodes, so walking from parent to child can never lead back to an already-seen node. A general graph can have cycles and multiple paths, so without a visited set BFS/DFS can loop forever." >
+    <p class="q-text">1. Why does graph traversal need a visited set when Day 19's tree traversal never did?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cycles">A tree has no cycles and one path between nodes; a general graph can have cycles, so nodes can be re-reached</button>
+      <button class="btn dsa-quiz-option" data-value="size">Graphs always have more nodes than trees, so tracking is required for performance</button>
+      <button class="btn dsa-quiz-option" data-value="notneeded">It doesn't — the visited set is optional, just a minor optimization</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="enqueue" data-explain="Mark a node visited the moment it's enqueued, not when it's dequeued. Marking at dequeue time lets the same node be discovered and pushed onto the queue multiple times before it's ever processed." >
+    <p class="q-text">2. In BFS, when should a node be added to the visited set?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="enqueue">The moment it's enqueued (discovered) — not when it's later dequeued</button>
+      <button class="btn dsa-quiz-option" data-value="dequeue">Only after it's dequeued and fully processed</button>
+      <button class="btn dsa-quiz-option" data-value="never">BFS doesn't need a visited set if it uses a queue</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="everynode" data-explain="A single BFS/DFS call only reaches nodes connected to its starting point. To cover a disconnected graph, loop over every node and start a fresh traversal from each one that's still unvisited after the previous traversals finished." >
+    <p class="q-text">3. How do you make sure every node gets visited in a disconnected graph?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="everynode">Loop over all nodes and start a new traversal from each unvisited one, not just a single starting point</button>
+      <button class="btn dsa-quiz-option" data-value="onecall">A single BFS or DFS call from any node always reaches every node in the graph</button>
+      <button class="btn dsa-quiz-option" data-value="sortfirst">Sort the nodes first, then traverse once from the smallest</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="vplusE" data-explain="The visited set guarantees each of the V vertices is processed exactly once, and each of the E edges is examined at most twice (once from each endpoint) — giving O(V + E), not something that depends on the number of cycles." >
+    <p class="q-text">4. What is the time complexity of BFS or DFS on a graph, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="vplusE">O(V + E) — every vertex is visited once and every edge is examined once or twice</button>
+      <button class="btn dsa-quiz-option" data-value="vtimesE">O(V &times; E) — every vertex is checked against every edge</button>
+      <button class="btn dsa-quiz-option" data-value="dependscycles">It depends on how many cycles the graph has — more cycles means higher complexity</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="list" data-explain="An adjacency list uses O(V + E) space and is what's iterated over directly in BFS/DFS — the standard, most common representation in interviews, especially for the sparse graphs those problems typically use. A matrix costs O(V squared) space regardless of how many edges actually exist." >
+    <p class="q-text">5. For a typical sparse interview graph, which representation is the usual default, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="list">Adjacency list — O(V + E) space, and it's exactly what BFS/DFS iterate over</button>
+      <button class="btn dsa-quiz-option" data-value="matrix">Adjacency matrix — always faster regardless of graph density</button>
+      <button class="btn dsa-quiz-option" data-value="either">It never matters which representation you pick</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 23 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day22.html">← Day 22: Heaps &amp; Priority Queues</a>
+    <a class="btn" href="day24.html">Day 24: Graphs II — Shortest Path &amp; Topo Sort →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 23;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- shared graph: 7 nodes, one 4-cycle (A-B-D-C-A), undirected adjacency list ----
+  const GRAPH_W = 700, GRAPH_H = 380;
+  const POS = { A: [150, 70], B: [330, 70], C: [150, 200], D: [330, 200], E: [480, 135], F: [620, 135], G: [330, 320] };
+  const ADJ = { A: ['B', 'C'], B: ['A', 'D'], C: ['A', 'D'], D: ['B', 'C', 'E', 'G'], E: ['D', 'F'], F: ['E'], G: ['D'] };
+  const EDGE_LIST = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['C', 'D'], ['D', 'E'], ['E', 'F'], ['D', 'G']];
+
+  function buildNodesEdges() {
+    const nodes = Object.keys(POS).map((id) => ({ id, label: id, x: POS[id][0], y: POS[id][1] }));
+    const edges = EDGE_LIST.map(([a, b]) => ({ from: a, to: b })); // no `directed` flag — undirected edges
+    return { nodes, edges };
+  }
+
+  function paintGraph(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {}, {});
+  }
+
+  // ---- BFS step generator (mirrors the real bfs() function exactly) ----
+  function buildBFSSteps(adj, start) {
+    const { nodes, edges } = buildNodesEdges();
+    const steps = [];
+    const visited = new Set([start]);
+    const queue = [start];
+    const done = new Set();
+    const order = [];
+
+    function stateSnapshot(current) {
+      const s = {};
+      done.forEach((id) => { s[id] = 'sorted'; });
+      queue.forEach((id) => { if (!done.has(id)) s[id] = 'pointer'; });
+      if (current) s[current] = 'active';
+      return s;
+    }
+    function pushStep(narration, states) {
+      steps.push({ narration, nodes: nodes.map((n) => Object.assign({}, n)), edges: edges.slice(), states: states || {} });
+    }
+
+    pushStep(`Start BFS at ${start}. Enqueue ${start}, mark visited. Queue: [${queue.join(', ')}]. Visited: {${[...visited].join(', ')}}.`, stateSnapshot());
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      pushStep(`Dequeue ${cur} — check its neighbors. Queue: [${queue.join(', ')}].`, stateSnapshot(cur));
+      for (const nb of adj[cur]) {
+        if (visited.has(nb)) {
+          pushStep(`${cur} → ${nb}: already visited — skip (this is what stops the A-B-D-C cycle from looping forever).`, stateSnapshot(cur));
+        } else {
+          visited.add(nb);
+          queue.push(nb);
+          pushStep(`${cur} → ${nb}: unvisited — mark visited, enqueue. Queue: [${queue.join(', ')}].`, stateSnapshot(cur));
+        }
+      }
+      done.add(cur);
+      order.push(cur);
+      pushStep(`${cur} fully processed.`, stateSnapshot());
+    }
+    pushStep(`BFS complete. Order: ${order.join(' → ')}.`, stateSnapshot());
+    return steps;
+  }
+
+  // ---- DFS step generator: explicit call-frame stack, identical order to real recursion ----
+  function buildDFSSteps(adj, start) {
+    const { nodes, edges } = buildNodesEdges();
+    const steps = [];
+    const visited = new Set();
+    const finished = new Set();
+    const order = [];
+
+    function statesNow(stackIds) {
+      const s = {};
+      finished.forEach((id) => { s[id] = 'sorted'; });
+      stackIds.forEach((id, i) => { s[id] = (i === stackIds.length - 1) ? 'active' : 'pointer'; });
+      return s;
+    }
+    function pushStep(narration, stackIds) {
+      steps.push({ narration, nodes: nodes.map((n) => Object.assign({}, n)), edges: edges.slice(), states: statesNow(stackIds) });
+    }
+
+    const stack = [{ id: start, idx: 0 }];
+    visited.add(start);
+    order.push(start);
+    pushStep(`Start DFS at ${start}. Visit ${start}, mark visited.`, stack.map((f) => f.id));
+
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1];
+      const neighbors = adj[frame.id];
+      if (frame.idx >= neighbors.length) {
+        finished.add(frame.id);
+        stack.pop();
+        pushStep(`${frame.id} has no more unvisited neighbors — backtrack${stack.length ? ` to ${stack[stack.length - 1].id}` : ''}.`, stack.map((f) => f.id));
+        continue;
+      }
+      const nb = neighbors[frame.idx];
+      frame.idx++;
+      if (visited.has(nb)) {
+        pushStep(`${frame.id} checks neighbor ${nb} — already visited, skip.`, stack.map((f) => f.id));
+      } else {
+        visited.add(nb);
+        order.push(nb);
+        stack.push({ id: nb, idx: 0 });
+        pushStep(`${frame.id} checks neighbor ${nb} — unvisited, recurse into ${nb}.`, stack.map((f) => f.id));
+      }
+    }
+    pushStep(`DFS complete. Order: ${order.join(' → ')}.`, []);
+    return steps;
+  }
+
+  // ---- viz 1: BFS ----
+  const viz1Stage = document.getElementById('viz1Stage');
+  const graph1 = new DSA.Graph(viz1Stage, { width: GRAPH_W, height: GRAPH_H });
+  let start1 = 'A';
+  let steps1 = buildBFSSteps(ADJ, start1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 900,
+    onStep(step) { paintGraph(graph1, step || steps1[0]); },
+    onShuffle() {
+      const others = Object.keys(ADJ).filter((id) => id !== start1);
+      start1 = others[Math.floor(Math.random() * others.length)];
+      steps1 = buildBFSSteps(ADJ, start1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: DFS ----
+  const viz2Stage = document.getElementById('viz2Stage');
+  const graph2 = new DSA.Graph(viz2Stage, { width: GRAPH_W, height: GRAPH_H });
+  let start2 = 'A';
+  let steps2 = buildDFSSteps(ADJ, start2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 900,
+    onStep(step) { paintGraph(graph2, step || steps2[0]); },
+    onShuffle() {
+      const others = Object.keys(ADJ).filter((id) => id !== start2);
+      start2 = others[Math.floor(Math.random() * others.length)];
+      steps2 = buildDFSSteps(ADJ, start2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
