@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 13: Binary Search Variations — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Find the first or last occurrence of a duplicated target, then flip the template inside out to search an answer space instead of an array." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 13 / 30 &middot; WEEK 2</p>
+  <h1>Binary Search Variations</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Find the first and last occurrence of a duplicated target — standard binary search only
+      guarantees finding <em>a</em> match, not a specific one.</li>
+    <li>Recognize "search on answer": binary search over a range of possible <em>answers</em>
+      instead of over array indices, using a yes/no feasibility check at each guess.</li>
+    <li>See both variants use <code>while (lo &lt; hi)</code> and narrow to a single boundary —
+      the opposite shape from Day 12's exact-match <code>lo &lt;= hi</code> template.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Day 12's template answers one question: "does this exact value exist, and if so, at which
+    index?" Once you find a match, you stop. But two common situations need more:</p>
+  <p><strong>Duplicates.</strong> If the target appears 4 times in a row, which index does
+    standard binary search return? Whichever one <code>mid</code> happens to land on — not
+    necessarily the first or last. To find a specific boundary, you don't stop at the first
+    match: you record it as a candidate and keep narrowing in the same direction, discarding the
+    match itself along with everything past it.</p>
+  <p><strong>Search on answer.</strong> Some problems don't hand you a sorted array at all — they
+    ask "what's the smallest/largest value that satisfies some condition?" (e.g. "the slowest
+    eating speed that still finishes in time"). If that condition is <em>monotonic</em> — false
+    for every value below some threshold, true for every value at or above it — you can binary
+    search the space of possible <em>answers</em>, testing each guess with a feasibility check
+    instead of an array comparison.</p>
+
+  <h2>Diagram: first vs. last occurrence</h2>
+  <svg class="diagram" viewBox="0 0 620 175" role="img" aria-label="Searching for the value 4 in the array 2, 4, 4, 4, 4, 7, 9: the value 4 occupies indices 1 through 4. A plain binary search might land on any of those four indices, but the first-occurrence search narrows to index 1 and the last-occurrence search narrows to index 4.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Array [2, 4, 4, 4, 4, 7, 9] — target = 4 appears at indices 1-4</text>
+    <g font-size="12">
+      <rect x="20" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="56" y="51" text-anchor="middle" fill="#DCDFE4">2</text>
+      <rect x="92" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="128" y="51" text-anchor="middle" fill="#98C379">4</text>
+      <rect x="164" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#E6C07B" stroke-width="2"/><text x="200" y="51" text-anchor="middle" fill="#E6C07B">4</text>
+      <rect x="236" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#E6C07B" stroke-width="2"/><text x="272" y="51" text-anchor="middle" fill="#E6C07B">4</text>
+      <rect x="308" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="344" y="51" text-anchor="middle" fill="#98C379">4</text>
+      <rect x="380" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="416" y="51" text-anchor="middle" fill="#DCDFE4">7</text>
+      <rect x="452" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="488" y="51" text-anchor="middle" fill="#DCDFE4">9</text>
+    </g>
+    <text x="56" y="80" font-size="11" fill="#DCDFE4" text-anchor="middle">index 0</text>
+    <text x="128" y="80" font-size="11" fill="#98C379" text-anchor="middle">first=1</text>
+    <text x="344" y="80" font-size="11" fill="#98C379" text-anchor="middle">last=4</text>
+    <text x="20" y="110" font-size="12" fill="#DCDFE4">A plain binary search could land on index 1, 2, 3, or 4 — any of them is</text>
+    <text x="20" y="127" font-size="12" fill="#DCDFE4">a "correct" match. Finding first/last needs two separate, deliberate</text>
+    <text x="20" y="144" font-size="12" fill="#DCDFE4">searches, each biased to keep narrowing after a match instead of stopping.</text>
+    <text x="20" y="164" font-size="11" class="dim">Green = confirmed boundary. Amber = a match found mid-search, still narrowing.</text>
+  </svg>
+
+  <h2>Interactive visualization: find first and last occurrence</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current range [lo, hi]</span>
+    <span><i class="lg-active"></i> mid (checking now)</span>
+    <span><i class="lg-compare"></i> match found, still narrowing</span>
+    <span><i class="lg-swap"></i> eliminated</span>
+    <span><i class="lg-sorted"></i> confirmed boundary</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: first/last occurrence</h2>
+  <pre><code>function searchRange(nums, target) {
+  function findBound(isFirst) {
+    let lo = 0, hi = nums.length - 1, result = -1;
+    while (lo &lt;= hi) {
+      const mid = lo + Math.floor((hi - lo) / 2);
+      if (nums[mid] === target) {
+        result = mid;                     // record this match...
+        if (isFirst) hi = mid - 1;        // ...but keep looking further left
+        else lo = mid + 1;                // ...or further right
+      } else if (nums[mid] &lt; target) lo = mid + 1;
+      else hi = mid - 1;
+    }
+    return result;
+  }
+  return [findBound(true), findBound(false)];
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The only change from Day 12's template is the <code>if (nums[mid] === target)</code>
+      branch: instead of <code>return mid</code> immediately, it saves <code>mid</code> as
+      <code>result</code> and then keeps narrowing — toward <code>lo</code> for the first
+      occurrence, toward <code>hi</code> for the last. Every other line is identical to Day 12.</li>
+    <li>Calling the same function twice with a flag (<code>isFirst</code>) avoids duplicating the
+      whole loop — the only difference between the two searches is which side keeps narrowing
+      after a match.</li>
+  </ul>
+
+  <h3>Dry run: findBound(true) — first occurrence of 4 in [2, 4, 4, 4, 4, 7, 9]</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>lo</th><th>hi</th><th>mid</th><th>arr[mid]</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>6</td><td>3</td><td>4</td><td>match! result=3, keep looking left → hi=2</td></tr>
+      <tr><td>0</td><td>2</td><td>1</td><td>4</td><td>match! result=1, keep looking left → hi=0</td></tr>
+      <tr><td>0</td><td>0</td><td>0</td><td>2</td><td>2 &lt; 4 → lo=1</td></tr>
+      <tr><td>1</td><td>0</td><td>—</td><td>—</td><td>lo &gt; hi, loop ends → return 1</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">The search keeps going even after finding a
+    match at index 3 — that's the whole trick. The <em>last</em> confirmed match before the loop
+    ends (index 1) is the true first occurrence.</p>
+
+  <h2>Diagram: search on answer</h2>
+  <svg class="diagram" viewBox="0 0 620 165" role="img" aria-label="Search on answer: candidate eating speeds from 1 up to the largest pile, where the feasibility check flips from false (too slow, takes too many hours) to true (fast enough) at exactly one point. Binary search finds that flip point directly." >
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Koko's eating speed: is speed v "fast enough to finish in time h"?</text>
+    <g font-size="12">
+      <rect x="20" y="35" width="220" height="30" rx="4" fill="#2C313A" stroke="#E06C75"/><text x="130" y="55" text-anchor="middle" fill="#E06C75">false — too slow</text>
+      <rect x="240" y="35" width="360" height="30" rx="4" fill="#2C313A" stroke="#98C379"/><text x="420" y="55" text-anchor="middle" fill="#98C379">true — fast enough to finish</text>
+    </g>
+    <line x1="240" y1="70" x2="240" y2="90" stroke="#61AEEE" stroke-width="2"/>
+    <text x="240" y="105" font-size="11" fill="#61AEEE" text-anchor="middle">flip point = the answer</text>
+    <text x="20" y="130" font-size="12" fill="#DCDFE4">Binary search the speed axis itself, not an array: guess a speed, check</text>
+    <text x="20" y="147" font-size="12" fill="#DCDFE4">feasibility in O(piles), narrow toward the flip point in O(log(max pile)).</text>
+  </svg>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Variant</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>First/last occurrence</td><td>O(log n)</td><td>O(1)</td><td>Two independent binary searches over the same n-element array — still logarithmic, just with a factor-of-2 constant.</td></tr>
+      <tr><td>Search on answer (e.g. Koko)</td><td>O(n log m)</td><td>O(1)</td><td>log m guesses over the answer range (m = largest possible answer), each guess costing O(n) to check feasibility across all n piles.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why does plain binary search fail to find "the first occurrence" reliably?</strong>
+      It stops at the first match <code>mid</code> happens to land on, which depends on the exact
+      sequence of midpoints computed — not on where the target actually starts. There is no
+      general rule for which duplicate a plain search returns; treat it as arbitrary.</li>
+    <li><strong>How do you recognize a "search on answer" problem?</strong> Look for phrasing
+      like "minimum/maximum value such that…" combined with a check that gets monotonically
+      easier or harder to satisfy as the candidate value increases. If you can write a
+      <code>canDo(candidate)</code> function that's <code>false</code> then <code>true</code>
+      (or vice versa) as candidate increases, you can binary search candidate directly.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if higher
+      isn't strictly better?" — then the condition isn't monotonic, and binary search doesn't
+      apply at all; don't force it onto a non-monotonic problem.</span></li>
+    <li><strong>Why <code>while (lo &lt; hi)</code> here instead of Day 12's <code>lo &lt;= hi</code>?</strong>
+      These variants converge to a single boundary index, not an exact match-or-fail. When
+      <code>lo === hi</code>, that's already the answer — no need for one more redundant check.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> mixing the
+      two templates (e.g. <code>while (lo &lt; hi)</code> with <code>hi = mid - 1</code>, or using
+      <code>lo = mid</code> without the ceiling-mid fix from Day 12's trap diagram) is the single
+      most common way this pattern breaks in an interview.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name which template you're using and why —
+    "this needs the leftmost/rightmost boundary, so I'm using the narrowing template, not
+    Day 12's exact-match one" — before writing a line of code. Interviewers are listening for
+    whether you're pattern-matching the problem shape to the right template, not just typing
+    something that happens to compile.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Sqrt(x) <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/sqrtx/" target="_blank" rel="noopener">LeetCode: Sqrt(x)</a>)</span></h4>
+    <p>Given a non-negative integer <code>x</code>, return the largest integer whose square is
+      ≤ <code>x</code> — without using <code>Math.sqrt</code>.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>The answer space is 0 to x. The condition
+      "candidate² ≤ x" is monotonic (true for small candidates, false for large ones) — binary
+      search that condition directly. Watch out: if you write it with <code>lo = mid</code>
+      (biasing toward keeping larger feasible values), you need the ceiling-mid fix from Day 12's
+      trap diagram to avoid an infinite loop.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function mySqrt(x) {
+  let lo = 0, hi = x;
+  while (lo < hi) {
+    const mid = lo + Math.ceil((hi - lo) / 2); // ceil, since lo = mid below
+    if (mid * mid > x) hi = mid - 1;
+    else lo = mid; // mid*mid <= x — keep mid as a candidate, don't exclude it
+  }
+  return lo;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Find First and Last Position of Element in Sorted Array <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/" target="_blank" rel="noopener">LeetCode: Find First and Last Position of Element in Sorted Array</a>)</span></h4>
+    <p>Given a sorted array with duplicates, return the first and last index of a target value,
+      or <code>[-1, -1]</code> if it's not present. Today's main template, applied directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Run the first-occurrence search and the
+      last-occurrence search independently — don't try to combine them into one pass, the
+      narrowing direction after a match is opposite for each.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function searchRange(nums, target) {
+  function findBound(isFirst) {
+    let lo = 0, hi = nums.length - 1, result = -1;
+    while (lo <= hi) {
+      const mid = lo + Math.floor((hi - lo) / 2);
+      if (nums[mid] === target) {
+        result = mid;
+        if (isFirst) hi = mid - 1;
+        else lo = mid + 1;
+      } else if (nums[mid] < target) lo = mid + 1;
+      else hi = mid - 1;
+    }
+    return result;
+  }
+  return [findBound(true), findBound(false)];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Koko Eating Bananas <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/koko-eating-bananas/" target="_blank" rel="noopener">LeetCode: Koko Eating Bananas</a>)</span></h4>
+    <p>Koko has <code>piles</code> of bananas and <code>h</code> hours. Eating at integer speed
+      <code>v</code> bananas/hour, each pile takes <code>ceil(pile / v)</code> hours. Find the
+      minimum speed that finishes all piles within <code>h</code> hours.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>This is search on answer: the answer space
+      is speeds 1 to max(piles). Write <code>canFinish(speed)</code> that sums
+      <code>ceil(pile / speed)</code> across all piles and checks it's ≤ h — that's your
+      monotonic feasibility check. Binary search the speed axis for the smallest speed where it
+      returns true.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function minEatingSpeed(piles, h) {
+  let lo = 1, hi = Math.max(...piles);
+  while (lo < hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    const hours = piles.reduce((sum, p) => sum + Math.ceil(p / mid), 0);
+    if (hours <= h) hi = mid;      // mid works — try slower (smaller) speeds
+    else lo = mid + 1;             // mid too slow — need faster speeds
+  }
+  return lo;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="arbitrary" data-explain="Plain binary search stops at the first match mid happens to compute, which depends on the sequence of midpoints, not on where the target run actually starts — there's no guarantee it's the first index.">
+    <p class="q-text">1. When a target appears multiple times, which index does plain binary search (Day 12's template) return?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="arbitrary">Whichever index mid happens to land on first — not reliably first or last</button>
+      <button class="btn dsa-quiz-option" data-value="first">Always the first occurrence</button>
+      <button class="btn dsa-quiz-option" data-value="last">Always the last occurrence</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="keepgoing" data-explain="Instead of returning immediately, save the match as a candidate result and keep narrowing toward the side you want (left for first, right for last) — the loop only stops once the range is exhausted." >
+    <p class="q-text">2. How does the first-occurrence search change Day 12's template after finding a match?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="keepgoing">It records the match and keeps narrowing left instead of returning immediately</button>
+      <button class="btn dsa-quiz-option" data-value="restart">It restarts the whole search from index 0</button>
+      <button class="btn dsa-quiz-option" data-value="stops">It stops immediately, same as Day 12</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="monotonic" data-explain="Search on answer requires a feasibility check that flips exactly once as the candidate answer increases — false for every value below the threshold, true for every value at or above it." >
+    <p class="q-text">3. What property must a "search on answer" feasibility check have?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="monotonic">It must be monotonic — false-then-true (or vice versa) as the candidate increases</button>
+      <button class="btn dsa-quiz-option" data-value="fast">It must run in O(1) time</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">The array of piles must be sorted first</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nlogm" data-explain="Each of the log m guesses over the answer range costs O(n) to check feasibility across all n piles, giving O(n log m) total." >
+    <p class="q-text">4. What's the time complexity of Koko Eating Bananas' search-on-answer solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nlogm">O(n log m) — n piles checked at each of log m candidate speeds</button>
+      <button class="btn dsa-quiz-option" data-value="logn">O(log n) — same as a plain array binary search</button>
+      <button class="btn dsa-quiz-option" data-value="nm">O(n · m) — every speed from 1 to m is tried against every pile</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="ceil" data-explain="When a branch sets lo = mid (keeping mid as a still-valid candidate rather than excluding it), mid must round up (Math.ceil) — otherwise, when lo and hi are adjacent, mid rounds down to lo and lo never advances, freezing forever (Day 12's trap diagram)." >
+    <p class="q-text">5. In Sqrt(x)'s solution, why does mid use <code>Math.ceil</code> instead of the usual <code>Math.floor</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="ceil">Because the "feasible" branch sets lo = mid, so mid must round up to avoid freezing at lo</button>
+      <button class="btn dsa-quiz-option" data-value="precision">Because Math.ceil gives a more numerically precise midpoint</button>
+      <button class="btn dsa-quiz-option" data-value="nodiff">There's no real difference — either would work identically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 13 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day12.html">← Day 12: Binary Search</a>
+    <a class="btn" href="day14.html">Day 14: Week 2 Review →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 13;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: find first occurrence, then last occurrence ----
+  function buildBoundarySteps(input, target) {
+    const a = input.slice();
+    const steps = [{ narration: `Find first and last occurrence of ${target} in [${a.join(', ')}].`, values: a, states: {} }];
+
+    function runPass(isFirst, confirmed) {
+      let lo = 0, hi = a.length - 1, result = -1;
+      const eliminated = new Set();
+      const label = isFirst ? 'first' : 'last';
+      steps.push({ narration: `Searching for the ${label} occurrence of ${target}.`, values: a, states: Object.assign({}, confirmed) });
+
+      function rangeStates(extra) {
+        const s = Object.assign({}, confirmed);
+        eliminated.forEach((idx) => { s[idx] = 'swap'; });
+        for (let i = lo; i <= hi; i++) if (!eliminated.has(i)) s[i] = 'pointer';
+        if (result !== -1) s[result] = 'compare';
+        return Object.assign(s, extra);
+      }
+
+      while (lo <= hi) {
+        const mid = lo + Math.floor((hi - lo) / 2);
+        steps.push({ narration: `lo=${lo}, hi=${hi} → mid=${mid} (value ${a[mid]}).`, values: a, states: rangeStates({ [mid]: 'active' }) });
+        if (a[mid] === target) {
+          result = mid;
+          if (isFirst) {
+            steps.push({ narration: `Match at ${mid} — record it, keep searching LEFT for an earlier one.`, values: a, states: rangeStates({ [mid]: 'active' }) });
+            hi = mid - 1;
+          } else {
+            steps.push({ narration: `Match at ${mid} — record it, keep searching RIGHT for a later one.`, values: a, states: rangeStates({ [mid]: 'active' }) });
+            lo = mid + 1;
+          }
+        } else if (a[mid] < target) {
+          steps.push({ narration: `${a[mid]} < ${target} — search right half.`, values: a, states: rangeStates({ [mid]: 'active' }) });
+          for (let i = lo; i <= mid; i++) eliminated.add(i);
+          lo = mid + 1;
+        } else {
+          steps.push({ narration: `${a[mid]} > ${target} — search left half.`, values: a, states: rangeStates({ [mid]: 'active' }) });
+          for (let i = mid; i <= hi; i++) eliminated.add(i);
+          hi = mid - 1;
+        }
+      }
+      const finalConfirmed = Object.assign({}, confirmed);
+      if (result !== -1) finalConfirmed[result] = 'sorted';
+      steps.push({ narration: `${label === 'first' ? 'First' : 'Last'} occurrence confirmed: index ${result}.`, values: a, states: finalConfirmed });
+      return finalConfirmed;
+    }
+
+    const afterFirst = runPass(true, {});
+    runPass(false, afterFirst);
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [2, 4, 4, 4, 4, 7, 9];
+  const TARGET1 = 4;
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 10 });
+  bars1.setData(BASE1);
+  let steps1 = buildBoundarySteps(BASE1, TARGET1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 1000,
+    onStep(step) { if (!step) { bars1.paint({}, BASE1); return; } bars1.paint(step.states, step.values); },
+    onShuffle() {
+      const base = DSA.randomArray(4, 1, 6).sort((x, y) => x - y);
+      const t = base[Math.floor(base.length / 2)];
+      const repeated = [];
+      let inserted = false;
+      base.forEach((v) => {
+        if (v === t && !inserted) { repeated.push(t, t, t); inserted = true; }
+        else if (v !== t) repeated.push(v);
+      });
+      if (!inserted) repeated.push(t, t, t);
+      repeated.sort((x, y) => x - y);
+      steps1 = buildBoundarySteps(repeated, t);
+      bars1.setData(repeated);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
