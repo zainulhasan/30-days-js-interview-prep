@@ -469,6 +469,19 @@ regression. This is a good example of the "diagram looks right on skim, but a sp
 element is silently missing" failure mode — worth explicitly checking marker/arrow visibility,
 not just overlap/clipping, in future Graph-based lesson reviews.
 
+## Done — Day 25 (Dynamic Programming I)
+Built solo. `fibNaive`/`fibMemo`/`fibTab`/`fibOptimal` (four progressively-optimized versions of
+the same recurrence) plus `climbStairs`. Node-verified all four fib variants agree for n=0..15,
+and independently counted recursive calls to confirm the exact numbers quoted in the lesson text
+(fib(4): 9 naive vs. 7 memoized; fib(10): 177 vs. 19; fib(30): 2,692,537 vs. 59 — not just cited
+Big-O, the actual counts). Also verified `minCostClimbingStairs` and `uniquePaths` against their
+known LeetCode examples. Fixed one real bug: the "filling a DP table" diagram's two curved
+"pulls from" arrows peaked at a height that visually crossed directly through the `dp[6]` column
+label — confirmed via the quadratic-Bezier math that the curve passes within ~1px of the label's
+baseline near its start — fixed by moving the label row up for clearance, same recurring
+"element overlaps an adjacent element" bug class as before, just arc-vs-label instead of
+text-vs-text this time.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
