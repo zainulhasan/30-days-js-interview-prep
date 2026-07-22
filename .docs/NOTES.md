@@ -201,9 +201,20 @@ has caught real issues before the review agent even runs, which is faster than w
   diagram depicting a stack: newest/most-recent on top, always. Added the missing `.lg-active`
   legend CSS class (state existed in engine.js, no swatch existed).
 
+## Done — Day 10 (Merge Sort)
+Full split+merge animation (instrumented recursive step builder over DSA.Bars) + recursion-tree
+diagram. Practice problem 3 is intentionally Hard (Merge k Sorted Lists), not the usual
+easy→medium arc — it's the natural extension of today's topic, honestly labeled as a Day-15
+(linked lists) preview with an array-based sketch instead of a real submission. Noting this here
+as the approved exception (mirrors Day 7's "5 problems" exception). Review caught a real bug:
+merge narration said "X is smaller" unconditionally, including on ties, which directly
+contradicted the lesson's own stability teaching whenever Shuffle produced a duplicate — fixed
+with explicit tie-case wording. Also fixed a legend promising an unused blue state while green
+was overloaded to mean two different things.
+
 ## Not started yet
-- Lesson pages `lessons/day10.html` … `day30.html` (rest of Week 2: Days 10-14; Week 3: core
-  data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-9 as
+- Lesson pages `lessons/day11.html` … `day30.html` (rest of Week 2: Days 11-14; Week 3: core
+  data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-10 as
   the template, apply every point in "Lesson template" above and the lessons-learned noted here,
   review each via `.docs/REVIEW-CHECKLIST.md`.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
