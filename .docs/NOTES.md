@@ -186,11 +186,26 @@ confidence on Days 5-7. Also keep self-checking for the recurring bug classes be
 review (cross-section value mismatches, SVG text clipping, legend/state mismatches) — doing so
 has caught real issues before the review agent even runs, which is faster than waiting for review.
 
+## Done — Days 8-9 (Week 2 started)
+- **Day 8** (Bubble/Selection/Insertion Sort): 3 animated sorts using DSA.Bars directly + a
+  signature-comparison diagram. Review caught a real complexity-table contradiction (claimed
+  bubble sort O(n) best case, but the shown code had no early-exit — fixed by adding the
+  standard swapped-flag optimization to both code and animation, not by weakening the claim)
+  and an off-by-one in the insertion-sort narration.
+- **Day 9** (Recursion & Call Stack): first real use of the `CallStack` engine renderer
+  (factorial + recursive string-reverse). Caught a real bug myself pre-review: a pop loop bound
+  to `stackVals.length` while mutating that same array mid-loop — terminated early, same bug
+  class as Day 3's own lesson content. Review caught the static diagram drawing the stack
+  upside-down vs. how `CallStack.render()` actually displays it (newest call renders on top,
+  confirmed from engine.js `frames.slice().reverse()`) — worth remembering for any FUTURE
+  diagram depicting a stack: newest/most-recent on top, always. Added the missing `.lg-active`
+  legend CSS class (state existed in engine.js, no swatch existed).
+
 ## Not started yet
-- Lesson pages `lessons/day08.html` … `day30.html` (Week 2: sorting, searching, recursion —
-  Days 8-14; Week 3: core data structures — Days 15-21; Week 4: advanced + interview sim —
-  Days 22-30). Use Days 1-7 as the template, apply every point in "Lesson template" above and
-  the Week 1 lessons-learned noted here, review each via `.docs/REVIEW-CHECKLIST.md`.
+- Lesson pages `lessons/day10.html` … `day30.html` (rest of Week 2: Days 10-14; Week 3: core
+  data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-9 as
+  the template, apply every point in "Lesson template" above and the lessons-learned noted here,
+  review each via `.docs/REVIEW-CHECKLIST.md`.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
 
 ## Environment for local preview
