@@ -35,17 +35,86 @@ See [RESEARCH.md](./RESEARCH.md) and [DECISIONS.md](./DECISIONS.md) for the appr
 - Roadmap section on the home page is a **week-grouped list with detail rows**, not the 6×5 card
   grid originally sketched in the spec — user asked for "list format with details" after seeing
   the card version. This is now the pattern; do not reintroduce the card grid.
+- Planning docs (RESEARCH.md, DECISIONS.md, NOTES.md) live in **`.docs/`**, not repo root —
+  moved via `git mv` per user request to keep the root clean. Root-relative links to them
+  (e.g. index.html footer) must point at `.docs/<file>.md`.
+- `README.md` added at repo root with project overview + exact GitHub Pages deploy steps.
+- Repo owner is GitHub user **zainulhasan** (not the machine's default `gh` account,
+  `zaindarasa`) — see "gh account gotcha" below, this matters for every future push/PR/gh call.
+
+## Lesson template — established and validated on Day 1, apply to every remaining lesson
+`lessons/day01.html` is the reference pattern. Key decisions baked into it that must carry
+forward to Days 2–30:
+- **Multiple diagrams/visualizations per lesson are fine** (even expected) when one concept
+  doesn't cover everything — Day 1 has one SVG diagram (2 stacked sections: push/pop vs.
+  unshift/shift) and **two separate** interactive Play/Step/Reset/Shuffle animations (mutation
+  methods, then destructuring/spread), not one combined viz. Split when it makes each one
+  clearer; don't force everything into a single diagram/animation just because the spec says
+  "a diagram"/"an animation" (singular in the spec ≠ a hard cap of one).
+- **Use medium-sized examples, not trivial ones** — user explicitly asked for 5-element arrays
+  instead of 3-element ones ("jr devs need to understand things in details"). Default to ~5
+  elements (or equivalent) for every lesson's running example, not the smallest example that
+  technically works.
+- **SVG text does not wrap** — long caption lines silently get clipped at the viewBox edge.
+  Keep every `<text>` line short (under ~60 chars at font-size 12 in our diagram width) or
+  split across multiple `<text>` elements on separate y-coordinates. Always visually verify
+  diagrams in-browser (zoom/screenshot) after writing them — don't trust coordinate math alone,
+  this exact overlap/clipping bug happened twice on Day 1 before being caught by rendering it.
+- **Cross-section consistency is the easiest thing to get wrong** — the diagram, the animation's
+  narration, the code sample, the dry-run table, and the complexity table must all use the
+  *same* example values and operations. A content-advisor review caught a real bug (animation
+  said `push(10)`, code/diagram said `push(6)`) and a second one after the fix (diagram's new-
+  element color contradicted the legend/animation). Whenever example values are hardcoded in
+  more than one place, double check them against each other before moving on.
+- **LeetCode "links" must be real `<a href>` tags** to the actual problem URL
+  (`https://leetcode.com/problems/<slug>/`), not plain text naming the problem.
+- **Verify difficulty labels against the actual LeetCode page** — don't guess Easy/Medium/Hard.
+- **Interview Corner needs explicit structure**, not just a paragraph per question: at least one
+  item should have a labeled "↳ Common follow-up:" chain, and gotchas should be called out with
+  an explicit "⚠ Trap:" label rather than folded silently into a regular answer.
+- **Practice-problem hints should point at the right tool, not restate the algorithm** — a hint
+  that gives away the full approach in prose isn't a hint.
+- **After every lesson is content-complete, run it through a fresh review pass** (a subagent
+  with no context from the writing session, told to be skeptical) checking: factual accuracy,
+  cross-section consistency, section completeness against the spec's required list, quiz
+  quality (exactly one defensible correct answer per question), practice-problem quality
+  (hints/solutions/links/difficulty), beginner-friendliness, and anything an interviewer would
+  flag as wrong/misleading. Fix what it finds before moving to the next lesson — do this for
+  every lesson, not just Day 1 (Day 1 got this treatment; it found 5 must-fix + 5 nice-to-have
+  issues that would otherwise have been copied into 29 more lessons).
+
+## gh account gotcha (recurring — check every session)
+This machine has **multiple `gh` accounts** logged in (`zaindarasa`, `s3-devops-team`,
+`zainulhasan`), and the active one is a **global, machine-wide setting** that other concurrent
+agent sessions can and do change without warning (observed mid-session: active account flipped
+from `zainulhasan` back to `zaindarasa` between two git operations in the same conversation).
+`zaindarasa` does NOT have push access to `zainulhasan/30-days-js-interview-prep`.
+**Before every `gh`/git-push/PR operation on this repo:** run
+`gh auth status 2>&1 | grep -B1 "Active account: true"` and if it's not `zainulhasan`, run
+`gh auth switch --user zainulhasan` immediately before the operation (not earlier — it can flip
+again in between). Repo-local git config already bypasses the system osxkeychain credential
+cache (see `git config --local --get-all credential.helper`), so once the correct account is
+active, `git push` works.
+
+## Done — Day 1 lesson (`lessons/day01.html`)
+Covers: array push/pop/shift/unshift (O(1) end vs O(n) front, with a why-focused SVG diagram),
+index access, destructuring, spread — 5-element running example throughout. Two interactive
+animations (mutation methods; destructuring+spread). Dry run, complexity table (with footnotes
+disambiguating "n" and marking amortized O(1)), interview corner (5 Q&A, 2 with explicit
+follow-ups, 2 with explicit trap callouts), 3 Easy practice problems with real LeetCode links,
+hints, and solutions (one solution uses `.entries()` destructuring to tie back to the lesson),
+5-question quiz. Went through a full content-advisor review round-trip (found and fixed real
+bugs — see "Lesson template" section above). Verified in-browser: zero console errors, both
+animations' Play/Step/Reset/Shuffle all work and narration matches the visual/color state,
+quiz gives correct instant feedback, reveals toggle correctly, mark-complete writes to
+localStorage and undoes correctly, no horizontal overflow at ~375-427px width.
 
 ## Not started yet
-- Individual lesson pages `lessons/day01.html` … `day30.html` (this is the bulk of the work —
-  each needs: goal, concept, SVG diagram, engine-driven animation, commented code, complexity
-  table, interview corner, 3 practice problems w/ hidden hints+solutions, 5-question quiz,
-  prev/next nav + mark-complete button). Build order per DECISIONS.md: Week 1 (Days 1–7) first,
-  verify each in-browser, then Weeks 2–4.
-- Shared lesson page chrome/template hasn't been finalized as a literal template file — first
-  lesson (Day 1) will establish the pattern; keep it consistent across all 30 after that.
-- `README.md` with GitHub Pages deploy steps — write last, per the spec's working method.
-- GitHub Pages not yet enabled in repo settings.
+- Lesson pages `lessons/day02.html` … `day30.html` — use Day 1 as the template, apply every
+  point in "Lesson template" above, and get each one reviewed the same way before moving on.
+  Build order per DECISIONS.md: rest of Week 1 (Days 2–7) next, verify each in-browser, then
+  Weeks 2–4.
+- GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
 
 ## Environment for local preview
 ```bash
