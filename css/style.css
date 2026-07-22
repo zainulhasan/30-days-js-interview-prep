@@ -48,6 +48,12 @@ pre {
   overflow-x: auto;
 }
 
+/* syntax highlighting — tokens applied by js/engine.js's highlightCode() */
+.dsa-hl .tok-keyword { color: var(--c-active); }
+.dsa-hl .tok-string { color: var(--c-sorted); }
+.dsa-hl .tok-comment { color: var(--text-dim); font-style: italic; }
+.dsa-hl .tok-number, .dsa-hl .tok-literal { color: var(--warn); }
+
 p code, li code {
   background: var(--bg-raised);
   padding: 0.1em 0.4em;

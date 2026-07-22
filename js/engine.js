@@ -366,6 +366,54 @@ const DSA = (function () {
     });
   }
 
+  // ---- Syntax highlighting for <pre><code> blocks ---------------------
+  // Small hand-rolled JS tokenizer — no library, no CDN. Colors match the
+  // One Dark Pro tokens already used everywhere else on the site.
+  const JS_KEYWORDS = new Set([
+    'const', 'let', 'var', 'function', 'class', 'return', 'if', 'else', 'while', 'for',
+    'new', 'this', 'extends', 'constructor', 'break', 'continue', 'typeof', 'instanceof',
+    'in', 'of', 'throw', 'try', 'catch', 'finally', 'static', 'get', 'set', 'super',
+    'yield', 'async', 'await', 'export', 'import', 'default', 'switch', 'case', 'void',
+    'delete', 'do',
+  ]);
+  const JS_LITERALS = new Set(['true', 'false', 'null', 'undefined', 'NaN', 'Infinity']);
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // comment | string (single/double/template) | number | identifier | anything else (1 char)
+  const TOKEN_RE = /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|(\b\d+\.?\d*\b)|([A-Za-z_$][\w$]*)|([\s\S])/g;
+
+  function highlightJS(code) {
+    let out = '';
+    let m;
+    TOKEN_RE.lastIndex = 0;
+    while ((m = TOKEN_RE.exec(code)) !== null) {
+      const [, comment, str, num, ident, other] = m;
+      if (comment) out += `<span class="tok-comment">${escapeHtml(comment)}</span>`;
+      else if (str) out += `<span class="tok-string">${escapeHtml(str)}</span>`;
+      else if (num) out += `<span class="tok-number">${escapeHtml(num)}</span>`;
+      else if (ident) {
+        if (JS_KEYWORDS.has(ident)) out += `<span class="tok-keyword">${escapeHtml(ident)}</span>`;
+        else if (JS_LITERALS.has(ident)) out += `<span class="tok-literal">${escapeHtml(ident)}</span>`;
+        else out += escapeHtml(ident);
+      } else out += escapeHtml(other);
+    }
+    return out;
+  }
+
+  // Applied automatically on every page (see DOMContentLoaded below) — no
+  // lesson file needs to call this itself.
+  function highlightCode(root) {
+    (root || document).querySelectorAll('pre > code').forEach((codeEl) => {
+      codeEl.innerHTML = highlightJS(codeEl.textContent);
+      codeEl.classList.add('dsa-hl');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => highlightCode(document));
+
   return {
     StepPlayer,
     Bars,
@@ -376,5 +424,6 @@ const DSA = (function () {
     randomArray,
     wireQuiz,
     wireReveals,
+    highlightCode,
   };
 })();
