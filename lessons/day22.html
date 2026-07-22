@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 22: Heaps &amp; Priority Queues — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Store a binary heap as a flat array and animate the two moves that keep it valid — bubble-up on insert, bubble-down on extract-min." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 22 / 30 &middot; WEEK 4</p>
+  <h1>Heaps &amp; Priority Queues</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Recognize the heap property (every parent must be less than or equal to both of its
+      children, for a min-heap) and understand why a complete binary tree can be stored as a
+      flat array using index math, instead of pointers.</li>
+    <li>Implement <code>insert</code> (push to the end, then bubble up) and
+      <code>extractMin</code> (swap the root with the last element, shrink the array, then
+      bubble down) directly on a plain array — the version interviewers actually expect, not a
+      tree of <code>Node</code> objects.</li>
+    <li>Know the complexity of every heap operation, including the surprising O(n) cost of
+      building a heap from an existing array, and understand why bubbling down must always
+      check both children, not just the left one.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A <strong>binary heap</strong> is a complete binary tree — every level is completely filled
+    except possibly the last, which fills left to right with no gaps — that also satisfies the
+    <strong>heap property</strong>. For a <strong>min-heap</strong> (today's focus), the heap
+    property says every parent is less than or equal to both of its children, so the root is
+    always the smallest value in the whole structure. A <strong>max-heap</strong> is the mirror
+    image: every parent is greater than or equal to both children, so the root is always the
+    largest — same code throughout, just flip every comparison.</p>
+  <p>Because the tree is always complete (no gaps), you never actually need pointers to
+    represent it. Instead, you store the values in a plain array, left to right, level by level,
+    and use index arithmetic to find a node's parent and children: for a node at index i, its
+    children live at index 2i + 1 and index 2i + 2, and its parent lives at index
+    floor((i − 1) / 2). No <code>Node</code> class, no <code>.left</code>/<code>.right</code>
+    references — just an array and three formulas. This is the array-based heap almost every
+    interview question expects, and it's the reason the tree diagram below and the array boxes
+    above it are two views of the exact same data.</p>
+  <p><strong>Real-life analogy.</strong> Think of a hospital ER's triage queue. Patients aren't
+    seen in the order they walked in — the most urgent case is always seen next, no matter how
+    long everyone else has been waiting. That's a min-heap ordered by urgency, and it's the
+    opposite of Day 18's queue: a FIFO queue guarantees first-come-first-served regardless of how
+    important each item is, while a heap-backed priority queue guarantees most-urgent-first
+    regardless of arrival order.</p>
+
+  <h2>Diagram: array-to-tree index mapping</h2>
+  <svg class="diagram" viewBox="0 0 680 430" role="img" aria-label="The same 7-value min-heap array [3, 8, 5, 15, 12, 9, 20] shown two ways: as 7 flat array boxes with their indices 0 through 6, and directly below as the equivalent 3-level tree, with each tree node labeled with the same index. Three caption lines below give the formulas: left child of i is index 2i+1, right child of i is index 2i+2, and parent of i is index floor((i-1)/2).">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Array [3, 8, 5, 15, 12, 9, 20] — same data, two views</text>
+
+    <g font-size="10" fill="#818896">
+      <text x="74" y="34" text-anchor="middle">i=0</text>
+      <text x="150" y="34" text-anchor="middle">i=1</text>
+      <text x="226" y="34" text-anchor="middle">i=2</text>
+      <text x="302" y="34" text-anchor="middle">i=3</text>
+      <text x="378" y="34" text-anchor="middle">i=4</text>
+      <text x="454" y="34" text-anchor="middle">i=5</text>
+      <text x="530" y="34" text-anchor="middle">i=6</text>
+    </g>
+    <g font-size="16" fill="#DCDFE4">
+      <rect x="40" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="74" y="63" text-anchor="middle">3</text>
+      <rect x="116" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="150" y="63" text-anchor="middle">8</text>
+      <rect x="192" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="226" y="63" text-anchor="middle">5</text>
+      <rect x="268" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="302" y="63" text-anchor="middle">15</text>
+      <rect x="344" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="378" y="63" text-anchor="middle">12</text>
+      <rect x="420" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="454" y="63" text-anchor="middle">9</text>
+      <rect x="496" y="40" width="68" height="34" rx="4" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="530" y="63" text-anchor="middle">20</text>
+    </g>
+
+    <text x="340" y="100" font-size="12" fill="#818896" text-anchor="middle">same 7 values, laid out as a tree ↓</text>
+
+    <g stroke="#3E4452" stroke-width="2">
+      <line x1="340" y1="150" x2="190" y2="225"/>
+      <line x1="340" y1="150" x2="490" y2="225"/>
+      <line x1="190" y1="225" x2="115" y2="300"/>
+      <line x1="190" y1="225" x2="265" y2="300"/>
+      <line x1="490" y1="225" x2="415" y2="300"/>
+      <line x1="490" y1="225" x2="565" y2="300"/>
+    </g>
+
+    <g font-size="14">
+      <circle cx="340" cy="150" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="340" y="155" text-anchor="middle" fill="#DCDFE4">3</text>
+      <circle cx="190" cy="225" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="190" y="230" text-anchor="middle" fill="#DCDFE4">8</text>
+      <circle cx="490" cy="225" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="490" y="230" text-anchor="middle" fill="#DCDFE4">5</text>
+      <circle cx="115" cy="300" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="115" y="305" text-anchor="middle" fill="#DCDFE4">15</text>
+      <circle cx="265" cy="300" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="265" y="305" text-anchor="middle" fill="#DCDFE4">12</text>
+      <circle cx="415" cy="300" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="415" y="305" text-anchor="middle" fill="#DCDFE4">9</text>
+      <circle cx="565" cy="300" r="18" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="565" y="305" text-anchor="middle" fill="#DCDFE4">20</text>
+    </g>
+    <g font-size="10" fill="#818896">
+      <text x="340" y="184" text-anchor="middle">i=0</text>
+      <text x="190" y="259" text-anchor="middle">i=1</text>
+      <text x="490" y="259" text-anchor="middle">i=2</text>
+      <text x="115" y="334" text-anchor="middle">i=3</text>
+      <text x="265" y="334" text-anchor="middle">i=4</text>
+      <text x="415" y="334" text-anchor="middle">i=5</text>
+      <text x="565" y="334" text-anchor="middle">i=6</text>
+    </g>
+
+    <text x="20" y="368" font-size="12" fill="#DCDFE4">left child of i  →  index 2i + 1</text>
+    <text x="20" y="388" font-size="12" fill="#DCDFE4">right child of i  →  index 2i + 2</text>
+    <text x="20" y="408" font-size="12" fill="#DCDFE4">parent of i  →  index floor((i - 1) / 2)</text>
+  </svg>
+
+  <h2>Diagram: bubble-up, step by step</h2>
+  <svg class="diagram" viewBox="0 0 680 510" role="img" aria-label="Storyboard of insert(3) into the heap [10, 15, 12]. Panel one: 3 is appended as index 3, a child of index 1 (value 15). Panel two: 15 is greater than 3, so they swap — 3 moves to index 1, 15 moves to index 3. Panel three: 10 is greater than 3, so they swap — 3 moves to the root, 10 moves to index 1. Final array is [3, 10, 12, 15].">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Insert 3 into heap [10, 15, 12] — bubble up toward the root</text>
+
+    <text x="20" y="49" font-size="11" fill="#818896">Before — 3 appended as index 3, a child of index 1 (value 15)</text>
+    <g stroke="#3E4452" stroke-width="2">
+      <line x1="340" y1="70" x2="250" y2="115"/>
+      <line x1="340" y1="70" x2="430" y2="115"/>
+      <line x1="250" y1="115" x2="250" y2="160"/>
+    </g>
+    <circle cx="340" cy="70" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="340" y="75" text-anchor="middle" font-size="13" fill="#DCDFE4">10</text>
+    <circle cx="250" cy="115" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="250" y="120" text-anchor="middle" font-size="13" fill="#DCDFE4">15</text>
+    <circle cx="430" cy="115" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="430" y="120" text-anchor="middle" font-size="13" fill="#DCDFE4">12</text>
+    <circle cx="250" cy="160" r="16" fill="#2C313A" stroke="#C678DD" stroke-width="2"/><text x="250" y="165" text-anchor="middle" font-size="13" fill="#C678DD">3</text>
+
+    <text x="20" y="199" font-size="11" fill="#818896">① 15 is greater than 3 — swap index 3 and index 1</text>
+    <g stroke="#3E4452" stroke-width="2">
+      <line x1="340" y1="220" x2="250" y2="265"/>
+      <line x1="340" y1="220" x2="430" y2="265"/>
+      <line x1="250" y1="265" x2="250" y2="310"/>
+    </g>
+    <circle cx="340" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="340" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">10</text>
+    <circle cx="250" cy="265" r="16" fill="#2C313A" stroke="#E06C75" stroke-width="2"/><text x="250" y="270" text-anchor="middle" font-size="13" fill="#E06C75">3</text>
+    <circle cx="430" cy="265" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="430" y="270" text-anchor="middle" font-size="13" fill="#DCDFE4">12</text>
+    <circle cx="250" cy="310" r="16" fill="#2C313A" stroke="#E06C75" stroke-width="2"/><text x="250" y="315" text-anchor="middle" font-size="13" fill="#E06C75">15</text>
+
+    <text x="20" y="349" font-size="11" fill="#818896">② 10 is greater than 3 — swap index 1 and index 0, done</text>
+    <g stroke="#3E4452" stroke-width="2">
+      <line x1="340" y1="370" x2="250" y2="415"/>
+      <line x1="340" y1="370" x2="430" y2="415"/>
+      <line x1="250" y1="415" x2="250" y2="460"/>
+    </g>
+    <circle cx="340" cy="370" r="16" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="340" y="375" text-anchor="middle" font-size="13" fill="#98C379">3</text>
+    <circle cx="250" cy="415" r="16" fill="#2C313A" stroke="#E06C75" stroke-width="2"/><text x="250" y="420" text-anchor="middle" font-size="13" fill="#E06C75">10</text>
+    <circle cx="430" cy="415" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="430" y="420" text-anchor="middle" font-size="13" fill="#DCDFE4">12</text>
+    <circle cx="250" cy="460" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/><text x="250" y="465" text-anchor="middle" font-size="13" fill="#DCDFE4">15</text>
+
+    <text x="340" y="495" font-size="12" fill="#DCDFE4" text-anchor="middle">Final: [3, 10, 12, 15] — 3 only traveled as far up as it needed to.</text>
+  </svg>
+
+  <h2>Interactive visualization: insert + bubble up</h2>
+  <div class="legend">
+    <span><i class="lg-active"></i> current node (bubbling)</span>
+    <span><i class="lg-compare"></i> parent being compared</span>
+    <span><i class="lg-swap"></i> swap in progress</span>
+    <span><i class="lg-sorted"></i> heap property confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0 0 0.35rem;">Array view (flat storage)</p>
+    <div class="viz-stage"><div id="viz1StageArray"></div></div>
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0.85rem 0 0.35rem;">Tree view (same data, same indices)</p>
+    <div class="viz-stage"><div id="viz1StageTree"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: extract-min + bubble down</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> root about to be removed</span>
+    <span><i class="lg-active"></i> current node (bubbling)</span>
+    <span><i class="lg-compare"></i> children being compared</span>
+    <span><i class="lg-swap"></i> swap in progress</span>
+    <span><i class="lg-sorted"></i> heap property confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0 0 0.35rem;">Array view (flat storage)</p>
+    <div class="viz-stage"><div id="viz2StageArray"></div></div>
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0.85rem 0 0.35rem;">Tree view (same data, same indices)</p>
+    <div class="viz-stage"><div id="viz2StageTree"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: a min-heap on a plain array</h2>
+  <pre><code>class MinHeap {
+  constructor() {
+    this.data = []; // flat array — this IS the whole heap, no nodes, no pointers
+  }
+
+  size() { return this.data.length; }
+  peek() { return this.data[0]; }               // O(1) — the min always sits at the root
+
+  // index math takes the place of .parent/.left/.right pointers
+  parent(i) { return Math.floor((i - 1) / 2); }
+  left(i)   { return 2 * i + 1; }
+  right(i)  { return 2 * i + 2; }
+
+  insert(val) {
+    this.data.push(val);                   // 1. add to the end — the only O(1) place to insert
+    this.bubbleUp(this.data.length - 1);   // 2. restore the heap property upward
+  }
+
+  bubbleUp(i) {
+    while (i &gt; 0) {
+      const p = this.parent(i);
+      if (this.data[p] &lt;= this.data[i]) break; // parent already smaller or equal — done
+      [this.data[p], this.data[i]] = [this.data[i], this.data[p]]; // swap up
+      i = p;                                      // keep bubbling from the new position
+    }
+  }
+
+  extractMin() {
+    if (this.data.length === 0) return undefined;
+    const min = this.data[0];        // 1. the root is always the minimum
+    const last = this.data.pop();    // 2. remove the last element
+    if (this.data.length &gt; 0) {
+      this.data[0] = last;           // 3. move it to the root to keep the array compact
+      this.bubbleDown(0);            // 4. restore the heap property downward
+    }
+    return min;
+  }
+
+  bubbleDown(i) {
+    const n = this.data.length;
+    while (true) {
+      const l = this.left(i), r = this.right(i);
+      let smallest = i;
+      if (l &lt; n && this.data[l] &lt; this.data[smallest]) smallest = l;
+      if (r &lt; n && this.data[r] &lt; this.data[smallest]) smallest = r; // check BOTH children
+      if (smallest === i) break;      // neither child is smaller — done
+      [this.data[i], this.data[smallest]] = [this.data[smallest], this.data[i]];
+      i = smallest;                   // keep bubbling from the new position
+    }
+  }
+}
+</code></pre>
+
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>parent</code>/<code>left</code>/<code>right</code> are the entire "pointer
+      structure" of this tree — three formulas, no object references. They assume a 0-indexed
+      array, which is what JavaScript gives you by default; a 1-indexed heap would use
+      <code>2i</code>/<code>2i + 1</code> for children instead, so mixing the two conventions is
+      the classic off-by-one bug (more on this in Interview Corner).</li>
+    <li><code>insert</code> is always two steps in this order: append to the end (never anywhere
+      else — that's the only spot that keeps the array "complete"), then call
+      <code>bubbleUp</code> starting from that new last index.</li>
+    <li><code>bubbleUp</code>'s <code>while</code> loop compares the current node only against
+      its <em>parent</em> (never siblings) and stops the instant the parent is already small
+      enough — that early <code>break</code> is exactly why insert is O(log n) instead of always
+      walking all the way to the root.</li>
+    <li><code>extractMin</code> has a subtle order dependency: <code>min</code> must be read
+      <em>before</em> <code>pop()</code> touches the array, and the
+      <code>this.data.length &gt; 0</code> guard matters — if the heap had exactly one element,
+      popping it leaves an empty array, and there is no root left to overwrite or bubble down
+      from.</li>
+    <li><code>bubbleDown</code>'s two <code>if</code> lines are the heart of the whole lesson:
+      it checks the left child, <em>then separately</em> checks the right child against whatever
+      is currently the smallest candidate — so it always ends up swapping with the smaller of the
+      two, never just "the left one." Skipping the second check is the single most common heap
+      bug (see the trap in Interview Corner).</li>
+  </ul>
+
+  <h3>Dry run: extractMin() bubble-down on [3, 8, 5, 15, 12, 9, 20]</h3>
+  <p style="color:var(--text-dim);font-size:0.88rem;">min = arr[0] = 3 (saved as the return
+    value). Pop the last element, 20, and move it into the root — the array entering the loop
+    below is [20, 8, 5, 15, 12, 9].</p>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>arr[i]</th><th>left child</th><th>right child</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>20</td><td>idx 1 = 8</td><td>idx 2 = 5</td><td>5 is the smaller of the two children — swap index 0 and index 2</td></tr>
+      <tr><td>2</td><td>20</td><td>idx 5 = 9</td><td>none (idx 6 doesn't exist)</td><td>9 is the only, and therefore smaller, child — swap index 2 and index 5</td></tr>
+      <tr><td>5</td><td>20</td><td>none</td><td>none</td><td>no children left to compare — heap property holds, stop</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Two swaps later the heap is
+    [5, 8, 9, 15, 12, 20] and <code>extractMin()</code> returns 3 — matching the interactive
+    visualization above, which uses this exact same starting array.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>insert (push + bubble up)</td><td>O(log n)</td><td>O(1)</td><td>The new value travels at most the height of the tree on its way up (log n levels), and each level costs one comparison plus at most one swap.</td></tr>
+      <tr><td>extractMin (bubble down)</td><td>O(log n)</td><td>O(1)</td><td>Same bound in the other direction — the replacement root sinks at most the height of the tree before both of its children are no smaller than it.</td></tr>
+      <tr><td>peek</td><td>O(1)</td><td>O(1)</td><td>The minimum always sits at index 0 — no traversal needed.</td></tr>
+      <tr><td>build heap from an unsorted array</td><td>O(n)</td><td>O(1)</td><td>This one is surprising — see the note below the table.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Why build-heap is O(n), not O(n log n):
+    the standard bottom-up algorithm runs <code>bubbleDown</code> starting from the last
+    non-leaf node up through the root — it does not insert elements one at a time. Most nodes in
+    a complete tree live near the bottom, where a <code>bubbleDown</code> call has almost no
+    distance left to travel (a leaf does zero work, the row just above leaves does at most one
+    swap, and so on). Summing that shrinking amount of work across every level of the tree
+    converges to O(n) total. The naive "n inserts, each O(log n)" estimate of O(n log n)
+    overcounts badly, because it assumes every node needs a full root-to-leaf (or leaf-to-root)
+    walk, when in a heap the vast majority of nodes are already close to where they need to be.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why is peek() O(1) while insert and extractMin are O(log n)?</strong>
+      <code>peek()</code> just reads index 0 — no traversal at all. <code>insert</code> and
+      <code>extractMin</code> both have to restore the heap property, which can require moving a
+      value along one root-to-leaf path, and that path length is bounded by the tree's height,
+      log n.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Then why isn't
+      insert O(1) amortized, the way array push is?" — Array push is O(1) because nothing else in
+      the array has to change when you append. A heap insert must preserve a structural invariant
+      across the whole tree, not just the tail — the new value can be smaller than values many
+      levels above it, and only a walk up the tree can discover and fix that. The walk is short
+      (log n), but it's essentially never zero.</span></li>
+    <li><strong>What's the classic off-by-one bug in the parent/child index formulas?</strong>
+      Mixing indexing conventions — using <code>2i</code>/<code>2i + 1</code> for children
+      (correct only for a 1-indexed heap) together with a 0-indexed JavaScript array, or writing
+      the parent formula as <code>Math.floor(i / 2)</code> instead of
+      <code>Math.floor((i - 1) / 2)</code>.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> pick one
+      indexing convention and sanity-check it by hand on index 0 (the root has no parent) and
+      index 1/2 (the root's two children) before writing anything else — silently mixing
+      0-indexed array access with 1-indexed math is the single most common heap bug in
+      interviews.</span></li>
+    <li><strong>When bubbling down, why must you compare against both children instead of just
+      the left one?</strong> The heap property requires the parent to be less than or equal to
+      <em>both</em> children, not just the left. If you only ever compare against (and
+      conditionally swap with) the left child, you can end up in a state where the parent is
+      still greater than the right child — the heap property is now silently violated, even
+      though your one comparison "passed."<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> always
+      find the <em>smaller</em> of the two children first, then compare the parent against that
+      one value — don't write two independent if-statements that can each trigger their own
+      swap, or you can swap with the larger child by mistake.</span></li>
+    <li><strong>How do bubbleUp and bubbleDown know when to stop early instead of going all the
+      way to the root or a leaf?</strong> The heap property is local: the moment a node satisfies
+      "parent ≤ me" (bubbling up) or "me ≤ both my children" (bubbling down), every node on the
+      other side of it was already valid before this operation touched anything — there's nothing
+      left to fix, so the loop breaks immediately. That early exit is exactly why both operations
+      are O(log n) instead of always paying for a full-height walk.</li>
+    <li><strong>Why can't you binary search a heap for an arbitrary value?</strong> A heap only
+      guarantees an ordering along parent-child paths — the root is the min, but there's no
+      guarantee about how any two siblings, or any two unrelated nodes, compare to each other.
+      Binary search needs a global order that lets you eliminate half the remaining candidates at
+      each step; a heap doesn't provide one. Finding an arbitrary value in a heap is O(n) worst
+      case, same as an unsorted array.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> say the invariant before touching the
+    array — "index i's children live at 2i + 1 and 2i + 2, its parent at
+    floor((i − 1) / 2), and every parent has to be less than or equal to both children." For
+    insert: "push to the end, then bubble up — compare against the parent, swap if it's bigger,
+    stop the moment it isn't." For extractMin: "save the root as the return value, move the last
+    element into the root, shrink the array by one, then bubble down — compare against both
+    children, swap with whichever is smaller, never just the left one." Interviewers are
+    listening for two specific things: whether you get the index math right without hesitating,
+    and whether you remember to check both children on the way down — those are the two places
+    this pattern silently breaks in a live interview.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Kth Largest Element in a Stream <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/kth-largest-element-in-a-stream/" target="_blank" rel="noopener">LeetCode: Kth Largest Element in a Stream</a>)</span></h4>
+    <p>Design a class that finds the kth largest element in a stream of numbers as new values are
+      added one at a time — this is a running, online query, not a one-shot computation.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>You don't need to re-sort the whole stream
+      on every <code>add()</code>. Keep a min-heap capped at size k; whenever it grows past k,
+      pop the minimum. The kth largest value at any moment is always sitting at the root of that
+      capped heap.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>class KthLargest {
+  constructor(k, nums) {
+    this.k = k;
+    this.heap = [];
+    for (const n of nums) this.add(n);
+  }
+
+  add(val) {
+    this._push(val);
+    if (this.heap.length > this.k) this._popMin();
+    return this.heap[0]; // root of a size-k min-heap IS the kth largest
+  }
+
+  _push(val) {
+    this.heap.push(val);
+    let i = this.heap.length - 1;
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      if (this.heap[p] <= this.heap[i]) break;
+      [this.heap[p], this.heap[i]] = [this.heap[i], this.heap[p]];
+      i = p;
+    }
+  }
+
+  _popMin() {
+    const last = this.heap.pop();
+    if (this.heap.length === 0) return;
+    this.heap[0] = last;
+    let i = 0;
+    const n = this.heap.length;
+    while (true) {
+      const l = 2 * i + 1, r = 2 * i + 2;
+      let s = i;
+      if (l < n && this.heap[l] < this.heap[s]) s = l;
+      if (r < n && this.heap[r] < this.heap[s]) s = r;
+      if (s === i) break;
+      [this.heap[i], this.heap[s]] = [this.heap[s], this.heap[i]];
+      i = s;
+    }
+  }
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Last Stone Weight <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/last-stone-weight/" target="_blank" rel="noopener">LeetCode: Last Stone Weight</a>)</span></h4>
+    <p>Given an array of stone weights, repeatedly smash the two heaviest stones together: if
+      they're equal, both are destroyed; otherwise the lighter one is destroyed and the heavier
+      becomes the difference between the two. Return the weight of the last stone left, or 0 if
+      none remain.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>"The two heaviest" is exactly what a
+      max-heap gives you in O(log n) per extraction. Build one from the stones, pop two, push the
+      difference back if it's nonzero, and repeat until at most one stone is left.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function lastStoneWeight(stones) {
+  const heap = []; // max-heap: same code as MinHeap, comparisons flipped
+
+  function push(val) {
+    heap.push(val);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      if (heap[p] >= heap[i]) break; // parent already >= — no swap needed
+      [heap[p], heap[i]] = [heap[i], heap[p]];
+      i = p;
+    }
+  }
+
+  function pop() {
+    const top = heap[0];
+    const last = heap.pop();
+    if (heap.length > 0) {
+      heap[0] = last;
+      let i = 0;
+      const n = heap.length;
+      while (true) {
+        const l = 2 * i + 1, r = 2 * i + 2;
+        let s = i;
+        if (l < n && heap[l] > heap[s]) s = l; // largest child wins for a max-heap
+        if (r < n && heap[r] > heap[s]) s = r;
+        if (s === i) break;
+        [heap[i], heap[s]] = [heap[s], heap[i]];
+        i = s;
+      }
+    }
+    return top;
+  }
+
+  stones.forEach(push);
+  while (heap.length > 1) {
+    const a = pop(), b = pop(); // a >= b, the two heaviest stones
+    if (a !== b) push(a - b);
+  }
+  return heap.length ? heap[0] : 0;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Top K Frequent Elements <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank" rel="noopener">LeetCode: Top K Frequent Elements</a>)</span></h4>
+    <p>Given an integer array, return the k most frequent elements, in any order.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Count frequencies with a hash map first
+      (Day 6), then keep a min-heap of size k ordered by frequency — whenever it grows past k,
+      pop the lowest-frequency entry. Whatever survives in the heap at the end is your answer.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function topKFrequent(nums, k) {
+  const freq = new Map();
+  for (const n of nums) freq.set(n, (freq.get(n) || 0) + 1);
+
+  const heap = []; // min-heap of [count, value] pairs, ordered by count, capped at size k
+
+  function push(item) {
+    heap.push(item);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      if (heap[p][0] <= heap[i][0]) break;
+      [heap[p], heap[i]] = [heap[i], heap[p]];
+      i = p;
+    }
+  }
+
+  function popMin() {
+    const last = heap.pop();
+    if (heap.length === 0) return;
+    heap[0] = last;
+    let i = 0;
+    const n = heap.length;
+    while (true) {
+      const l = 2 * i + 1, r = 2 * i + 2;
+      let s = i;
+      if (l < n && heap[l][0] < heap[s][0]) s = l;
+      if (r < n && heap[r][0] < heap[s][0]) s = r;
+      if (s === i) break;
+      [heap[i], heap[s]] = [heap[s], heap[i]];
+      i = s;
+    }
+  }
+
+  for (const [val, count] of freq) {
+    push([count, val]);
+    if (heap.length > k) popMin(); // evict the least-frequent entry once we exceed k
+  }
+  return heap.map(([count, val]) => val);
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="children" data-explain="In a 0-indexed array, a node's children live at 2i+1 (left) and 2i+2 (right); 2i and 2i+1 is the correct pair only if the array were 1-indexed instead.">
+    <p class="q-text">1. For a 0-indexed array-based heap, what are the child indices of a node at index i?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="children">2i + 1 and 2i + 2</button>
+      <button class="btn dsa-quiz-option" data-value="oneindexed">2i and 2i + 1</button>
+      <button class="btn dsa-quiz-option" data-value="half">i / 2 and i / 2 + 1</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="The heap property says a parent must be less than or equal to BOTH children, not just the left one. Comparing only against the left child can leave the right child smaller than the parent, silently breaking the invariant even though the one comparison you made passed.">
+    <p class="q-text">2. When bubbling down, why must you compare against both children instead of just the left one?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">Because the heap property requires the parent to be no greater than both children — checking only the left can leave the right child smaller than the parent</button>
+      <button class="btn dsa-quiz-option" data-value="leftbig">Because the left child is always the larger of the two, so checking it alone would be wrong</button>
+      <button class="btn dsa-quiz-option" data-value="notneeded">It isn't actually required — checking only the left child still gives the correct result</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="o1" data-explain="The minimum of a min-heap always sits at index 0 — peek() just reads arr[0], no traversal or comparisons needed.">
+    <p class="q-text">3. What is the time complexity of peek() — reading the minimum without removing it?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">O(log n)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="It's tempting to assume n inserts times O(log n) each equals O(n log n), but that overcounts: most nodes in a heap live near the leaves, where a bubbleDown call does almost no work. Summing that shrinking amount of work across every level of the tree converges to O(n), not O(n log n).">
+    <p class="q-text">4. Building a heap from an existing n-element array (heapify) runs in what time complexity?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n) — most nodes are near the bottom of the tree, where bubbleDown does almost no work</button>
+      <button class="btn dsa-quiz-option" data-value="onlogn">O(n log n) — the same as inserting all n elements one at a time</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">O(log n) — heapify only ever touches the root</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="two" data-explain="parent(i) = floor((i - 1) / 2). For i = 5: floor((5 - 1) / 2) = floor(4 / 2) = 2 — index 2 (value 20) is index 5's parent in the array [10, 15, 20, 17, 25, 30, 40] used in this lesson's insert visualization.">
+    <p class="q-text">5. In the array [10, 15, 20, 17, 25, 30, 40] (0-indexed), what is the parent index of index 5?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="two">2</button>
+      <button class="btn dsa-quiz-option" data-value="one">1</button>
+      <button class="btn dsa-quiz-option" data-value="three">3</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 22 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day21.html">← Day 21: Week 3 Review</a>
+    <a class="btn" href="day23.html">Day 23: Graphs — BFS &amp; DFS →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 22;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- shared heap <-> tree layout, used by both interactive visualizations ----
+  const GRAPH_W = 680, GRAPH_H = 310;
+  const HEAP_Y = [50, 120, 190, 255];
+  const HEAP_X = { 0: [340], 1: [190, 490], 2: [115, 265, 415, 565] };
+
+  function heapNodeXY(i) {
+    if (i === 0) return { x: HEAP_X[0][0], y: HEAP_Y[0] };
+    const level = Math.floor(Math.log2(i + 1));
+    // Only index 7 ever reaches level 3 in this lesson (base heaps are fixed at 7 elements
+    // before an insert appends one more) — it's always the leftmost grandchild slot, directly
+    // under index 3, so it doesn't need the general per-level x-position table below.
+    if (level >= 3) return { x: 115, y: HEAP_Y[3] };
+    const levelStart = Math.pow(2, level) - 1;
+    const pos = i - levelStart;
+    return { x: HEAP_X[level][pos], y: HEAP_Y[level] };
+  }
+
+  function heapNodes(values) {
+    return values.map((v, i) => {
+      const xy = heapNodeXY(i);
+      return { id: String(i), label: String(v), x: xy.x, y: xy.y };
+    });
+  }
+
+  function heapEdges(values) {
+    const edges = [];
+    for (let i = 0; i < values.length; i++) {
+      const l = 2 * i + 1, r = 2 * i + 2;
+      if (l < values.length) edges.push({ from: String(i), to: String(l), directed: false });
+      if (r < values.length) edges.push({ from: String(i), to: String(r), directed: false });
+    }
+    return edges;
+  }
+
+  // paints the Graph tree view, then layers small "i=N" index labels + a ROOT marker on top —
+  // same pattern as Day 15/16's paintGraph helper: call graph.render(), then append extra text.
+  function paintHeapGraph(graph, step) {
+    const values = step.values;
+    graph.nodes = heapNodes(values);
+    graph.edges = heapEdges(values);
+    graph.render(step.states || {}, {});
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = graph.svg;
+    function addText(x, y, txt, fill, size) {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', x);
+      t.setAttribute('y', y);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', size || 10);
+      t.setAttribute('fill', fill || '#818896');
+      t.textContent = txt;
+      svg.appendChild(t);
+    }
+    graph.nodes.forEach((n) => addText(n.x, n.y + 32, 'i=' + n.id, '#818896', 10));
+    if (graph.nodes.length) addText(graph.nodes[0].x, graph.nodes[0].y - 28, 'ROOT', '#61AEEE', 11);
+  }
+
+  // builds a valid min-heap array by inserting values one at a time (mirrors MinHeap.insert) —
+  // used both for the fixed starting examples and for Shuffle's random ones.
+  function buildValidHeap(values) {
+    const arr = [];
+    function bubbleUp(i) {
+      while (i > 0) {
+        const p = Math.floor((i - 1) / 2);
+        if (arr[p] <= arr[i]) break;
+        [arr[p], arr[i]] = [arr[i], arr[p]];
+        i = p;
+      }
+    }
+    values.forEach((v) => {
+      arr.push(v);
+      bubbleUp(arr.length - 1);
+    });
+    return arr;
+  }
+
+  // ---- viz 1: insert + bubble up ----
+  function buildInsertSteps(baseValues, newVal) {
+    let arr = baseValues.slice();
+    const steps = [];
+    function pushStep(narration, states) { steps.push({ narration, values: arr.slice(), states: states || {} }); }
+
+    pushStep(`Start: heap = [${arr.join(', ')}]. Insert ${newVal}.`);
+    arr.push(newVal);
+    let i = arr.length - 1;
+    pushStep(`push(${newVal}) — placed at the end, index ${i}. Now bubble it up.`, { [i]: 'active' });
+
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      const childVal = arr[i], parentVal = arr[p];
+      pushStep(`Compare index ${i} (${childVal}) with parent index ${p} (${parentVal}).`, { [i]: 'active', [p]: 'compare' });
+      if (parentVal <= childVal) {
+        pushStep(`${parentVal} is less than or equal to ${childVal} — heap property holds. Stop bubbling.`, { [i]: 'sorted' });
+        return steps;
+      }
+      [arr[p], arr[i]] = [arr[i], arr[p]];
+      pushStep(`${parentVal} is greater than ${childVal} — swap. ${childVal} moves up to index ${p}.`, { [p]: 'swap', [i]: 'swap' });
+      i = p;
+    }
+    pushStep(`Reached the root (index 0) — bubble-up complete: [${arr.join(', ')}].`, { 0: 'sorted' });
+    return steps;
+  }
+
+  const viz1StageArray = document.getElementById('viz1StageArray');
+  const viz1StageTree = document.getElementById('viz1StageTree');
+  const bars1 = new DSA.Bars(viz1StageArray, { min: 0, max: 65 });
+  const graph1 = new DSA.Graph(viz1StageTree, { width: GRAPH_W, height: GRAPH_H });
+  let BASE1 = [10, 15, 20, 17, 25, 30, 40];
+  let NEWVAL1 = 2;
+  let steps1 = buildInsertSteps(BASE1, NEWVAL1);
+  bars1.setData(BASE1);
+  paintHeapGraph(graph1, { values: BASE1, states: {} });
+
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1200,
+    onStep(step) {
+      const s = step || { values: BASE1, states: {} };
+      bars1.setData(s.values); // array length changes mid-animation (push) — rebuild, not just paint
+      bars1.paint(s.states, s.values);
+      paintHeapGraph(graph1, s);
+    },
+    onShuffle() {
+      BASE1 = buildValidHeap(DSA.randomArray(7, 5, 60));
+      NEWVAL1 = DSA.randomArray(1, 1, 60)[0];
+      steps1 = buildInsertSteps(BASE1, NEWVAL1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: extract-min + bubble down ----
+  function buildExtractSteps(baseValues) {
+    let arr = baseValues.slice();
+    const steps = [];
+    function pushStep(narration, states) { steps.push({ narration, values: arr.slice(), states: states || {} }); }
+
+    pushStep(`Start: heap = [${arr.join(', ')}]. extractMin() removes the root.`);
+    const min = arr[0];
+    pushStep(`min = arr[0] = ${min} — this is the value we will return.`, { 0: 'pointer' });
+    const last = arr.pop();
+    pushStep(`Pop the last element (${last}, index ${arr.length}) off the array.`, {});
+    if (arr.length === 0) {
+      pushStep(`Heap is now empty.`, {});
+      return steps;
+    }
+    arr[0] = last;
+    pushStep(`Move ${last} into the root (index 0) to keep the array compact. Now bubble it down.`, { 0: 'active' });
+
+    let i = 0;
+    const n = arr.length;
+    while (true) {
+      const l = 2 * i + 1, r = 2 * i + 2;
+      let smallest = i;
+      if (l < n && arr[l] < arr[smallest]) smallest = l;
+      if (r < n && arr[r] < arr[smallest]) smallest = r;
+      const cmpStates = { [i]: 'active' };
+      if (l < n) cmpStates[l] = 'compare';
+      if (r < n) cmpStates[r] = 'compare';
+      let childDesc;
+      if (l < n && r < n) childDesc = `left idx ${l} (${arr[l]}) and right idx ${r} (${arr[r]})`;
+      else if (l < n) childDesc = `left idx ${l} (${arr[l]}) — no right child`;
+      else childDesc = `no children (leaf)`;
+      pushStep(`At index ${i} (${arr[i]}), compare with ${childDesc}.`, cmpStates);
+      if (smallest === i) {
+        pushStep(`${arr[i]} has no smaller child — heap property holds. Stop.`, { [i]: 'sorted' });
+        break;
+      }
+      pushStep(`Index ${smallest} (${arr[smallest]}) is the smaller child — swap with index ${i}.`, { [i]: 'swap', [smallest]: 'swap' });
+      [arr[i], arr[smallest]] = [arr[smallest], arr[i]];
+      i = smallest;
+    }
+    pushStep(`extractMin() complete: removed ${min}. Heap now: [${arr.join(', ')}].`, {});
+    return steps;
+  }
+
+  const viz2StageArray = document.getElementById('viz2StageArray');
+  const viz2StageTree = document.getElementById('viz2StageTree');
+  const bars2 = new DSA.Bars(viz2StageArray, { min: 0, max: 65 });
+  const graph2 = new DSA.Graph(viz2StageTree, { width: GRAPH_W, height: GRAPH_H });
+  let BASE2 = [3, 8, 5, 15, 12, 9, 20];
+  let steps2 = buildExtractSteps(BASE2);
+  bars2.setData(BASE2);
+  paintHeapGraph(graph2, { values: BASE2, states: {} });
+
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1200,
+    onStep(step) {
+      const s = step || { values: BASE2, states: {} };
+      bars2.setData(s.values); // array length changes mid-animation (pop) — rebuild, not just paint
+      bars2.paint(s.states, s.values);
+      paintHeapGraph(graph2, s);
+    },
+    onShuffle() {
+      BASE2 = buildValidHeap(DSA.randomArray(7, 5, 60));
+      steps2 = buildExtractSteps(BASE2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
