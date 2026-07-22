@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 16: Linked Lists II — Fast/Slow &amp; Reverse — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Fast/slow pointers and reversing a list, one animated pointer swap at a time." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 16 / 30 &middot; WEEK 3</p>
+  <h1>Linked Lists II — Fast/Slow &amp; Reverse</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Reverse a singly linked list in place using three pointers (<code>prev</code>,
+      <code>cur</code>, <code>next</code>) — no extra list, no recursion needed.</li>
+    <li>Use <strong>fast/slow pointers</strong> (one step at a time, one two steps at a time) to
+      find the middle of a list in a single pass — and see why the same trick detects a cycle.</li>
+    <li>Combine both techniques in Reorder List, today's capstone problem.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Think of a group of people standing in a line holding hands, each one told "point your free
+    hand at whoever is in front of you." To reverse the line, everyone has to let go of the person
+    in front and instead grab the person <em>behind</em> them — one at a time, because if two
+    people let go and re-grab in the wrong order, the chain splits and part of the line is lost
+    forever. That's exactly Day 15's "capture before you overwrite" lesson, applied to <em>every</em>
+    node instead of just one.</p>
+  <p><strong>Reversal.</strong> Walk the list once, and at each node, flip its <code>.next</code> to
+    point <em>backward</em> instead of forward. Three pointers make this safe: <code>prev</code>
+    (the reversed portion built so far), <code>cur</code> (the node being flipped right now), and
+    a temporary <code>next</code> (saved <em>before</em> <code>cur.next</code> is overwritten, or
+    the rest of the list is lost — same trap as Day 15's delete).</p>
+  <p><strong>Fast/slow pointers.</strong> Start two pointers at <code>head</code>. Move
+    <code>slow</code> one step at a time, <code>fast</code> two steps at a time. When
+    <code>fast</code> reaches the end, <code>slow</code> has covered exactly half the distance —
+    it's at the middle. The same setup detects a cycle: if the list loops back on itself,
+    <code>fast</code> never hits a real end. Instead, because <code>fast</code> gains exactly one
+    node on <code>slow</code> every step once both are inside the loop, it's guaranteed to catch up
+    and land on the exact same node as <code>slow</code> within one full trip around the cycle —
+    it can't "jump over" <code>slow</code>, since a gain of one node per step can't skip a node
+    entirely.</p>
+
+  <h2>Diagram: reversing the pointers</h2>
+  <svg class="diagram" viewBox="0 0 620 210" role="img" aria-label="Mid-reversal snapshot of the list 1, 2, 3, 4, 5: nodes 1 and 2 have already been flipped to point backward (2 points at 1, 1 points at NULL), prev is at node 2, cur is at node 3, and nodes 3, 4, 5 still point forward in their original direction.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Mid-reversal: prev=2, cur=3 — 2 iterations done</text>
+    <g font-size="13">
+      <rect x="20" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="55" y="57" text-anchor="middle" fill="#98C379">1</text>
+      <rect x="120" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="155" y="57" text-anchor="middle" fill="#98C379">2</text>
+      <rect x="220" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="255" y="57" text-anchor="middle" fill="#61AEEE">3</text>
+      <rect x="340" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="375" y="57" text-anchor="middle" fill="#DCDFE4">4</text>
+      <rect x="440" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="475" y="57" text-anchor="middle" fill="#DCDFE4">5</text>
+    </g>
+    <text x="55" y="94" font-size="11" fill="#818896" text-anchor="middle">NULL</text>
+    <text x="155" y="88" font-size="11" fill="#98C379" text-anchor="middle">prev</text>
+    <text x="255" y="88" font-size="11" fill="#61AEEE" text-anchor="middle">cur</text>
+    <text x="375" y="88" font-size="14" fill="#818896" text-anchor="middle">→</text>
+    <text x="475" y="88" font-size="11" fill="#818896" text-anchor="middle">still forward</text>
+    <text x="20" y="128" font-size="12" fill="#DCDFE4">Reversed portion (green): 2 → 1 → NULL. Untouched portion (gray):</text>
+    <text x="20" y="145" font-size="12" fill="#DCDFE4">3 → 4 → 5, still pointing the original direction.</text>
+    <text x="20" y="170" font-size="12" fill="#DCDFE4">Next: save cur.next (4) BEFORE flipping cur.next to point at prev (2) —</text>
+    <text x="20" y="187" font-size="12" fill="#DCDFE4">the exact same "capture before overwrite" rule from Day 15's delete.</text>
+  </svg>
+
+  <h2>Diagram: fast/slow finds the middle</h2>
+  <svg class="diagram" viewBox="0 0 620 175" role="img" aria-label="Fast and slow pointers on a five-node list: slow has advanced two steps to node 3 while fast has advanced four steps and reached the last node, node 5, with no next node to continue to. Since fast cannot advance further, slow's current position, node 3, is the middle." >
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">List [1, 2, 3, 4, 5] — fast moves 2x speed</text>
+    <g font-size="13">
+      <rect x="20" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="55" y="57" text-anchor="middle" fill="#DCDFE4">1</text>
+      <rect x="120" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="155" y="57" text-anchor="middle" fill="#DCDFE4">2</text>
+      <rect x="220" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#98C379" stroke-width="2"/><text x="255" y="57" text-anchor="middle" fill="#98C379">3</text>
+      <rect x="320" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="355" y="57" text-anchor="middle" fill="#DCDFE4">4</text>
+      <rect x="420" y="34" width="70" height="36" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="455" y="57" text-anchor="middle" fill="#61AEEE">5</text>
+    </g>
+    <text x="255" y="88" font-size="11" fill="#98C379" text-anchor="middle">slow (2 steps)</text>
+    <text x="455" y="88" font-size="11" fill="#61AEEE" text-anchor="middle">fast (4 steps, at end)</text>
+    <text x="20" y="118" font-size="12" fill="#DCDFE4">fast.next is null — the loop stops here. slow has moved exactly half</text>
+    <text x="20" y="135" font-size="12" fill="#DCDFE4">as far as fast, so slow's node (3) is the middle. One pass, no</text>
+    <text x="20" y="152" font-size="12" fill="#DCDFE4">counting the length first and no second walk.</text>
+  </svg>
+
+  <h2>Interactive visualization: reverse a linked list</h2>
+  <div class="legend">
+    <span><i class="lg-sorted"></i> reversed portion</span>
+    <span><i class="lg-pointer"></i> cur (being flipped now)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: fast/slow pointers find the middle</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> slow (1 step)</span>
+    <span><i class="lg-active"></i> fast (2 steps)</span>
+    <span><i class="lg-sorted"></i> middle found</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: reverse, and find the middle</h2>
+  <pre><code>function reverseList(head) {
+  let prev = null, cur = head;
+  while (cur) {
+    const next = cur.next;   // ① save it — we're about to overwrite cur.next
+    cur.next = prev;         // ② flip the pointer backward
+    prev = cur;               // advance prev to where cur was
+    cur = next;                // advance cur to the node we saved in step ①
+  }
+  return prev; // prev is the new head once cur runs off the end (becomes null)
+}
+
+function middleNode(head) {
+  let slow = head, fast = head;
+  while (fast &amp;&amp; fast.next) {   // stop if fast can't take a full 2-step move
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  return slow;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>reverseList</code>: <code>const next = cur.next</code> must run <em>before</em>
+      <code>cur.next = prev</code> — otherwise the only reference to the rest of the list is gone
+      the instant it's overwritten. This is Day 15's "capture before overwrite" rule, now applied
+      inside a loop instead of once.</li>
+    <li>The loop ends when <code>cur</code> becomes <code>null</code> — at that exact moment,
+      <code>prev</code> is sitting on what used to be the last node, which is now the new head.</li>
+    <li><code>middleNode</code>'s loop condition is <code>fast &amp;&amp; fast.next</code>, not
+      just <code>fast</code> — <code>fast.next.next</code> would throw if <code>fast.next</code>
+      were <code>null</code>. This condition guarantees a full 2-step move is always safe before
+      attempting it.</li>
+    <li>For an odd-length list, the loop stops with <code>fast</code> exactly on the last node
+      (<code>fast.next === null</code>). For an even-length list, it stops one step earlier
+      (<code>fast === null</code>) — <code>slow</code> lands on the <em>second</em> of the two
+      middle nodes in that case, which is the standard convention for this problem.</li>
+  </ul>
+
+  <h3>Dry run: reverseList on [1, 2, 3, 4, 5]</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Iteration</th><th>next (saved)</th><th>cur.next = prev</th><th>prev</th><th>cur</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2</td><td>1 → NULL</td><td>1</td><td>2</td></tr>
+      <tr><td>2</td><td>3</td><td>2 → 1</td><td>2</td><td>3</td></tr>
+      <tr><td>3</td><td>4</td><td>3 → 2</td><td>3</td><td>4</td></tr>
+      <tr><td>4</td><td>5</td><td>4 → 3</td><td>4</td><td>5</td></tr>
+      <tr><td>5</td><td>null</td><td>5 → 4</td><td>5</td><td>null</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">cur becomes null after iteration 5 — loop
+    ends, return prev (node 5). Final list: <code>5 → 4 → 3 → 2 → 1 → NULL</code>.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Reverse (iterative)</td><td>O(n)</td><td>O(1)</td><td>One pass, three pointer variables — no extra list, no call stack growth.</td></tr>
+      <tr><td>Reverse (recursive)</td><td>O(n)</td><td>O(n)</td><td>Same number of steps, but each recursive call adds a stack frame (Day 9) — n frames deep at the bottom of the recursion.</td></tr>
+      <tr><td>Find middle (fast/slow)</td><td>O(n)</td><td>O(1)</td><td>One pass — no need to count the length first and walk again.</td></tr>
+      <tr><td>Cycle detection (Floyd's)</td><td>O(n)</td><td>O(1)</td><td>Same two pointers; no hash set of visited nodes needed, unlike the O(n)-space alternative.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why prefer the iterative reversal over a recursive one?</strong> Same O(n) time,
+      but the recursive version uses O(n) call-stack space (Day 9) versus O(1) for the iterative
+      loop — on a very long list, recursion risks a stack overflow that the loop never will.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't say
+      recursion is "simpler" without naming this cost — interviewers want to hear you weigh the
+      trade-off, not just prefer one style.</span></li>
+    <li><strong>Why does fast/slow find the middle in one pass instead of two (count the length,
+      then walk length/2 steps)?</strong> Both are O(n), but fast/slow does it without a second
+      full walk — the "count then walk" approach touches the list twice; fast/slow touches it
+      once, arriving at the answer exactly when the single pass ends.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Can fast ever
+      skip past slow without meeting it, in a cycle?" — no: once both pointers are inside the
+      loop, fast gains exactly one node on slow every step, so the gap between them shrinks by
+      exactly 1 each time — it can't jump from "2 nodes ahead" to "1 node behind" without passing
+      through "1 node ahead" first.</span></li>
+    <li><strong>What's the classic bug in the fast/slow loop condition?</strong> Writing
+      <code>while (fast)</code> instead of <code>while (fast &amp;&amp; fast.next)</code> — the
+      first crashes with a null-pointer error the moment <code>fast</code> lands on the last node
+      and the code tries <code>fast.next.next</code>.</li>
+    <li><strong>How would you find <em>where</em> a cycle begins, not just whether one exists?</strong>
+      After <code>slow</code> and <code>fast</code> meet inside the cycle, reset a third pointer to
+      <code>head</code> and advance it and <code>slow</code> one step at a time — they meet exactly
+      at the cycle's starting node. (This is Linked List Cycle II — the reasoning behind why it
+      works is a fun rabbit hole, but the mechanical recipe above is what to reproduce in an
+      interview.)</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> for reversal, narrate the pointer dance
+    before touching code — "save next, flip cur's pointer backward, slide prev and cur both
+    forward by one." For fast/slow, state the invariant — "fast always covers exactly twice the
+    distance slow does, so when fast runs out of room, slow is exactly at the midpoint." Naming
+    these invariants out loud is what separates "I memorized this pattern" from "I can rebuild it
+    from scratch if I blank on the exact code."</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Reverse Linked List <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/reverse-linked-list/" target="_blank" rel="noopener">LeetCode: Reverse Linked List</a>)</span></h4>
+    <p>Reverse a singly linked list and return the new head — today's core technique, applied
+      directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Three pointers: prev, cur, next. Save
+      cur.next before you overwrite it — same rule as Day 15's delete.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function reverseList(head) {
+  let prev = null, cur = head;
+  while (cur) {
+    const next = cur.next;
+    cur.next = prev;
+    prev = cur;
+    cur = next;
+  }
+  return prev;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Linked List Cycle <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/linked-list-cycle/" target="_blank" rel="noopener">LeetCode: Linked List Cycle</a>)</span></h4>
+    <p>Given the head of a linked list, determine if it contains a cycle, using O(1) extra space.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Floyd's fast/slow pointers. If there's no
+      cycle, fast reaches a real null end. If there is one, fast and slow are guaranteed to land
+      on the same node eventually — that's your signal.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function hasCycle(head) {
+  let slow = head, fast = head;
+  while (fast &amp;&amp; fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    if (slow === fast) return true;
+  }
+  return false;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Reorder List <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/reorder-list/" target="_blank" rel="noopener">LeetCode: Reorder List</a>)</span></h4>
+    <p>Given <code>1 → 2 → 3 → 4</code>, reorder it in place to <code>1 → 4 → 2 → 3</code> —
+      alternating from the front and back toward the middle. Combines <em>both</em> of today's
+      techniques.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Three steps: (1) find the middle with
+      fast/slow, (2) reverse the second half with today's three-pointer technique, (3) merge the
+      first half and the reversed second half by alternating nodes one at a time.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function reorderList(head) {
+  if (!head || !head.next) return head;
+
+  // 1. find the middle
+  let slow = head, fast = head;
+  while (fast.next &amp;&amp; fast.next.next) { slow = slow.next; fast = fast.next.next; }
+
+  // 2. reverse the second half
+  let second = slow.next;
+  slow.next = null;
+  let prev = null;
+  while (second) {
+    const next = second.next;
+    second.next = prev;
+    prev = second;
+    second = next;
+  }
+
+  // 3. merge the two halves alternately
+  let first = head;
+  second = prev;
+  while (second) {
+    const t1 = first.next, t2 = second.next;
+    first.next = second;
+    second.next = t1;
+    first = t1;
+    second = t2;
+  }
+  return head;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="capture" data-explain="const next = cur.next must be saved before cur.next = prev overwrites it — otherwise the rest of the original list becomes permanently unreachable, the same trap as Day 15's delete." >
+    <p class="q-text">1. In the reversal loop, why must <code>next</code> be saved before <code>cur.next = prev</code> runs?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="capture">Otherwise the rest of the original list becomes permanently unreachable</button>
+      <button class="btn dsa-quiz-option" data-value="perf">It's purely a performance optimization, not required for correctness</button>
+      <button class="btn dsa-quiz-option" data-value="notneeded">It isn't necessary — JS keeps a reference automatically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onepass" data-explain="Fast/slow finds the middle in one pass over the list; counting the length first and then walking length/2 steps touches the list twice — both are O(n), but fast/slow does it in a single traversal." >
+    <p class="q-text">2. What's the advantage of fast/slow pointers over "count the length, then walk halfway"?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onepass">It finds the middle in a single pass instead of two separate walks</button>
+      <button class="btn dsa-quiz-option" data-value="fastercomplexity">It's O(log n) instead of O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="noadvantage">There's no real advantage — both approaches are identical</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="gainone" data-explain="Once both pointers are inside the cycle, fast gains exactly one node on slow every step — the gap shrinks by exactly 1 each time, so it must pass through every intermediate gap size, including 0 (a meeting), before it could ever jump past." >
+    <p class="q-text">3. Why can't fast "jump over" slow without ever meeting it, once both are inside a cycle?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="gainone">Fast gains exactly one node on slow per step, so the gap shrinks by exactly 1 each time — it can't skip a value</button>
+      <button class="btn dsa-quiz-option" data-value="random">It's not guaranteed — sometimes fast does skip past slow</button>
+      <button class="btn dsa-quiz-option" data-value="samespeed">Fast and slow actually move at the same speed inside a cycle</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="stackspace" data-explain="Recursive reversal has the same O(n) time as iterative, but uses O(n) call-stack space (one frame per node) versus the iterative loop's O(1) — a long list risks a stack overflow recursively that the loop never will." >
+    <p class="q-text">4. What's the space-complexity trade-off between iterative and recursive list reversal?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="stackspace">Recursive uses O(n) call-stack space; iterative uses O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're identical — both O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="iterworse">Iterative is actually O(n) space because it builds a new list</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="both" data-explain="Reorder List needs fast/slow to find the middle, then today's reversal technique on the second half, then a final merge step — genuinely combining both of today's techniques into one problem." >
+    <p class="q-text">5. Which two techniques does Reorder List combine?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="both">Fast/slow (to find the middle) and reversal (on the second half)</button>
+      <button class="btn dsa-quiz-option" data-value="onlyreverse">Only reversal, applied twice</button>
+      <button class="btn dsa-quiz-option" data-value="sortingonly">Sorting the list, then reversing it</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 16 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day15.html">← Day 15: Linked Lists</a>
+    <a class="btn" href="day17.html">Day 17: Stacks →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 16;
+  DSAProgress.setLastDay(THE_DAY);
+
+  const SLOT_X = (i) => 130 + i * 105; // extra left margin so the NULL label to the left of node 0 has room
+  const ROW_Y = 110;
+  const GRAPH_W = 740, GRAPH_H = 190;
+
+  function paintGraphWithNull(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {}, step.edgeStates || {});
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = graph.svg;
+    function addText(x, y, txt, fill, size) {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', x); t.setAttribute('y', y);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', size || 11);
+      t.setAttribute('fill', fill || '#818896'); t.textContent = txt;
+      svg.appendChild(t);
+    }
+    if (step.nullAfterId != null) {
+      const n = step.nodes.find((nd) => nd.id === step.nullAfterId);
+      if (n) {
+        const line = document.createElementNS(ns, 'line');
+        line.setAttribute('x1', n.x - 18); line.setAttribute('y1', n.y);
+        line.setAttribute('x2', n.x - 50); line.setAttribute('y2', n.y);
+        line.setAttribute('stroke', '#3E4452'); line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-dasharray', '4 3');
+        svg.appendChild(line);
+        addText(n.x - 68, n.y + 4, 'NULL', '#818896', 11);
+      }
+    }
+    (step.labels || []).forEach((l) => addText(l.x, l.y, l.text, l.color, 11));
+  }
+
+  // ---- viz 1: reverse a linked list ----
+  function buildReverseSteps(values) {
+    let counter = 0;
+    const mk = (label, x, y) => ({ id: 'v' + counter++, label: String(label), x, y });
+    const nodes = values.map((v, i) => mk(v, SLOT_X(i), ROW_Y));
+    const n = nodes.length;
+    const steps = [];
+
+    function edgesFor(prevCount, curIdx) {
+      const edges = [];
+      for (let i = 1; i < prevCount; i++) edges.push({ from: nodes[i].id, to: nodes[i - 1].id, directed: true });
+      for (let i = curIdx; i < n - 1; i++) edges.push({ from: nodes[i].id, to: nodes[i + 1].id, directed: true });
+      return edges;
+    }
+    function statesFor(prevCount, curIdx) {
+      const s = {};
+      for (let i = 0; i < prevCount; i++) s[nodes[i].id] = 'sorted';
+      if (curIdx < n) s[nodes[curIdx].id] = 'pointer';
+      return s;
+    }
+    function labelsFor(prevCount, curIdx) {
+      const labels = [];
+      if (prevCount > 0) labels.push({ x: nodes[prevCount - 1].x, y: nodes[prevCount - 1].y + 32, text: 'prev', color: '#98C379' });
+      if (curIdx < n) labels.push({ x: nodes[curIdx].x, y: nodes[curIdx].y + 32, text: 'cur', color: '#61AEEE' });
+      return labels;
+    }
+
+    steps.push({
+      narration: `Start: [${values.join(', ')}]. prev=null, cur=head.`,
+      nodes: nodes.map((nd) => Object.assign({}, nd)), edges: edgesFor(0, 0), states: statesFor(0, 0),
+      labels: labelsFor(0, 0), nullAfterId: null,
+    });
+
+    for (let i = 0; i < n; i++) {
+      const nextIdx = i + 1;
+      steps.push({
+        narration: `Iteration ${i + 1}: save next=${nextIdx < n ? nodes[nextIdx].label : 'null'}, flip cur.next to point at prev (${i === 0 ? 'null' : nodes[i - 1].label}).`,
+        nodes: nodes.map((nd) => Object.assign({}, nd)), edges: edgesFor(i + 1, nextIdx), states: statesFor(i + 1, nextIdx),
+        labels: labelsFor(i + 1, nextIdx), nullAfterId: nodes[0].id,
+      });
+    }
+    steps.push({
+      narration: `cur is now null — loop ends. prev (${nodes[n - 1].label}) is the new head. Reversed: [${values.slice().reverse().join(', ')}].`,
+      nodes: nodes.map((nd) => Object.assign({}, nd)), edges: edgesFor(n, n), states: statesFor(n, n),
+      labels: [], nullAfterId: nodes[0].id,
+    });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const graph1 = new DSA.Graph(viz1Stage, { width: GRAPH_W, height: GRAPH_H });
+  const BASE1 = [1, 2, 3, 4, 5];
+  let steps1 = buildReverseSteps(BASE1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1200,
+    onStep(step) { paintGraphWithNull(graph1, step || steps1[0]); },
+    onShuffle() {
+      const fresh = DSA.randomArray(5, 1, 9);
+      steps1 = buildReverseSteps(fresh);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: fast/slow pointers find the middle ----
+  function buildMiddleSteps(values) {
+    let counter = 0;
+    const mk = (label, x, y) => ({ id: 'm' + counter++, label: String(label), x, y });
+    const nodes = values.map((v, i) => mk(v, SLOT_X(i), ROW_Y));
+    const n = nodes.length;
+    const edges = [];
+    for (let i = 0; i < n - 1; i++) edges.push({ from: nodes[i].id, to: nodes[i + 1].id, directed: true });
+    const steps = [];
+
+    function stepAt(slowIdx, fastIdx, narration, done) {
+      const states = {};
+      if (fastIdx < n) states[nodes[fastIdx].id] = 'active';
+      states[nodes[slowIdx].id] = done ? 'sorted' : 'pointer';
+      const labels = [{ x: nodes[slowIdx].x, y: nodes[slowIdx].y + 32, text: 'slow', color: '#98C379' }];
+      if (fastIdx < n) labels.push({ x: nodes[fastIdx].x, y: nodes[fastIdx].y - 26, text: 'fast', color: '#C678DD' });
+      steps.push({ narration, nodes: nodes.map((nd) => Object.assign({}, nd)), edges, states, labels, nullAfterId: null });
+    }
+
+    let slow = 0, fast = 0;
+    stepAt(slow, fast, `Start: slow=fast=head (index 0, value ${nodes[0].label}).`);
+    while (fast < n - 1 && fast + 1 < n - 1 + 1 && (fast + 1) < n) {
+      if (!(fast + 1 <= n - 1)) break;
+      // condition mirrors `while (fast && fast.next)`: need a real fast.next to take 2 steps
+      if (fast >= n - 1) break;
+      const hasNext = fast + 1 <= n - 1;
+      if (!hasNext) break;
+      slow += 1;
+      fast += 2;
+      const clampedFast = Math.min(fast, n - 1);
+      stepAt(slow, fast < n ? fast : clampedFast, `slow advances 1 → index ${slow} (value ${nodes[slow].label}). fast advances 2 → ${fast < n ? `index ${fast} (value ${nodes[fast].label})` : 'past the end'}.`);
+      if (fast >= n - 1) break;
+    }
+    stepAt(slow, Math.min(fast, n - 1), `fast can't take a full 2-step move anymore — middle found: index ${slow} (value ${nodes[slow].label}).`, true);
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const graph2 = new DSA.Graph(viz2Stage, { width: GRAPH_W, height: GRAPH_H });
+  const BASE2 = [1, 2, 3, 4, 5];
+  let steps2 = buildMiddleSteps(BASE2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1200,
+    onStep(step) { paintGraphWithNull(graph2, step || steps2[0]); },
+    onShuffle() {
+      const fresh = DSA.randomArray(5 + Math.floor(Math.random() * 2), 1, 9);
+      steps2 = buildMiddleSteps(fresh);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
