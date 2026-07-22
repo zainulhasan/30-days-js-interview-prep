@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 26: Dynamic Programming II — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="House Robber and Coin Change — a max-of-choices recurrence and an unbounded inner-loop recurrence, filled cell by cell." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 26 / 30 &middot; WEEK 4</p>
+  <h1>Dynamic Programming II</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Recognize a <strong>max-of-choices</strong> recurrence — <code>dp[i] = max(dp[i-1], dp[i-2] +
+      nums[i])</code> — and tell it apart from yesterday's pure-sum recurrence
+      <code>dp[i] = dp[i-1] + dp[i-2]</code>. This is the first time in the course a DP table cell
+      records a <em>decision</em> (skip this house or rob it) instead of just accumulating a running
+      total.</li>
+    <li>Recognize an <strong>unbounded</strong> DP, where a single "choice" (a coin denomination) can
+      be reused an unlimited number of times, and see why that forces an inner loop over every
+      option at each cell instead of a fixed O(1) lookback.</li>
+    <li>Leave with two more DP shapes in your pattern library beyond fibonacci — by the end of Day
+      26 you should be able to look at a new problem and ask "is this a sum, a max-of-choices, or an
+      unbounded min/max-over-options?" before writing a single line of code.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Day 25's recurrence never had to make a decision — <code>dp[i] = dp[i-1] + dp[i-2]</code> just
+    adds two numbers together, every time, no matter what. Today's two problems both break that
+    pattern in different ways, and recognizing <em>which</em> way a new problem breaks it is the
+    actual interview skill.</p>
+
+  <p><strong>House Robber, as a decision.</strong> Imagine walking down a street of houses, where
+    robbing two houses next to each other trips the alarm. At each house you face exactly one
+    choice: <strong>skip it</strong> and carry forward whatever you'd already secured up to the
+    previous house, or <strong>rob it</strong> and add its value to whatever you'd secured two
+    houses back (since the house right before it is now off-limits). You take whichever of those
+    two options is worth more — that's <code>dp[i] = max(dp[i-1], dp[i-2] + nums[i])</code>. Notice
+    the shape: it's a <strong>max of two options</strong>, not a sum of two cells. Day 25's
+    recurrence always uses both previous cells together; this one uses exactly one of them,
+    whichever wins.</p>
+
+  <p><strong>Coin Change, as an unbounded search.</strong> Now imagine making change for an amount
+    using a fixed set of coin denominations, where you can use as many of any coin as you like — a
+    handful of $1 coins is just as legal as a single $5. To find the minimum coins for amount
+    <code>amt</code>, try <em>every</em> coin denomination that's small enough to fit: for a given
+    coin <code>c</code>, if you use one of it, you still need to make <code>amt - c</code> with
+    whatever's optimal there, plus this one coin. Take the cheapest option over every coin:
+    <code>dp[amt] = min(dp[amt - c] + 1)</code> for every coin <code>c &le; amt</code>. The word
+    "unbounded" refers to the coins, not the amount — each coin can be reused without limit, which
+    is exactly why the recurrence has to check <em>every</em> coin at every cell instead of reading
+    a fixed two cells back like fibonacci or House Robber.</p>
+
+  <p>Lined up side by side, three structurally different recurrences:</p>
+  <ul class="goal-list">
+    <li><strong>Day 25 (fibonacci-shaped):</strong> <code>dp[i] = dp[i-1] + dp[i-2]</code> — always
+      sum both previous cells, no decision involved.</li>
+    <li><strong>House Robber:</strong> <code>dp[i] = max(dp[i-1], dp[i-2] + nums[i])</code> — a
+      decision between exactly 2 fixed options, still O(1) work per cell.</li>
+    <li><strong>Coin Change:</strong> <code>dp[amt] = min(dp[amt-c] + 1)</code> over every coin
+      <code>c</code> — a decision between as many options as there are coins, so each cell costs
+      O(number of coins), not O(1).</li>
+  </ul>
+  <p>Same "sticky note" idea as Day 25 underneath all three — don't recompute a subproblem you've
+    already solved — but the shape of what gets written on each sticky note, and how many earlier
+    notes get read to fill in a new one, is different every time.</p>
+
+  <h2>Diagram: House Robber — one cell's decision (max, not sum)</h2>
+  <svg class="diagram" viewBox="0 0 620 290" role="img" aria-label="Zoomed-in diagram of a single House Robber DP cell being computed. Boxes for dp[0]=2 and dp[1]=7 are shown with blue pointer borders as source cells being read. A purple box for dp[2], currently unknown, is being computed from two options: skip, a straight arrow from dp[1] labeled skip: dp[1]=7, and rob, a curved arrow from dp[0] labeled rob: dp[0]+nums[2]=2+9=11. Below, the worked math shows dp[2]=max(7,11)=11, so rob wins.">
+    <text x="25" y="30" font-size="13" fill="#61AEEE" font-weight="bold">House Robber — one cell's decision: dp[i] = max(dp[i-1], dp[i-2] + nums[i])</text>
+    <text x="25" y="50" font-size="12" fill="#DCDFE4">Worked example: nums = [2, 7, 9, 3, 1], computing dp[2] (i = 2)</text>
+
+    <!-- rob arc: box0 top -> box2 top, peak well above the labels -->
+    <path d="M 100 125 Q 300 85 500 125" stroke="#D19A66" stroke-width="2" fill="none"/>
+    <!-- skip line: box1 right edge -> box2 left edge, straight, mid-box height -->
+    <line x1="335" y1="145" x2="465" y2="145" stroke="#61AEEE" stroke-width="2"/>
+
+    <text x="230" y="85" font-size="11" fill="#D19A66" text-anchor="middle">rob: dp[0] + nums[2] = 2 + 9 = 11</text>
+    <text x="430" y="85" font-size="11" fill="#61AEEE" text-anchor="middle">skip: dp[1] = 7</text>
+
+    <g font-size="13" text-anchor="middle">
+      <rect x="65" y="125" width="70" height="40" rx="5" fill="#2C313A" stroke="#61AEEE" stroke-width="2.5"/>
+      <text x="100" y="150" fill="#61AEEE">2</text>
+      <rect x="265" y="125" width="70" height="40" rx="5" fill="#2C313A" stroke="#61AEEE" stroke-width="2.5"/>
+      <text x="300" y="150" fill="#61AEEE">7</text>
+      <rect x="465" y="125" width="70" height="40" rx="5" fill="#2C313A" stroke="#C678DD" stroke-width="3"/>
+      <text x="500" y="150" fill="#C678DD">?</text>
+    </g>
+
+    <g font-size="10" text-anchor="middle" fill="#818896">
+      <text x="100" y="190">dp[0]</text>
+      <text x="300" y="190">dp[1]</text>
+      <text x="500" y="190">dp[2]</text>
+    </g>
+
+    <text x="25" y="213" font-size="12" fill="#DCDFE4">Blue borders = source cells being read. Purple = the cell being computed now.</text>
+    <text x="25" y="235" font-size="12" fill="#DCDFE4">nums[2] = 9, dp[1] = 7, dp[0] = 2.</text>
+    <text x="25" y="258" font-size="12" fill="#DCDFE4">dp[2] = max(dp[1], dp[0]+nums[2]) = max(7, 2+9) = max(7, 11) = 11 → rob wins.</text>
+  </svg>
+
+  <h2>Diagram: Coin Change — the unbounded inner loop</h2>
+  <svg class="diagram" viewBox="0 0 620 330" role="img" aria-label="Diagram of Coin Change computing dp[6] with coins 1, 2 and 5. Three independent rows each show a source dp cell, a short arrow, and a candidate computation: dp[5]=1 plus coin 1 gives 2, dp[4]=2 plus coin 2 gives 3, dp[1]=1 plus coin 5 gives 2. Below, dp[6] equals the minimum of 2, 3 and 2, which is 2.">
+    <text x="25" y="30" font-size="13" fill="#61AEEE" font-weight="bold">Coin Change — inner loop over every coin, then take the min</text>
+    <text x="25" y="50" font-size="12" fill="#DCDFE4">Worked example: coins = [1, 2, 5], amount = 11 — computing dp[6]</text>
+
+    <g font-size="12" text-anchor="middle">
+      <rect x="30" y="75" width="80" height="30" rx="5" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="70" y="95" fill="#61AEEE">dp[5]=1</text>
+    </g>
+    <line x1="110" y1="90" x2="175" y2="90" stroke="#61AEEE" stroke-width="2"/>
+    <text x="190" y="94" font-size="12" fill="#61AEEE">coin 1 → dp[5] + 1 = 1 + 1 = 2</text>
+
+    <g font-size="12" text-anchor="middle">
+      <rect x="30" y="160" width="80" height="30" rx="5" fill="#2C313A" stroke="#D19A66" stroke-width="2"/>
+      <text x="70" y="180" fill="#D19A66">dp[4]=2</text>
+    </g>
+    <line x1="110" y1="175" x2="175" y2="175" stroke="#D19A66" stroke-width="2"/>
+    <text x="190" y="179" font-size="12" fill="#D19A66">coin 2 → dp[4] + 1 = 2 + 1 = 3</text>
+
+    <g font-size="12" text-anchor="middle">
+      <rect x="30" y="245" width="80" height="30" rx="5" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
+      <text x="70" y="265" fill="#98C379">dp[1]=1</text>
+    </g>
+    <line x1="110" y1="260" x2="175" y2="260" stroke="#98C379" stroke-width="2"/>
+    <text x="190" y="264" font-size="12" fill="#98C379">coin 5 → dp[1] + 1 = 1 + 1 = 2</text>
+
+    <text x="25" y="305" font-size="13" fill="#DCDFE4" font-weight="bold">dp[6] = min(2, 3, 2) = 2 — cheapest of the 3 candidates wins.</text>
+  </svg>
+
+  <h2>Interactive visualization: filling the DP table</h2>
+  <p>Two different recurrence shapes, same left-to-right table fill — watch what each cell reads and
+    how many earlier cells it has to check.</p>
+  <div class="legend">
+    <span><i class="lg-sorted"></i> filled / confirmed</span>
+    <span><i class="lg-pointer"></i> source cell being read</span>
+    <span><i class="lg-active"></i> cell being computed now</span>
+  </div>
+
+  <h3>1. House Robber — max(skip, rob) at every cell</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. Coin Change — the inner loop over every coin</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// 1. HOUSE ROBBER (LC 198) — O(1) space, two rolling variables.
+//    prev2 stands in for "dp[i-2]", prev1 for "dp[i-1]", both seeded at 0
+//    (robbing nothing before house 0 is worth 0 — the same trick as an
+//    empty base case).
+function houseRobber(nums) {
+  let prev2 = 0, prev1 = 0;
+  for (let i = 0; i < nums.length; i++) {
+    const cur = Math.max(prev1, prev2 + nums[i]);  // skip vs. rob
+    prev2 = prev1;                                  // slide the window forward
+    prev1 = cur;
+  }
+  return prev1;
+}
+
+// 2. COIN CHANGE (LC 322) — 1D tabulated array, Infinity sentinel.
+//    dp[amt] = fewest coins to make amt; dp[0] = 0 (base case); every
+//    other slot starts at Infinity, meaning "not reachable yet."
+function coinChange(coins, amount) {
+  const dp = new Array(amount + 1).fill(Infinity);
+  dp[0] = 0;
+  for (let amt = 1; amt <= amount; amt++) {
+    for (const coin of coins) {                     // try EVERY coin — unbounded reuse
+      if (coin <= amt && dp[amt - coin] + 1 < dp[amt]) {
+        dp[amt] = dp[amt - coin] + 1;
+      }
+    }
+  }
+  return dp[amount] === Infinity ? -1 : dp[amount];  // never reached — no combination works
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>houseRobber</code>'s <code>prev2</code> and <code>prev1</code> play the role of
+      <code>dp[i-2]</code> and <code>dp[i-1]</code>, both starting at 0 — that 0 represents "the
+      best you could do robbing zero houses," which correctly falls out of the max on the very
+      first iteration (<code>max(0, 0 + nums[0]) = nums[0]</code>). Every loop iteration is one
+      decision: <code>Math.max(prev1, prev2 + nums[i])</code> is literally "skip this house
+      (keep <code>prev1</code>) or rob it (<code>prev2</code> + this house's value)," and whichever
+      is larger becomes the new rolling total.</li>
+    <li>The <code>prev2 = prev1; prev1 = cur;</code> pair slides the window forward exactly like
+      Day 25's <code>fibOptimal</code> — same O(1)-space trick, just applied to a max instead of a
+      sum.</li>
+    <li><code>coinChange</code> seeds <code>dp[0] = 0</code> (zero coins to make zero) and
+      everything else at <code>Infinity</code>, meaning "no known way to make this amount yet."
+      <code>Infinity</code> is deliberate: it makes any real coin count automatically beat an
+      unreached amount in the comparison, and it survives arithmetic cleanly
+      (<code>Infinity + 1</code> is still <code>Infinity</code>) instead of silently looking like a
+      valid small number the way a <code>0</code> sentinel would.</li>
+    <li>The outer loop walks <code>amt</code> from 1 up to the target — bottom-up, same direction as
+      every tabulated DP so far. The <strong>inner</strong> loop is what's new: for each
+      <code>amt</code>, it tries <em>every</em> coin denomination that's small enough to fit
+      (<code>coin &lt;= amt</code>), because any of them could have been the last coin used to
+      reach this amount, and there's no way to know which without checking. That inner loop is the
+      direct consequence of coins being reusable without limit — "unbounded."</li>
+    <li>The final line converts the internal <code>Infinity</code> sentinel back into the problem's
+      actual contract: LeetCode expects <code>-1</code> for "impossible," not <code>Infinity</code>.
+      This check is not optional — skip it and the function returns <code>Infinity</code> for
+      unreachable amounts instead of <code>-1</code>.</li>
+  </ul>
+
+  <h3>Dry run: houseRobber([2, 7, 9, 3, 1]) — rolling max</h3>
+  <div style="overflow-x:auto;">
+    <table class="dryrun-table">
+      <thead><tr><th>i</th><th>nums[i]</th><th>prev1 (before)</th><th>prev2 (before)</th><th>cur = max(prev1, prev2+nums[i])</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>2</td><td>0</td><td>0</td><td>max(0, 0+2) = 2</td></tr>
+        <tr><td>1</td><td>7</td><td>2</td><td>0</td><td>max(2, 0+7) = 7</td></tr>
+        <tr><td>2</td><td>9</td><td>7</td><td>2</td><td>max(7, 2+9) = 11</td></tr>
+        <tr><td>3</td><td>3</td><td>11</td><td>7</td><td>max(11, 7+3) = 11</td></tr>
+        <tr><td>4</td><td>1</td><td>11</td><td>11</td><td>max(11, 11+1) = 12</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Final answer: 12. Trace which branch of the
+    max won at each step to recover the actual houses: dp[4] = 12 came from the "rob" branch
+    (dp[2] + nums[4] = 11 + 1), so house 4 is robbed; dp[2] = 11 also came from its "rob" branch
+    (dp[0] + nums[2] = 2 + 9), so house 2 is robbed too; dp[0] is a base case, so house 0 is robbed.
+    The optimal set is houses at indices 0, 2, and 4 — values 2, 9, and 1 — which sums to
+    <strong>12</strong>, with no two adjacent.</p>
+
+  <h3>Dry run: coinChange([1, 2, 5], 11) — bottom-up table</h3>
+  <div style="overflow-x:auto;">
+    <table class="dryrun-table">
+      <thead><tr><th>amt</th><th>best coin</th><th>from dp[amt-coin] + 1</th><th>dp[amt]</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>—</td><td>base case</td><td>0</td></tr>
+        <tr><td>1</td><td>1</td><td>dp[0]+1 = 1</td><td>1</td></tr>
+        <tr><td>2</td><td>2</td><td>dp[0]+1 = 1</td><td>1</td></tr>
+        <tr><td>3</td><td>1 or 2</td><td>dp[1]+1 = 2, dp[2]+1 = 2</td><td>2</td></tr>
+        <tr><td>4</td><td>2</td><td>dp[2]+1 = 2</td><td>2</td></tr>
+        <tr><td>5</td><td>5</td><td>dp[0]+1 = 1</td><td>1</td></tr>
+        <tr><td>6</td><td>1 or 5</td><td>dp[5]+1 = 2, dp[1]+1 = 2</td><td>2</td></tr>
+        <tr><td>7</td><td>2 or 5</td><td>dp[5]+1 = 2, dp[2]+1 = 2</td><td>2</td></tr>
+        <tr><td>8</td><td>1, 2, or 5</td><td>dp[7]+1=3, dp[6]+1=3, dp[3]+1=3</td><td>3</td></tr>
+        <tr><td>9</td><td>2 or 5</td><td>dp[7]+1=3, dp[4]+1=3</td><td>3</td></tr>
+        <tr><td>10</td><td>5</td><td>dp[5]+1 = 2</td><td>2</td></tr>
+        <tr><td>11</td><td>1 or 5</td><td>dp[10]+1=3, dp[6]+1=3</td><td>3</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Final answer: dp[11] = 3 — five plus five plus
+    one (5 + 5 + 1 = 11, 3 coins). Note dp[10] = 2 (two fives) reuses coin 5 twice — that's the
+    "unbounded" part in action.</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+    <table class="complexity-table">
+      <thead><tr><th>Problem</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>House Robber (optimal)</td><td>O(n)</td><td>O(1)</td><td>A single pass over the houses, and every cell does a fixed, constant amount of work (one comparison, one max) — same shape as Day 25's rolling-variable fibonacci, just with a max instead of a sum.</td></tr>
+        <tr><td>Coin Change (tabulated)</td><td>O(amount × coins)</td><td>O(amount)</td><td>The outer loop runs once per amount from 1 to the target (O(amount) iterations); the <strong>inner</strong> loop tries every coin denomination at each of those amounts (O(coins) per iteration). Nested, that's O(amount × coins) total — the first DP in the course whose per-cell cost isn't O(1). Space is the dp array itself, one slot per amount from 0 to the target.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This is the key complexity distinction of the
+    day: House Robber's inner work per cell is constant (just compare 2 numbers), so its total time
+    is linear in the input size. Coin Change's inner work per cell scales with the number of coin
+    denominations, so its total time is the <em>product</em> of two input sizes, not a sum of one.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why does House Robber's recurrence need "max," when Day 25's fibonacci-shaped
+      recurrence used a plain sum?</strong> Fibonacci and Climbing Stairs are both "how many ways"
+      or "how much total" problems where every path counts — you genuinely want everything added
+      together. House Robber is an optimization problem with a hard constraint (no two adjacent
+      houses): at each house you're choosing between two mutually exclusive outcomes, and only the
+      better one survives into the next cell. Whenever a problem says "choose the best option
+      among a small fixed set of alternatives," that's a signal you need <code>max</code> (or
+      <code>min</code>) at each cell, not a sum.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How would you
+      recover which houses were actually robbed, not just the total?" — track which branch of the
+      max won at each cell (a parallel "choice" array), then walk backward from the end.</span></li>
+    <li><strong>What happens if Coin Change has no valid combination for the target amount, and why
+      does the code handle it correctly?</strong> Some amounts simply can't be made from the given
+      coins (e.g. coins <code>[2]</code> can never make an odd amount). Because <code>dp</code> is
+      seeded with <code>Infinity</code> everywhere except <code>dp[0] = 0</code>, an unreachable
+      <code>dp[amt]</code> never gets overwritten by any coin's <code>dp[amt-coin] + 1</code> — that
+      comparison only replaces <code>Infinity</code> if the candidate is smaller, and
+      <code>Infinity + 1</code> stays <code>Infinity</code> forever. The final
+      <code>dp[amount] === Infinity ? -1 : dp[amount]</code> check then converts that into the
+      required <code>-1</code>.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> seeding the
+      array with <code>0</code> instead of <code>Infinity</code> is a common mistake — every
+      unreachable amount would silently read as "0 coins needed," which is wrong but never crashes,
+      so it's easy to miss in a quick test.</span></li>
+    <li><strong>Why doesn't a greedy "always pick the largest coin that fits" strategy work for Coin
+      Change?</strong> Greedy is only correct for coin systems specifically designed for it (like
+      US currency). Take coins <code>[1, 3, 4]</code> and amount <code>6</code>: greedy grabs the
+      largest coin that fits first — 4, leaving 2, then 1, then 1, for a total of <strong>3
+      coins</strong> (4+1+1). But the true optimum is <strong>2 coins</strong> (3+3). Greedy commits
+      to the locally-best choice at each step and never reconsiders it, so it can lock in a decision
+      that looks great in the moment but blocks a better global solution — exactly the kind of case
+      DP handles correctly because it explores every option instead of committing early.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this is also
+      the natural bridge to Day 27 — greedy algorithms are faster and simpler when they work, but
+      tomorrow's lesson is specifically about how to recognize when a problem's structure guarantees
+      greedy is safe, versus when (like here) it silently gives a wrong answer.</span></li>
+    <li><strong>Why is Coin Change's time complexity O(amount &times; coins) instead of just
+      O(amount) like House Robber?</strong> House Robber's per-cell work is O(1) — always exactly 2
+      fixed lookbacks. Coin Change's per-cell work is O(coins) — it has to try every denomination
+      because, unlike fibonacci's or House Robber's fixed 2-cell lookback, there's no way to know in
+      advance which coin was optimal without checking them all. Multiply the O(amount) outer loop by
+      the O(coins) inner loop and you get the product, not a sum — this is the first problem in the
+      course where the DP table itself is 1D but the per-cell cost isn't constant.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the recurrence shape before writing code
+    — "this is a max over 2 fixed options" (House Robber) or "this is a min over every coin, so I
+    need a nested loop" (Coin Change) — then state the base case and the sentinel value you're
+    seeding the table with, and why (0 for "free," Infinity for "not yet reachable"). Interviewers
+    are listening for whether you can name the shape of the recurrence and justify your sentinel
+    choice before the code even runs, not just whether the final answer happens to be correct.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. House Robber <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">LeetCode: House Robber</a>)</span></h4>
+    <p>Given an array of non-negative integers representing money stashed in each house along a
+      street, return the maximum amount you can rob without robbing two adjacent houses. Today's
+      first worked example — the code above is the real solution.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>At each house you have exactly 2 options: skip
+      it (keep whatever total you already had) or rob it (add its value to the total from 2 houses
+      back, since the house right before it is now off-limits). Take the max of those 2 options at
+      every step — you never need to look further back than 2 cells.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function houseRobber(nums) {
+  let prev2 = 0, prev1 = 0;
+  for (let i = 0; i < nums.length; i++) {
+    const cur = Math.max(prev1, prev2 + nums[i]);
+    prev2 = prev1;
+    prev1 = cur;
+  }
+  return prev1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Coin Change <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/coin-change/" target="_blank" rel="noopener">LeetCode: Coin Change</a>)</span></h4>
+    <p>Given coin denominations and a target amount, return the fewest number of coins needed to
+      make that amount, or <code>-1</code> if it's not possible with any combination. Today's
+      second worked example — the code above is the real solution.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Seed a <code>dp</code> array of size
+      <code>amount + 1</code> with <code>Infinity</code>, except <code>dp[0] = 0</code>. For every
+      amount from 1 up to the target, try every coin denomination that's small enough to fit, and
+      keep the minimum of <code>dp[amt - coin] + 1</code> across all of them. Convert
+      <code>Infinity</code> back to <code>-1</code> at the very end.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function coinChange(coins, amount) {
+  const dp = new Array(amount + 1).fill(Infinity);
+  dp[0] = 0;
+  for (let amt = 1; amt <= amount; amt++) {
+    for (const coin of coins) {
+      if (coin <= amt && dp[amt - coin] + 1 < dp[amt]) {
+        dp[amt] = dp[amt - coin] + 1;
+      }
+    }
+  }
+  return dp[amount] === Infinity ? -1 : dp[amount];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Longest Increasing Subsequence <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/longest-increasing-subsequence/" target="_blank" rel="noopener">LeetCode: Longest Increasing Subsequence</a>)</span></h4>
+    <p>Given an integer array, return the length of the longest strictly increasing subsequence
+      (elements don't need to be contiguous, just in increasing order and in their original
+      relative order). A new, structurally different DP shape — each cell has to look back at
+      <em>every</em> earlier index, not just a fixed 2.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Let <code>dp[i]</code> be the length of the
+      longest increasing subsequence that <em>ends</em> at index <code>i</code>, initialized to 1
+      (every element is a subsequence of length 1 by itself). For each <code>i</code>, check every
+      earlier index <code>j &lt; i</code>: if <code>nums[j] &lt; nums[i]</code>, then
+      <code>nums[i]</code> could extend that subsequence, so
+      <code>dp[i] = max(dp[i], dp[j] + 1)</code>. The answer is the max value anywhere in
+      <code>dp</code> — O(n²) time, no need for the faster O(n log n) approach here.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function lengthOfLIS(nums) {
+  const n = nums.length;
+  const dp = new Array(n).fill(1);
+  let best = 1;
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < i; j++) {
+      if (nums[j] < nums[i]) {
+        dp[i] = Math.max(dp[i], dp[j] + 1);
+      }
+    }
+    best = Math.max(best, dp[i]);
+  }
+  return best;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="maxchoice" data-explain="House Robber's recurrence is a max over exactly 2 mutually exclusive options (skip vs. rob) because it's an optimization problem with a constraint — only the better choice survives. Day 25's fibonacci-shaped recurrence is a plain sum because every path genuinely counts toward the total.">
+    <p class="q-text">1. Why is House Robber's recurrence dp[i] = max(dp[i-1], dp[i-2]+nums[i]) instead of a sum like Day 25's fibonacci?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="maxchoice">It's an optimization with a constraint — only the better of 2 mutually exclusive choices survives, so it needs max, not a sum</button>
+      <button class="btn dsa-quiz-option" data-value="random">The problem is randomly harder so it needed a different formula</button>
+      <button class="btn dsa-quiz-option" data-value="samesum">It's actually the same sum recurrence, just renamed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="unbounded" data-explain="Because each coin denomination can be reused an unlimited number of times ('unbounded'), there's no fixed pair of earlier cells to read the way fibonacci or House Robber can. Every coin denomination could have been the last coin used, so the recurrence has to check all of them at each amount." >
+    <p class="q-text">2. Why does Coin Change need an inner loop over every coin at each amount, instead of a fixed lookback like fibonacci?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="unbounded">Coins can be reused without limit ("unbounded"), so any coin could be the last one used — the recurrence has to check them all</button>
+      <button class="btn dsa-quiz-option" data-value="sorting">The coins array must be sorted first, which requires a loop</button>
+      <button class="btn dsa-quiz-option" data-value="nofixed">There's no real reason — it's just how the LeetCode solution happens to be written</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="infinity" data-explain="Seeding the dp array with Infinity (except dp[0] = 0) means an unreachable amount never gets overwritten by any coin, since Infinity + 1 stays Infinity forever. A naive 0 sentinel would silently look like 'reachable with 0 coins' for every unvisited amount, producing wrong answers instead of correctly returning -1.">
+    <p class="q-text">3. Why does Coin Change seed its dp array with Infinity instead of 0, and check for Infinity at the end?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="infinity">Infinity guarantees any real coin count wins the comparison, and never gets mistaken for a valid reachable amount — a 0 sentinel would silently produce wrong answers</button>
+      <button class="btn dsa-quiz-option" data-value="stylechoice">It's purely a stylistic preference with no functional difference from using 0</button>
+      <button class="btn dsa-quiz-option" data-value="speed">Infinity makes the loop run faster than using 0</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="alljprev" data-explain="LIS's recurrence is dp[i] = 1 + max(dp[j]) over every earlier index j where nums[j] < nums[i] — unlike fibonacci or House Robber's fixed 2-cell lookback, LIS has to check every single earlier index, which is what makes its straightforward solution O(n²).">
+    <p class="q-text">4. What's the recurrence shape for Longest Increasing Subsequence's dp[i]?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="alljprev">1 + the max of dp[j] over every earlier index j where nums[j] &lt; nums[i]</button>
+      <button class="btn dsa-quiz-option" data-value="fixedtwo">A fixed lookback of exactly 2 earlier cells, like fibonacci</button>
+      <button class="btn dsa-quiz-option" data-value="sumall">The sum of every dp[j] for all j &lt; i, regardless of value</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="amtcoins" data-explain="Coin Change nests an O(amount) outer loop with an O(coins) inner loop, giving O(amount x coins) total — the first DP in the course whose per-cell cost isn't constant. House Robber stays O(n) because its per-cell work is a fixed, constant comparison." >
+    <p class="q-text">5. What's the time complexity of the tabulated Coin Change solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="amtcoins">O(amount &times; coins) — an outer loop over amounts nested with an inner loop over coins</button>
+      <button class="btn dsa-quiz-option" data-value="onlyamt">O(amount) — same as House Robber, since it's still a 1D array</button>
+      <button class="btn dsa-quiz-option" data-value="exp">O(2^amount) — exponential, since coins can repeat</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 26 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day25.html">← Day 25: Dynamic Programming I</a>
+    <a class="btn" href="day27.html">Day 27: Greedy Algorithms →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 26;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: House Robber bottom-up DP table fill (DSA.Grid) ----
+  function buildRobberSteps(nums) {
+    const n = nums.length;
+    const values = new Array(n).fill(undefined);
+    const states = {};
+    const steps = [];
+
+    values[0] = nums[0];
+    states['0,0'] = 'sorted';
+    steps.push({
+      narration: `Base case: dp[0] = nums[0] = ${nums[0]} — only one house so far, just rob it.`,
+      values: [values.slice()], states: Object.assign({}, states),
+    });
+
+    if (n > 1) {
+      states['0,0'] = 'pointer';
+      states['0,1'] = 'active';
+      steps.push({
+        narration: `Computing dp[1]: max(dp[0] = ${values[0]}, nums[1] = ${nums[1]}) — no house before house 0, so "rob" is just nums[1] alone.`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+      const val1 = Math.max(values[0], nums[1]);
+      values[1] = val1;
+      states['0,0'] = 'sorted';
+      states['0,1'] = 'sorted';
+      steps.push({
+        narration: `dp[1] = max(${values[0]}, ${nums[1]}) = ${val1}.`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+    }
+
+    for (let i = 2; i < n; i++) {
+      states['0,' + (i - 1)] = 'pointer';
+      states['0,' + (i - 2)] = 'pointer';
+      states['0,' + i] = 'active';
+      steps.push({
+        narration: `Computing dp[${i}]: skip → dp[${i - 1}] (= ${values[i - 1]}), or rob → dp[${i - 2}] + nums[${i}] (= ${values[i - 2]} + ${nums[i]}).`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+      const robVal = values[i - 2] + nums[i];
+      const val = Math.max(values[i - 1], robVal);
+      values[i] = val;
+      states['0,' + (i - 1)] = 'sorted';
+      states['0,' + (i - 2)] = 'sorted';
+      states['0,' + i] = 'sorted';
+      const winner = robVal > values[i - 1] ? 'rob' : 'skip';
+      steps.push({
+        narration: `dp[${i}] = max(${values[i - 1]}, ${robVal}) = ${val} — ${winner} wins.`,
+        values: [values.slice()], states: Object.assign({}, states),
+      });
+    }
+
+    steps.push({
+      narration: `Done. dp[${n - 1}] = ${values[n - 1]} — the most you can rob without ever robbing 2 adjacent houses.`,
+      values: [values.slice()], states: Object.assign({}, states),
+    });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const grid1 = new DSA.Grid(viz1Stage);
+  let nums1 = [2, 7, 9, 3, 1];
+  grid1.setData(1, nums1.length, [''], nums1.map((_, i) => 'dp[' + i + ']'));
+  let steps1 = buildRobberSteps(nums1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 900,
+    onStep(step) { if (!step) { grid1.paint([], {}); return; } grid1.paint(step.values, step.states); },
+    onShuffle() {
+      const n = 5 + Math.floor(Math.random() * 4); // 5..8
+      nums1 = DSA.randomArray(n, 1, 9);
+      grid1.setData(1, nums1.length, [''], nums1.map((_, i) => 'dp[' + i + ']'));
+      steps1 = buildRobberSteps(nums1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: Coin Change bottom-up 1D table fill, inner loop over coins (DSA.Grid) ----
+  function toDisplayRow(arr) {
+    return arr.map((v) => (v === Infinity ? '∞' : v));
+  }
+
+  function buildCoinSteps(coins, amount) {
+    const values = new Array(amount + 1).fill(undefined);
+    const states = {};
+    const steps = [];
+
+    values[0] = 0;
+    states['0,0'] = 'sorted';
+    steps.push({
+      narration: 'Base case: dp[0] = 0 — zero coins needed to make amount 0.',
+      values: [toDisplayRow(values)], states: Object.assign({}, states),
+    });
+
+    for (let amt = 1; amt <= amount; amt++) {
+      states['0,' + amt] = 'active';
+      let best = Infinity;
+      let bestCoin = null;
+      for (const coin of coins) {
+        if (coin <= amt && values[amt - coin] !== undefined) {
+          states['0,' + (amt - coin)] = 'pointer';
+          const cand = values[amt - coin] + 1;
+          steps.push({
+            narration: `amount ${amt}: try coin ${coin} → dp[${amt - coin}] (= ${values[amt - coin] === Infinity ? '∞' : values[amt - coin]}) + 1 = ${cand === Infinity ? '∞' : cand}.`,
+            values: [toDisplayRow(values)], states: Object.assign({}, states),
+          });
+          if (cand < best) { best = cand; bestCoin = coin; }
+          states['0,' + (amt - coin)] = 'sorted';
+        }
+      }
+      values[amt] = best;
+      states['0,' + amt] = 'sorted';
+      steps.push({
+        narration: best === Infinity
+          ? `dp[${amt}] = ∞ — no combination of these coins can make ${amt}.`
+          : `dp[${amt}] = min over all coins = ${best} (best found using coin ${bestCoin}).`,
+        values: [toDisplayRow(values)], states: Object.assign({}, states),
+      });
+    }
+
+    steps.push({
+      narration: `Done. dp[${amount}] = ${values[amount] === Infinity ? '∞ (impossible → return -1)' : values[amount]} — minimum coins needed.`,
+      values: [toDisplayRow(values)], states: Object.assign({}, states),
+    });
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const grid2 = new DSA.Grid(viz2Stage);
+  let coins2 = [1, 2, 5];
+  let amount2 = 11;
+  grid2.setData(1, amount2 + 1, [''], Array.from({ length: amount2 + 1 }, (_, i) => 'dp[' + i + ']'));
+  let steps2 = buildCoinSteps(coins2, amount2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2, narrationEl: document.getElementById('viz2Narration'), counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'), stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'), shuffleBtn: document.getElementById('viz2Shuffle'), speed: 900,
+    onStep(step) { if (!step) { grid2.paint([], {}); return; } grid2.paint(step.values, step.states); },
+    onShuffle() {
+      const extra1 = 2 + Math.floor(Math.random() * 3); // 2..4
+      const extra2 = 5 + Math.floor(Math.random() * 5); // 5..9
+      coins2 = [1, extra1, extra2];
+      amount2 = 8 + Math.floor(Math.random() * 8); // 8..15
+      grid2.setData(1, amount2 + 1, [''], Array.from({ length: amount2 + 1 }, (_, i) => 'dp[' + i + ']'));
+      steps2 = buildCoinSteps(coins2, amount2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
