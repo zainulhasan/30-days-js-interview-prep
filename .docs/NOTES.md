@@ -259,11 +259,83 @@ through nested recursive partitions, quiz feedback and mark-complete both work.
 Kth Largest Element in an Array (Medium, explicit Day 8b callback), 3Sum (Medium, explicit Day 4
 callback).
 
+## Done — Days 14, 15, 17, 18 (first parallel-agent batch)
+User asked to speed up via parallelism. Dispatched 4 `general-purpose` Agent calls in parallel
+(Day 14 Week 2 Review, Day 15 Linked Lists, Day 17 Stacks, Day 18 Queues & Deques — Day 16 held
+back since it depends on Day 15's actual Node/LinkedList implementation), each with a fully
+self-contained prompt (see "Parallel build approach" entry above). All 4 came back with real,
+node-verified algorithms and no must-fix structural gaps, but browser-testing surfaced several
+real bugs — parallelism sped up first-draft writing, but every lesson still needed the full
+manual verification pass, exactly as expected:
+
+- **Day 15 exposed two genuine SHARED bugs in `js/engine.js`/`css/style.css`**, not lesson-specific
+  — it's the first-ever real usage of `DSA.Graph` (defined since the foundation build, never
+  exercised until now): (1) the Graph's SVG had no definite container width, so it silently fell
+  back to the browser's 300×150 intrinsic default instead of filling its panel (fixed: constructor
+  now does `this.container.classList.add('dsa-graph-wrap')`, paired with a new `.dsa-graph-wrap {
+  width: 100% }` rule); (2) the shared state-color classes (`dsa-active`, `dsa-pointer`, etc.) only
+  ever set CSS `background`, which has zero effect on an SVG `<circle>` — so every graph node
+  silently rendered in neutral gray regardless of its actual state, defeating the whole point of
+  the color-coded animation. Fixed with explicit `fill` overrides per `.dsa-node-circle.dsa-<state>`
+  plus `~ .dsa-node-text` sibling-selector rules for text contrast. **Both fixes are now permanent
+  for every future Graph-based lesson (trees, BSTs, graphs, Days 19-24)** — verify Graph nodes
+  actually change color and the SVG fills its panel the first time you build one of those, as a
+  sanity check that this fix is still in place.
+- **Recurring bug, now seen 3 times across this batch: an unbroken slash-or-hyphen-joined token
+  inside a table cell forces that column wider than its container, overflowing at 390px mobile
+  width** even though the rest of the page is fine (Day 17: "Min Stack (push/pop/top/getMin)";
+  Day 14: "Binary Search — boundary/search-on-answer (Day 13)"). Fix is always the same: add a
+  space around the slash/hyphen so the browser can wrap there. **Standing rule: after building any
+  table, grep the cell contents for a token 15+ characters with no space, especially in an
+  "Approach"/"Algorithm" first column** — this is now a known site-wide risk class, not
+  a one-off.
+- **Recurring bug, now seen 3 times: an SVG `<text>` line that's individually short enough to fit
+  the viewBox width can still visually overlap an ADJACENT text element** if they're both
+  positioned at the same y-coordinate too close together horizontally (Day 15: two "Trap:" lines
+  clipped at the viewBox's right edge; Day 18: two labels — "front = ..." / "back = ..." — each
+  fit their own width but overlapped each other in the middle). The original "keep lines short"
+  rule isn't sufficient by itself — also check horizontal spacing between side-by-side text
+  elements at the same y, not just each line's own length against the viewBox.
+- **A real, pre-existing prose/code mismatch in Day 13 was caught by Day 14's review agent**
+  (comparing Day 14's cheat sheet against Day 13's actual code) and fixed at the source: Day 13's
+  goal list and interview corner claimed BOTH binary-search variants (first/last occurrence AND
+  search-on-answer) use a `while (lo < hi)` loop, but `findBound()`'s actual code uses `lo <= hi`
+  (it still checks for an exact match, just doesn't return immediately — only Sqrt(x)/Koko's
+  genuinely different search-on-answer template uses `lo < hi`). Rewrote the prose to correctly
+  distinguish the two template shapes instead of conflating them. Day 14's own quiz Q3 (which had
+  copied the same false claim) was fixed to match. **Lesson: a downstream review agent comparing
+  one day's summary against an earlier day's actual code is a good way to catch bugs the earlier
+  day's own review missed** — the earlier lesson's own review didn't cross-check its prose against
+  its own code closely enough.
+- **Found and fixed a real, unrelated sitewide bug while starting this batch**: the favicon hex
+  fix from the original One Dark Pro theme correction (`.docs/DECISIONS.md` §2.5) was never
+  actually applied — the percent-encoded favicon accent color was still the old approximate blue
+  (`%2361AFEF`) in all 12 pre-Day-11 pages. Fixed with one `sd` pass; see the dedicated NOTES.md
+  entry above for detail. Also added `.gitignore` (`.claude/`, `.playwright-mcp/`, `.DS_Store`) —
+  local tool-session artifacts had been showing up as untracked files.
+- Day 17 review (must-fix: none) found 2 worthwhile nice-to-haves, both applied: a "peek() vs
+  top()" terminology bridge (Min Stack's real LeetCode API uses `top()`; goal list only ever said
+  `peek()`), and a diagram caption that overclaimed what the literal next character in the traced
+  string would be.
+- Day 15 review found 2 must-fix items, both applied: (1) Concept section was missing the
+  required real-life analogy (every other new-topic lesson has one) — added a scavenger-hunt
+  analogy (each clue only tells you where the next one is, no shortcut to clue #4); (2) Graph node
+  text was shrinking below legibility on narrow mobile viewports — the fixed viewBox scales
+  uniformly with its container, so a 720-unit-wide graph squeezed into a ~330px mobile panel made
+  every label ~5-6px tall. **Fixed centrally in `js/engine.js`'s `Graph` constructor** (not
+  per-lesson): `this.svg.style.minWidth = width + 'px'` keeps the SVG at its natural size, paired
+  with `.dsa-graph-wrap { overflow-x: auto }` so mobile scrolls horizontally instead of shrinking
+  text — the same pattern already used sitewide for wide tables and `pre` code blocks. This is now
+  permanent for every future Graph-based lesson, same as the width/color fixes above — three
+  Graph-renderer fixes total from this one lesson being the first real usage.
+- Day 18 review dispatched, pending as of this note.
+
 ## Not started yet
-- Lesson pages `lessons/day12.html` … `day30.html` (rest of Week 2: Days 12-14; Week 3: core
-  data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-11 as
-  the template (now in the theme below), apply every point in "Lesson template" above and
-  the lessons-learned noted here, review each via `.docs/REVIEW-CHECKLIST.md`.
+- Day 16 (Linked Lists II — Fast/Slow & Reverse), then Days 19-30 (Week 3: Trees, BSTs — Days
+  19-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-15/17/18 as the template
+  (now in the theme below), apply every point in "Lesson template" above and the lessons-learned
+  noted here — especially the 3 recurring bug classes just documented — and review each via
+  `.docs/REVIEW-CHECKLIST.md`.
 - **Open decision, not yet actioned:** whether to vendor the actual JetBrains Mono font file
   (self-hosted, OFL-licensed, offline-safe) so headings/code render in true JetBrains Mono
   instead of falling back to a system monospace font. Asked the user; awaiting their answer.
