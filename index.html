@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>30 Days of DSA in JavaScript — Interview Ready</title>
+<meta name="description" content="A free, animated, self-paced JavaScript DSA course for interview prep. No sign-up, works offline." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="lessons/day01.html">Start Day 1 →</a></nav>
+</header>
+
+<main class="container">
+  <section class="hero">
+    <span class="hero-badge">Free · No sign-up · Works fully offline</span>
+    <h1>30 Days of DSA in JavaScript</h1>
+    <p>Interview Ready — a free, self-paced course. Every lesson has a diagram, an
+      interactive animation you control, a line-by-line dry run, real interview
+      questions, practice problems, and a quiz. Plain English, no fluff.</p>
+  </section>
+
+  <section class="card" aria-live="polite">
+    <div class="progress-label" id="progressLabel">You finished 0/30 days</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="continue-row">
+      <a class="btn btn-primary" id="continueBtn" href="lessons/day01.html">▶ Start Day 1</a>
+    </div>
+  </section>
+
+  <h2>The 30-Day Roadmap</h2>
+  <div id="roadmap"></div>
+
+  <h2>How to use this course</h2>
+  <ol class="how-to-list">
+    <li><strong>Read</strong> the goal and concept for the day.</li>
+    <li><strong>Watch</strong> the animation — press Step to go one move at a time, or Play to
+      run it. The narration line tells you exactly what's happening in plain English.</li>
+    <li><strong>Code along</strong> — read the commented code and the line-by-line explanation.</li>
+    <li><strong>Solve</strong> the 3 practice problems yourself before peeking at hints or solutions.</li>
+    <li><strong>Quiz</strong> yourself with the 5 quick questions, then mark the day complete.</li>
+  </ol>
+</main>
+
+<footer class="site-footer">
+  Built as a personal study project. No frameworks, no build step, works fully offline.
+  See <a href="RESEARCH.md">RESEARCH.md</a> for sources and credits.
+</footer>
+
+<script src="js/curriculum.js"></script>
+<script src="js/progress.js"></script>
+<script>
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function renderGrid() {
+    const roadmap = document.getElementById('roadmap');
+    roadmap.innerHTML = '';
+    DSA_WEEKS.forEach(({ week, title }) => {
+      const daysInWeek = DSA_DAYS.filter((d) => d.week === week);
+      const doneInWeek = daysInWeek.filter((d) => DSAProgress.isDone(d.day)).length;
+
+      const section = document.createElement('section');
+      section.className = 'week-section';
+      section.innerHTML = `
+        <div class="week-header">
+          <h3><span class="week-num">Week ${week}</span> <span class="week-subtitle">— ${title}</span></h3>
+          <span class="week-progress">${doneInWeek}/${daysInWeek.length} done</span>
+        </div>
+        <div class="day-list"></div>
+      `;
+      const list = section.querySelector('.day-list');
+
+      daysInWeek.forEach(({ day, title: dayTitle, blurb }) => {
+        const done = DSAProgress.isDone(day);
+        const a = document.createElement('a');
+        a.className = 'day-row' + (done ? ' done' : '');
+        a.href = `lessons/day${pad(day)}.html`;
+        a.innerHTML = `
+          <span class="day-badge">${done ? '✓' : pad(day)}</span>
+          <span class="day-info">
+            <span class="day-title">Day ${day}: ${dayTitle}</span>
+            <span class="day-blurb">${blurb}</span>
+          </span>
+          <span class="day-status">
+            <span class="status-text">${done ? 'Done' : 'Not started'}</span>
+            <span class="chevron">›</span>
+          </span>
+        `;
+        list.appendChild(a);
+      });
+
+      roadmap.appendChild(section);
+    });
+  }
+
+  function renderProgress() {
+    const done = DSAProgress.completedCount();
+    const total = DSAProgress.TOTAL_DAYS;
+    document.getElementById('progressLabel').textContent = `You finished ${done}/${total} days`;
+    document.getElementById('progressFill').style.width = `${(done / total) * 100}%`;
+
+    const lastDay = DSAProgress.getLastDay();
+    const nextDay = DSAProgress.firstIncompleteDay();
+    const btn = document.getElementById('continueBtn');
+    if (done === 0 && !lastDay) {
+      btn.textContent = '▶ Start Day 1';
+      btn.href = 'lessons/day01.html';
+    } else if (done >= total) {
+      btn.textContent = '🎉 Review any day';
+      btn.href = `lessons/day${pad(lastDay || 30)}.html`;
+    } else {
+      btn.textContent = `▶ Continue — Day ${nextDay}`;
+      btn.href = `lessons/day${pad(nextDay)}.html`;
+    }
+  }
+
+  renderGrid();
+  renderProgress();
+</script>
+</body>
+</html>
