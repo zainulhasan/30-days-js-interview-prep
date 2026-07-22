@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 2: Big-O Notation — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Visualize how O(1), O(log n), O(n), O(n log n), O(n²), and O(2ⁿ) actually grow as input size increases." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 2 / 30 &middot; WEEK 1</p>
+  <h1>Big-O Notation</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Understand that Big-O describes how work <strong>grows</strong> as input size grows — not how many seconds something takes.</li>
+    <li>Recognize the 6 complexity classes you'll see constantly: O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ).</li>
+    <li>Be able to look at a code snippet and say its time complexity by counting loops and halving patterns.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Big-O answers one question: <strong>"If the input doubles, how much more work do I do?"</strong>
+    — not "how many seconds does this take on my laptop." A hotel concierge who helps you in the
+    same amount of time no matter how full the hotel is: that's <strong>O(1)</strong>. Checking
+    every guest's name against a printed list, one by one: double the guests, double the work —
+    that's <strong>O(n)</strong>. Repeatedly cutting a phone book in half to find a name: double
+    the guests, and you only need <em>one more step</em> — that's <strong>O(log n)</strong>.
+    Comparing every guest to every other guest (say, "who shares your birthday?"): double the
+    guests, and the work goes up by <em>4×</em> — that's <strong>O(n²)</strong>. Sorting the
+    guest list efficiently — a linear scan repeated roughly log n times — is
+    <strong>O(n log n)</strong>. And trying every possible subset of guests for a group photo
+    (2 choices — in or out — per guest) is <strong>O(2ⁿ)</strong>: it's fine for 5 guests and
+    completely impossible for 500.</p>
+  <p>We drop constants and lower-order terms (O(2n + 5) is just written O(n)) because Big-O is
+    about the <em>shape</em> of the growth curve for large n, not the exact count. A slightly
+    slower O(n) algorithm always beats an O(n²) one eventually, no matter what the constants
+    are — that crossover is what Big-O predicts.</p>
+
+  <h2>Diagram</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Operations vs. input size (n), for the
+    6 complexity classes you'll see over and over in this course. The chart is capped at 50
+    operations — O(n²) and O(2ⁿ) don't actually flatten out, they just fly straight past the
+    top edge and get clipped there. In reality they keep climbing far higher.</p>
+  <div class="viz-panel">
+    <svg id="staticChart" class="diagram" viewBox="0 0 620 390" role="img" aria-label="Line chart comparing O(1), O(log n), O(n), O(n log n), O(n squared), and O(2 to the n) growth from n=1 to n=10"></svg>
+  </div>
+
+  <h2>Interactive visualization</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Watch the curves get drawn as n grows,
+    one step at a time. The table below the chart updates with the exact operation count for
+    each class at the current n.</p>
+  <div class="viz-panel">
+    <svg id="animChart" class="diagram" viewBox="0 0 620 390" role="img" aria-label="Animated growth chart"></svg>
+    <div style="overflow-x:auto;margin-top:0.75rem;">
+      <table class="dryrun-table" id="liveTable" style="margin:0;">
+        <thead><tr><th>n</th><th>O(1)</th><th>O(log n)</th><th>O(n)</th><th>O(n log n)</th><th>O(n²)</th><th>O(2ⁿ)</th></tr></thead>
+        <tbody><tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></tbody>
+      </table>
+    </div>
+    <div class="narration" id="vizNarration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="vizPlay">▶ Play</button>
+      <button class="btn" id="vizStep">Step ⏭</button>
+      <button class="btn" id="vizReset">⟲ Reset</button>
+      <button class="btn" id="vizShuffle">🔀 Shuffle (random n range)</button>
+      <span class="viz-counter" id="vizCounter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <p>Here's what each complexity class typically looks like in real code:</p>
+  <pre><code>// O(1) — constant. No loop, work doesn't depend on input size.
+function first(arr) { return arr[0]; }
+
+// O(log n) — logarithmic. Each step cuts the problem in half.
+// (Full binary search implementation on Day 12.)
+function halvingSteps(n) {
+  let steps = 0;
+  while (n > 1) { n = Math.floor(n / 2); steps++; }
+  return steps;
+}
+
+// O(n) — linear. One loop over the input.
+function sum(arr) {
+  let total = 0;
+  for (const x of arr) total += x;
+  return total;
+}
+
+// O(n log n) — linearithmic. A linear amount of work, log n times.
+// JS's built-in sort uses an algorithm in this class (Merge Sort on Day 10).
+function sorted(arr) { return [...arr].sort((a, b) => a - b); }
+
+// O(n²) — quadratic. A loop inside a loop over the same input.
+function countPairs(arr) {
+  let count = 0;
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      count++;
+    }
+  }
+  return count;
+}
+
+// O(2ⁿ) — exponential. Every call branches into 2 more calls.
+// (Full breakdown of why this is O(2ⁿ) on Day 9 and Day 25.)
+function fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>first(arr)</code> — returns immediately. No loop, so no dependency on
+      <code>arr</code>'s size. O(1).</li>
+    <li><code>halvingSteps(n)</code> — each iteration divides <code>n</code> by 2. The loop
+      runs about log₂(n) times before <code>n</code> shrinks to 1. O(log n).</li>
+    <li><code>sum(arr)</code> — one pass, one operation per element. O(n).</li>
+    <li><code>sorted(arr)</code> — copies the array (O(n)) then sorts it. Efficient sorting
+      algorithms do a linear amount of work at each of roughly log n "levels" — that
+      combination is O(n log n), which we'll build by hand on Day 10.</li>
+    <li><code>countPairs(arr)</code> — for every element, scan the rest of the array. Loop
+      inside a loop, both bounded by <code>arr.length</code>. O(n²).</li>
+    <li><code>fib(n)</code> — every call (except the base cases) makes 2 more calls. That
+      branching factor of 2, repeated n times deep, gives O(2ⁿ) total calls.</li>
+  </ul>
+
+  <h3>Dry run: countPairs([10, 20, 30, 40])</h3>
+  <p>4 elements, so we expect <code>4 &times; 3 / 2 = 6</code> pairs — let's trace it:</p>
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>i</th><th>j</th><th>count</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>2</td><td>0</td><td>2</td><td>2</td></tr>
+      <tr><td>3</td><td>0</td><td>3</td><td>3</td></tr>
+      <tr><td>4</td><td>1</td><td>2</td><td>4</td></tr>
+      <tr><td>5</td><td>1</td><td>3</td><td>5</td></tr>
+      <tr><td>6</td><td>2</td><td>3</td><td>6</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">The inner loop shrinks each time, but the
+    total number of comparisons still grows with the <em>square</em> of the input size —
+    that's the signature of O(n²).</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Class</th><th>Name</th><th>Ops at n=10</th><th>Ops at n=20</th><th>Typical space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>O(1)</td><td>Constant</td><td>1</td><td>1</td><td>O(1)</td><td>Same work regardless of input size.</td></tr>
+      <tr><td>O(log n)</td><td>Logarithmic</td><td>~3</td><td>~4</td><td>O(1)</td><td>Each step cuts the remaining problem in half.</td></tr>
+      <tr><td>O(n)</td><td>Linear</td><td>10</td><td>20</td><td>O(1)</td><td>Work grows exactly with input size.</td></tr>
+      <tr><td>O(n log n)</td><td>Linearithmic</td><td>~33</td><td>~86</td><td>O(n)*</td><td>A linear pass, repeated log n times — efficient sorting.</td></tr>
+      <tr><td>O(n²)</td><td>Quadratic</td><td>100</td><td>400</td><td>O(1)</td><td>Nested loop — every element checked against every other.</td></tr>
+      <tr><td>O(2ⁿ)</td><td>Exponential</td><td>1,024</td><td>1,048,576</td><td>O(n)†</td><td>Work doubles with every single extra input element.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Notice n=20 for O(2ⁿ): over a million
+    operations, from an input just twice the size of n=10's 1,024. That jump is why exponential
+    algorithms become unusable almost immediately as input grows.<br>
+    *Merge sort (Day 10) needs O(n) extra space for the merge step. †Naive recursive Fibonacci
+    is O(2ⁿ) time, but only O(n) space — that's the max depth of the call stack at any one
+    moment, not the total number of calls made (more on this Day 9 and Day 25).</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What's the difference between O(n) and O(n²)? Give a code example of each.</strong>
+      O(n) is one loop over the input (e.g. summing an array); O(n²) is a loop nested inside
+      another loop over the same input (e.g. checking every pair). Doubling the input doubles
+      O(n)'s work but quadruples O(n²)'s.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Can you turn
+      an O(n²) pair-checking algorithm into O(n)?" — often yes, by trading space for time with a
+      hash set (we build this exact pattern on Day 6).</span></li>
+    <li><strong>Why do we drop constants, like writing O(2n) as just O(n)?</strong> Big-O
+      describes the growth <em>shape</em> for large n, not an exact operation count. The
+      constant factor matters for real-world speed, but it doesn't change which algorithm wins
+      as n keeps growing — an O(n) algorithm eventually beats an O(n²) one no matter the
+      constants.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> "eventually"
+      is doing real work in that sentence — for small, bounded inputs a "worse" Big-O algorithm
+      with tiny constants can genuinely be faster in practice. Don't over-optimize Big-O at the
+      cost of readability for code that only ever runs on small n.</span></li>
+    <li><strong>What's the difference between best, average, and worst case complexity?</strong>
+      Best case: the luckiest input (e.g. searching and the target is first). Worst case: the
+      unluckiest (target is last, or missing entirely). Interviewers almost always want
+      <strong>worst case</strong> unless they say otherwise — it's the guarantee you can
+      actually rely on.</li>
+    <li><strong>Can an algorithm have different time and space complexity?</strong> Yes, and
+      interviewers love asking for both. Memoized recursive Fibonacci is O(n) time but also
+      O(n) space (the cache); the iterative version is O(n) time and O(1) space (two variables).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> by
+      convention, space complexity usually excludes the input itself (and sometimes the output)
+      — it's about <em>extra</em> space your algorithm allocates. Say this explicitly in an
+      interview; it removes ambiguity about what you're counting.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the complexity as soon as you spot
+    the shape ("this is two nested loops over n, so O(n²)"), then immediately say whether that's
+    good enough: "given the constraints say n ≤ 10⁴, O(n²) is 10⁸ operations — that's borderline,
+    I'd look for an O(n log n) or O(n) approach." Tying Big-O to the actual input size given in
+    the problem is what separates "I memorized the term" from "I can use it."</p>
+
+  <h2>Practice problems</h2>
+  <p style="color:var(--text-dim);font-size:0.85rem;">These are less about the "trick" and more
+    about noticing the brute-force complexity, then asking "can I do better?" — the core
+    interview skill for today.</p>
+
+  <div class="problem">
+    <h4>1. Contains Duplicate <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/contains-duplicate/" target="_blank" rel="noopener">LeetCode: Contains Duplicate</a>)</span></h4>
+    <p>Given an array of integers, return <code>true</code> if any value appears at least twice.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>The brute-force way compares every pair —
+      what's its complexity? A <code>Set</code> lets you check "have I seen this before?" in
+      O(1), which changes the total complexity.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>// Brute force: O(n²) time, O(1) space — compare every pair.
+// Better: O(n) time, O(n) space — trade space for time.
+function containsDuplicate(nums) {
+  const seen = new Set();
+  for (const n of nums) {
+    if (seen.has(n)) return true;
+    seen.add(n);
+  }
+  return false;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Best Time to Buy and Sell Stock <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" target="_blank" rel="noopener">LeetCode: Best Time to Buy and Sell Stock</a>)</span></h4>
+    <p>Given daily stock prices, find the maximum profit from buying on one day and selling on a
+      later day. Return 0 if no profit is possible.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Brute force checks every buy/sell pair —
+      O(n²). You only need to track the lowest price seen so far as you scan once, left to right.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>// Brute force: O(n²) — check every (buy day, sell day) pair.
+// Better: O(n) — one pass, track the minimum price so far.
+function maxProfit(prices) {
+  let minPrice = Infinity;
+  let best = 0;
+  for (const price of prices) {
+    minPrice = Math.min(minPrice, price);
+    best = Math.max(best, price - minPrice);
+  }
+  return best;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Two Sum <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">LeetCode: Two Sum</a>)</span></h4>
+    <p>Given an array of integers and a target, return the indices of the two numbers that add
+      up to the target.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Brute force checks every pair — O(n²). For
+      today, just identify that complexity and sketch the idea of trading space for time again.
+      We'll build the full O(n) hash-map solution properly on Day 6.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>// Brute force: O(n²) time, O(1) space — the version to write TODAY.
+// (The O(n) hash-map version is Day 6's lesson — don't worry about it yet.)
+function twoSum(nums, target) {
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = i + 1; j < nums.length; j++) {
+      if (nums[i] + nums[j] === target) return [i, j];
+    }
+  }
+  return [];
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="One loop that touches each element once is the textbook definition of O(n).">
+    <p class="q-text">1. A single loop over an array of size n has what time complexity?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+      <button class="btn dsa-quiz-option" data-value="olog">O(log n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on2" data-explain="A loop inside a loop, both over the same input, multiplies to n × n = n².">
+    <p class="q-text">2. Two nested loops, both over the same array of size n, give what time complexity?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+      <button class="btn dsa-quiz-option" data-value="onlogn">O(n log n)</button>
+      <button class="btn dsa-quiz-option" data-value="o2n">O(2ⁿ)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on2" data-explain="O(n²) always grows faster than O(n log n) — there's no crossover, check the chart above.">
+    <p class="q-text">3. Which grows faster as n increases: O(n log n) or O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onlogn">O(n log n)</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+      <button class="btn dsa-quiz-option" data-value="same">They grow at the same rate</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="Constants are dropped in Big-O — O(2n + 5) describes the same growth shape as O(n).">
+    <p class="q-text">4. O(2n + 5) is usually simplified to which of these?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="o2n_plus5">O(2n + 5) — you keep the exact expression</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="olog" data-explain="Cutting the search space in half every step is exactly what makes binary search O(log n).">
+    <p class="q-text">5. Binary search cuts the search space in half every step. What's its time complexity?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="olog">O(log n)</button>
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 2 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day01.html">← Day 1: JS Essentials for DSA</a>
+    <a class="btn" href="day03.html">Day 3: Arrays & Strings →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 2;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- growth-curve chart: hand-drawn SVG, no charting library ----
+  const SERIES = [
+    { key: 'o1', label: 'O(1)', color: '#9aa7b8', fn: () => 1 },
+    { key: 'olog', label: 'O(log n)', color: '#58a6ff', fn: (n) => Math.max(0.3, Math.log2(n)) },
+    { key: 'on', label: 'O(n)', color: '#3fb950', fn: (n) => n },
+    { key: 'onlogn', label: 'O(n log n)', color: '#d4a72c', fn: (n) => n * Math.max(0.3, Math.log2(n)) },
+    { key: 'on2', label: 'O(n²)', color: '#e5534b', fn: (n) => n * n },
+    { key: 'o2n', label: 'O(2ⁿ)', color: '#a371f7', fn: (n) => Math.pow(2, n) },
+  ];
+  const N_MAX = 10;
+  const Y_MAX = 50;
+  const PAD = { left: 46, right: 20, top: 16, bottom: 60 };
+  const CW = 620, CH = 390;
+  const plotW = CW - PAD.left - PAD.right;
+  const plotH = CH - PAD.top - PAD.bottom;
+
+  function xScale(n, nMax) { return PAD.left + ((n - 1) / ((nMax || N_MAX) - 1)) * plotW; }
+  function yScale(v) { return PAD.top + (1 - Math.min(v, Y_MAX) / Y_MAX) * plotH; }
+
+  function fmt(v) {
+    v = Math.round(v);
+    return v.toLocaleString('en-US');
+  }
+
+  function renderChart(svg, upToN, currentN, nMaxForScale) {
+    const nMax = nMaxForScale || N_MAX;
+    const ns = 'http://www.w3.org/2000/svg';
+    svg.innerHTML = '';
+
+    // axes
+    const axis = document.createElementNS(ns, 'g');
+    axis.innerHTML = `
+      <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${CH - PAD.bottom}" stroke="#2a3140" stroke-width="1.5"/>
+      <line x1="${PAD.left}" y1="${CH - PAD.bottom}" x2="${CW - PAD.right}" y2="${CH - PAD.bottom}" stroke="#2a3140" stroke-width="1.5"/>
+      <text x="${PAD.left - 8}" y="${PAD.top + 4}" font-size="10" fill="#9aa7b8" text-anchor="end">${Y_MAX}+</text>
+      <text x="${PAD.left - 8}" y="${CH - PAD.bottom + 4}" font-size="10" fill="#9aa7b8" text-anchor="end">0</text>
+      <text x="${(PAD.left + CW - PAD.right) / 2}" y="${CH - PAD.bottom + 18}" font-size="11" fill="#9aa7b8" text-anchor="middle">input size (n) →</text>
+      <text x="14" y="${(PAD.top + CH - PAD.bottom) / 2}" font-size="11" fill="#9aa7b8" text-anchor="middle" transform="rotate(-90 14 ${(PAD.top + CH - PAD.bottom) / 2})">operations</text>
+    `;
+    svg.appendChild(axis);
+
+    // series lines
+    SERIES.forEach((s) => {
+      const pts = [];
+      for (let n = 1; n <= upToN; n++) pts.push(`${xScale(n, nMax)},${yScale(s.fn(n))}`);
+      const poly = document.createElementNS(ns, 'polyline');
+      poly.setAttribute('points', pts.join(' '));
+      poly.setAttribute('fill', 'none');
+      poly.setAttribute('stroke', s.color);
+      poly.setAttribute('stroke-width', '2.5');
+      svg.appendChild(poly);
+    });
+
+    // current-n marker
+    if (currentN) {
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', xScale(currentN, nMax));
+      line.setAttribute('x2', xScale(currentN, nMax));
+      line.setAttribute('y1', PAD.top);
+      line.setAttribute('y2', CH - PAD.bottom);
+      line.setAttribute('stroke', '#e6edf3');
+      line.setAttribute('stroke-dasharray', '3 3');
+      line.setAttribute('opacity', '0.6');
+      svg.appendChild(line);
+    }
+
+    // legend
+    const legendY = CH - 8;
+    let lx = PAD.left;
+    SERIES.forEach((s) => {
+      const g = document.createElementNS(ns, 'g');
+      g.innerHTML = `<rect x="${lx}" y="${legendY - 8}" width="10" height="10" fill="${s.color}" rx="2"/>
+        <text x="${lx + 14}" y="${legendY}" font-size="10" fill="#c9d1d9">${s.label}</text>`;
+      svg.appendChild(g);
+      lx += s.label.length * 6 + 34;
+    });
+  }
+
+  // static reference diagram — fully drawn, no animation
+  renderChart(document.getElementById('staticChart'), N_MAX, null);
+
+  // ---- interactive: reveal the curves as n grows ----
+  const animSvg = document.getElementById('animChart');
+  const liveTableBody = document.querySelector('#liveTable tbody');
+
+  function buildSteps(nMax) {
+    const steps = [];
+    for (let n = 1; n <= nMax; n++) {
+      const logSteps = Math.max(1, Math.round(Math.log2(n)));
+      steps.push({
+        n,
+        narration: `At n=${n}: O(log n) takes only ${logSteps} step${logSteps === 1 ? '' : 's'}, O(n) does ${fmt(n)} operations, O(n²) does ${fmt(n * n)}, O(2ⁿ) does ${fmt(Math.pow(2, n))}${Math.pow(2, n) > Y_MAX ? ' — already off the chart' : ''}.`,
+      });
+    }
+    return steps;
+  }
+
+  let currentNMax = N_MAX;
+  let steps = buildSteps(currentNMax);
+
+  const player = new DSA.StepPlayer({
+    steps,
+    narrationEl: document.getElementById('vizNarration'),
+    counterEl: document.getElementById('vizCounter'),
+    playBtn: document.getElementById('vizPlay'),
+    stepBtn: document.getElementById('vizStep'),
+    resetBtn: document.getElementById('vizReset'),
+    shuffleBtn: document.getElementById('vizShuffle'),
+    speed: 1200,
+    onStep(step) {
+      if (!step) {
+        renderChart(animSvg, 0, null);
+        liveTableBody.innerHTML = '<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>';
+        return;
+      }
+      renderChart(animSvg, step.n, step.n, currentNMax);
+      const row = SERIES.map((s) => `<td>${fmt(s.fn(step.n))}</td>`).join('');
+      liveTableBody.innerHTML = `<tr><td>${step.n}</td>${row}</tr>`;
+    },
+    onShuffle() {
+      currentNMax = 6 + Math.floor(Math.random() * 5); // random range 6-10
+      steps = buildSteps(currentNMax);
+      player.setSteps(steps);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
