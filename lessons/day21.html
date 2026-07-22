@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 21: Week 3 Review — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Week 3 cheat sheet: linked lists, stacks, queues, trees, and BSTs unified by one question — which access pattern does this problem actually need? Plus iterative inorder BST validation with an explicit stack." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 21 / 30 &middot; WEEK 3 REVIEW</p>
+  <h1>Week 3 Review</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Connect Days 15–20 into one decision process: given a new problem, know which
+      <strong>access pattern</strong> it actually needs — LIFO, FIFO, pointer-chain, level-by-level,
+      or sorted-order — before picking a data structure.</li>
+    <li>Solve 5 mixed practice problems that draw on more than one Week 3 idea at once.</li>
+    <li>Walk away with a one-page cheat sheet of every Week 3 template and complexity.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Week 3 looks like six separate topics, but almost every one of them is answering the same
+    underlying question: <em>what's the cheapest way to add or remove exactly where this problem
+    needs it?</em> A linked list (Day 15/16) buys O(1) insert/delete at a known pointer, when an
+    array's O(n) shift would be too slow — and its fast/slow-pointer trick turns "find the middle"
+    or "detect a cycle" into a single pass with no extra memory. A stack (Day 17) is the natural
+    fit whenever the rule is "deal with the most recently opened thing first" — matching brackets,
+    undo, backtracking. A queue or deque (Day 18) is the mirror image: oldest goes first, or (for a
+    deque) both ends need to move. Trees (Day 19) don't have one traversal order — BFS and DFS are
+    the exact same "explore the frontier" idea, just fed into a queue (level by level) or a stack
+    (full depth before backtracking). A binary search tree (Day 20) is a tree with one extra
+    invariant — everything left of a node is smaller, everything right is bigger, at <em>every</em>
+    level, not just the immediate children — which is what turns search/insert into O(h) and makes
+    an inorder walk come out already sorted.</p>
+  <p>That last connection is worth sitting with: Day 20 validated a BST by tracking a shrinking
+    min/max bound down each recursive call. There's a completely different way to prove the exact
+    same thing, using this week's other big idea instead of recursion — walk the tree inorder with
+    an <strong>explicit stack</strong> (Day 17's tool, not the call stack) and confirm every value
+    that comes out is strictly bigger than the last one you saw. If that's ever not true, the tree
+    isn't a valid BST — no bounds tracking required, because a valid BST's inorder sequence
+    <em>is</em> the sorted order, by definition. Today's visualization builds exactly that.</p>
+
+  <h2>Diagram: which Week 3 structure do I reach for?</h2>
+  <svg class="diagram" viewBox="0 0 620 460" role="img" aria-label="Decision checklist for Week 3: needing most-recent-first access points to a stack, needing oldest-first or a two-ended window points to a queue or deque, needing O(1) insert/delete at a known node points to a linked list, needing every node at distance k before distance k+1 points to BFS with a queue, needing to fully explore one path before backtracking points to DFS with a stack, and needing sorted-order search or insert in O(h) points to a binary search tree.">
+    <defs>
+      <marker id="arr21" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#818896"/></marker>
+    </defs>
+
+    <g font-size="13">
+      <rect x="20" y="15" width="330" height="46" rx="8" fill="#2C313A" stroke="#61AEEE"/>
+      <text x="35" y="34" fill="#DCDFE4">Need LIFO — undo, matching,</text>
+      <text x="35" y="52" fill="#DCDFE4">or DFS backtracking?</text>
+    </g>
+    <path d="M355,38 L400,38" stroke="#61AEEE" stroke-width="2" marker-end="url(#arr21)"/>
+    <text x="410" y="34" fill="#61AEEE" font-weight="bold" font-size="14">Stack</text>
+    <text x="410" y="50" font-size="11" class="dim">(Day 17)</text>
+
+    <g font-size="13">
+      <rect x="20" y="80" width="330" height="46" rx="8" fill="#2C313A" stroke="#C678DD"/>
+      <text x="35" y="99" fill="#DCDFE4">Need FIFO, or a window with</text>
+      <text x="35" y="117" fill="#DCDFE4">two moving ends?</text>
+    </g>
+    <path d="M355,103 L400,103" stroke="#C678DD" stroke-width="2" marker-end="url(#arr21)"/>
+    <text x="410" y="99" fill="#C678DD" font-weight="bold" font-size="14">Queue / Deque</text>
+    <text x="410" y="117" font-size="11" class="dim">(Day 18)</text>
+
+    <g font-size="13">
+      <rect x="20" y="145" width="330" height="46" rx="8" fill="#2C313A" stroke="#4D96D9"/>
+      <text x="35" y="164" fill="#DCDFE4">Need O(1) insert/delete at</text>
+      <text x="35" y="182" fill="#DCDFE4">a known node or pointer?</text>
+    </g>
+    <path d="M355,168 L400,168" stroke="#4D96D9" stroke-width="2" marker-end="url(#arr21)"/>
+    <text x="410" y="164" fill="#4D96D9" font-weight="bold" font-size="14">Linked List</text>
+    <text x="410" y="182" font-size="11" class="dim">(Day 15/16)</text>
+
+    <g font-size="13">
+      <rect x="20" y="210" width="330" height="46" rx="8" fill="#2C313A" stroke="#E6C07B"/>
+      <text x="35" y="229" fill="#DCDFE4">Need every node at distance k</text>
+      <text x="35" y="247" fill="#DCDFE4">before any at distance k+1?</text>
+    </g>
+    <path d="M355,233 L400,233" stroke="#E6C07B" stroke-width="2" marker-end="url(#arr21)"/>
+    <text x="410" y="229" fill="#E6C07B" font-weight="bold" font-size="14">BFS (Queue)</text>
+    <text x="410" y="247" font-size="11" class="dim">(Day 19)</text>
+
+    <g font-size="13">
+      <rect x="20" y="275" width="330" height="46" rx="8" fill="#2C313A" stroke="#E06C75"/>
+      <text x="35" y="294" fill="#DCDFE4">Need to fully explore one</text>
+      <text x="35" y="312" fill="#DCDFE4">path before backtracking?</text>
+    </g>
+    <path d="M355,298 L400,298" stroke="#E06C75" stroke-width="2" marker-end="url(#arr21)"/>
+    <text x="410" y="294" fill="#E06C75" font-weight="bold" font-size="14">DFS (Stack)</text>
+    <text x="410" y="312" font-size="11" class="dim">(Day 19)</text>
+
+    <g font-size="13">
+      <rect x="20" y="340" width="330" height="46" rx="8" fill="#2C313A" stroke="#98C379"/>
+      <text x="35" y="359" fill="#DCDFE4">Need sorted-order search or</text>
+      <text x="35" y="377" fill="#DCDFE4">insert in O(h) time?</text>
+    </g>
+    <path d="M355,363 L400,363" stroke="#98C379" stroke-width="2" marker-end="url(#arr21)"/>
+    <text x="410" y="359" fill="#98C379" font-weight="bold" font-size="14">BST</text>
+    <text x="410" y="377" font-size="11" class="dim">(Day 20)</text>
+
+    <text x="20" y="420" font-size="12" class="dim">Check these top to bottom — the first "yes" is usually your pattern.</text>
+    <text x="20" y="438" font-size="12" class="dim">Rows 4-5 assume a tree/graph is already given, not built from scratch.</text>
+  </svg>
+
+  <h2>Interactive visualization: validating a BST with an explicit stack, no bounds tracking</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Same 7-node BST as Day 20. Walk it inorder
+    using an explicit stack (Day 17's tool) instead of recursion. Every value popped off the stack
+    must be strictly bigger than the last one popped — that single running check <em>is</em> the
+    whole BST validation, because a valid BST's inorder sequence is always sorted.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> pushed, waiting on the stack</span>
+    <span><i class="lg-active"></i> just popped — comparing to the last value</span>
+    <span><i class="lg-sorted"></i> confirmed valid so far</span>
+    <span><i class="lg-swap"></i> broke the invariant — invalid</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="display:flex;flex-direction:column;gap:0.9rem;width:100%;">
+        <div id="viz1TreeStage"></div>
+        <div id="viz1StackStage"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>Dry run: iterative inorder validate, the valid tree (20/30/40/50/60/70/80)</h3>
+  <div style="overflow-x:auto;">
+    <table class="dryrun-table">
+      <thead><tr><th>Action</th><th>Stack (bottom → top)</th><th>Popped</th><th>prev → curr check</th></tr></thead>
+      <tbody>
+        <tr><td>Descend left from 50</td><td>50, 30, 20</td><td>—</td><td>—</td></tr>
+        <tr><td>Pop</td><td>50, 30</td><td>20</td><td>prev=null → OK, prev=20</td></tr>
+        <tr><td>No right child; pop</td><td>50</td><td>30</td><td>30 &gt; 20 → OK, prev=30</td></tr>
+        <tr><td>Descend right of 30, then left</td><td>50, 40</td><td>—</td><td>—</td></tr>
+        <tr><td>Pop</td><td>50</td><td>40</td><td>40 &gt; 30 → OK, prev=40</td></tr>
+        <tr><td>No right child; pop</td><td>(empty)</td><td>50</td><td>50 &gt; 40 → OK, prev=50</td></tr>
+        <tr><td>Descend right of 50, then left</td><td>70, 60</td><td>—</td><td>—</td></tr>
+        <tr><td>Pop</td><td>70</td><td>60</td><td>60 &gt; 50 → OK, prev=60</td></tr>
+        <tr><td>No right child; pop</td><td>(empty)</td><td>70</td><td>70 &gt; 60 → OK, prev=70</td></tr>
+        <tr><td>Descend right of 70</td><td>80</td><td>—</td><td>—</td></tr>
+        <tr><td>Pop</td><td>(empty)</td><td>80</td><td>80 &gt; 70 → OK, prev=80</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Every pop was strictly bigger than the one
+    before it — 20, 30, 40, 50, 60, 70, 80 — so the whole tree is confirmed valid. No min/max bound
+    was ever tracked; the stack's LIFO order plus one running comparison did all the work.</p>
+
+  <h2>Week 3 cheat sheet — code templates</h2>
+  <pre><code>// LINKED LIST (Day 15/16) — Node + insert at head, O(1)
+class Node {
+  constructor(val) { this.val = val; this.next = null; }
+}
+function insertAtHead(head, val) {
+  const node = new Node(val);
+  node.next = head;
+  return node; // new head
+}
+
+// FAST/SLOW POINTERS (Day 16) — find the middle in one pass
+function middleNode(head) {
+  let slow = head, fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  return slow; // middle (or 2nd middle on even length)
+}
+
+// STACK (Day 17) — plain array, push/pop at the END, O(1) each
+const stack = [];
+stack.push(x);       // add to top
+const top = stack.pop(); // remove from top
+
+// QUEUE / DEQUE (Day 18) — plain array, both ends
+const queue = [];
+queue.push(x);        // add to back
+const front = queue.shift(); // remove from front
+queue.unshift(x);     // add to front (deque only)
+
+// BFS (Day 19) — level order, uses a QUEUE
+function bfs(root) {
+  const order = [];
+  const queue = root ? [root] : [];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    order.push(node.val);
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+  return order;
+}
+
+// DFS (Day 19) — depth order, uses a STACK (explicit, no recursion)
+function dfs(root) {
+  const order = [];
+  const stack = root ? [root] : [];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    order.push(node.val);
+    if (node.right) stack.push(node.right); // push right first
+    if (node.left) stack.push(node.left);   // so left pops first
+  }
+  return order;
+}
+
+// BST search / insert (Day 20) — O(h)
+function search(root, val) {
+  let curr = root;
+  while (curr) {
+    if (val === curr.val) return curr;
+    curr = val < curr.val ? curr.left : curr.right;
+  }
+  return null;
+}
+
+// TODAY'S SYNTHESIS — validate a BST via iterative inorder + one stack
+function isValidBSTIterative(root) {
+  const stack = [];
+  let curr = root;
+  let prev = null; // no value seen yet
+  while (curr || stack.length > 0) {
+    while (curr) { stack.push(curr); curr = curr.left; } // descend all the way left
+    curr = stack.pop();
+    if (prev !== null && curr.val <= prev) return false;  // out of order — invalid
+    prev = curr.val;
+    curr = curr.right; // then explore the right subtree
+  }
+  return true;
+}
+</code></pre>
+
+  <h2>Complexity — everything from Week 3, at a glance</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Linked list insert/delete at a known node (Day 15/16)</td><td>O(1)</td><td>O(1)</td><td>No shifting — only pointers change. Finding that node first is O(n).</td></tr>
+      <tr><td>Fast/slow middle or cycle detection (Day 16)</td><td>O(n)</td><td>O(1)</td><td>One pass, two pointers — no extra data structure needed.</td></tr>
+      <tr><td>Stack push/pop/top (Day 17)</td><td>O(1) each</td><td>O(n)</td><td>Array's built-in push/pop are already O(1) — no shifting at the end.</td></tr>
+      <tr><td>Queue enqueue/dequeue via array (Day 18)</td><td>O(1) push, O(n) shift</td><td>O(n)</td><td>push() is O(1); shift() re-indexes every remaining element — a real linked-list-backed queue avoids this.</td></tr>
+      <tr><td>BFS / DFS traversal (Day 19)</td><td>O(V + E)</td><td>O(V)</td><td>Every node enqueued/pushed and processed exactly once; space is the widest frontier (BFS) or deepest path (DFS).</td></tr>
+      <tr><td>BST search / insert (Day 20)</td><td>O(h)</td><td>O(1) iterative</td><td>h = tree height — O(log n) if balanced, degrades to O(n) if skewed (Day 20's sorted-insert trap).</td></tr>
+      <tr><td>Iterative inorder BST validate (today)</td><td>O(n)</td><td>O(h)</td><td>Every node is pushed and popped exactly once; the stack never holds more than one root-to-leaf path at a time.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>If you can only ask yourself one question to pick a Week 3 structure, what is
+      it?</strong> "What order does this problem need things removed in?" Most-recent-first is a
+      stack. Oldest-first is a queue. A specific, already-known position is a linked list pointer.
+      Once you know the removal order, the structure almost always falls out automatically.</li>
+    <li><strong>How does DFS via an explicit stack differ from DFS via recursion?</strong> They
+      visit nodes in the exact same order — recursion's call stack <em>is</em> a stack, just an
+      implicit one managed by the language runtime instead of an array you control. The explicit
+      version exists because very deep trees can blow the real call stack (a stack overflow, Day
+      9's exact failure mode), and because some interviewers specifically want to see you reason
+      about the mechanism, not just call a recursive helper.</li>
+    <li><strong>Why does an iterative inorder walk validate a BST without tracking min/max
+      bounds?</strong> Because a valid BST's inorder sequence is <em>defined</em> to come out
+      sorted — that's what the invariant means. Checking "is every value bigger than the last one"
+      is mathematically the same claim as "does every node respect its full-subtree bounds," just
+      verified through the traversal order instead of through explicit bound parameters.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> the check
+      must be <code>prev !== null</code>, not a truthy check like <code>if (prev)</code> — a real
+      tree value of <code>0</code> is falsy in JavaScript but is a perfectly valid "previous value
+      seen," and a truthy check would silently skip comparing against it.</span></li>
+    <li><strong>When does a plain array actually fall short as a queue?</strong> <code>shift()</code>
+      is O(n) because every remaining element has to move down one index — fine for a small sliding
+      window (Day 18), but a real hot-path queue at scale needs O(1) at both ends, which means a
+      doubly linked list (or a circular buffer) under the hood instead.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So why did Day 18
+      just use an array?" — the interview signal in a sliding-window problem is almost always the
+      window-management logic itself, not whether you've hand-rolled a production-grade deque.
+      Name the O(n) caveat out loud and move on, unless the interviewer asks you to fix it.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the access pattern before the structure
+    — "I need the most recently seen item first, so this is a stack problem" or "this needs
+    everything at the current depth processed before going deeper, so BFS with a queue" — the same
+    way Week 2 taught naming the constraint before naming the algorithm. When a problem visibly
+    combines two ideas (a BST validated with a stack, a tree walked with a queue), say so explicitly
+    — interviewers read that as recognizing structure, not stitching code together by trial and
+    error.</p>
+
+  <h2>5 mixed practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Palindrome Linked List <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/palindrome-linked-list/" target="_blank" rel="noopener">LeetCode: Palindrome Linked List</a>)</span></h4>
+    <p>Given the head of a singly linked list, determine if it reads the same forward and backward.
+      Combines Day 15's list walk with Day 16's fast/slow-pointer instinct.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>The simplest correct approach: walk the whole
+      list once, collect every value into an array, then check the array reads the same
+      forwards/backwards with two pointers closing in from both ends — no need to reverse anything
+      in place for this to be correct.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function isPalindrome(head) {
+  const vals = [];
+  let node = head;
+  while (node) { vals.push(node.val); node = node.next; }
+  for (let i = 0, j = vals.length - 1; i < j; i++, j--) {
+    if (vals[i] !== vals[j]) return false;
+  }
+  return true;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Implement Stack using Queues <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/implement-stack-using-queues/" target="_blank" rel="noopener">LeetCode: Implement Stack using Queues</a>)</span></h4>
+    <p>Implement a LIFO stack using only queue operations (push to back, pop from front). The
+      mirror image of Day 18's Implement Queue using Stacks.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>After enqueuing the new element, rotate the
+      queue by dequeuing and re-enqueuing every <em>older</em> element behind it — that puts the
+      newest element back at the front, which is exactly what "top of stack" needs to read from.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>class MyStack {
+  constructor() { this.q = []; }
+  push(x) {
+    this.q.push(x);
+    for (let i = 0; i < this.q.length - 1; i++) this.q.push(this.q.shift());
+  }
+  pop() { return this.q.shift(); }
+  top() { return this.q[0]; }
+  empty() { return this.q.length === 0; }
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Kth Smallest Element in a BST <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/kth-smallest-element-in-a-bst/" target="_blank" rel="noopener">LeetCode: Kth Smallest Element in a BST</a>)</span></h4>
+    <p>Given a BST, find the kth smallest value. Today's exact iterative-inorder-with-a-stack
+      technique, stopping early instead of walking the whole tree.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Reuse today's exact traversal shape. Instead
+      of comparing each pop to the previous value, just count pops — the kth pop is the kth
+      smallest, by the same "inorder is sorted" guarantee.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function kthSmallest(root, k) {
+  const stack = [];
+  let curr = root;
+  let count = 0;
+  while (curr || stack.length > 0) {
+    while (curr) { stack.push(curr); curr = curr.left; }
+    curr = stack.pop();
+    count++;
+    if (count === k) return curr.val;
+    curr = curr.right;
+  }
+  return -1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>4. Binary Tree Zigzag Level Order Traversal <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/" target="_blank" rel="noopener">LeetCode: Binary Tree Zigzag Level Order Traversal</a>)</span></h4>
+    <p>Return level-order traversal, but alternate direction each level (left→right, then
+      right→left, and so on). Day 19's BFS-with-a-queue, plus one direction flip per level.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p4-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p4-hint" hidden>Run ordinary level-order BFS exactly like Day
+      19 — collect each level into its own array using a queue. The only new step: reverse that
+      level's array before adding it to the result whenever the current level is right-to-left.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p4-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p4-sol" hidden><pre><code>function zigzagLevelOrder(root) {
+  if (!root) return [];
+  const result = [];
+  let queue = [root];
+  let leftToRight = true;
+  while (queue.length > 0) {
+    const level = [];
+    const next = [];
+    for (const node of queue) {
+      level.push(node.val);
+      if (node.left) next.push(node.left);
+      if (node.right) next.push(node.right);
+    }
+    if (!leftToRight) level.reverse();
+    result.push(level);
+    queue = next;
+    leftToRight = !leftToRight;
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>5. Lowest Common Ancestor of a Binary Search Tree <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/" target="_blank" rel="noopener">LeetCode: Lowest Common Ancestor of a Binary Search Tree</a>)</span></h4>
+    <p>Given a BST and two of its nodes, find their lowest common ancestor. The BST invariant (Day
+      20) turns a generic-tree LCA problem — which needs a stack/recursion to search both
+      subtrees — into a single O(h) walk with no backtracking at all.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p5-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p5-hint" hidden>At each node, compare both target values to
+      the current node's value. If both are smaller, the answer is entirely in the left subtree; if
+      both are bigger, entirely in the right. The first node where they DON'T both go the same way
+      is the split point — that's the LCA, no need to ever backtrack.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p5-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p5-sol" hidden><pre><code>function lowestCommonAncestor(root, p, q) {
+  let curr = root;
+  while (curr) {
+    if (p.val < curr.val && q.val < curr.val) curr = curr.left;
+    else if (p.val > curr.val && q.val > curr.val) curr = curr.right;
+    else return curr; // split point (or one of p/q IS curr) — this is the LCA
+  }
+  return null;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="stack" data-explain="LIFO — most-recent-first — is exactly what a stack provides. Undo, matching brackets, and DFS backtracking are all 'deal with the last thing that happened before anything earlier' problems.">
+    <p class="q-text">1. Which Week 3 structure fits "process the most recently seen item first"?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="stack">Stack</button>
+      <button class="btn dsa-quiz-option" data-value="queue">Queue</button>
+      <button class="btn dsa-quiz-option" data-value="bst">Binary Search Tree</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="frontier" data-explain="BFS and DFS share the exact same 'explore the frontier' traversal shape — the only thing that changes is which structure holds the frontier: a queue gives level order (BFS), a stack gives depth order (DFS)." >
+    <p class="q-text">2. What's the one structural change that turns a BFS traversal into a DFS traversal?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="frontier">Swap the frontier structure — queue becomes stack (or use recursion)</button>
+      <button class="btn dsa-quiz-option" data-value="recursion">DFS requires recursion; BFS can never use recursion</button>
+      <button class="btn dsa-quiz-option" data-value="sorting">DFS requires sorting the children first; BFS does not</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortedinorder" data-explain="A valid BST's inorder traversal is defined to come out sorted. Checking that every popped value is bigger than the last one is mathematically equivalent to checking every node's full-subtree min/max bounds — just verified through traversal order instead of explicit bound parameters." >
+    <p class="q-text">3. Why can an iterative inorder walk validate a BST without tracking min/max bounds?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortedinorder">A valid BST's inorder sequence is always sorted, so one running "is this bigger than the last?" check suffices</button>
+      <button class="btn dsa-quiz-option" data-value="fasterbigo">Because iterative code is always asymptotically faster than recursive code</button>
+      <button class="btn dsa-quiz-option" data-value="nobounds">It can't — min/max bounds are always required to validate a BST</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onepass" data-explain="The fast pointer moves 2 steps for every 1 the slow pointer moves, so by the time fast reaches the end, slow is exactly at the middle — all in a single pass over the list." >
+    <p class="q-text">4. How many passes over a linked list does the fast/slow-pointer technique need to find the middle?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onepass">One pass</button>
+      <button class="btn dsa-quiz-option" data-value="twopass">Two passes — one to count length, one to walk to the middle</button>
+      <button class="btn dsa-quiz-option" data-value="logn">O(log n) passes, halving the list each time</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="reindex" data-explain="Array shift()/unshift() are O(n) because every remaining element has to be moved to a new index. A real hot-path queue needs O(1) at both ends, which means a linked-list-backed (or circular-buffer) implementation instead." >
+    <p class="q-text">5. Why is a plain JavaScript array a poor choice for a queue at scale?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="reindex">shift()/unshift() are O(n) — every remaining element has to be re-indexed</button>
+      <button class="btn dsa-quiz-option" data-value="nopush">Arrays can't support push() at all</button>
+      <button class="btn dsa-quiz-option" data-value="unsorted">Arrays can't hold unsorted data</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 21 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day20.html">← Day 20: Binary Search Trees</a>
+    <a class="btn" href="day22.html">Day 22: Heaps & Priority Queues →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 21;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- shared base BST — same shape/positions as Day 20's diagrams ----
+  const IDS = ['n50', 'n30', 'n70', 'n20', 'n40', 'n60', 'n80'];
+  const VALID_VALUES = { n50: 50, n30: 30, n70: 70, n20: 20, n40: 40, n60: 60, n80: 80 };
+  // corrupted variant: n60 relabeled 35 — locally fine under its parent 70 (35 < 70), but
+  // globally invalid since it sits in 50's RIGHT subtree, where every value must be > 50.
+  const CORRUPT_VALUES = { n50: 50, n30: 30, n70: 70, n20: 20, n40: 40, n60: 35, n80: 80 };
+  const POS = {
+    n50: { x: 450, y: 50 },
+    n30: { x: 250, y: 130 }, n70: { x: 650, y: 130 },
+    n20: { x: 150, y: 210 }, n40: { x: 350, y: 210 }, n60: { x: 550, y: 210 }, n80: { x: 750, y: 210 },
+  };
+  const EDGES = [
+    { from: 'n50', to: 'n30', directed: true }, { from: 'n50', to: 'n70', directed: true },
+    { from: 'n30', to: 'n20', directed: true }, { from: 'n30', to: 'n40', directed: true },
+    { from: 'n70', to: 'n60', directed: true }, { from: 'n70', to: 'n80', directed: true },
+  ];
+  const CHILD_OF = { n50: { L: 'n30', R: 'n70' }, n30: { L: 'n20', R: 'n40' }, n70: { L: 'n60', R: 'n80' } };
+  const GRAPH_W = 900, GRAPH_H = 280;
+
+  function nodesFor(values) {
+    return IDS.map((id) => ({ id, x: POS[id].x, y: POS[id].y, label: String(values[id]) }));
+  }
+
+  // ---- step generator: mirrors isValidBSTIterative() exactly ----
+  function buildInorderSteps(values) {
+    const nodes = nodesFor(values);
+    const steps = [];
+    const stack = []; // array of ids, mirrors the real algorithm's stack
+    const doneIds = new Set();
+    let curr = 'n50';
+    let prev = null;
+    let invalidAt = null;
+
+    function frames() {
+      return stack.map((id) => ({ label: String(values[id]), state: 'pointer' }));
+    }
+    function nodeStates(extra) {
+      const s = {};
+      doneIds.forEach((id) => { s[id] = 'sorted'; });
+      stack.forEach((id) => { if (!doneIds.has(id)) s[id] = 'pointer'; });
+      if (invalidAt) s[invalidAt] = 'swap';
+      return Object.assign(s, extra);
+    }
+    function pushStep(narration, extraNodeStates, extraFrame) {
+      const f = frames();
+      if (extraFrame) f.push(extraFrame);
+      steps.push({ narration, nodeStates: nodeStates(extraNodeStates), edges: EDGES, frames: f });
+    }
+
+    pushStep(`Start at the root (${values.n50}). curr = ${values.n50}, stack empty.`, {});
+    while ((curr && !invalidAt) || (stack.length > 0 && !invalidAt)) {
+      while (curr) {
+        stack.push(curr);
+        pushStep(`Push ${values[curr]}, descend left.`, { [curr]: 'pointer' });
+        curr = CHILD_OF[curr] ? CHILD_OF[curr].L : null;
+      }
+      const poppedId = stack.pop();
+      const poppedVal = values[poppedId];
+      pushStep(`Pop ${poppedVal}.`, { [poppedId]: 'active' });
+      if (prev !== null && poppedVal <= prev) {
+        invalidAt = poppedId;
+        pushStep(`${poppedVal} ≤ prev (${prev}) — INVALID. This value broke the sorted inorder order.`, { [poppedId]: 'swap' });
+        break;
+      }
+      const compareText = prev === null ? `prev was null — first value, automatically OK.` : `${poppedVal} > prev (${prev}) — OK.`;
+      doneIds.add(poppedId);
+      prev = poppedVal;
+      pushStep(compareText + ` prev = ${poppedVal}.`, { [poppedId]: 'sorted' });
+      curr = CHILD_OF[poppedId] ? CHILD_OF[poppedId].R : null;
+    }
+    if (!invalidAt) {
+      pushStep(`Stack empty, no more nodes. All values came out strictly increasing — VALID BST.`, {});
+    }
+    return steps;
+  }
+
+  // ---- viz 1: iterative inorder BST validate (Tree + explicit Stack) ----
+  const viz1TreeStage = document.getElementById('viz1TreeStage');
+  const viz1StackStage = document.getElementById('viz1StackStage');
+  const graph1 = new DSA.Graph(viz1TreeStage, { width: GRAPH_W, height: GRAPH_H });
+  const callStack1 = new DSA.CallStack(viz1StackStage);
+  let steps1 = buildInorderSteps(VALID_VALUES);
+  let currentValues1 = VALID_VALUES;
+
+  function paintInorder(step) {
+    if (!step) {
+      graph1.nodes = nodesFor(currentValues1);
+      graph1.edges = EDGES;
+      graph1.render({}, {});
+      callStack1.render([]);
+      return;
+    }
+    graph1.nodes = nodesFor(currentValues1);
+    graph1.edges = step.edges;
+    graph1.render(step.nodeStates, {});
+    callStack1.render(step.frames);
+  }
+
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1000,
+    onStep(step) { paintInorder(step || steps1[0]); },
+    onShuffle() {
+      currentValues1 = currentValues1 === VALID_VALUES ? CORRUPT_VALUES : VALID_VALUES;
+      steps1 = buildInorderSteps(currentValues1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
