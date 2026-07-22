@@ -493,26 +493,20 @@ function middleNode(head) {
       const states = {};
       if (fastIdx < n) states[nodes[fastIdx].id] = 'active';
       states[nodes[slowIdx].id] = done ? 'sorted' : 'pointer';
-      const labels = [{ x: nodes[slowIdx].x, y: nodes[slowIdx].y + 32, text: 'slow', color: '#98C379' }];
+      const labels = [{ x: nodes[slowIdx].x, y: nodes[slowIdx].y + 32, text: 'slow', color: done ? '#98C379' : '#61AEEE' }];
       if (fastIdx < n) labels.push({ x: nodes[fastIdx].x, y: nodes[fastIdx].y - 26, text: 'fast', color: '#C678DD' });
       steps.push({ narration, nodes: nodes.map((nd) => Object.assign({}, nd)), edges, states, labels, nullAfterId: null });
     }
 
     let slow = 0, fast = 0;
     stepAt(slow, fast, `Start: slow=fast=head (index 0, value ${nodes[0].label}).`);
-    while (fast < n - 1 && fast + 1 < n - 1 + 1 && (fast + 1) < n) {
-      if (!(fast + 1 <= n - 1)) break;
-      // condition mirrors `while (fast && fast.next)`: need a real fast.next to take 2 steps
-      if (fast >= n - 1) break;
-      const hasNext = fast + 1 <= n - 1;
-      if (!hasNext) break;
+    while (fast + 1 < n) { // mirrors `while (fast && fast.next)` — fast.next exists iff index fast+1 is valid
       slow += 1;
       fast += 2;
-      const clampedFast = Math.min(fast, n - 1);
-      stepAt(slow, fast < n ? fast : clampedFast, `slow advances 1 → index ${slow} (value ${nodes[slow].label}). fast advances 2 → ${fast < n ? `index ${fast} (value ${nodes[fast].label})` : 'past the end'}.`);
-      if (fast >= n - 1) break;
+      const fastLabel = fast < n ? `index ${fast} (value ${nodes[fast].label})` : 'past the end';
+      stepAt(slow, fast, `slow advances 1 → index ${slow} (value ${nodes[slow].label}). fast advances 2 → ${fastLabel}.`);
     }
-    stepAt(slow, Math.min(fast, n - 1), `fast can't take a full 2-step move anymore — middle found: index ${slow} (value ${nodes[slow].label}).`, true);
+    stepAt(slow, fast, `fast can't take a full 2-step move anymore — middle found: index ${slow} (value ${nodes[slow].label}).`, true);
     return steps;
   }
 
