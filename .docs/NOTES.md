@@ -157,15 +157,41 @@ target-value mismatches (caught one myself before browser-testing, review agent 
 Fixed and re-verified, including re-running the corrected code through `node` on multiple test
 cases before trusting it.
 
+## WEEK 1 COMPLETE (Days 1-7)
+All 7 lessons built, node-verified where they contain runnable algorithms, browser-tested
+(console errors, animations, quiz, reveals, mark-complete, mobile width), and independently
+reviewed via `.docs/REVIEW-CHECKLIST.md` with fixes applied. Day 5 (Sliding Window), Day 6
+(Hash Maps & Sets), Day 7 (Week 1 Review) built after Day 4; summaries:
+- **Day 5**: fixed/variable sliding window. Review caught a diagram caption with a wrong traced
+  result and a complexity-table space claim that contradicted the lesson's own practice-problem
+  solution (same O(k)-overreach class as Day 4/6).
+- **Day 6**: hash maps/sets, frequency counting. Caught two bugs myself pre-review (map display
+  breaking Map's own insertion-order guarantee via a plain-object round-trip; a narration/
+  display timing mismatch) — this "catch it myself first" habit is now working. Review caught a
+  legend not matching actual visualization colors, and another O(k)-overreach in the complexity
+  table.
+- **Day 7**: Week 1 review day — 5 mixed practice problems (not 3, per the original spec for
+  review days), a Week 1 code-template cheat sheet, a pattern decision-checklist diagram, and a
+  synthesis visualization (Subarray Sum Equals K) combining sliding-window + hash-map ideas.
+  Rebuilt the flowchart diagram from a branching tree to a stacked linear layout after the tree
+  caused text overlap/clipping — noting this as a **general diagram-design rule**: prefer
+  stacked/linear layouts over branching trees in a 620px-wide SVG; trees run out of horizontal
+  room fast. Review caught a missing required section (the "how to talk through it out loud"
+  paragraph — every lesson needs one, review-day structure exceptions don't cover skipping it).
+
+**New standing practice, working well, keep doing it:** any lesson with a real, runnable code
+solution should be executed via `node -e` against known test cases before browser-testing, not
+just visually inspected — this has caught real bugs (Day 4's off-by-one) and given fast
+confidence on Days 5-7. Also keep self-checking for the recurring bug classes before dispatching
+review (cross-section value mismatches, SVG text clipping, legend/state mismatches) — doing so
+has caught real issues before the review agent even runs, which is faster than waiting for review.
+
 ## Not started yet
-- Lesson pages `lessons/day05.html` … `day30.html` — use Days 1-4 as the template, apply every
-  point in "Lesson template" above, review each via `.docs/REVIEW-CHECKLIST.md` before moving
-  on. Build order per DECISIONS.md: rest of Week 1 (Days 5–7) next, then Weeks 2–4.
+- Lesson pages `lessons/day08.html` … `day30.html` (Week 2: sorting, searching, recursion —
+  Days 8-14; Week 3: core data structures — Days 15-21; Week 4: advanced + interview sim —
+  Days 22-30). Use Days 1-7 as the template, apply every point in "Lesson template" above and
+  the Week 1 lessons-learned noted here, review each via `.docs/REVIEW-CHECKLIST.md`.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
-- **New standing practice going forward:** any lesson with a real, runnable code solution
-  (practice problems especially) should be executed via `node -e` on at least one test case
-  before being trusted, not just visually inspected — this is how the Day 4 removeDuplicates
-  bug was confirmed and how the fix was verified.
 
 ## Environment for local preview
 ```bash
