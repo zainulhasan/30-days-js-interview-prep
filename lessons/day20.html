@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 20: Binary Search Trees — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Insert, search, and validate a binary search tree — animated." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 20 / 30 &middot; WEEK 3</p>
+  <h1>Binary Search Trees</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Meet the <strong>BST invariant</strong>: for every single node, everything in its left
+      subtree is smaller than it, and everything in its right subtree is larger — not just its
+      immediate children, its <em>entire</em> subtree on each side.</li>
+    <li>Implement <strong>insert</strong> (walk left/right by comparison until you find an empty
+      spot) and <strong>search</strong> (the exact same left/right walk, stopping early on a match
+      or a dead end) on the same <code>TreeNode</code> class Day 19 already introduced.</li>
+    <li>Implement <strong>isValidBST</strong> correctly — and see exactly why checking only
+      "left child &lt; parent &lt; right child" at each node is a trap that lets genuinely invalid
+      trees slip through.</li>
+    <li>Know the honest complexity: insert/search are O(h), where h is the tree's height — O(log n)
+      only if the tree stays roughly balanced, and O(n) on a skewed tree. "BST operations are
+      O(log n)" is an overclaim unless you say "for a balanced tree."</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A <strong>binary search tree (BST)</strong> uses the exact same <code>TreeNode</code> class as
+    Day 19 — <code>val</code>, <code>left</code>, <code>right</code> — and the exact same shape (at
+    most two children per node). What changes is <em>where</em> a new value is allowed to go.
+    Day 19's tree had no ordering rule at all — a new node could land "wherever there's room."
+    A BST adds one rule and enforces it everywhere: at <em>every</em> node, every value in its left
+    subtree must be smaller than it, and every value in its right subtree must be larger. That one
+    rule is what makes insert and search fast — it turns "where do I look?" into a single
+    comparison at each step instead of a full scan.</p>
+  <p>Think of a well-organized filing cabinet, or a paper phone book: entries are kept in sorted
+    order specifically so you never have to scan the whole thing. Looking for "Mendez"? Open
+    roughly to the middle — say you land on "K". "Mendez" comes after "K" alphabetically, so you
+    already know the entire first half of the book (everything from "A" to "K") can't contain it —
+    skip it, and only look to the right. That's exactly Day 12's binary search, applied to a tree
+    instead of a sorted array: one comparison eliminates an entire subtree, not just one entry.</p>
+  <p>A BST bakes that same idea into its shape. Instead of a sorted array you binary search over
+    with <code>lo</code>/<code>hi</code>/<code>mid</code>, the sort order lives in the tree's
+    structure itself — "go left" or "go right" at each node <em>is</em> the narrowing step, and the
+    empty spot where a walk runs out of tree <em>is</em> where a new value belongs.</p>
+
+  <h2>Diagram: a valid BST and its invariant</h2>
+  <svg class="diagram" viewBox="0 0 620 360" role="img" aria-label="A 7-node binary search tree rooted at 50, with left child 30 and right child 70. 30's children are 20 and 40; 70's children are 60 and 80. Every node in the left subtree of the root (20, 30, 40) is less than 50, and every node in the right subtree of the root (60, 70, 80) is greater than 50 — the same pattern repeats one level down: 20 is less than 30, 40 is greater than 30, 60 is less than 70, 80 is greater than 70.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">A valid BST — left subtree &lt; node &lt; right subtree, at every node</text>
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="310" y1="60" x2="180" y2="140"/>
+      <line x1="310" y1="60" x2="440" y2="140"/>
+      <line x1="180" y1="140" x2="110" y2="220"/>
+      <line x1="180" y1="140" x2="250" y2="220"/>
+      <line x1="440" y1="140" x2="370" y2="220"/>
+      <line x1="440" y1="140" x2="510" y2="220"/>
+    </g>
+    <g>
+      <circle cx="310" cy="60" r="16" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="310" y="65" text-anchor="middle" font-size="13" fill="#DCDFE4">50</text>
+      <circle cx="180" cy="140" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="180" y="145" text-anchor="middle" font-size="13" fill="#DCDFE4">30</text>
+      <circle cx="440" cy="140" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="440" y="145" text-anchor="middle" font-size="13" fill="#DCDFE4">70</text>
+      <circle cx="110" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="110" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">20</text>
+      <circle cx="250" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="250" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">40</text>
+      <circle cx="370" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="370" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">60</text>
+      <circle cx="510" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="510" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">80</text>
+    </g>
+    <text x="30" y="255" font-size="12" fill="#98C379" text-anchor="start">◀ left: {20, 30, 40} all &lt; 50</text>
+    <text x="590" y="255" font-size="12" fill="#E06C75" text-anchor="end">right: {60, 70, 80} all &gt; 50 ▶</text>
+    <text x="20" y="290" font-size="12" fill="#ABB2BF">The same rule repeats one level down: 20 &lt; 30 &lt; 40, and 60 &lt; 70 &lt; 80.</text>
+    <text x="20" y="310" font-size="12" fill="#ABB2BF">Inorder traversal (left, node, right) visits 20, 30, 40, 50, 60, 70, 80 —</text>
+    <text x="20" y="328" font-size="12" fill="#ABB2BF">sorted order, for free, as a side effect of the BST invariant.</text>
+  </svg>
+
+  <h2>Diagram: insert's walk — deciding left/right until an empty spot</h2>
+  <svg class="diagram" viewBox="0 0 620 370" role="img" aria-label="Inserting the value 45 into the same 7-node BST. Starting at root 50, since 45 is less than 50, go left to 30. Since 45 is greater than 30, go right to 40. Since 45 is greater than 40 and 40 has no right child, 45 becomes the new right child of 40 — a walk of exactly two comparisons before landing in the one empty spot where it belongs.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Inserting 45: walk left/right by comparison until an empty spot appears</text>
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="310" y1="60" x2="180" y2="140"/>
+      <line x1="310" y1="60" x2="440" y2="140"/>
+      <line x1="180" y1="140" x2="110" y2="220"/>
+      <line x1="180" y1="140" x2="250" y2="220"/>
+      <line x1="440" y1="140" x2="370" y2="220"/>
+      <line x1="440" y1="140" x2="510" y2="220"/>
+    </g>
+    <g stroke="#61AEEE" stroke-width="2.5">
+      <line x1="310" y1="60" x2="180" y2="140"/>
+      <line x1="180" y1="140" x2="250" y2="220"/>
+    </g>
+    <line x1="250" y1="220" x2="290" y2="270" stroke="#98C379" stroke-width="2.5" stroke-dasharray="4 3"/>
+    <g>
+      <circle cx="310" cy="60" r="16" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="310" y="65" text-anchor="middle" font-size="13" fill="#DCDFE4">50</text>
+      <circle cx="180" cy="140" r="16" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="180" y="145" text-anchor="middle" font-size="13" fill="#DCDFE4">30</text>
+      <circle cx="440" cy="140" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="440" y="145" text-anchor="middle" font-size="13" fill="#DCDFE4">70</text>
+      <circle cx="110" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="110" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">20</text>
+      <circle cx="250" cy="220" r="16" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="250" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">40</text>
+      <circle cx="370" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="370" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">60</text>
+      <circle cx="510" cy="220" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="510" y="225" text-anchor="middle" font-size="13" fill="#DCDFE4">80</text>
+      <circle cx="290" cy="280" r="16" fill="#2C313A" stroke="#98C379" stroke-width="2" stroke-dasharray="3 2"/>
+      <text x="290" y="285" text-anchor="middle" font-size="13" fill="#98C379">45</text>
+    </g>
+    <text x="20" y="60" font-size="11" fill="#818896">45 &lt; 50 → go left</text>
+    <text x="20" y="140" font-size="11" fill="#818896">45 &gt; 30 → go right</text>
+    <text x="320" y="270" font-size="11" fill="#98C379">40 has no right child → 45 lands here</text>
+    <text x="20" y="325" font-size="12" fill="#ABB2BF">Two comparisons, then an empty spot —</text>
+    <text x="20" y="343" font-size="12" fill="#ABB2BF">the walk always ends at the first null child.</text>
+  </svg>
+
+  <h2>Diagram: why "just check parent vs. child" validation is wrong</h2>
+  <svg class="diagram" viewBox="0 0 620 355" role="img" aria-label="A tree rooted at 10 with left child 5 and right child 15; 15 has left child 6 and right child 20. Node 6 looks locally fine: it is less than its immediate parent 15. But node 6 sits in the right subtree of the root 10, so the BST invariant requires it to be greater than 10 — and 6 is less than 10, so this tree is actually invalid. A validator that only compares each node to its immediate parent would miss this and incorrectly call the tree valid.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Locally fine, globally invalid: the classic isValidBST trap</text>
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="200" y1="55" x2="120" y2="125"/>
+      <line x1="200" y1="55" x2="320" y2="125"/>
+      <line x1="320" y1="125" x2="260" y2="200"/>
+      <line x1="320" y1="125" x2="400" y2="200"/>
+    </g>
+    <g>
+      <circle cx="200" cy="55" r="16" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="200" y="60" text-anchor="middle" font-size="13" fill="#DCDFE4">10</text>
+      <circle cx="120" cy="125" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="120" y="130" text-anchor="middle" font-size="13" fill="#DCDFE4">5</text>
+      <circle cx="320" cy="125" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="320" y="130" text-anchor="middle" font-size="13" fill="#DCDFE4">15</text>
+      <circle cx="260" cy="200" r="16" fill="#2C313A" stroke="#E06C75" stroke-width="3"/>
+      <text x="260" y="205" text-anchor="middle" font-size="13" fill="#E06C75">6</text>
+      <circle cx="400" cy="200" r="16" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="400" y="205" text-anchor="middle" font-size="13" fill="#DCDFE4">20</text>
+    </g>
+    <text x="418" y="130" font-size="11" fill="#818896">15's right subtree</text>
+    <text x="120" y="245" font-size="12" fill="#98C379">✓ locally: 6 &lt; 15 (its own parent) — looks fine</text>
+    <text x="120" y="264" font-size="12" fill="#E06C75">✗ globally: 6 is in root 10's RIGHT subtree — must be &gt; 10.</text>
+    <text x="120" y="283" font-size="12" fill="#E06C75">But 6 &lt; 10, so this tree is actually invalid.</text>
+    <text x="20" y="308" font-size="12" fill="#ABB2BF">A validator checking only left.val &lt; node.val &lt; right.val per node</text>
+    <text x="20" y="326" font-size="12" fill="#ABB2BF">misses this — it needs min/max bounds threaded from every ancestor.</text>
+  </svg>
+
+  <h2>Interactive visualization: insert into a BST</h2>
+  <div class="legend">
+    <span><i class="lg-active"></i> current node — comparing now</span>
+    <span><i class="lg-sorted"></i> path already confirmed</span>
+    <span><i class="lg-compare"></i> new node — landed here</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: search a BST</h2>
+  <div class="legend">
+    <span><i class="lg-active"></i> current node — comparing now</span>
+    <span><i class="lg-sorted"></i> path so far (green on the last node = match found)</span>
+    <span><i class="lg-swap"></i> path so far, ending in a dead end — not found</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: insert, search, isValidBST</h2>
+  <pre><code>// Same TreeNode class as Day 19 — val, left, right. What's new today is the
+// RULE every insert obeys: smaller goes left, larger goes right, at every node.
+class TreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+function insert(root, val) {
+  if (!root) return new TreeNode(val);    // empty spot found — this is where val belongs
+  if (val < root.val) root.left = insert(root.left, val);
+  else if (val > root.val) root.right = insert(root.right, val);
+  // val === root.val: already present — no duplicate inserted, tree unchanged
+  return root;
+}
+
+function search(root, val) {
+  if (!root) return false;                // fell off the tree — dead end, not found
+  if (val === root.val) return true;      // match
+  return val < root.val ? search(root.left, val) : search(root.right, val);
+}
+
+// The classic trap: checking only "left.val < node.val < right.val" at each node
+// misses violations against a GRANDPARENT or higher ancestor. Thread a min/max
+// bound down through the recursion instead — every node must fall strictly
+// between the tightest bounds set by ALL of its ancestors, not just its parent.
+function isValidBST(root, min = -Infinity, max = Infinity) {
+  if (!root) return true;                 // an empty tree (or empty subtree) is valid
+  if (root.val <= min || root.val >= max) return false;
+  return isValidBST(root.left, min, root.val) &&
+         isValidBST(root.right, root.val, max);
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>TreeNode</code> is unchanged from Day 19 — the BST invariant is a rule about
+      <em>where</em> values are placed, not a new field on the node itself.</li>
+    <li><code>insert</code> recurses one comparison at a time: smaller goes left, larger goes
+      right, and the base case <code>if (!root) return new TreeNode(val)</code> is exactly the
+      empty spot the walk was looking for — that returned new node gets wired back in as the
+      parent's <code>.left</code> or <code>.right</code> by the assignment one level up.</li>
+    <li><code>search</code> has the identical walk shape as <code>insert</code>, minus the
+      wiring-in step — it's Day 12's binary search comparison (<code>lo</code>/<code>hi</code>/
+      <code>mid</code>) with the tree's own structure standing in for the sorted array.</li>
+    <li><code>isValidBST</code> is the one genuinely new idea: <code>min</code>/<code>max</code>
+      start at <code>±Infinity</code> and tighten by exactly one side on every recursive call —
+      going left tightens <code>max</code> to the current node's value (nothing further left may
+      exceed it), going right tightens <code>min</code>. That's what makes it check every
+      ancestor, not just the immediate parent — by the time you reach node 6 in the trap diagram
+      above, its inherited bound is <code>(min=10, max=15)</code>, not just <code>(−∞, 15)</code>,
+      so <code>6 &lt;= 10</code> correctly fails.</li>
+  </ul>
+
+  <h3>Dry run: insert(65) into the 7-node BST above</h3>
+  <div style="overflow-x:auto;">
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>Current node</th><th>Compare</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>50</td><td>65 &gt; 50</td><td>go right → 70</td></tr>
+      <tr><td>2</td><td>70</td><td>65 &lt; 70</td><td>go left → 60</td></tr>
+      <tr><td>3</td><td>60</td><td>65 &gt; 60, 60.right is empty</td><td>insert 65 as 60's right child</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Three nodes deep, two real comparisons — the
+    walk always terminates the instant it steps toward a <code>null</code> child, which is exactly
+    where the new node belongs.</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>insert</td><td>O(h)</td><td>O(h)</td><td>One comparison per level walked down, h = tree height. Recursive call stack depth also tracks h.</td></tr>
+      <tr><td>search</td><td>O(h)</td><td>O(h)</td><td>Identical walk to insert, just without wiring in a new node — same per-level comparison, same recursion depth.</td></tr>
+      <tr><td>isValidBST</td><td>O(n)</td><td>O(h)</td><td>Must visit every node once to confirm the whole tree (O(n) time) — the min/max bounds are just extra arguments, not extra visits. Call stack depth is still h.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">h = the tree's height, n = total nodes.
+    <strong>O(h) is not automatically O(log n).</strong> On a <em>balanced</em> tree, h ≈ log n, and
+    insert/search really do run in logarithmic time — that's the whole appeal of a BST. But
+    nothing about a plain BST keeps it balanced: insert 1, 2, 3, 4, 5 in that exact order and every
+    new value is always larger than everything already in the tree, so each one becomes the
+    previous node's right child. The result is a straight rightward chain — height n, no
+    branching at all — and insert/search degrade to O(n), the same cost as scanning a linked list.
+    Say "O(log n) for a balanced BST," never "O(log n) BST operations" unqualified.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why is checking only "left child &lt; parent &lt; right child" at each node not
+      enough to validate a BST?</strong> Because the BST invariant is about a node's entire
+      subtree on each side, not just its immediate children. A node can be perfectly ordered
+      relative to its own parent while still violating the invariant relative to a grandparent or
+      higher ancestor — see the diagram above, where node 6 is fine next to its parent 15 but
+      invalid relative to root 10.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this exact
+      local-only check is the single most common wrong <code>isValidBST</code> submission — it
+      passes small hand-checked examples (parent/child pairs all look fine!) and fails the moment
+      a grandparent-level violation is hidden three levels down.</span></li>
+    <li><strong>How does threading min/max bounds through the recursion fix it?</strong> Every
+      recursive call carries the tightest lower and upper bound inherited from <em>every</em>
+      ancestor so far, not just the direct parent. Going left tightens the upper bound to the
+      current node's value; going right tightens the lower bound. By the time you reach any node,
+      its bounds already encode every ancestor's constraint, so one comparison
+      (<code>min &lt; node.val &lt; max</code>) is enough to catch a violation from any depth.</li>
+    <li><strong>Are BST insert/search really O(log n)?</strong> Only if the tree is reasonably
+      balanced. The honest complexity is O(h), h = height — O(log n) when h stays proportional to
+      log n, but O(n) on a skewed tree (e.g. inserting already-sorted data, which produces a
+      straight chain).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How would you
+      keep it balanced?" — self-balancing variants (AVL trees, red-black trees) add rotation
+      rules after insert/delete specifically to bound the height at O(log n) no matter the insert
+      order; a plain BST as shown today has no such guarantee.</span></li>
+    <li><strong>Why does <code>insert</code> silently do nothing when <code>val</code> already
+      exists?</strong> The template shown treats a BST as a set of distinct values — the
+      <code>val === root.val</code> case falls through both comparisons and the function just
+      returns the unchanged subtree. Some variants intentionally allow duplicates (commonly by
+      routing them to the right, "duplicates go right" as a convention) — always confirm with the
+      interviewer which behavior is expected before assuming one.</li>
+    <li><strong>What's the very first edge case to say out loud for any of these three
+      functions?</strong> The empty tree (<code>root === null</code>). <code>insert</code> must
+      create the very first node instead of dereferencing <code>null.val</code>;
+      <code>search</code> must return <code>false</code> instead of crashing; <code>isValidBST</code>
+      must return <code>true</code> (an empty tree trivially satisfies the invariant) — the same
+      "guard null before touching <code>.val</code>" habit from Day 19 applies to every one of
+      today's three functions.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the invariant before writing a line —
+    "at every node, left subtree is smaller, right subtree is larger" — then narrate each walk as
+    a single comparison per step: "is my target smaller or larger than the current node? that
+    tells me the only subtree worth looking in." For <code>isValidBST</code> specifically, say the
+    trap out loud before coding it: "checking just the immediate parent isn't enough — I need to
+    carry a min and max bound down from every ancestor." Interviewers on this topic are listening
+    for whether you state the invariant precisely (not "sorted," but "left subtree fully smaller,
+    right subtree fully larger, at every node") and whether you qualify O(log n) with "if
+    balanced" instead of asserting it unconditionally.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Search in a Binary Search Tree <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/search-in-a-binary-search-tree/" target="_blank" rel="noopener">LeetCode: Search in a Binary Search Tree</a>)</span></h4>
+    <p>Given the root of a BST and a value <code>val</code>, find the node whose value equals
+      <code>val</code> and return the subtree rooted there, or <code>null</code> if it doesn't
+      exist — today's <code>search</code>, returning the node itself instead of a boolean.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Same walk as today's <code>search</code> —
+      the only change is returning the node (or subtree) you land on instead of <code>true</code>,
+      and <code>null</code> instead of <code>false</code> on a dead end.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function searchBST(root, val) {
+  if (!root) return null;
+  if (root.val === val) return root;
+  return val < root.val ? searchBST(root.left, val) : searchBST(root.right, val);
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Insert into a Binary Search Tree <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/insert-into-a-binary-search-tree/" target="_blank" rel="noopener">LeetCode: Insert into a Binary Search Tree</a>)</span></h4>
+    <p>Given the root of a BST and a value to insert (guaranteed not already present), insert it
+      and return the root of the resulting BST — today's <code>insert</code>, applied directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Any empty spot the walk reaches that keeps
+      the invariant intact is a valid answer — LeetCode explicitly allows multiple valid resulting
+      trees, so don't overthink finding "the" correct spot beyond following the same left/right
+      comparison walk as today's code.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function insertIntoBST(root, val) {
+  if (!root) return new TreeNode(val);
+  if (val < root.val) root.left = insertIntoBST(root.left, val);
+  else root.right = insertIntoBST(root.right, val);
+  return root;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Validate Binary Search Tree <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/validate-binary-search-tree/" target="_blank" rel="noopener">LeetCode: Validate Binary Search Tree</a>)</span></h4>
+    <p>Given the root of a binary tree, determine if it is a valid BST — today's
+      <code>isValidBST</code>, the min/max-bound version, applied directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Resist the tempting-but-wrong shortcut of
+      only comparing each node to its immediate children. Thread a <code>(min, max)</code> bound
+      through the recursion instead, tightening one side per step down, exactly like today's
+      trap-diagram example.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function isValidBST(root, min = -Infinity, max = Infinity) {
+  if (!root) return true;
+  if (root.val <= min || root.val >= max) return false;
+  return isValidBST(root.left, min, root.val) &&
+         isValidBST(root.right, root.val, max);
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="subtree" data-explain="The BST invariant is about a node's entire subtree on each side, not just its direct children — that's exactly why a min/max bound has to be threaded through the whole recursion.">
+    <p class="q-text">1. What does the BST invariant actually require at each node?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="subtree">Everything in its left subtree is smaller, everything in its right subtree is larger — not just its direct children</button>
+      <button class="btn dsa-quiz-option" data-value="children">Only its immediate left and right children need to be smaller/larger</button>
+      <button class="btn dsa-quiz-option" data-value="balanced">The tree must also stay height-balanced at every node</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="emptyspot" data-explain="insert walks left/right by comparison exactly like search, and the moment it steps toward a null child, that null spot is where the new node belongs — it becomes the new node's parent's left or right pointer." >
+    <p class="q-text">2. Where does insert(root, val) place a brand-new value?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="emptyspot">Wherever the left/right comparison walk first reaches a null child</button>
+      <button class="btn dsa-quiz-option" data-value="root">Always as the new root, pushing the old tree down</button>
+      <button class="btn dsa-quiz-option" data-value="closestleaf">At whichever existing leaf is numerically closest to val</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="trap" data-explain="The naive check only compares each node to its immediate parent — it misses violations against a grandparent or higher ancestor, exactly the trap shown in today's third diagram, where node 6 looks fine next to parent 15 but breaks root 10's constraint." >
+    <p class="q-text">3. Why does checking only "left.val &lt; node.val &lt; right.val" at each node fail to validate a BST correctly?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="trap">It only checks against the immediate parent, missing violations against a grandparent or higher ancestor</button>
+      <button class="btn dsa-quiz-option" data-value="slow">It's correct, just too slow — O(n²) instead of O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="duplicates">It's correct for BSTs without duplicates, wrong only when duplicates exist</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="skewed" data-explain="Inserting 1, 2, 3, 4, 5 in order makes every new value larger than everything already present, so each one becomes the previous node's right child — a straight rightward chain of height n, degrading insert/search to O(n)." >
+    <p class="q-text">4. Inserting the values 1, 2, 3, 4, 5 in that exact order into an empty BST produces what shape, and what does that do to insert/search cost?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="skewed">A skewed, linked-list-shaped tree (height 5) — insert/search degrade to O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="balanced">A perfectly balanced tree — insert/search stay O(log n)</button>
+      <button class="btn dsa-quiz-option" data-value="invalid">Not a valid BST, since the values are already sorted</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="oh" data-explain="The honest bound is O(h), h = the tree's height. It equals O(log n) only when the tree is balanced (h proportional to log n) — on a skewed tree h can reach n, making the same operation O(n)." >
+    <p class="q-text">5. What is the truly accurate worst-case time complexity of BST insert/search, stated in terms of the tree itself?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="oh">O(h), where h is the tree's height — O(log n) only if the tree happens to be balanced</button>
+      <button class="btn dsa-quiz-option" data-value="ologn">Always O(log n), by definition of "binary search tree"</button>
+      <button class="btn dsa-quiz-option" data-value="on2">Always O(n²), since every insert may require rebalancing</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 20 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day19.html">← Day 19: Trees — BFS &amp; DFS</a>
+    <a class="btn" href="day21.html">Day 21: Week 3 Review →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 20;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- shared base BST: 7 nodes, values 20,30,40,50,60,70,80, inserted in order
+  // 50,30,70,20,40,60,80 so the tree is perfectly balanced (matches the diagrams above) ----
+  const BASE_IDS = ['n50', 'n30', 'n70', 'n20', 'n40', 'n60', 'n80'];
+  const BASE_VALUES = { n50: 50, n30: 30, n70: 70, n20: 20, n40: 40, n60: 60, n80: 80 };
+  const BASE_POS = {
+    n50: { x: 450, y: 50 },
+    n30: { x: 250, y: 130 }, n70: { x: 650, y: 130 },
+    n20: { x: 150, y: 210 }, n40: { x: 350, y: 210 }, n60: { x: 550, y: 210 }, n80: { x: 750, y: 210 },
+  };
+  const BASE_EDGES = [
+    { from: 'n50', to: 'n30', directed: true }, { from: 'n50', to: 'n70', directed: true },
+    { from: 'n30', to: 'n20', directed: true }, { from: 'n30', to: 'n40', directed: true },
+    { from: 'n70', to: 'n60', directed: true }, { from: 'n70', to: 'n80', directed: true },
+  ];
+  const CHILD_OF = { n50: { L: 'n30', R: 'n70' }, n30: { L: 'n20', R: 'n40' }, n70: { L: 'n60', R: 'n80' } };
+  const GRAPH_W = 900;
+
+  // one candidate insert value per empty leaf-slot, with a hand-checked, non-overlapping
+  // landing position at depth 3 (generous margins on every side, per the site's Graph rules)
+  const INSERT_CANDIDATES = [
+    { val: 10, parent: 'n20', dir: 'L', x: 95,  y: 290 },
+    { val: 25, parent: 'n20', dir: 'R', x: 205, y: 290 },
+    { val: 35, parent: 'n40', dir: 'L', x: 295, y: 290 },
+    { val: 45, parent: 'n40', dir: 'R', x: 405, y: 290 },
+    { val: 55, parent: 'n60', dir: 'L', x: 495, y: 290 },
+    { val: 65, parent: 'n60', dir: 'R', x: 605, y: 290 },
+    { val: 75, parent: 'n80', dir: 'L', x: 695, y: 290 },
+    { val: 90, parent: 'n80', dir: 'R', x: 805, y: 290 },
+  ];
+  const SEARCH_HITS = [20, 30, 40, 50, 60, 70, 80];
+  const SEARCH_MISSES = [10, 25, 35, 45, 55, 65, 75, 90];
+
+  function baseNodes() {
+    return BASE_IDS.map((id) => ({ id, x: BASE_POS[id].x, y: BASE_POS[id].y, label: String(BASE_VALUES[id]) }));
+  }
+
+  function paintTree(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {}, {});
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = graph.svg;
+    function addText(x, y, txt, fill, size) {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', x);
+      t.setAttribute('y', y);
+      t.setAttribute('font-size', size || 12);
+      t.setAttribute('fill', fill || '#818896');
+      t.textContent = txt;
+      svg.appendChild(t);
+    }
+    // place the path-so-far caption a fixed, generous margin above THIS graph's own
+    // bottom edge, so it never crowds the deepest row of nodes regardless of which
+    // graph (insert's taller 4-level layout vs. search's shorter 3-level one) is painting
+    addText(20, graph.height - 20, step.pathLine, '#61AEEE', 12);
+  }
+
+  // ---- viz 1: insert(root, val) — mirrors insert() from "The code" step by step ----
+  function buildInsertSteps(candidate) {
+    const nodes = baseNodes();
+    const edges = BASE_EDGES.slice();
+    const path = [];
+    const steps = [];
+
+    steps.push({
+      narration: `Insert ${candidate.val}. Start at the root (50).`,
+      nodes: nodes.slice(), edges, states: { n50: 'active' },
+      pathLine: `Path so far: [50]`,
+    });
+
+    let cur = 'n50';
+    path.push(cur);
+    while (true) {
+      const curVal = BASE_VALUES[cur];
+      const dir = candidate.val < curVal ? 'L' : 'R';
+      const nextId = CHILD_OF[cur] ? CHILD_OF[cur][dir] : null;
+      const states = {};
+      path.forEach((id) => { states[id] = 'sorted'; });
+      states[cur] = 'active';
+      if (nextId) {
+        steps.push({
+          narration: `${candidate.val} ${dir === 'L' ? '<' : '>'} ${curVal} → go ${dir === 'L' ? 'left' : 'right'} to ${BASE_VALUES[nextId]}.`,
+          nodes: nodes.slice(), edges, states,
+          pathLine: `Path so far: [${path.map((id) => BASE_VALUES[id]).join(', ')}]`,
+        });
+        cur = nextId;
+        path.push(cur);
+      } else {
+        steps.push({
+          narration: `${candidate.val} ${dir === 'L' ? '<' : '>'} ${curVal}, and ${curVal}'s ${dir === 'L' ? 'left' : 'right'} child is empty — this is where ${candidate.val} belongs.`,
+          nodes: nodes.slice(), edges, states,
+          pathLine: `Path so far: [${path.map((id) => BASE_VALUES[id]).join(', ')}]`,
+        });
+        break;
+      }
+    }
+
+    const newNode = { id: 'nNew', x: candidate.x, y: candidate.y, label: String(candidate.val) };
+    const newEdges = edges.concat([{ from: candidate.parent, to: 'nNew', directed: true }]);
+    const finalStates = {};
+    path.forEach((id) => { finalStates[id] = 'sorted'; });
+    finalStates.nNew = 'compare';
+    steps.push({
+      narration: `Inserted. ${candidate.val} is now the ${candidate.dir === 'L' ? 'left' : 'right'} child of ${BASE_VALUES[candidate.parent]}.`,
+      nodes: nodes.concat([newNode]), edges: newEdges, states: finalStates,
+      pathLine: `Path taken: [${path.map((id) => BASE_VALUES[id]).join(', ')}] → new node ${candidate.val}`,
+    });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  // taller: 4 levels (root, 2 children, 4 grandchildren, plus the newly inserted node at depth 3)
+  const graph1 = new DSA.Graph(viz1Stage, { width: GRAPH_W, height: 380 });
+  let candidate1 = INSERT_CANDIDATES[3]; // insert(45) — matches the dry-run-adjacent walk shown in prose
+  let steps1 = buildInsertSteps(candidate1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1200,
+    onStep(step) { paintTree(graph1, step || steps1[0]); },
+    onShuffle() {
+      candidate1 = DSA.shuffleArray(INSERT_CANDIDATES)[0];
+      steps1 = buildInsertSteps(candidate1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: search(root, val) — mirrors search() from "The code" step by step ----
+  function buildSearchSteps(target) {
+    const nodes = baseNodes();
+    const edges = BASE_EDGES.slice();
+    const path = [];
+    const steps = [];
+
+    steps.push({
+      narration: `Search for ${target}. Start at the root (50).`,
+      nodes: nodes.slice(), edges, states: { n50: 'active' },
+      pathLine: `Path so far: [50]`,
+    });
+
+    let cur = 'n50';
+    while (cur) {
+      path.push(cur);
+      const curVal = BASE_VALUES[cur];
+      const states = {};
+      path.slice(0, -1).forEach((id) => { states[id] = 'sorted'; });
+      states[cur] = 'active';
+      if (target === curVal) {
+        const finalStates = {};
+        path.forEach((id) => { finalStates[id] = 'sorted'; });
+        steps.push({
+          narration: `${target} === ${curVal} — match found!`,
+          nodes: nodes.slice(), edges, states: finalStates,
+          pathLine: `Path taken: [${path.map((id) => BASE_VALUES[id]).join(', ')}] → found`,
+        });
+        return steps;
+      }
+      const dir = target < curVal ? 'L' : 'R';
+      const nextId = CHILD_OF[cur] ? CHILD_OF[cur][dir] : null;
+      if (nextId) {
+        steps.push({
+          narration: `${target} ${dir === 'L' ? '<' : '>'} ${curVal} → go ${dir === 'L' ? 'left' : 'right'} to ${BASE_VALUES[nextId]}.`,
+          nodes: nodes.slice(), edges, states,
+          pathLine: `Path so far: [${path.map((id) => BASE_VALUES[id]).join(', ')}]`,
+        });
+        cur = nextId;
+      } else {
+        const finalStates = {};
+        path.forEach((id) => { finalStates[id] = 'swap'; });
+        steps.push({
+          narration: `${target} ${dir === 'L' ? '<' : '>'} ${curVal}, and ${curVal}'s ${dir === 'L' ? 'left' : 'right'} child is empty — dead end, ${target} is not in this tree.`,
+          nodes: nodes.slice(), edges, states: finalStates,
+          pathLine: `Path taken: [${path.map((id) => BASE_VALUES[id]).join(', ')}] → not found`,
+        });
+        return steps;
+      }
+    }
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  // shorter: search never goes past the existing 3 levels (root, 2 children, 4 grandchildren)
+  const graph2 = new DSA.Graph(viz2Stage, { width: GRAPH_W, height: 280 });
+  let target2 = 60; // a hit, by default
+  let steps2 = buildSearchSteps(target2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1200,
+    onStep(step) { paintTree(graph2, step || steps2[0]); },
+    onShuffle() {
+      const pool = SEARCH_HITS.concat(SEARCH_MISSES);
+      target2 = DSA.shuffleArray(pool)[0];
+      steps2 = buildSearchSteps(target2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
