@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 27: Greedy Algorithms — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Greedy algorithms, and a counter-example showing exactly when greedy fails." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 27 / 30 &middot; WEEK 4</p>
+  <h1>Greedy Algorithms</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Understand what "greedy" actually means: make the locally-optimal choice at every step and
+      <strong>never revisit it</strong> — and learn the <strong>greedy-choice property</strong>, the
+      one condition that must hold before that strategy is allowed to work.</li>
+    <li>Work through <strong>Non-overlapping Intervals</strong> (LC 435) as a canonical example
+      where greedy provably works — and understand precisely why sorting by <strong>end time</strong>
+      (not start time, not interval length) is what makes the greedy choice safe.</li>
+    <li>Work through a genuine counter-example — coin change with coins <code>[1, 3, 4]</code> —
+      where greedy provably <strong>fails</strong>, to build the instinct for recognizing when NOT
+      to trust it.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A <strong>greedy algorithm</strong> makes the choice that looks best right now, commits to it,
+    and never looks back. No backtracking, no reconsidering, no comparing against alternatives you
+    didn't take. Contrast that with <strong>dynamic programming</strong> (Days 25–26): DP considers —
+    or caches the outcome of — every relevant subproblem, then combines those cached answers into a
+    provably-correct result. Greedy skips all of that bookkeeping and just takes the best-looking
+    option at each step. That makes greedy dramatically cheaper when it's valid... and silently wrong
+    when it isn't.</p>
+  <p>"When it's valid" is the whole game. A greedy strategy is only safe to use when the problem has
+    the <strong>greedy-choice property</strong>: the locally optimal choice at each step is provably
+    always part of <em>some</em> globally optimal solution. If you can't prove that — or worse, if
+    you can find even one input where the locally-best choice leads somewhere worse — greedy is not
+    safe, and you need DP's exhaustive subproblem search instead.</p>
+  <p>Today has two worked examples that sit on opposite sides of that line:</p>
+  <ul class="goal-list">
+    <li><strong>Non-overlapping Intervals</strong> — greedy <em>works</em> here. Sort the intervals
+      by end time, then greedily keep any interval whose start doesn't overlap the last interval you
+      kept. The insight that makes this provably correct: whichever interval finishes <em>earliest</em>
+      always leaves the most possible room for everything that comes after it, so keeping it can never
+      be a worse choice than keeping something that finishes later.</li>
+    <li><strong>Coin change with coins [1, 3, 4]</strong> — greedy <em>fails</em> here. "Always take
+      the biggest coin you can" sounds locally reasonable, but for amount 6 it produces a
+      demonstrably worse answer than the true optimum. This is the exact reason Day 26's Coin Change
+      used DP instead of a greedy shortcut — greedy simply cannot be trusted on this problem shape.</li>
+  </ul>
+
+  <h2>Diagram: interval scheduling — greedy sorted by end time</h2>
+  <svg class="diagram" viewBox="0 0 640 385" role="img" aria-label="Number line diagram of 4 intervals — [1,2], [2,3], [3,4], [1,3] — sorted by end time and walked left to right. [1,2] and [2,3] are kept in green because each start is greater than or equal to the running lastEnd. [1,3] is discarded in red because its start (1) is less than lastEnd (3) at that point. [3,4] is kept in green because its start (3) is no less than lastEnd (3). Final result: 1 interval removed, 3 kept.">
+    <text x="24" y="32" font-size="13" fill="#61AEEE" font-weight="bold">Sorted by END time, then walked left to right (greedy keep/discard)</text>
+
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="48" y1="60" x2="598" y2="60"/>
+      <line x1="48" y1="56" x2="48" y2="64"/>
+      <line x1="158" y1="56" x2="158" y2="64"/>
+      <line x1="268" y1="56" x2="268" y2="64"/>
+      <line x1="378" y1="56" x2="378" y2="64"/>
+      <line x1="488" y1="56" x2="488" y2="64"/>
+      <line x1="598" y1="56" x2="598" y2="64"/>
+    </g>
+    <g font-size="10" fill="#818896" text-anchor="middle">
+      <text x="48" y="78">0</text><text x="158" y="78">1</text><text x="268" y="78">2</text>
+      <text x="378" y="78">3</text><text x="488" y="78">4</text><text x="598" y="78">5</text>
+    </g>
+
+    <text x="213" y="94" font-size="10.5" fill="#98C379" text-anchor="middle">[1,2] KEEP &#8594; lastEnd=2</text>
+    <rect x="158" y="100" width="110" height="24" rx="5" fill="#2C313A" stroke="#98C379" stroke-width="3"/>
+
+    <text x="323" y="140" font-size="10.5" fill="#98C379" text-anchor="middle">[2,3] KEEP &#8594; lastEnd=3</text>
+    <rect x="268" y="146" width="110" height="24" rx="5" fill="#2C313A" stroke="#98C379" stroke-width="3"/>
+
+    <text x="268" y="186" font-size="10.5" fill="#E06C75" text-anchor="middle">[1,3] REMOVE (1 &lt; lastEnd 3)</text>
+    <rect x="158" y="192" width="220" height="24" rx="5" fill="#2C313A" stroke="#E06C75" stroke-width="3" stroke-dasharray="5 3"/>
+
+    <text x="433" y="232" font-size="10.5" fill="#98C379" text-anchor="middle">[3,4] KEEP &#8594; lastEnd=4</text>
+    <rect x="378" y="238" width="110" height="24" rx="5" fill="#2C313A" stroke="#98C379" stroke-width="3"/>
+
+    <rect x="48" y="278" width="14" height="14" rx="3" fill="#2C313A" stroke="#98C379" stroke-width="3"/>
+    <text x="68" y="289" font-size="11" fill="#DCDFE4">kept — start &#8805; lastEnd, no overlap</text>
+    <rect x="48" y="300" width="14" height="14" rx="3" fill="#2C313A" stroke="#E06C75" stroke-width="3"/>
+    <text x="68" y="311" font-size="11" fill="#DCDFE4">removed — start &lt; lastEnd (overlaps last kept)</text>
+
+    <text x="24" y="342" font-size="12" fill="#DCDFE4">Only [1,3] gets removed — 1 total. Ending each kept interval as EARLY as</text>
+    <text x="24" y="359" font-size="12" fill="#DCDFE4">possible (sorting by end time) is what leaves the most room for the rest.</text>
+  </svg>
+
+  <h2>Diagram: when greedy fails — coin change with [1, 3, 4], amount 6</h2>
+  <svg class="diagram" viewBox="0 0 640 378" role="img" aria-label="Two side-by-side receipts for making change for amount 6 with coins 1, 3, and 4. The left receipt, labeled GREEDY, always takes the largest coin possible: pick 4 leaving 2, pick 1 leaving 1, pick 1 leaving 0 — a total of 3 coins, marked not optimal. The right receipt, labeled OPTIMAL, shows the true minimum: pick 3 leaving 3, pick 3 leaving 0 — a total of 2 coins, marked optimal. Greedy uses 1 more coin than necessary.">
+    <text x="24" y="32" font-size="13" fill="#61AEEE" font-weight="bold">Coin-change counter-example — coins [1, 3, 4], target amount 6</text>
+
+    <rect x="40" y="58" width="260" height="230" rx="8" fill="#2C313A" stroke="#E06C75" stroke-width="2"/>
+    <text x="170" y="86" font-size="15" font-weight="bold" fill="#E06C75" text-anchor="middle">GREEDY</text>
+    <text x="170" y="102" font-size="9.5" fill="#818896" text-anchor="middle">(largest coin &#8804; remaining, each step)</text>
+    <text x="64" y="130" font-size="11.5" fill="#ABB2BF">Pick 4 &#8594; remaining 2</text>
+    <text x="64" y="154" font-size="11.5" fill="#ABB2BF">Pick 1 &#8594; remaining 1</text>
+    <text x="64" y="178" font-size="11.5" fill="#ABB2BF">Pick 1 &#8594; remaining 0</text>
+    <line x1="64" y1="198" x2="276" y2="198" stroke="#3E4452" stroke-width="1.5"/>
+    <text x="64" y="224" font-size="13.5" font-weight="bold" fill="#E06C75">Total: 3 coins (4 + 1 + 1)</text>
+    <text x="64" y="252" font-size="11" fill="#E06C75">&#10007; not optimal — 1 coin too many</text>
+
+    <rect x="340" y="58" width="260" height="230" rx="8" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
+    <text x="470" y="86" font-size="15" font-weight="bold" fill="#98C379" text-anchor="middle">OPTIMAL</text>
+    <text x="470" y="102" font-size="9.5" fill="#818896" text-anchor="middle">(true minimum-coin solution)</text>
+    <text x="364" y="130" font-size="11.5" fill="#ABB2BF">Pick 3 &#8594; remaining 3</text>
+    <text x="364" y="154" font-size="11.5" fill="#ABB2BF">Pick 3 &#8594; remaining 0</text>
+    <text x="364" y="178" font-size="10" fill="#818896">&#8212; done in 2 picks, not 3</text>
+    <line x1="364" y1="198" x2="576" y2="198" stroke="#3E4452" stroke-width="1.5"/>
+    <text x="364" y="224" font-size="13.5" font-weight="bold" fill="#98C379">Total: 2 coins (3 + 3)</text>
+    <text x="364" y="252" font-size="11" fill="#98C379">&#10003; optimal — fewest coins possible</text>
+
+    <text x="24" y="322" font-size="12" fill="#DCDFE4">Greedy commits to the coin 4 immediately and can never revisit that choice —</text>
+    <text x="24" y="339" font-size="12" fill="#DCDFE4">yesterday's Day 26 DP checks every option exhaustively and correctly finds 3 + 3.</text>
+  </svg>
+
+  <h2>Interactive visualization: the interval greedy walk</h2>
+  <p>Watch <strong>Non-overlapping Intervals</strong> run step by step: sort by end time, then walk
+    left to right, keeping anything that doesn't overlap the last kept interval.</p>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently checking</span>
+    <span><i class="lg-sorted"></i> kept (non-overlapping)</span>
+    <span><i class="lg-swap"></i> removed (overlaps last kept)</span>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">The dashed blue line marks <code>lastEnd</code>
+    — the boundary the next interval's start must clear to be kept.</p>
+
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="vizIntervalStage"></div></div>
+    <div class="narration" id="vizIntervalNarration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="vizIntervalPlay">▶ Play</button>
+      <button class="btn" id="vizIntervalStep">Step ⏭</button>
+      <button class="btn" id="vizIntervalReset">⟲ Reset</button>
+      <button class="btn" id="vizIntervalShuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="vizIntervalCounter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// Non-overlapping Intervals (LC 435) — greedy, sorted by END time.
+// Returns the minimum number of intervals to remove so the rest don't overlap.
+function eraseOverlapIntervals(intervals) {
+  if (intervals.length === 0) return 0;
+
+  // The single most important line: sort by END time, not start time.
+  // Whichever interval finishes earliest leaves the most room for what follows —
+  // that's the greedy-choice property holding for THIS ordering specifically.
+  intervals.sort((a, b) => a[1] - b[1]);
+
+  let removals = 0;
+  let lastEnd = intervals[0][1];        // end time of the most recently KEPT interval
+
+  for (let i = 1; i < intervals.length; i++) {
+    const [start, end] = intervals[i];
+    if (start &lt; lastEnd) {
+      removals++;                       // overlaps the last kept interval — discard it
+    } else {
+      lastEnd = end;                    // no overlap — this becomes the new "last kept"
+    }
+  }
+  return removals;
+}
+
+// The classic counter-example: greedy does NOT work for arbitrary coin change.
+// Coins [1, 3, 4], amount 6 — "always take the largest coin you can afford."
+function greedyCoinChange(coins, amount) {
+  const sorted = coins.slice().sort((a, b) => b - a); // largest first
+  let remaining = amount;
+  const picks = [];
+  for (const coin of sorted) {
+    while (remaining >= coin) {
+      picks.push(coin);
+      remaining -= coin;
+    }
+  }
+  return picks; // for [1,3,4], amount 6 -> [4, 1, 1] — 3 coins, NOT optimal (3+3 = 2 coins)
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>intervals.sort((a, b) => a[1] - b[1])</code> is the entire trick. Sorting by end time
+      means the interval that finishes soonest is always considered first — and "finishes soonest"
+      is exactly the property that makes a greedy keep-decision provably safe here.</li>
+    <li><code>lastEnd</code> tracks the end time of the most recently <em>kept</em> interval — it's
+      the boundary the next interval's start has to clear.</li>
+    <li>The loop starts at <code>i = 1</code> because <code>intervals[0]</code> (the interval that
+      finishes earliest of all) is always kept — there's nothing before it to overlap with.</li>
+    <li><code>if (start &lt; lastEnd)</code> — this interval starts before the last kept one
+      finished, so they overlap. Increment <code>removals</code> and move on; <code>lastEnd</code>
+      does NOT change, because the interval that's already kept still ends earlier than this
+      discarded one would have.</li>
+    <li><code>else { lastEnd = end; }</code> — no overlap, so this interval survives and becomes the
+      new reference point for everything after it.</li>
+    <li><code>greedyCoinChange</code> is deliberately the "obviously reasonable" approach: sort coins
+      largest-first, and keep taking the biggest one that still fits. It's included specifically to
+      be traced against the diagram above and shown to be wrong for <code>[1, 3, 4]</code>.</li>
+  </ul>
+
+  <h3>Dry run: eraseOverlapIntervals([[1,2],[2,3],[3,4],[1,3]])</h3>
+  <div style="overflow-x:auto;">
+    <table class="dryrun-table">
+      <thead><tr><th>Interval (sorted by end)</th><th>lastEnd before</th><th>start &lt; lastEnd?</th><th>Action</th><th>removals after</th></tr></thead>
+      <tbody>
+        <tr><td>[1,2] (first)</td><td>—</td><td>—</td><td>keep (nothing to compare against yet) — lastEnd = 2</td><td>0</td></tr>
+        <tr><td>[2,3]</td><td>2</td><td>2 &lt; 2? No</td><td>keep — lastEnd = 3</td><td>0</td></tr>
+        <tr><td>[1,3]</td><td>3</td><td>1 &lt; 3? Yes</td><td>remove (overlaps [2,3])</td><td>1</td></tr>
+        <tr><td>[3,4]</td><td>3</td><td>3 &lt; 3? No</td><td>keep — lastEnd = 4</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Input <code>[[1,2],[2,3],[3,4],[1,3]]</code>
+    sorts by end time to <code>[1,2],[2,3],[1,3],[3,4]</code>. Only <code>[1,3]</code> overlaps a
+    kept interval — final answer: <strong>1 removal</strong>.</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+    <table class="complexity-table">
+      <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>eraseOverlapIntervals (full)</td><td>O(n log n)</td><td>O(log n) – O(n)</td><td>The sort dominates the runtime — the greedy scan after it is a single O(n) pass. Space depends on the sort implementation: some comparison sorts use O(log n) recursion stack, others (like some engines' array sort) can use up to O(n) auxiliary space.</td></tr>
+        <tr><td>The greedy walk alone (already sorted)</td><td>O(n)</td><td>O(1)</td><td>One pass, tracking only <code>lastEnd</code> and a counter — no extra data structures.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why sort by END time instead of START time?</strong> Keeping the interval that
+      finishes earliest always leaves the maximum possible room for everything that comes after —
+      that's what makes the greedy "keep" decision provably safe. Sorting by start time breaks this:
+      consider <code>[1,10]</code>, <code>[2,3]</code>, <code>[4,5]</code>. Sorted by start,
+      <code>[1,10]</code> comes first and gets kept (nothing to compare against yet), which then
+      blocks both <code>[2,3]</code> and <code>[4,5]</code> — 2 removals. But the true optimum keeps
+      <code>[2,3]</code> and <code>[4,5]</code> (they don't overlap each other) and removes only
+      <code>[1,10]</code> — 1 removal. Start-time sorting can lock in a "wide" interval early and
+      block everything else; end-time sorting never can, because it always prefers whatever frees up
+      the earliest.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> sorting by
+      interval <em>length</em> has the same failure mode as sorting by start time — a short interval
+      can still finish late and block a lot of what follows it. Length and start time both miss the
+      one property that actually matters: when does it end.</span></li>
+    <li><strong>What does the coin-change counter-example (coins [1,3,4], amount 6) actually prove?</strong>
+      That the greedy-choice property doesn't hold for arbitrary coin systems. "Always take the
+      largest coin you can" picks 4, then 1, then 1 — 3 coins — while the true minimum is 3+3, just 2
+      coins. Locally optimal (biggest coin available) did not lead to globally optimal. Any time you
+      can produce even one input like this, greedy is formally disqualified for that problem — this
+      is the formal answer to "when does greedy fail."<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "When does greedy
+      actually work for coin change?" Only for canonical coin systems (like US currency:
+      1, 5, 10, 25) where it's provable that the largest-coin choice never blocks a better solution.
+      You can't assume canonicity — you have to know or prove it for the specific coin set given.</span></li>
+    <li><strong>How do you recognize, in an interview, whether a problem is greedy-safe or needs DP?</strong>
+      Try to construct a counter-example before committing to greedy: pick a small, adversarial input
+      and hand-trace the greedy choice against what you know (or can compute) the true optimum to be.
+      If you can find even ONE case where the greedy choice leads to a worse outcome, greedy is not
+      safe — fall back to DP, whose exhaustive subproblem consideration is exactly the guarantee
+      greedy doesn't have.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> "it passed the
+      example in the problem statement" is not proof — the coin-change counter-example above would
+      pass plenty of small test cases (e.g. amount = 4 → greedy correctly picks [4], or [3,1]) while
+      still being wrong on amount = 6. One passing example never proves the greedy-choice property.</span></li>
+    <li><strong>How does this connect to Day 26's Coin Change DP?</strong> Same problem shape —
+      minimum coins to make an amount — with two totally different guarantees. Yesterday's DP
+      solution considers every reachable sub-amount and keeps the true minimum at each one, so it's
+      correct for <em>any</em> coin system, canonical or not. Today's greedy shortcut is faster and
+      simpler to write, but only correct when the specific coin set happens to have the
+      greedy-choice property — and <code>[1, 3, 4]</code> is the concrete proof that you can't assume
+      that. DP is the safe default; greedy is the fast path you're only allowed to take once you've
+      proven it's safe.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> state the greedy choice explicitly before
+    writing any code — "I'll sort by end time and keep whatever doesn't overlap the last kept
+    interval" — then say <em>why</em> it's safe: "the earliest-finishing interval always leaves the
+    most room, so this choice can't be wrong." If you're not sure a greedy choice is safe, say so out
+    loud and propose testing it against a small adversarial example before committing — that's
+    exactly the instinct interviewers are listening for, and it's the difference between "I got lucky"
+    and "I can prove this is correct."</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Best Time to Buy and Sell Stock II <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/" target="_blank" rel="noopener">LeetCode: Best Time to Buy and Sell Stock II</a>)</span></h4>
+    <p>Given daily stock prices, return the maximum profit you can make with <strong>unlimited</strong>
+      transactions (buy then sell, any number of times, but you must sell before buying again). This
+      is a <em>different</em> LeetCode problem from the single-transaction "Best Time to Buy and Sell
+      Stock" from earlier in the course — this one allows as many trades as you want.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>You don't need to track actual buy/sell days.
+      Every day the price goes up compared to yesterday, that gain was available to capture — so just
+      sum every positive day-over-day difference. Greedy works here because capturing every uptick is
+      always at least as good as any other trading strategy.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function maxProfit(prices) {
+  let profit = 0;
+  for (let i = 1; i < prices.length; i++) {
+    if (prices[i] > prices[i - 1]) {
+      profit += prices[i] - prices[i - 1];
+    }
+  }
+  return profit;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Non-overlapping Intervals <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/non-overlapping-intervals/" target="_blank" rel="noopener">LeetCode: Non-overlapping Intervals</a>)</span></h4>
+    <p>Given a list of intervals, return the minimum number of intervals to remove so the rest don't
+      overlap. Today's main worked example — the code above is the real solution.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Sort by end time first — that single decision
+      is what makes the rest of the algorithm correct. Then walk left to right, tracking the end time
+      of the last interval you kept; any interval whose start is earlier than that gets removed.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function eraseOverlapIntervals(intervals) {
+  if (intervals.length === 0) return 0;
+  intervals.sort((a, b) => a[1] - b[1]);
+  let removals = 0;
+  let lastEnd = intervals[0][1];
+  for (let i = 1; i < intervals.length; i++) {
+    const [start, end] = intervals[i];
+    if (start < lastEnd) {
+      removals++;
+    } else {
+      lastEnd = end;
+    }
+  }
+  return removals;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Jump Game <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/jump-game/" target="_blank" rel="noopener">LeetCode: Jump Game</a>)</span></h4>
+    <p>Given an array where <code>nums[i]</code> is the maximum jump length from index <code>i</code>,
+      starting at index 0, return whether you can reach the last index.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Track the farthest index reachable so far as
+      you scan left to right, updating it to <code>max(farthest, i + nums[i])</code> at every index.
+      If you ever reach an index that's beyond the farthest point reachable BEFORE you update it at
+      that index, you're stuck — return false.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function canJump(nums) {
+  let farthest = 0;
+  for (let i = 0; i < nums.length; i++) {
+    if (i > farthest) return false;
+    farthest = Math.max(farthest, i + nums[i]);
+  }
+  return true;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="property" data-explain="The greedy-choice property means a locally optimal choice at each step is PROVABLY always part of some globally optimal solution. It's not a guarantee that comes from a problem 'looking' like an optimization problem — it has to actually be proven (or disproven with a counter-example) for that specific problem.">
+    <p class="q-text">1. What does the "greedy-choice property" mean?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="property">A locally optimal choice at each step is provably always part of some globally optimal solution</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">The input must be sorted before a greedy algorithm can run</button>
+      <button class="btn dsa-quiz-option" data-value="always">Every optimization problem automatically has it</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="earliest" data-explain="Sorting by end time means whichever interval finishes earliest is always considered — and finishing earliest always leaves the maximum possible room for everything that comes after. Sorting by start time can lock in a 'wide' interval early (like [1,10]) that blocks several shorter, non-overlapping intervals that would have been better to keep.">
+    <p class="q-text">2. In interval scheduling, why sort by END time instead of START time?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="earliest">Keeping the interval that finishes earliest leaves the most room for everything after it</button>
+      <button class="btn dsa-quiz-option" data-value="faster">Sorting by end time is computationally faster than sorting by start time</button>
+      <button class="btn dsa-quiz-option" data-value="same">Start-time and end-time sorting always produce the same greedy result</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="notalways" data-explain="With coins [1,3,4] and amount 6, greedy (always take the largest coin) picks 4, then 1, then 1 — 3 coins — while the true optimum is 3+3, just 2 coins. Locally optimal did not lead to globally optimal, proving greedy isn't always correct — it depends entirely on whether the greedy-choice property actually holds for that specific problem." >
+    <p class="q-text">3. What does the coin-change counter-example (coins [1,3,4], amount 6) prove?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="notalways">Greedy's locally-optimal choice isn't always globally optimal — it can produce a worse answer than DP</button>
+      <button class="btn dsa-quiz-option" data-value="dpwrong">That dynamic programming gives the wrong answer for coin change</button>
+      <button class="btn dsa-quiz-option" data-value="onlybig">That greedy only fails when the amount is very large</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="counterexample" data-explain="If you can construct even one input where the greedy choice leads to a worse outcome than the true optimum, greedy is not safe for that problem — that's the rule of thumb. DP's exhaustive subproblem consideration is the fallback when you can't prove (or can actively disprove) the greedy-choice property.">
+    <p class="q-text">4. How do you recognize, in an interview, that a problem is NOT greedy-safe?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="counterexample">You can construct any single counter-example where the greedy choice leads to a worse outcome</button>
+      <button class="btn dsa-quiz-option" data-value="slow">Whenever the greedy solution runs slower than O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="never">You can never know without submitting it and seeing if it fails</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nlogn" data-explain="The sort dominates the runtime at O(n log n); the greedy scan that follows it is only O(n). If the input were already guaranteed sorted by end time, the walk alone would be O(n) — but the algorithm as a whole, including the required sort, is O(n log n).">
+    <p class="q-text">5. What's the time complexity of the Non-overlapping Intervals greedy solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nlogn">O(n log n) — dominated by the sort; the greedy scan itself is O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n) — sorting doesn't affect the complexity</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n&sup2;) — every interval is compared against every other interval</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 27 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day26.html">← Day 26: Dynamic Programming II</a>
+    <a class="btn" href="day28.html">Day 28: Pattern Recognition Masterclass →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 27;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- Interval greedy walk — custom step visualization (Bars' vertical-height
+  // metaphor doesn't fit intervals; this paints horizontal span bars on a shared
+  // number line instead, driven by the same DSA.StepPlayer engine). ----
+
+  const IV_COLORS = {
+    default: ['#3E4452', '#ABB2BF'],
+    active: ['#C678DD', '#282C34'],
+    sorted: ['#98C379', '#282C34'],
+    swap: ['#E06C75', '#282C34'],
+  };
+
+  function makeIntervalViz(container) {
+    container.style.position = 'relative';
+    container.style.width = '100%';
+    return {
+      paint(step) {
+        container.innerHTML = '';
+        if (!step) { container.style.height = '90px'; return; }
+        const { order, states, lastEnd, domainMax } = step;
+        const rowH = 34, rowGap = 12, topPad = 40;
+        container.style.height = (topPad + order.length * (rowH + rowGap) + 12) + 'px';
+
+        const scalePct = (v) => 5 + (v / domainMax) * 90;
+
+        const axis = document.createElement('div');
+        axis.style.cssText = `position:absolute; left:5%; width:90%; top:${topPad - 12}px; height:1px; background:#3E4452;`;
+        container.appendChild(axis);
+
+        for (let v = 0; v <= domainMax; v++) {
+          const tick = document.createElement('div');
+          tick.style.cssText = `position:absolute; left:${scalePct(v)}%; top:${topPad - 28}px; transform:translateX(-50%); font-family:var(--font-head); font-size:10px; color:#818896; white-space:nowrap;`;
+          tick.textContent = v;
+          container.appendChild(tick);
+        }
+
+        if (lastEnd !== null && lastEnd !== undefined) {
+          const marker = document.createElement('div');
+          marker.style.cssText = `position:absolute; left:${scalePct(lastEnd)}%; top:${topPad - 12}px; bottom:6px; width:0; border-left:2px dashed #61AEEE;`;
+          container.appendChild(marker);
+          const mLabel = document.createElement('div');
+          mLabel.style.cssText = `position:absolute; left:${scalePct(lastEnd)}%; top:${topPad - 12}px; transform:translate(4px, 0); font-family:var(--font-head); font-size:10px; color:#61AEEE; white-space:nowrap;`;
+          mLabel.textContent = 'lastEnd=' + lastEnd;
+          container.appendChild(mLabel);
+        }
+
+        order.forEach((iv, i) => {
+          const [bg, fg] = IV_COLORS[states[i] || 'default'];
+          const left = scalePct(iv[0]);
+          const width = scalePct(iv[1]) - left;
+          const bar = document.createElement('div');
+          bar.style.cssText = `position:absolute; left:${left}%; width:${width}%; top:${topPad + i * (rowH + rowGap)}px; height:${rowH}px; background:${bg}; color:${fg}; border-radius:5px; display:flex; align-items:center; justify-content:center; font-family:var(--font-head); font-size:12px; font-weight:600; box-sizing:border-box; transition:background 0.2s;`;
+          bar.textContent = `[${iv[0]}, ${iv[1]}]`;
+          container.appendChild(bar);
+        });
+      },
+    };
+  }
+
+  function buildIntervalSteps(rawIntervals) {
+    const domainMax = Math.max(...rawIntervals.map((iv) => iv[1])) + 1;
+    const steps = [];
+
+    steps.push({
+      narration: `${rawIntervals.length} intervals, in the order given — not sorted yet.`,
+      order: rawIntervals.slice(), states: rawIntervals.map(() => 'default'), lastEnd: null, domainMax,
+    });
+
+    const sorted = rawIntervals.slice().sort((a, b) => a[1] - b[1]);
+    const states = sorted.map(() => 'default');
+    steps.push({
+      narration: 'Sort by END time, ascending. This single choice is what makes every later greedy decision provably safe.',
+      order: sorted.slice(), states: states.slice(), lastEnd: null, domainMax,
+    });
+
+    let lastEnd = null;
+    let removed = 0, kept = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      states[i] = 'active';
+      steps.push({
+        narration: `Checking [${sorted[i][0]}, ${sorted[i][1]}] — is its start (${sorted[i][0]}) >= lastEnd (${lastEnd === null ? 'none yet' : lastEnd})?`,
+        order: sorted.slice(), states: states.slice(), lastEnd, domainMax,
+      });
+      if (lastEnd === null || sorted[i][0] >= lastEnd) {
+        states[i] = 'sorted';
+        lastEnd = sorted[i][1];
+        kept++;
+        steps.push({
+          narration: `Kept. [${sorted[i][0]}, ${sorted[i][1]}] doesn't overlap the last kept interval — lastEnd updates to ${lastEnd}. (${kept} kept so far)`,
+          order: sorted.slice(), states: states.slice(), lastEnd, domainMax,
+        });
+      } else {
+        states[i] = 'swap';
+        removed++;
+        steps.push({
+          narration: `Removed. start ${sorted[i][0]} < lastEnd ${lastEnd}, so this interval overlaps the last kept one. (${removed} removed so far)`,
+          order: sorted.slice(), states: states.slice(), lastEnd, domainMax,
+        });
+      }
+    }
+    steps.push({
+      narration: `Done — ${removed} interval${removed === 1 ? '' : 's'} removed, ${kept} kept and non-overlapping.`,
+      order: sorted.slice(), states: states.slice(), lastEnd, domainMax,
+    });
+    return steps;
+  }
+
+  function randomIntervals() {
+    const n = 5 + Math.floor(Math.random() * 2); // 5 or 6
+    const arr = [];
+    for (let i = 0; i < n; i++) {
+      const start = Math.floor(Math.random() * 9); // 0..8
+      const len = 1 + Math.floor(Math.random() * 4); // 1..4
+      arr.push([start, start + len]);
+    }
+    return arr;
+  }
+
+  const intervalStage = document.getElementById('vizIntervalStage');
+  const intervalViz = makeIntervalViz(intervalStage);
+  let intervalData = [[1, 4], [3, 5], [0, 2], [5, 7], [6, 8]];
+  let intervalSteps = buildIntervalSteps(intervalData);
+  const intervalPlayer = new DSA.StepPlayer({
+    steps: intervalSteps,
+    narrationEl: document.getElementById('vizIntervalNarration'),
+    counterEl: document.getElementById('vizIntervalCounter'),
+    playBtn: document.getElementById('vizIntervalPlay'),
+    stepBtn: document.getElementById('vizIntervalStep'),
+    resetBtn: document.getElementById('vizIntervalReset'),
+    shuffleBtn: document.getElementById('vizIntervalShuffle'),
+    speed: 1000,
+    onStep(step) { intervalViz.paint(step); },
+    onShuffle() {
+      intervalData = randomIntervals();
+      intervalSteps = buildIntervalSteps(intervalData);
+      intervalPlayer.setSteps(intervalSteps);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
