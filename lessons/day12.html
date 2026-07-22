@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 12: Binary Search — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="The classic binary search template — lo, mid, hi — and the off-by-one traps that quietly break it." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 12 / 30 &middot; WEEK 2</p>
+  <h1>Binary Search</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Implement the classic iterative binary search template on a sorted array.</li>
+    <li>Understand exactly why <code>lo &lt;= hi</code> and <code>hi = mid - 1</code> are correct
+      — and why the "close enough" versions (<code>lo &lt; hi</code>, <code>hi = mid</code>)
+      quietly break, sometimes in an infinite loop.</li>
+    <li>See that binary search isn't just "find x in a sorted array" — it works anywhere you can
+      ask a yes/no question that flips exactly once across the search space.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Guess a number between 1 and 100. Instead of guessing 1, 2, 3, 4… (linear, up to 100
+    guesses), guess <strong>50</strong> first. Told "higher"? You just eliminated half the
+    numbers in one guess. Guess the midpoint of what's left, every time — each guess halves the
+    remaining possibilities, so 100 numbers takes at most 7 guesses, not 100. That halving is
+    where <strong>O(log n)</strong> comes from: it's the number of times you can cut n in half
+    before you're left with one candidate.</p>
+  <p>The catch: this only works if the search space is <strong>sorted</strong> (or more
+    precisely, <em>monotonic</em> — see the Interview Corner for what that really means). On an
+    unsorted array, "higher" or "lower" tells you nothing about where to look next.</p>
+
+  <h2>Diagram: narrowing lo / mid / hi</h2>
+  <svg class="diagram" viewBox="0 0 620 210" role="img" aria-label="Binary search on a sorted array of seven elements, searching for the value 9: lo starts at index 0, hi at index 6, mid at index 3 (value 7). Since 7 is less than 9, the left half including mid is eliminated and lo moves to index 4.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Search for 9 in [1, 3, 5, 7, 9, 11, 13]</text>
+    <g font-size="12">
+      <rect x="20" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="56" y="51" text-anchor="middle" fill="#61AEEE">1</text>
+      <rect x="92" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="128" y="51" text-anchor="middle" fill="#61AEEE">3</text>
+      <rect x="164" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="200" y="51" text-anchor="middle" fill="#61AEEE">5</text>
+      <rect x="236" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#C678DD" stroke-width="2"/><text x="272" y="51" text-anchor="middle" fill="#C678DD">7</text>
+      <rect x="308" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="344" y="51" text-anchor="middle" fill="#61AEEE">9</text>
+      <rect x="380" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="416" y="51" text-anchor="middle" fill="#61AEEE">11</text>
+      <rect x="452" y="30" width="72" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="488" y="51" text-anchor="middle" fill="#61AEEE">13</text>
+    </g>
+    <text x="56" y="80" font-size="11" fill="#61AEEE" text-anchor="middle">lo=0</text>
+    <text x="272" y="80" font-size="11" fill="#C678DD" text-anchor="middle">mid=3</text>
+    <text x="488" y="80" font-size="11" fill="#61AEEE" text-anchor="middle">hi=6</text>
+    <text x="20" y="110" font-size="12" fill="#DCDFE4">arr[mid] = 7, target = 9 → 7 &lt; 9, so the answer (if it exists)</text>
+    <text x="20" y="127" font-size="12" fill="#DCDFE4">must be to the right. Eliminate index 0-3 (indices ≤ mid) entirely.</text>
+    <text x="20" y="152" font-size="12" class="dim">Next round: lo=4, hi=6 — only [9, 11, 13] is still in play. One</text>
+    <text x="20" y="169" font-size="12" class="dim">more comparison finds mid=4 → arr[4]=9 = target. Found in 3 steps,</text>
+    <text x="20" y="186" font-size="12" class="dim">not 5 — that's the halving in action.</text>
+  </svg>
+
+  <h2>Interactive visualization: full binary search</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current range [lo, hi]</span>
+    <span><i class="lg-active"></i> mid (checking now)</span>
+    <span><i class="lg-swap"></i> eliminated</span>
+    <span><i class="lg-sorted"></i> found</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>function search(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo &lt;= hi) {                             // "="  matters — see below
+    const mid = lo + Math.floor((hi - lo) / 2);   // not (lo+hi)/2 — see below
+    if (nums[mid] === target) return mid;
+    else if (nums[mid] &lt; target) lo = mid + 1;    // answer is to the right
+    else hi = mid - 1;                            // answer is to the left
+  }
+  return -1; // not found
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>while (lo &lt;= hi)</code> — the range <code>[lo, hi]</code> is treated as
+      <em>inclusive</em> on both ends, so the loop must still run when exactly one candidate is
+      left (<code>lo === hi</code>). Using <code>&lt;</code> here would skip checking that last
+      candidate entirely.</li>
+    <li><code>mid = lo + Math.floor((hi - lo) / 2)</code> — computes the same midpoint as
+      <code>Math.floor((lo + hi) / 2)</code>, but written this way to dodge integer overflow in
+      languages with fixed-width integers (Java, C++). JS numbers don't overflow the same way at
+      these sizes, but writing it the safe way is a cheap habit that signals you know why it
+      exists.</li>
+    <li><code>hi = mid - 1</code> / <code>lo = mid + 1</code> — both moves <em>exclude</em>
+      <code>mid</code> from the next range, because <code>mid</code> was just checked and ruled
+      out. Forgetting the <code>-1</code>/<code>+1</code> (using <code>hi = mid</code> instead)
+      keeps a already-checked index in play — usually just wasteful, but combined with
+      <code>while (lo &lt; hi)</code> it can infinite-loop (see the trap below).</li>
+  </ul>
+
+  <h3>Dry run: search([1, 3, 5, 7, 9, 11, 13], target=9)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>lo</th><th>hi</th><th>mid</th><th>arr[mid]</th><th>Compare to 9</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>6</td><td>3</td><td>7</td><td>7 &lt; 9</td><td>lo = 4 (search right half)</td></tr>
+      <tr><td>4</td><td>6</td><td>5</td><td>11</td><td>11 &gt; 9</td><td>hi = 4 (search left half)</td></tr>
+      <tr><td>4</td><td>4</td><td>4</td><td>9</td><td>9 === 9</td><td>return 4 — found</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">3 comparisons to search 7 elements —
+    log₂(7) ≈ 2.8, rounded up to 3. Compare to a linear scan, which could take up to 7.</p>
+
+  <h2>Diagram: the off-by-one trap that infinite-loops</h2>
+  <svg class="diagram" viewBox="0 0 620 175" role="img" aria-label="An off-by-one trap: with lo=3 and hi=4, mid rounds down to 3, equal to lo. Writing lo=mid instead of lo=mid+1 leaves lo stuck at 3 forever, looping without end.">
+    <text x="20" y="18" font-size="13" fill="#E06C75" font-weight="bold">Trap: lo = mid (instead of lo = mid + 1) can freeze forever</text>
+    <text x="20" y="42" font-size="12" fill="#DCDFE4">State: lo=3, hi=4. mid = Math.floor((3+4)/2) = 3 — mid rounds down to equal lo.</text>
+    <g font-size="12">
+      <rect x="20" y="55" width="270" height="30" rx="4" fill="#2C313A" stroke="#98C379"/>
+      <text x="30" y="75" fill="#98C379">✓ lo = mid + 1  →  lo becomes 4, hi stays 4</text>
+      <rect x="320" y="55" width="270" height="30" rx="4" fill="#2C313A" stroke="#E06C75"/>
+      <text x="330" y="75" fill="#E06C75">✗ lo = mid  →  lo stays 3, unchanged</text>
+    </g>
+    <text x="20" y="105" font-size="12" fill="#98C379">Next round: lo=4, hi=4 → loop condition lo &lt; hi is false → exits cleanly.</text>
+    <text x="20" y="127" font-size="12" fill="#E06C75">Next round: lo=3, hi=4 → identical state to before → mid=3 again → lo=3</text>
+    <text x="20" y="144" font-size="12" fill="#E06C75">again forever. The loop condition never becomes false. 🔁 infinite loop.</text>
+    <text x="20" y="166" font-size="11" class="dim">This exact shape shows up in "search on answer" templates like today's Find Peak Element.</text>
+  </svg>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Iterative</td><td>O(log n)</td><td>O(1)</td><td>Halves the search range each step — log₂n steps to reach 1 element. No extra memory beyond a few index variables.</td></tr>
+      <tr><td>Recursive</td><td>O(log n)</td><td>O(log n)</td><td>Same halving, but each recursive call adds a call-stack frame (Day 9) — log n frames deep before returning.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why <code>lo &lt;= hi</code> instead of <code>lo &lt; hi</code>?</strong> The
+      range <code>[lo, hi]</code> is inclusive — when <code>lo === hi</code>, there's still one
+      unchecked candidate. <code>&lt;</code> would exit the loop right before checking it,
+      silently returning "not found" on an array where the target is the very last candidate
+      remaining.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "When
+      <em>would</em> you use <code>lo &lt; hi</code>?" — in "find the boundary" templates (first/
+      last occurrence, search-on-answer, Day 13's topic), where you deliberately narrow to a
+      single answer index rather than an exact match-or-fail. The loop shape changes with the
+      problem shape — memorizing one template and forcing every problem into it is the trap.</span></li>
+    <li><strong>What does "the search space must be sorted" really mean?</strong> More precisely:
+      there must be a boolean condition that's <code>false</code> for a prefix of the space and
+      <code>true</code> for the rest (or vice versa) — a single flip point. A literal sorted array
+      is the simplest case, but today's Find Peak Element runs binary search on data that isn't
+      sorted at all, because "is this side going up or down" still flips at most once per
+      direction.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't say
+      "binary search needs a sorted array" as an absolute rule — say "needs a monotonic
+      predicate," and be ready to show an example (like Find Peak Element) where the array itself
+      isn't sorted.</span></li>
+    <li><strong>How would you find the <em>first</em> occurrence of a duplicated target?</strong>
+      Standard binary search stops at the first match it happens to hit, which isn't necessarily
+      the first index. You'd keep searching left even after finding a match, recording it as a
+      candidate and narrowing <code>hi = mid - 1</code> instead of returning immediately. This is
+      exactly Day 13's topic.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> state the invariant first — "at every point
+    in the loop, if the target exists, it's somewhere in <code>[lo, hi]</code>" — then justify
+    each boundary update by showing it preserves that invariant. Naming the invariant explicitly
+    is what separates "I memorized this template" from "I understand why this template is
+    correct," and it's exactly what lets you adapt the template when a problem needs a different
+    shape (like Day 13's variants).</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Binary Search <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/binary-search/" target="_blank" rel="noopener">LeetCode: Binary Search</a>)</span></h4>
+    <p>Given a sorted array of integers and a target value, return its index, or -1 if it's not
+      present. This is today's template, applied directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Write the loop invariant down before you
+      code: "if target exists, it's in [lo, hi]." Every line of the loop body should be justified
+      by keeping that true.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function search(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo <= hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (nums[mid] === target) return mid;
+    else if (nums[mid] < target) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return -1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Search in Rotated Sorted Array <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/search-in-rotated-sorted-array/" target="_blank" rel="noopener">LeetCode: Search in Rotated Sorted Array</a>)</span></h4>
+    <p>A sorted array has been rotated at an unknown pivot (e.g. <code>[4,5,6,7,0,1,2]</code>).
+      Find a target's index in O(log n) time.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>At every mid, at least one of the two
+      halves (<code>[lo, mid]</code> or <code>[mid, hi]</code>) is guaranteed to be normally
+      sorted, even though the whole array isn't. Figure out which half is sorted first (compare
+      <code>nums[lo]</code> to <code>nums[mid]</code>), then check whether the target falls
+      inside that sorted half's range to decide which side to keep.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function search(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (nums[mid] === target) return mid;
+    if (nums[lo] <= nums[mid]) { // left half [lo, mid] is normally sorted
+      if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+      else lo = mid + 1;
+    } else { // right half [mid, hi] is normally sorted instead
+      if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+      else hi = mid - 1;
+    }
+  }
+  return -1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Find Peak Element <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/find-peak-element/" target="_blank" rel="noopener">LeetCode: Find Peak Element</a>)</span></h4>
+    <p>Given an array where <code>nums[-1] = nums[n] = -∞</code>, find any index whose value is
+      strictly greater than both neighbors. The array is <strong>not sorted</strong> — this is
+      the clearest example of "binary search works on any monotonic yes/no question," not just
+      literal sorted arrays.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>The flip point: if <code>nums[mid] &gt;
+      nums[mid+1]</code>, you're on a downslope — a peak exists somewhere at or before
+      <code>mid</code>, so keep the left side including mid (<code>hi = mid</code>, not
+      <code>mid - 1</code> — mid itself could be the peak). Otherwise a peak exists after mid, so
+      <code>lo = mid + 1</code>. This is the boundary-search shape from the trap diagram above —
+      use <code>while (lo &lt; hi)</code>, never <code>lo &lt;= hi</code>, here.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function findPeakElement(nums) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (nums[mid] > nums[mid + 1]) hi = mid;     // peak is at or before mid
+    else lo = mid + 1;                            // peak is after mid
+  }
+  return lo; // lo === hi, pointing at a peak
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="skip" data-explain="With lo < hi, the loop exits as soon as lo === hi without ever checking that final remaining candidate — a target sitting exactly there is missed.">
+    <p class="q-text">1. Why does using <code>while (lo &lt; hi)</code> break the exact-match binary search template from today?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="skip">It skips checking the last remaining candidate when lo === hi</button>
+      <button class="btn dsa-quiz-option" data-value="slower">It makes the algorithm O(n) instead of O(log n)</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — it's equivalent either way</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="log" data-explain="Each comparison eliminates half of the remaining candidates, so the number of comparisons needed is log base 2 of n." >
+    <p class="q-text">2. What is binary search's time complexity, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="log">O(log n) — each step halves the remaining search space</button>
+      <button class="btn dsa-quiz-option" data-value="linear">O(n) — it still has to check every element eventually</button>
+      <button class="btn dsa-quiz-option" data-value="constant">O(1) — it always finds the answer in one guess</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="monotonic" data-explain="The real requirement is a monotonic predicate — a condition that's false then true (or true then false) with a single flip point. A literal sorted array is the most common example, but Find Peak Element shows it isn't the only one." >
+    <p class="q-text">3. What's the real requirement for binary search to work on a dataset?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="monotonic">A monotonic condition — false-then-true (or vice versa) with one flip point</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">The array must be numerically sorted ascending, no exceptions</button>
+      <button class="btn dsa-quiz-option" data-value="unique">Every value in the array must be unique</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="stack" data-explain="Recursive binary search has the same O(log n) time as iterative, but each recursive call adds a call-stack frame, costing O(log n) extra space that the iterative version doesn't need." >
+    <p class="q-text">4. What's the space-complexity difference between recursive and iterative binary search?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="stack">Recursive uses O(log n) extra space for the call stack; iterative uses O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're identical — both are O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="worse">Recursive is O(n) space because it copies the array on every call</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="loop" data-explain="With lo < hi and mid rounding down (Math.floor), if a branch sets lo = mid instead of lo = mid + 1, lo and hi can stay stuck at adjacent values forever — the loop condition never becomes false." >
+    <p class="q-text">5. In a "search on answer" template using <code>while (lo &lt; hi)</code>, what bug does writing <code>lo = mid</code> instead of <code>lo = mid + 1</code> risk?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="loop">An infinite loop — lo can get stuck and never reach hi</button>
+      <button class="btn dsa-quiz-option" data-value="crash">An index-out-of-bounds crash</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — mid and mid + 1 behave identically here</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 12 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day11.html">← Day 11: Quick Sort</a>
+    <a class="btn" href="day13.html">Day 13: Binary Search Variations →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 12;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: full binary search, narrowing lo/mid/hi ----
+  function buildBinarySearchSteps(input, target) {
+    const a = input.slice();
+    const steps = [{ narration: `Search for ${target} in [${a.join(', ')}].`, values: a, states: {} }];
+    let lo = 0, hi = a.length - 1;
+    const eliminated = new Set();
+
+    function rangeStates(extra) {
+      const s = {};
+      eliminated.forEach((idx) => { s[idx] = 'swap'; });
+      for (let i = lo; i <= hi; i++) if (!eliminated.has(i)) s[i] = 'pointer';
+      return Object.assign(s, extra);
+    }
+
+    let found = -1;
+    while (lo <= hi) {
+      const mid = lo + Math.floor((hi - lo) / 2);
+      steps.push({ narration: `lo=${lo}, hi=${hi} → mid=${mid} (value ${a[mid]}).`, values: a, states: rangeStates({ [mid]: 'active' }) });
+      if (a[mid] === target) {
+        found = mid;
+        steps.push({ narration: `${a[mid]} === ${target} — found at index ${mid}!`, values: a, states: rangeStates({ [mid]: 'sorted' }) });
+        break;
+      } else if (a[mid] < target) {
+        steps.push({ narration: `${a[mid]} < ${target} — eliminate indices ${lo}-${mid}, search the right half.`, values: a, states: rangeStates({ [mid]: 'active' }) });
+        for (let i = lo; i <= mid; i++) eliminated.add(i);
+        lo = mid + 1;
+      } else {
+        steps.push({ narration: `${a[mid]} > ${target} — eliminate indices ${mid}-${hi}, search the left half.`, values: a, states: rangeStates({ [mid]: 'active' }) });
+        for (let i = mid; i <= hi; i++) eliminated.add(i);
+        hi = mid - 1;
+      }
+    }
+    if (found === -1) {
+      steps.push({ narration: `lo > hi — search space is empty. ${target} is not in the array.`, values: a, states: rangeStates({}) });
+    }
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [1, 3, 5, 7, 9, 11, 13];
+  const TARGET1 = 9;
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 14 });
+  bars1.setData(BASE1);
+  let steps1 = buildBinarySearchSteps(BASE1, TARGET1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 1000,
+    onStep(step) { if (!step) { bars1.paint({}, BASE1); return; } bars1.paint(step.states, step.values); },
+    onShuffle() {
+      const a = DSA.randomArray(7, 1, 20).sort((x, y) => x - y);
+      const t = a[Math.floor(Math.random() * a.length)];
+      steps1 = buildBinarySearchSteps(a, t);
+      bars1.setData(a);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
