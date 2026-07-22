@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 1: JS Essentials for DSA — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Arrays, objects, loops, destructuring, and spread — the JavaScript toolkit every DSA solution uses." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 1 / 30 &middot; WEEK 1</p>
+  <h1>JS Essentials for DSA</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Read and write arrays and objects fast, without hesitating over syntax.</li>
+    <li>Use destructuring and the spread operator confidently — they show up in almost every interview solution.</li>
+    <li>Know which array operations are cheap (O(1)) and which are expensive (O(n)), before you even get to Big-O on Day 2.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Think of an array like a row of numbered lockers at a gym. Each locker has a fixed
+    position (its <strong>index</strong>), so you can open any locker instantly if you know
+    its number — that's why <code>arr[2]</code> is instant (O(1)).</p>
+  <p>The four basic ways to add/remove elements all come down to one question:
+    <strong>does anything else have to move?</strong></p>
+  <ul>
+    <li><code>push(x)</code> — add <code>x</code> at the <em>end</em>. Nothing else moves. O(1).</li>
+    <li><code>pop()</code> — remove the <em>last</em> element. Nothing else moves. O(1).</li>
+    <li><code>unshift(x)</code> — add <code>x</code> at the <em>front</em>. Every other element
+      has to shift one locker to the right first, to make room. O(n).</li>
+    <li><code>shift()</code> — remove the <em>first</em> element. Every remaining element has
+      to shift one locker to the left, to close the gap. O(n).</li>
+  </ul>
+  <p><strong>Destructuring</strong> is a shortcut for pulling values out of an array into named
+    variables in one line, instead of writing <code>arr[0]</code>, <code>arr[1]</code>
+    separately — that part really is free, it's just reading. <strong>Spread</strong>
+    (<code>...</code>) goes the other way — it builds a whole new array by copying every value
+    out of the old one. That copy is still real work: O(n), same cost as writing the loop
+    yourself. Spread doesn't add a new capability, it's just a cleaner way to write a copy loop
+    you could've written by hand.</p>
+
+  <h2>Diagrams</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Our running example throughout this lesson
+    is a 5-element array: <code>arr = [4, 7, 2, 9, 5]</code> — big enough to actually see which
+    elements move and which don't.</p>
+  <svg class="diagram" viewBox="0 0 620 300" role="img" aria-label="push and pop touch only the end of the array in O(1); unshift and shift must move every other element, costing O(n)">
+    <defs>
+      <marker id="arrDown1" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto"><path d="M0,0 L8,0 L4,8 Z" fill="#3fb950"/></marker>
+    </defs>
+
+    <text x="145" y="18" font-size="13" fill="#3fb950" font-weight="bold">push(6) / pop() — end of the array</text>
+    <g font-size="14">
+      <rect x="145" y="30" width="50" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="170" y="57" text-anchor="middle" fill="#e6edf3">4</text>
+      <rect x="201" y="30" width="50" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="226" y="57" text-anchor="middle" fill="#e6edf3">7</text>
+      <rect x="257" y="30" width="50" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="282" y="57" text-anchor="middle" fill="#e6edf3">2</text>
+      <rect x="313" y="30" width="50" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="338" y="57" text-anchor="middle" fill="#e6edf3">9</text>
+      <rect x="369" y="30" width="50" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="394" y="57" text-anchor="middle" fill="#e6edf3">5</text>
+      <rect x="425" y="30" width="50" height="44" rx="6" fill="#1c2330" stroke="#3fb950" stroke-dasharray="4 3"/>
+      <text x="450" y="57" text-anchor="middle" fill="#3fb950">6</text>
+    </g>
+    <path d="M450,78 L450,94" stroke="#3fb950" stroke-width="2" marker-end="url(#arrDown1)"/>
+    <text x="145" y="115" font-size="12" class="dim">Only the last slot moves — 4, 7, 2, 9, 5 stay put → O(1).</text>
+    <text x="145" y="132" font-size="12" class="dim">pop() is the same in reverse: delete the last slot only.</text>
+
+    <line x1="10" y1="150" x2="610" y2="150" stroke="#2a3140" stroke-dasharray="4 4"/>
+
+    <text x="145" y="176" font-size="13" fill="#d4a72c" font-weight="bold">unshift(1) / shift() — front of the array</text>
+    <g font-size="14">
+      <rect x="145" y="192" width="50" height="44" rx="6" fill="#1c2330" stroke="#3fb950" stroke-dasharray="4 3"/>
+      <text x="170" y="219" text-anchor="middle" fill="#3fb950">1</text>
+      <rect x="201" y="192" width="50" height="44" rx="6" fill="#30394a" stroke="#d4a72c"/>
+      <text x="226" y="219" text-anchor="middle" fill="#e6edf3">4</text>
+      <rect x="257" y="192" width="50" height="44" rx="6" fill="#30394a" stroke="#d4a72c"/>
+      <text x="282" y="219" text-anchor="middle" fill="#e6edf3">7</text>
+      <rect x="313" y="192" width="50" height="44" rx="6" fill="#30394a" stroke="#d4a72c"/>
+      <text x="338" y="219" text-anchor="middle" fill="#e6edf3">2</text>
+      <rect x="369" y="192" width="50" height="44" rx="6" fill="#30394a" stroke="#d4a72c"/>
+      <text x="394" y="219" text-anchor="middle" fill="#e6edf3">9</text>
+      <rect x="425" y="192" width="50" height="44" rx="6" fill="#30394a" stroke="#d4a72c"/>
+      <text x="450" y="219" text-anchor="middle" fill="#e6edf3">5</text>
+    </g>
+    <text x="145" y="260" font-size="12" class="dim">Amber boxes all shift right first, to free up index 0 → O(n).</text>
+    <text x="145" y="277" font-size="12" class="dim">shift() reverses this: remove index 0, then shift everyone left.</text>
+  </svg>
+
+  <h2>Interactive visualizations</h2>
+  <div class="legend">
+    <span><i class="lg-sorted"></i> just added / added by spread</span>
+    <span><i class="lg-compare"></i> shifting to make room / close a gap</span>
+    <span><i class="lg-pointer"></i> reading / current index</span>
+    <span><i class="lg-neutral"></i> untouched</span>
+  </div>
+
+  <h3>1. push, pop, unshift, shift — where does the cost come from?</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. Destructuring and spread</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// arr is a normal JS array — a contiguous, indexed list.
+const arr = [4, 7, 2, 9, 5];
+
+// push/pop touch only the END. Nothing else has to move. O(1).
+arr.push(6);   // arr is now [4, 7, 2, 9, 5, 6]
+arr.pop();     // arr is back to [4, 7, 2, 9, 5]
+
+// unshift/shift touch the START. Every other element has to
+// shift over to make room (or close the gap). O(n).
+arr.unshift(1); // arr is now [1, 4, 7, 2, 9, 5] — everyone else shifted right
+arr.shift();    // arr is back to [4, 7, 2, 9, 5] — everyone else shifted left
+
+// Reading by index is O(1): JS jumps straight to that memory slot.
+const first = arr[0]; // 4
+
+// Destructuring unpacks values into named variables in one line.
+// It's identical to writing arr[0], arr[1], arr[2], arr[3], arr[4] separately.
+const [a, b, c, d, e] = arr; // a=4, b=7, c=2, d=9, e=5
+
+// Spread (...) copies every element of arr into a NEW array,
+// then we add 6 at the end. arr itself is never changed.
+const merged = [...arr, 6]; // [4, 7, 2, 9, 5, 6]
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>arr.push(6)</code> — writes to the next free slot at the end. O(1).</li>
+    <li><code>arr.pop()</code> — deletes the last slot. O(1). Returns the removed value.</li>
+    <li><code>arr.unshift(1)</code> — inserts at index 0, but first shifts 4, 7, 2, 9, 5 each
+      one slot to the right. O(n) because every element moves.</li>
+    <li><code>arr.shift()</code> — removes index 0, then shifts every remaining element one
+      slot to the left to close the gap. Also O(n).</li>
+    <li><code>arr[0]</code> — direct index access. Always O(1), no matter how big the array is.</li>
+    <li><code>const [a, b, c, d, e] = arr</code> — destructuring. The pattern on the left
+      mirrors the shape of the array on the right, position by position.</li>
+    <li><code>[...arr, 6]</code> — the spread operator expands <code>arr</code>'s elements
+      in place, so this is really <code>[4, 7, 2, 9, 5, 6]</code>. It builds a <em>new</em> array.</li>
+  </ul>
+
+  <h3>Dry run</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>Code</th><th>arr</th><th>a, b, c, d, e</th><th>merged</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>const arr = [4,7,2,9,5]</code></td><td>[4,7,2,9,5]</td><td>—</td><td>—</td></tr>
+      <tr><td>2</td><td><code>arr.push(6)</code></td><td>[4,7,2,9,5,6]</td><td>—</td><td>—</td></tr>
+      <tr><td>3</td><td><code>arr.pop()</code></td><td>[4,7,2,9,5]</td><td>—</td><td>—</td></tr>
+      <tr><td>4</td><td><code>arr.unshift(1)</code></td><td>[1,4,7,2,9,5]</td><td>—</td><td>—</td></tr>
+      <tr><td>5</td><td><code>arr.shift()</code></td><td>[4,7,2,9,5]</td><td>—</td><td>—</td></tr>
+      <tr><td>6</td><td><code>const [a,b,c,d,e] = arr</code></td><td>[4,7,2,9,5]</td><td>4, 7, 2, 9, 5</td><td>—</td></tr>
+      <tr><td>7</td><td><code>const merged = [...arr, 6]</code></td><td>[4,7,2,9,5]</td><td>4, 7, 2, 9, 5</td><td>[4,7,2,9,5,6]</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Read by index <code>arr[i]</code></td><td>O(1)</td><td>O(1)</td><td>Contiguous memory — index math jumps straight there.</td></tr>
+      <tr><td>Destructure n values*</td><td>O(n)</td><td>O(1) extra</td><td>Has to read n slots, one per variable.</td></tr>
+      <tr><td>Spread copy <code>[...arr]</code></td><td>O(n)</td><td>O(n)</td><td>Every element must be copied into the new array.</td></tr>
+      <tr><td><code>push</code> / <code>pop</code> (end)</td><td>O(1)†</td><td>O(1)</td><td>No shifting — just add/remove the last slot.</td></tr>
+      <tr><td><code>unshift</code> / <code>shift</code> (start)</td><td>O(n)</td><td>O(1)</td><td>Every remaining element has to shift one slot over.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">*Here n is the number of variables you're
+    destructuring, not the array's length — <code>const [a, b] = hugeArray</code> is O(2), not
+    O(hugeArray.length). †Amortized — occasionally the engine has to grow the underlying array,
+    but on average it's O(1).</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What's the difference between rest and spread syntax?</strong> Same <code>...</code>
+      symbol, opposite direction: spread <em>expands</em> an array/object into individual
+      elements (<code>[...arr]</code>); rest <em>collects</em> individual elements into an
+      array (<code>function f(...args)</code>).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Can you use
+      rest and spread in the same line?" Yes — <code>const [first, ...rest] = arr</code> uses
+      destructuring + rest together; <code>fn(a, ...middle, b)</code> for spread inside a call
+      is also valid as long as there's only one rest element and it's last in a parameter list.</span></li>
+    <li><strong>Does destructuring work on objects too?</strong> Yes — <code>const {a, b} = obj</code>
+      matches by <em>key name</em> instead of position. You can rename with
+      <code>const {a: renamed} = obj</code>, and set a default with <code>const {a = 5} = obj</code>.</li>
+    <li><strong>Is <code>[...arr]</code> a deep copy or a shallow copy?</strong> Shallow. If
+      <code>arr</code> contains objects or nested arrays, the copy shares references to those
+      same inner objects — mutating a nested object still affects both arrays.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> candidates
+      often say "spread makes a copy" and stop there. An interviewer will immediately follow up
+      with "does that protect nested data?" — if you can't say "no, only the top level" you'll
+      lose points even though your first answer was technically correct.</span></li>
+    <li><strong>Why is <code>unshift</code> slower than <code>push</code> on a big array?</strong>
+      <code>push</code> just writes to the next free slot. <code>unshift</code> has to shift
+      every existing element one position to the right first, which is O(n).<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "So how would
+      you build a queue efficiently in JS, given shift() is O(n)?" — good answer: use two
+      pointers into an array (or a linked list, which we cover on Day 15) instead of
+      repeatedly calling shift().</span></li>
+    <li><strong>What happens if you destructure more variables than the array has?</strong>
+      The extra variables are <code>undefined</code> — no error is thrown.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this means
+      a typo'd or off-by-one destructure fails silently instead of crashing — always sanity
+      check array length first if the size isn't guaranteed.</span></li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> say the plan before you type: "I'll
+    destructure the first two values since I only need those, then use spread to build a new
+    array without mutating the input — that keeps this O(n) instead of accidentally O(n²) from
+    copying in a loop." Naming the shallow-copy gotcha unprompted is a strong signal to an
+    interviewer that you've been burned by it before.</p>
+
+  <h2>Practice problems</h2>
+  <p style="color:var(--text-dim);font-size:0.85rem;">All three below are warm-ups (Easy) —
+    Day 1 is about getting comfortable with the syntax. Real easy → medium pattern problems
+    start from Day 3 onward, once we've built up more tools.</p>
+
+  <div class="problem">
+    <h4>1. Concatenation of Array <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/concatenation-of-array/" target="_blank" rel="noopener">LeetCode: Concatenation of Array</a>)</span></h4>
+    <p>Given an array <code>nums</code>, return an array <code>ans</code> of length
+      <code>2n</code> where <code>ans</code> is <code>nums</code> concatenated with itself.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>You already have the exact tool for this
+      in today's lesson — you don't need a loop at all.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function getConcatenation(nums) {
+  return [...nums, ...nums];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Running Sum of 1d Array <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/running-sum-of-1d-array/" target="_blank" rel="noopener">LeetCode: Running Sum of 1d Array</a>)</span></h4>
+    <p>Given an array <code>nums</code>, return a new array where each element is the sum of
+      itself and every element before it.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>What's the relationship between
+      <code>result[i]</code> and <code>result[i - 1]</code>? You shouldn't need to re-add
+      everything from scratch on every step.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function runningSum(nums) {
+  const result = [];
+  let total = 0;
+  // .entries() yields [index, value] pairs — a natural fit for destructuring.
+  for (const [i, n] of nums.entries()) {
+    total += n;
+    result[i] = total;
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Shuffle the Array <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/shuffle-the-array/" target="_blank" rel="noopener">LeetCode: Shuffle the Array</a>)</span></h4>
+    <p>Given <code>nums = [x1,...,xn, y1,...,yn]</code>, return the array in the shuffled form
+      <code>[x1,y1,x2,y2,...,xn,yn]</code>.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>The array is exactly two halves of length
+      n glued together. Index into both halves at once with a single loop variable i.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function shuffle(nums, n) {
+  const result = [];
+  for (let i = 0; i < n; i++) {
+    result.push(nums[i], nums[i + n]);
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="3" data-explain="The empty slot between the commas skips index 1, so c grabs index 2's value, 3.">
+    <p class="q-text">1. What does <code>const [a, , c] = [1, 2, 3]</code> set <code>c</code> to?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="1">1</button>
+      <button class="btn dsa-quiz-option" data-value="2">2</button>
+      <button class="btn dsa-quiz-option" data-value="3">3</button>
+      <button class="btn dsa-quiz-option" data-value="u">undefined</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="a" data-explain="Spread expands both arrays' elements into one flat array at the same level.">
+    <p class="q-text">2. What is <code>[...[1, 2], ...[3, 4]]</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="a">[1, 2, 3, 4]</button>
+      <button class="btn dsa-quiz-option" data-value="b">[[1, 2], [3, 4]]</button>
+      <button class="btn dsa-quiz-option" data-value="c">[1, 2, [3, 4]]</button>
+      <button class="btn dsa-quiz-option" data-value="d">Syntax error</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="shallow" data-explain="Only the top level is copied — nested objects/arrays are still shared by reference.">
+    <p class="q-text">3. Is <code>[...arr]</code> a shallow copy or a deep copy?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="shallow">Shallow copy</button>
+      <button class="btn dsa-quiz-option" data-value="deep">Deep copy</button>
+      <button class="btn dsa-quiz-option" data-value="neither">Neither — it's a reference, not a copy</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="push" data-explain="push adds to the end (no shifting); unshift adds to the start, so every other element must move.">
+    <p class="q-text">4. Which one runs in O(1) time: <code>push</code> or <code>unshift</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="push">push (adds to the end)</button>
+      <button class="btn dsa-quiz-option" data-value="unshift">unshift (adds to the start)</button>
+      <button class="btn dsa-quiz-option" data-value="both">Both are O(1)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="5" data-explain="Destructuring defaults only kick in when the key is missing (or undefined) — {} has no 'a' key, so a falls back to 5.">
+    <p class="q-text">5. What is <code>a</code> after <code>const {a = 5} = {}</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="5">5</button>
+      <button class="btn dsa-quiz-option" data-value="u">undefined</button>
+      <button class="btn dsa-quiz-option" data-value="err">Throws an error</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 1 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="../index.html">← Home</a>
+    <a class="btn" href="day02.html">Day 2: Big-O Notation →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 1;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: push, pop, unshift, shift (O(1) end vs O(n) front) ----
+  function buildMutationSteps(base, pushVal, unshiftVal) {
+    const [p, q, r, s, t] = base;
+    const mn = Math.min(...base);
+    const mx = Math.max(...base);
+    if (pushVal === undefined) pushVal = mx + 1;
+    // Pick a value guaranteed distinct from every element already in base (and from pushVal),
+    // so no bar's value is ambiguous with an existing one during the animation.
+    if (unshiftVal === undefined) unshiftVal = mn > 1 ? mn - 1 : mx + 2;
+    return [
+      { narration: `We start with arr = [${base.join(', ')}].`, values: base.slice(), states: {} },
+      { narration: `arr.push(${pushVal}) writes to the next free slot at the end — O(1), nothing else moves.`, values: [p, q, r, s, t, pushVal], states: { 5: 'sorted' } },
+      { narration: `arr.pop() deletes the last slot — O(1).`, values: [p, q, r, s, t], states: {} },
+      { narration: `arr.unshift(${unshiftVal}) inserts at the front — but first every one of ${base.join(', ')} must shift right one slot. O(n).`, values: [unshiftVal, p, q, r, s, t], states: { 0: 'sorted', 1: 'compare', 2: 'compare', 3: 'compare', 4: 'compare', 5: 'compare' } },
+      { narration: `arr.shift() removes index 0 — then every remaining element shifts left to close the gap. O(n).`, values: [p, q, r, s, t], states: { 0: 'compare', 1: 'compare', 2: 'compare', 3: 'compare', 4: 'compare' } },
+      { narration: `arr[0] reads the value at index 0 directly — O(1) → first = ${p}.`, values: [p, q, r, s, t], states: { 0: 'pointer' } },
+    ];
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [4, 7, 2, 9, 5];
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 10 });
+  bars1.setData(BASE1);
+
+  let steps1 = buildMutationSteps(BASE1, 6, 1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1700,
+    onStep(step) {
+      if (!step) { bars1.setData(BASE1); return; }
+      if (step.values.length !== bars1.data.length) bars1.setData(step.values);
+      bars1.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const a = DSA.randomArray(5, 1, 9);
+      steps1 = buildMutationSteps(a);
+      bars1.setData(a);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: destructuring and spread ----
+  function buildSpreadSteps(base, addVal) {
+    const [p, q, r, s, t] = base;
+    if (addVal === undefined) addVal = Math.max(...base) + 1;
+    return [
+      { narration: `arr = [${base.join(', ')}].`, values: base.slice(), states: {} },
+      { narration: `const [a, b, c, d, e] = arr unpacks all five values in one line → a=${p}, b=${q}, c=${r}, d=${s}, e=${t}.`, values: base.slice(), states: { 0: 'pointer', 1: 'pointer', 2: 'pointer', 3: 'pointer', 4: 'pointer' } },
+      { narration: `const merged = [...arr, ${addVal}] copies every element into a new array, then adds ${addVal}.`, values: [p, q, r, s, t, addVal], states: { 0: 'default', 1: 'default', 2: 'default', 3: 'default', 4: 'default', 5: 'sorted' } },
+      { narration: `arr itself is still [${base.join(', ')}] — spread builds a new array, it never mutates the original.`, values: base.slice(), states: {} },
+    ];
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const BASE2 = [4, 7, 2, 9, 5];
+  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: 10 });
+  bars2.setData(BASE2);
+
+  let steps2 = buildSpreadSteps(BASE2, 6);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1700,
+    onStep(step) {
+      if (!step) { bars2.setData(BASE2); return; }
+      if (step.values.length !== bars2.data.length) bars2.setData(step.values);
+      bars2.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const a = DSA.randomArray(5, 1, 9);
+      steps2 = buildSpreadSteps(a);
+      bars2.setData(a);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? '✓ Day 1 complete — click to undo' : 'Mark Day 1 as complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
