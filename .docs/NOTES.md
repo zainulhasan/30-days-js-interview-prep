@@ -502,6 +502,34 @@ rendered correctly on the tree (confirming the earlier arrowhead fix holds up), 
 overflow, quiz/reveal/mark-complete all work. No bugs found — first review-day build with a clean
 pass on the first try.
 
+## Done — Days 26-27 (second parallel-agent batch, Week 4 continues)
+Dispatched two `general-purpose` agents in parallel again (same pattern as the Day 14/15/17/18
+batch): Day 26 (Dynamic Programming II) and Day 27 (Greedy Algorithms) don't depend on each other,
+just on Day 25 being done, so they built simultaneously.
+- **Day 26** (DP II — House Robber + Coin Change): two new recurrence shapes beyond Day 25's
+  fibonacci sum — House Robber's max-of-2-choices (`dp[i] = max(dp[i-1], dp[i-2]+nums[i])`) and
+  Coin Change's unbounded inner-loop min (`dp[amt] = min(dp[amt-c]+1)` over every coin). Practice:
+  House Robber, Coin Change (both doubling as formal citations of the worked examples, same
+  pattern as Day 25's Climbing Stairs), Longest Increasing Subsequence. Node-verified every
+  algorithm and every worked-example number before/after the agent wrote them (houseRobber
+  ([2,7,9,3,1])=12, coinChange([1,2,5],11)=3 with the full dp array cross-checked cell by cell
+  against the dry-run table, coinChange([1,3,4],6)=2 confirming the greedy-fails foreshadowing of
+  Day 27). Browser-tested clean — zero bugs found, matching the agent's own hand-traced
+  self-report exactly.
+- **Day 27** (Greedy Algorithms): Non-overlapping Intervals as the canonical "greedy provably
+  works" example (sort by end time — the why is the whole lesson), plus a genuine worked
+  counter-example (coins [1,3,4], amount 6: greedy picks 4+1+1=3 coins, optimal is 3+3=2 coins)
+  showing greedy failing on the exact problem Day 26 solved correctly with DP — a deliberate
+  cross-day callback. Custom interval-bar visualization (not `DSA.Bars`, which doesn't fit
+  horizontal spans) driven by the same `DSA.StepPlayer` engine, using percentage-based absolute
+  positioning so it scales cleanly at any width without a scroll wrapper — a new, reusable pattern
+  for future interval-style problems. Practice: Best Time to Buy and Sell Stock II, Non-overlapping
+  Intervals, Jump Game. Node-verified every algorithm (erase/greedyCoinChange/maxProfit/canJump)
+  against known cases. **Fixed one bug**: the interval-scheduling diagram's "kept"/"removed" legend
+  was laid out side-by-side and the "kept" label's text ran wider than the gap before the next
+  swatch, overlapping it — same recurring "adjacent same-row text collision" bug class as before;
+  fixed by stacking the two legend rows vertically instead of guessing at horizontal spacing.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
