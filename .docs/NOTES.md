@@ -235,9 +235,33 @@ Day 9 CallStack, Graph-style tree diagrams) with no console errors and good cont
 DECISIONS.md §2.5 — read that before starting Day 11**, since every new lesson must be authored
 directly in the new palette from here on (the old dark-theme hex values must not be reused).
 
+## Done — Day 11 (Quick Sort)
+Full recursive partition+recurse animation (instrumented Lomuto-partition step builder over
+DSA.Bars) + a before/after partition diagram (`[5,2,8,1,3]` around pivot `3`). Algorithm
+node-verified before writing HTML. Review caught 3 must-fix issues, all applied: (1) the
+diagram's "after" boxes had two values transposed (showed `[2,1,3,8,5]`, should be `[2,1,3,5,8]`
+— pure copy/paste box-label error, didn't match the lesson's own dry-run table or the real
+`partition()` output) — fixed by swapping the two `<text>` labels; (2) all 3 practice problems
+were Medium (no easy→medium arc) — fixed by replacing problem 1 with **Partition Array According
+to Given Pivot** (Easy, LeetCode 2161) which is also a near-perfect thematic tie-in (a stable
+three-way partition, contrasted with today's in-place unstable one); (3) problem 3 ("Sort
+Colors") was a silent duplicate of a Day 8 practice problem — fixed by replacing it with **3Sum**
+(Medium), which also nicely calls back to Day 4's two-pointer technique. Also independently
+caught (before review) that problem 1 as originally written ("Sort an Array") duplicated Day 10's
+problem 2 — resolved by the same swap. **New duplicate-avoidance note:** cross-check every new
+practice problem against the full list in this file's day-by-day summaries before finalizing —
+duplicates aren't always caught by the reviewer (it missed the Day 10 one), so do this check
+myself first, same discipline as the "catch bugs before review" habit above. Verified in-browser
+after fixes: zero console errors at both 390px and 1280px, full 18-step animation plays correctly
+through nested recursive partitions, quiz feedback and mark-complete both work.
+
+**Practice problems used so far, Day 11 final:** Partition Array According to Given Pivot (Easy),
+Kth Largest Element in an Array (Medium, explicit Day 8b callback), 3Sum (Medium, explicit Day 4
+callback).
+
 ## Not started yet
-- Lesson pages `lessons/day11.html` … `day30.html` (rest of Week 2: Days 11-14; Week 3: core
-  data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-10 as
+- Lesson pages `lessons/day12.html` … `day30.html` (rest of Week 2: Days 12-14; Week 3: core
+  data structures — Days 15-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-11 as
   the template (now in the theme below), apply every point in "Lesson template" above and
   the lessons-learned noted here, review each via `.docs/REVIEW-CHECKLIST.md`.
 - **Open decision, not yet actioned:** whether to vendor the actual JetBrains Mono font file
