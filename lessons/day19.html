@@ -111,11 +111,11 @@
     <text x="340" y="64" font-size="11" fill="#61AEEE">root</text>
     <text x="210" y="144" font-size="11" fill="#61AEEE">parent</text>
     <text x="140" y="224" font-size="11" fill="#61AEEE">leaf</text>
-    <text x="20" y="64" font-size="11" fill="#818896">depth 0</text>
-    <text x="20" y="144" font-size="11" fill="#818896">depth 1</text>
-    <text x="20" y="224" font-size="11" fill="#818896">depth 2</text>
-    <text x="20" y="266" font-size="12" fill="#ABB2BF">root = top node. parent → child = connected by an edge.</text>
-    <text x="20" y="284" font-size="12" fill="#ABB2BF">leaf = a node with no children (the bottom of the tree).</text>
+    <text x="20" y="64" font-size="11" fill="#9198A6">depth 0</text>
+    <text x="20" y="144" font-size="11" fill="#9198A6">depth 1</text>
+    <text x="20" y="224" font-size="11" fill="#9198A6">depth 2</text>
+    <text x="20" y="266" font-size="12" fill="#E2E3E7">root = top node. parent → child = connected by an edge.</text>
+    <text x="20" y="284" font-size="12" fill="#E2E3E7">leaf = a node with no children (the bottom of the tree).</text>
   </svg>
 
   <h2>Diagram: BFS order vs. DFS order on the same tree</h2>
@@ -154,7 +154,7 @@
       <text x="360" y="178">⑥</text>
       <text x="500" y="178">⑦</text>
     </g>
-    <text x="20" y="245" font-size="12" fill="#ABB2BF">Visit order: 1, 2, 3, 4, 5, 6, 7 — matches the labels.</text>
+    <text x="20" y="245" font-size="12" fill="#E2E3E7">Visit order: 1, 2, 3, 4, 5, 6, 7 — matches the labels.</text>
 
     <text x="20" y="290" font-size="13" fill="#61AEEE" font-weight="bold">DFS (stack) — down one branch, then backtrack</text>
     <g stroke="#3E4452" stroke-width="1.5">
@@ -190,7 +190,7 @@
       <text x="360" y="448">⑥</text>
       <text x="500" y="448">⑦</text>
     </g>
-    <text x="20" y="510" font-size="12" fill="#ABB2BF">Visit order: 1, 2, 4, 5, 3, 6, 7 — a different order!</text>
+    <text x="20" y="510" font-size="12" fill="#E2E3E7">Visit order: 1, 2, 4, 5, 3, 6, 7 — a different order!</text>
   </svg>
 
   <h2>Interactive visualization: BFS (level order)</h2>
@@ -553,7 +553,7 @@ function dfs(root) {
       t.setAttribute('x', x);
       t.setAttribute('y', y);
       t.setAttribute('font-size', size || 12);
-      t.setAttribute('fill', fill || '#818896');
+      t.setAttribute('fill', fill || '#9198A6');
       t.textContent = txt;
       svg.appendChild(t);
     }

@@ -379,7 +379,7 @@ function twoSum(nums, target) {
 
   // ---- growth-curve chart: hand-drawn SVG, no charting library ----
   const SERIES = [
-    { key: 'o1', label: 'O(1)', color: '#818896', fn: () => 1 },
+    { key: 'o1', label: 'O(1)', color: '#9198A6', fn: () => 1 },
     { key: 'olog', label: 'O(log n)', color: '#61AEEE', fn: (n) => Math.max(0.3, Math.log2(n)) },
     { key: 'on', label: 'O(n)', color: '#98C379', fn: (n) => n },
     { key: 'onlogn', label: 'O(n log n)', color: '#E6C07B', fn: (n) => n * Math.max(0.3, Math.log2(n)) },
@@ -411,10 +411,10 @@ function twoSum(nums, target) {
     axis.innerHTML = `
       <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${CH - PAD.bottom}" stroke="#3E4452" stroke-width="1.5"/>
       <line x1="${PAD.left}" y1="${CH - PAD.bottom}" x2="${CW - PAD.right}" y2="${CH - PAD.bottom}" stroke="#3E4452" stroke-width="1.5"/>
-      <text x="${PAD.left - 8}" y="${PAD.top + 4}" font-size="10" fill="#818896" text-anchor="end">${Y_MAX}+</text>
-      <text x="${PAD.left - 8}" y="${CH - PAD.bottom + 4}" font-size="10" fill="#818896" text-anchor="end">0</text>
-      <text x="${(PAD.left + CW - PAD.right) / 2}" y="${CH - PAD.bottom + 18}" font-size="11" fill="#818896" text-anchor="middle">input size (n) →</text>
-      <text x="14" y="${(PAD.top + CH - PAD.bottom) / 2}" font-size="11" fill="#818896" text-anchor="middle" transform="rotate(-90 14 ${(PAD.top + CH - PAD.bottom) / 2})">operations</text>
+      <text x="${PAD.left - 8}" y="${PAD.top + 4}" font-size="10" fill="#9198A6" text-anchor="end">${Y_MAX}+</text>
+      <text x="${PAD.left - 8}" y="${CH - PAD.bottom + 4}" font-size="10" fill="#9198A6" text-anchor="end">0</text>
+      <text x="${(PAD.left + CW - PAD.right) / 2}" y="${CH - PAD.bottom + 18}" font-size="11" fill="#9198A6" text-anchor="middle">input size (n) →</text>
+      <text x="14" y="${(PAD.top + CH - PAD.bottom) / 2}" font-size="11" fill="#9198A6" text-anchor="middle" transform="rotate(-90 14 ${(PAD.top + CH - PAD.bottom) / 2})">operations</text>
     `;
     svg.appendChild(axis);
 
@@ -449,7 +449,7 @@ function twoSum(nums, target) {
     SERIES.forEach((s) => {
       const g = document.createElementNS(ns, 'g');
       g.innerHTML = `<rect x="${lx}" y="${legendY - 8}" width="10" height="10" fill="${s.color}" rx="2"/>
-        <text x="${lx + 14}" y="${legendY}" font-size="10" fill="#818896">${s.label}</text>`;
+        <text x="${lx + 14}" y="${legendY}" font-size="10" fill="#9198A6">${s.label}</text>`;
       svg.appendChild(g);
       lx += s.label.length * 6 + 34;
     });

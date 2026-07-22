@@ -98,7 +98,7 @@
       <line x1="488" y1="56" x2="488" y2="64"/>
       <line x1="598" y1="56" x2="598" y2="64"/>
     </g>
-    <g font-size="10" fill="#818896" text-anchor="middle">
+    <g font-size="10" fill="#9198A6" text-anchor="middle">
       <text x="48" y="78">0</text><text x="158" y="78">1</text><text x="268" y="78">2</text>
       <text x="378" y="78">3</text><text x="488" y="78">4</text><text x="598" y="78">5</text>
     </g>
@@ -130,20 +130,20 @@
 
     <rect x="40" y="58" width="260" height="230" rx="8" fill="#2C313A" stroke="#E06C75" stroke-width="2"/>
     <text x="170" y="86" font-size="15" font-weight="bold" fill="#E06C75" text-anchor="middle">GREEDY</text>
-    <text x="170" y="102" font-size="9.5" fill="#818896" text-anchor="middle">(largest coin &#8804; remaining, each step)</text>
-    <text x="64" y="130" font-size="11.5" fill="#ABB2BF">Pick 4 &#8594; remaining 2</text>
-    <text x="64" y="154" font-size="11.5" fill="#ABB2BF">Pick 1 &#8594; remaining 1</text>
-    <text x="64" y="178" font-size="11.5" fill="#ABB2BF">Pick 1 &#8594; remaining 0</text>
+    <text x="170" y="102" font-size="9.5" fill="#9198A6" text-anchor="middle">(largest coin &#8804; remaining, each step)</text>
+    <text x="64" y="130" font-size="11.5" fill="#E2E3E7">Pick 4 &#8594; remaining 2</text>
+    <text x="64" y="154" font-size="11.5" fill="#E2E3E7">Pick 1 &#8594; remaining 1</text>
+    <text x="64" y="178" font-size="11.5" fill="#E2E3E7">Pick 1 &#8594; remaining 0</text>
     <line x1="64" y1="198" x2="276" y2="198" stroke="#3E4452" stroke-width="1.5"/>
     <text x="64" y="224" font-size="13.5" font-weight="bold" fill="#E06C75">Total: 3 coins (4 + 1 + 1)</text>
     <text x="64" y="252" font-size="11" fill="#E06C75">&#10007; not optimal — 1 coin too many</text>
 
     <rect x="340" y="58" width="260" height="230" rx="8" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
     <text x="470" y="86" font-size="15" font-weight="bold" fill="#98C379" text-anchor="middle">OPTIMAL</text>
-    <text x="470" y="102" font-size="9.5" fill="#818896" text-anchor="middle">(true minimum-coin solution)</text>
-    <text x="364" y="130" font-size="11.5" fill="#ABB2BF">Pick 3 &#8594; remaining 3</text>
-    <text x="364" y="154" font-size="11.5" fill="#ABB2BF">Pick 3 &#8594; remaining 0</text>
-    <text x="364" y="178" font-size="10" fill="#818896">&#8212; done in 2 picks, not 3</text>
+    <text x="470" y="102" font-size="9.5" fill="#9198A6" text-anchor="middle">(true minimum-coin solution)</text>
+    <text x="364" y="130" font-size="11.5" fill="#E2E3E7">Pick 3 &#8594; remaining 3</text>
+    <text x="364" y="154" font-size="11.5" fill="#E2E3E7">Pick 3 &#8594; remaining 0</text>
+    <text x="364" y="178" font-size="10" fill="#9198A6">&#8212; done in 2 picks, not 3</text>
     <line x1="364" y1="198" x2="576" y2="198" stroke="#3E4452" stroke-width="1.5"/>
     <text x="364" y="224" font-size="13.5" font-weight="bold" fill="#98C379">Total: 2 coins (3 + 3)</text>
     <text x="364" y="252" font-size="11" fill="#98C379">&#10003; optimal — fewest coins possible</text>
@@ -464,7 +464,7 @@ function greedyCoinChange(coins, amount) {
   // number line instead, driven by the same DSA.StepPlayer engine). ----
 
   const IV_COLORS = {
-    default: ['#3E4452', '#ABB2BF'],
+    default: ['#3E4452', '#E2E3E7'],
     active: ['#C678DD', '#282C34'],
     sorted: ['#98C379', '#282C34'],
     swap: ['#E06C75', '#282C34'],
@@ -489,7 +489,7 @@ function greedyCoinChange(coins, amount) {
 
         for (let v = 0; v <= domainMax; v++) {
           const tick = document.createElement('div');
-          tick.style.cssText = `position:absolute; left:${scalePct(v)}%; top:${topPad - 28}px; transform:translateX(-50%); font-family:var(--font-head); font-size:10px; color:#818896; white-space:nowrap;`;
+          tick.style.cssText = `position:absolute; left:${scalePct(v)}%; top:${topPad - 28}px; transform:translateX(-50%); font-family:var(--font-head); font-size:10px; color:#9198A6; white-space:nowrap;`;
           tick.textContent = v;
           container.appendChild(tick);
         }

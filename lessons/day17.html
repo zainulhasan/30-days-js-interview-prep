@@ -82,7 +82,7 @@
   <h2>Diagram: push and pop always happen at the top</h2>
   <svg class="diagram" viewBox="0 0 620 250" role="img" aria-label="Pushing the openers of the brace-bracket-paren-paren-bracket-brace string onto a stack builds it up with the most recently pushed character on top. When the matching closer arrives, it is compared against the top of the stack and, on a match, that top frame is popped off.">
     <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Push '{', '[', '(' — newest stays on top</text>
-    <text x="20" y="33" font-size="10" fill="#818896">(scanning the start of "{[()()]}")</text>
+    <text x="20" y="33" font-size="10" fill="#9198A6">(scanning the start of "{[()()]}")</text>
     <g font-size="13">
       <rect x="20" y="42" width="220" height="32" rx="6" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
       <text x="130" y="63" text-anchor="middle" fill="#61AEEE">'(' — top of stack</text>
@@ -95,7 +95,7 @@
     <text x="20" y="181" font-size="12" fill="#DCDFE4">TOP frame first — '(' — not '[' or '{'.</text>
 
     <text x="340" y="18" font-size="13" fill="#98C379" font-weight="bold">')' arrives → matches '(' → pop</text>
-    <text x="340" y="33" font-size="10" fill="#818896">the '(' frame is removed</text>
+    <text x="340" y="33" font-size="10" fill="#9198A6">the '(' frame is removed</text>
     <g font-size="13">
       <rect x="340" y="42" width="220" height="32" rx="6" fill="#2C313A" stroke="#98C379" stroke-width="2"/>
       <text x="450" y="63" text-anchor="middle" fill="#98C379">'[' — new top</text>
@@ -104,8 +104,8 @@
     </g>
     <text x="340" y="164" font-size="12" fill="#DCDFE4">'(' is gone — it matched and popped.</text>
     <text x="340" y="181" font-size="12" fill="#DCDFE4">Next incoming closer must match '['.</text>
-    <text x="20" y="215" font-size="12" fill="#ABB2BF">Push adds to the top; pop removes from the top —</text>
-    <text x="20" y="232" font-size="12" fill="#ABB2BF">always LIFO. A stack never touches the middle or bottom.</text>
+    <text x="20" y="215" font-size="12" fill="#E2E3E7">Push adds to the top; pop removes from the top —</text>
+    <text x="20" y="232" font-size="12" fill="#E2E3E7">always LIFO. A stack never touches the middle or bottom.</text>
   </svg>
 
   <h2>Diagram: Min Stack — track the running minimum alongside each value</h2>

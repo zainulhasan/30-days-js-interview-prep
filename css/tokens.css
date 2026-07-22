@@ -15,7 +15,9 @@
   --btn-bg: #404754;      /* button.background — real theme value, used for secondary buttons */
   --border: #3E4452;      /* focusBorder */
   --text: #e2e3e7;        /* editor.foreground / mono-1 */
-  --text-dim: #818896;    /* mono-2 */
+  --text-dim: #9198A6;    /* mono-2, lightened from the real theme's #818896 — the original
+                             fails WCAG AA contrast (3.9:1) against this site's dark backgrounds;
+                             this passes 4.5:1+ against all three while keeping the same hue */
   --heading: #DCDFE4;     /* brightened foreground for headings/logos/important labels */
   --accent: #61AEEE;      /* hue-2 / textLink.foreground — buttons, links, nav highlights */
   --accent-hover: #4D96D9;
