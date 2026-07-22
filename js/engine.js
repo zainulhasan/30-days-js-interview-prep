@@ -176,6 +176,11 @@ const DSA = (function () {
       this.svg = document.createElementNS(ns, 'svg');
       this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
       this.svg.classList.add('dsa-graph-svg');
+      // Never let the SVG shrink below its own natural width — node/text size is defined in
+      // viewBox user units, so squeezing it into a narrow mobile container would scale every
+      // label down proportionally, past legibility. Scroll horizontally instead (same pattern
+      // as the site's wide tables/code blocks), which keeps text at its intended physical size.
+      this.svg.style.minWidth = width + 'px';
       this.svg.setAttribute('role', 'img');
       const marker = document.createElementNS(ns, 'defs');
       marker.innerHTML =

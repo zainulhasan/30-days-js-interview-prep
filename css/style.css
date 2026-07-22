@@ -395,6 +395,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 /* graph renderer */
 .dsa-graph-wrap {
   width: 100%;
+  overflow-x: auto;
 }
 .dsa-graph-svg {
   width: 100%;
