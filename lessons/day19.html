@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 19: Trees — BFS & DFS — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Build a binary tree and animate BFS vs. DFS traversal order." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 19 / 30 &middot; WEEK 3</p>
+  <h1>Trees — BFS &amp; DFS</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Build a binary tree from a simple <code>TreeNode</code> class (<code>val</code>,
+      <code>left</code>, <code>right</code>) — the same three-field shape as Day 15's linked-list
+      <code>Node</code>, just with two pointers instead of one.</li>
+    <li>Traverse it two genuinely different ways on the exact same tree: <strong>BFS</strong>
+      (level order, using a queue) and <strong>DFS</strong> (as deep as possible before
+      backtracking, using a stack or recursion) — and see the visit orders actually diverge.</li>
+    <li>Know which one to reach for and why: BFS for shortest-path problems and level-by-level
+      processing, DFS for full-path exploration and the natural recursive shape most tree problems already have —
+      and how each traversal's extra memory use depends on the tree's shape (width vs. height).</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>A tree is a hierarchy: one root node at the top, connected by edges down to child nodes,
+    each of which can have children of its own. Unlike Day 15's linked list — a straight chain,
+    one <code>.next</code> per node — a tree branches. A <strong>binary tree</strong> puts one
+    specific limit on that branching: every node has at most two children, conventionally called
+    <code>left</code> and <code>right</code>.</p>
+  <p>Think of a company org chart deliberately kept flat: every manager (a node) has at most two
+    direct reports (its <code>left</code> and <code>right</code> children) — no more. The CEO is
+    the root; anyone with no direct reports is a <strong>leaf</strong>. A family tree drawn
+    top-down works the same way once you cap each person at two "children" slots — same shape,
+    different labels.</p>
+  <p>Picture exploring a multi-floor building maze-style, breadth-first: you fully explore every
+    room on floor 1 before taking a single step onto floor 2, then fully explore floor 2 before
+    floor 3. That's <strong>BFS (breadth-first search)</strong> — visit every node at the current
+    depth before moving to the next depth, using a <strong>queue</strong> (first discovered, first
+    explored) to enforce that order.</p>
+  <p>Now picture the opposite strategy: pick a corridor and follow it all the way to its dead end
+    before backtracking to try the next one. That's <strong>DFS (depth-first search)</strong> — go
+    as deep as possible down one branch before backtracking, using a <strong>stack</strong> (most
+    recently discovered, next explored) or plain recursion (the call stack does the same job for
+    free) to enforce that order.</p>
+
+  <h2>Diagram: anatomy of a binary tree</h2>
+  <svg class="diagram" viewBox="0 0 620 310" role="img" aria-label="A 7-node binary tree, 3 levels deep. Node 1 is the root at depth 0. Nodes 2 and 3 are its children at depth 1 — node 2 is the parent of nodes 4 and 5. Nodes 4, 5, 6, and 7 sit at depth 2 and are all leaves, since none of them has any children.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Anatomy: a 7-node binary tree, 3 levels deep</text>
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="300" y1="60" x2="170" y2="140"/>
+      <line x1="300" y1="60" x2="430" y2="140"/>
+      <line x1="170" y1="140" x2="100" y2="220"/>
+      <line x1="170" y1="140" x2="240" y2="220"/>
+      <line x1="430" y1="140" x2="360" y2="220"/>
+      <line x1="430" y1="140" x2="500" y2="220"/>
+    </g>
+    <g>
+      <circle cx="300" cy="60" r="14" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="300" y="64" text-anchor="middle" font-size="12" fill="#DCDFE4">1</text>
+      <circle cx="170" cy="140" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="170" y="144" text-anchor="middle" font-size="12" fill="#DCDFE4">2</text>
+      <circle cx="430" cy="140" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="430" y="144" text-anchor="middle" font-size="12" fill="#DCDFE4">3</text>
+      <circle cx="100" cy="220" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="100" y="224" text-anchor="middle" font-size="12" fill="#DCDFE4">4</text>
+      <circle cx="240" cy="220" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="240" y="224" text-anchor="middle" font-size="12" fill="#DCDFE4">5</text>
+      <circle cx="360" cy="220" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="360" y="224" text-anchor="middle" font-size="12" fill="#DCDFE4">6</text>
+      <circle cx="500" cy="220" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="500" y="224" text-anchor="middle" font-size="12" fill="#DCDFE4">7</text>
+    </g>
+    <text x="340" y="64" font-size="11" fill="#61AEEE">root</text>
+    <text x="210" y="144" font-size="11" fill="#61AEEE">parent</text>
+    <text x="140" y="224" font-size="11" fill="#61AEEE">leaf</text>
+    <text x="20" y="64" font-size="11" fill="#818896">depth 0</text>
+    <text x="20" y="144" font-size="11" fill="#818896">depth 1</text>
+    <text x="20" y="224" font-size="11" fill="#818896">depth 2</text>
+    <text x="20" y="266" font-size="12" fill="#ABB2BF">root = top node. parent → child = connected by an edge.</text>
+    <text x="20" y="284" font-size="12" fill="#ABB2BF">leaf = a node with no children (the bottom of the tree).</text>
+  </svg>
+
+  <h2>Diagram: BFS order vs. DFS order on the same tree</h2>
+  <svg class="diagram" viewBox="0 0 620 530" role="img" aria-label="The same 7-node tree traced two ways. BFS, using a queue, visits in the order 1, 2, 3, 4, 5, 6, 7 — level by level, matching the node labels exactly because they were assigned in level order. DFS, using a stack, visits in the order 1, 2, 4, 5, 3, 6, 7 — down the entire left branch to its two leaves before backtracking to the right branch, a genuinely different order from BFS.">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">BFS (queue) — visits level by level</text>
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="300" y1="70" x2="170" y2="135"/>
+      <line x1="300" y1="70" x2="430" y2="135"/>
+      <line x1="170" y1="135" x2="100" y2="200"/>
+      <line x1="170" y1="135" x2="240" y2="200"/>
+      <line x1="430" y1="135" x2="360" y2="200"/>
+      <line x1="430" y1="135" x2="500" y2="200"/>
+    </g>
+    <g>
+      <circle cx="300" cy="70" r="14" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="300" y="74" text-anchor="middle" font-size="12" fill="#DCDFE4">1</text>
+      <circle cx="170" cy="135" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="170" y="139" text-anchor="middle" font-size="12" fill="#DCDFE4">2</text>
+      <circle cx="430" cy="135" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="430" y="139" text-anchor="middle" font-size="12" fill="#DCDFE4">3</text>
+      <circle cx="100" cy="200" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="100" y="204" text-anchor="middle" font-size="12" fill="#DCDFE4">4</text>
+      <circle cx="240" cy="200" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="240" y="204" text-anchor="middle" font-size="12" fill="#DCDFE4">5</text>
+      <circle cx="360" cy="200" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="360" y="204" text-anchor="middle" font-size="12" fill="#DCDFE4">6</text>
+      <circle cx="500" cy="200" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="500" y="204" text-anchor="middle" font-size="12" fill="#DCDFE4">7</text>
+    </g>
+    <g font-size="13" fill="#98C379" text-anchor="middle">
+      <text x="300" y="48">①</text>
+      <text x="170" y="113">②</text>
+      <text x="430" y="113">③</text>
+      <text x="100" y="178">④</text>
+      <text x="240" y="178">⑤</text>
+      <text x="360" y="178">⑥</text>
+      <text x="500" y="178">⑦</text>
+    </g>
+    <text x="20" y="245" font-size="12" fill="#ABB2BF">Visit order: 1, 2, 3, 4, 5, 6, 7 — matches the labels.</text>
+
+    <text x="20" y="290" font-size="13" fill="#61AEEE" font-weight="bold">DFS (stack) — down one branch, then backtrack</text>
+    <g stroke="#3E4452" stroke-width="1.5">
+      <line x1="300" y1="340" x2="170" y2="405"/>
+      <line x1="300" y1="340" x2="430" y2="405"/>
+      <line x1="170" y1="405" x2="100" y2="470"/>
+      <line x1="170" y1="405" x2="240" y2="470"/>
+      <line x1="430" y1="405" x2="360" y2="470"/>
+      <line x1="430" y1="405" x2="500" y2="470"/>
+    </g>
+    <g>
+      <circle cx="300" cy="340" r="14" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="300" y="344" text-anchor="middle" font-size="12" fill="#DCDFE4">1</text>
+      <circle cx="170" cy="405" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="170" y="409" text-anchor="middle" font-size="12" fill="#DCDFE4">2</text>
+      <circle cx="430" cy="405" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="430" y="409" text-anchor="middle" font-size="12" fill="#DCDFE4">3</text>
+      <circle cx="100" cy="470" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="100" y="474" text-anchor="middle" font-size="12" fill="#DCDFE4">4</text>
+      <circle cx="240" cy="470" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="240" y="474" text-anchor="middle" font-size="12" fill="#DCDFE4">5</text>
+      <circle cx="360" cy="470" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="360" y="474" text-anchor="middle" font-size="12" fill="#DCDFE4">6</text>
+      <circle cx="500" cy="470" r="14" fill="#2C313A" stroke="#3E4452" stroke-width="2"/>
+      <text x="500" y="474" text-anchor="middle" font-size="12" fill="#DCDFE4">7</text>
+    </g>
+    <g font-size="13" fill="#C678DD" text-anchor="middle">
+      <text x="300" y="318">①</text>
+      <text x="170" y="383">②</text>
+      <text x="430" y="383">⑤</text>
+      <text x="100" y="448">③</text>
+      <text x="240" y="448">④</text>
+      <text x="360" y="448">⑥</text>
+      <text x="500" y="448">⑦</text>
+    </g>
+    <text x="20" y="510" font-size="12" fill="#ABB2BF">Visit order: 1, 2, 4, 5, 3, 6, 7 — a different order!</text>
+  </svg>
+
+  <h2>Interactive visualization: BFS (level order)</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> waiting in the queue</span>
+    <span><i class="lg-active"></i> being dequeued &amp; visited now</span>
+    <span><i class="lg-sorted"></i> already visited</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: DFS (preorder, iterative stack)</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> waiting on the stack</span>
+    <span><i class="lg-active"></i> being popped &amp; visited now</span>
+    <span><i class="lg-sorted"></i> already visited</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: BFS with a queue, DFS with a stack</h2>
+  <pre><code>class TreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+function bfs(root) {
+  const result = [];
+  if (!root) return result;          // empty tree — nothing to visit
+  const queue = [root];
+  while (queue.length) {
+    const node = queue.shift();       // FIFO: take the OLDEST discovered node
+    result.push(node.val);
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+  return result;
+}
+
+function dfs(root) {
+  const result = [];
+  if (!root) return result;          // empty tree — nothing to visit
+  const stack = [root];
+  while (stack.length) {
+    const node = stack.pop();         // LIFO: take the NEWEST discovered node
+    result.push(node.val);
+    if (node.right) stack.push(node.right); // push right first...
+    if (node.left) stack.push(node.left);   // ...so left is popped (visited) first
+  }
+  return result;
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>TreeNode</code> mirrors Day 15's <code>Node</code> class — a value plus pointers to
+      what comes next — except a tree node has <em>two</em> "next" pointers instead of one,
+      because a tree branches instead of chaining.</li>
+    <li>Both functions guard the empty tree first (<code>if (!root) return result;</code>) —
+      skip this and the very first line inside the loop tries to read <code>.val</code> off
+      <code>null</code>.</li>
+    <li><code>bfs</code> uses <code>queue.shift()</code> to remove from the <em>front</em> of the
+      array — first discovered, first visited (FIFO). Each visited node's children get pushed to
+      the <em>back</em>, so the whole current level finishes before the next level starts.</li>
+    <li><code>dfs</code> uses <code>stack.pop()</code> to remove from the <em>end</em> of the
+      array — most recently discovered, next visited (LIFO). Pushing <code>right</code> before
+      <code>left</code> is the one deliberate trick: it puts <code>left</code> on top of the
+      stack, so <code>left</code> is the next one popped — matching the natural "visit node, then
+      left subtree, then right subtree" preorder shape.</li>
+    <li>Both loops are otherwise structurally identical — same guard, same "take one, record it,
+      push its children" shape. The <em>only</em> difference between BFS and DFS here is
+      <code>shift()</code> vs. <code>pop()</code> and which end children get pushed to. That's the
+      whole trick: same skeleton, different data structure, opposite visiting order.</li>
+  </ul>
+
+  <h3>Dry run: bfs(root) on the tree above</h3>
+  <div style="overflow-x:auto;">
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>Dequeue</th><th>Children enqueued</th><th>Queue after</th><th>Visited so far</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>1</td><td>2, 3</td><td>[2, 3]</td><td>[1]</td></tr>
+      <tr><td>2</td><td>2</td><td>4, 5</td><td>[3, 4, 5]</td><td>[1, 2]</td></tr>
+      <tr><td>3</td><td>3</td><td>6, 7</td><td>[4, 5, 6, 7]</td><td>[1, 2, 3]</td></tr>
+      <tr><td>4</td><td>4</td><td>— (leaf)</td><td>[5, 6, 7]</td><td>[1, 2, 3, 4]</td></tr>
+      <tr><td>5</td><td>5</td><td>— (leaf)</td><td>[6, 7]</td><td>[1, 2, 3, 4, 5]</td></tr>
+      <tr><td>6</td><td>6</td><td>— (leaf)</td><td>[7]</td><td>[1, 2, 3, 4, 5, 6]</td></tr>
+      <tr><td>7</td><td>7</td><td>— (leaf)</td><td>[]</td><td>[1, 2, 3, 4, 5, 6, 7]</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Dry run: dfs(root) on the same tree</h3>
+  <div style="overflow-x:auto;">
+  <table class="dryrun-table">
+    <thead><tr><th>Step</th><th>Pop</th><th>Children pushed (right, left)</th><th>Stack after (bottom→top)</th><th>Visited so far</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>1</td><td>3, 2</td><td>[3, 2]</td><td>[1]</td></tr>
+      <tr><td>2</td><td>2</td><td>5, 4</td><td>[3, 5, 4]</td><td>[1, 2]</td></tr>
+      <tr><td>3</td><td>4</td><td>— (leaf)</td><td>[3, 5]</td><td>[1, 2, 4]</td></tr>
+      <tr><td>4</td><td>5</td><td>— (leaf)</td><td>[3]</td><td>[1, 2, 4, 5]</td></tr>
+      <tr><td>5</td><td>3</td><td>7, 6</td><td>[7, 6]</td><td>[1, 2, 4, 5, 3]</td></tr>
+      <tr><td>6</td><td>6</td><td>— (leaf)</td><td>[7]</td><td>[1, 2, 4, 5, 3, 6]</td></tr>
+      <tr><td>7</td><td>7</td><td>— (leaf)</td><td>[]</td><td>[1, 2, 4, 5, 3, 6, 7]</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Same tree, same starting node — two entirely
+    different orders. BFS finishes an entire level before starting the next; DFS drains the whole
+    left branch (down to leaves 4 and 5) before it ever backtracks to node 3.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Traversal</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>BFS (queue)</td><td>O(n)</td><td>O(w)</td><td>Every node is visited exactly once (O(n) time). The queue's peak size is the widest level of the tree — w — since an entire level can sit in the queue at once.</td></tr>
+      <tr><td>DFS (stack or recursion)</td><td>O(n)</td><td>O(h)</td><td>Every node is visited exactly once (O(n) time). The stack's (or call stack's) peak size is the tree's height — h — since it only ever holds one path from root to the current node.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">n = total nodes, w = the widest level's node
+    count, h = the tree's height. These are <em>not</em> interchangeable: on a balanced tree,
+    w ≈ n/2 and h ≈ log n, so DFS uses far less space. On a wide-but-shallow tree (many nodes,
+    few levels), w can approach n while h stays tiny — DFS wins big. On a narrow-but-skewed tree
+    (essentially a linked list), h can approach n while w stays tiny — now BFS's queue barely
+    grows, and DFS is the one paying O(n) space. The tree's shape decides which one is cheaper,
+    not the algorithm name.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>When would you choose BFS over DFS, and vice versa?</strong> BFS is the right call
+      whenever you need shortest-path-style behavior in an unweighted structure, or you need to
+      process a tree strictly level by level (print every node at depth 2, find the minimum depth
+      to a target, etc). DFS is the natural fit when you need to explore a full root-to-leaf path
+      before moving on (path-sum problems, structural validation top to bottom), and it's usually
+      the more natural recursive formulation of a tree problem.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if the tree
+      is very deep but narrow — a completely skewed, linked-list-shaped tree?" Then DFS's stack
+      grows to O(n), the same order BFS's queue would hit if the tree were wide and shallow
+      instead — "DFS uses less memory" is only true relative to a specific tree shape, not
+      universally.</span></li>
+    <li><strong>Why does BFS specifically need a FIFO queue, and DFS a LIFO stack?</strong> The two
+      traversals are defined entirely by their processing order. Level-by-level order requires
+      fully processing everything discovered so far before moving to the next batch — a queue's
+      first-in-first-out order does exactly that. Going as deep as possible before backtracking
+      requires processing what was <em>most recently</em> discovered first — a stack's
+      last-in-first-out order does exactly that. Swap the data structure in the identical loop
+      skeleton above and you get the other traversal's order — no other code change needed.</li>
+    <li><strong>What's the classic bug when writing bfs()/dfs() for a real tree?</strong><br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> forgetting to
+      guard the empty-tree case (<code>root === null</code>). Both loop-based traversals shown
+      today start with <code>if (!root) return result;</code> — skip it and
+      <code>queue = [root]</code> / <code>stack = [root]</code> seeds the loop with
+      <code>null</code>, and the very first iteration crashes trying to read
+      <code>null.val</code>.</span></li>
+    <li><strong>Is preorder the only "flavor" of DFS?</strong> No — preorder, inorder, and
+      postorder are all DFS; they just differ in <em>when</em> a node's own value is recorded
+      relative to recursing into its children (before both, between them, or after both). Today's
+      animation shows preorder (visit node, then left, then right) because it's the most intuitive
+      to trace by eye, but the same stack/recursion mechanics power all three — only the position
+      of one line (<code>result.push(node.val)</code>) moves.</li>
+    <li><strong>On a wide-but-shallow tree vs. a narrow-but-deep (skewed) tree, how does each
+      traversal's extra space actually behave?</strong> BFS's queue holds, at its peak, every node
+      on the widest level (w). DFS's stack (or recursion depth) holds, at its peak, one frame per
+      level from root to the current node (h). On a wide, shallow tree, w is huge and h is tiny —
+      DFS wins on space. On a narrow, deep (skewed) tree, h is huge (up to n) and w is tiny — now
+      BFS barely grows, and DFS is the one using O(n) space. Neither is "just better"; the shape of
+      the tree decides which structure blows up.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the data structure before writing a
+    single line — "BFS needs a queue because I want first-in-first-out, level-by-level order; DFS
+    needs a stack, or recursion, because I want last-in-first-out, depth-first order." Then narrate
+    the empty-tree guard out loud before touching <code>.val</code> — "first, what happens if root
+    is null?" Interviewers watching a tree-traversal solution are listening for exactly these two
+    things: do you reach for the right structure on purpose, not by memorized template, and do you
+    handle the empty case before you ever dereference a node.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Invert Binary Tree <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/invert-binary-tree/" target="_blank" rel="noopener">LeetCode: Invert Binary Tree</a>)</span></h4>
+    <p>Given the root of a binary tree, swap every node's left and right children, all the way
+      down, and return the new root.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Think about what changes at every single
+      node, not just the root — the recursive shape you need already appears in today's traversal
+      functions (do something to a node, then recurse into both children).</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function invertTree(root) {
+  if (!root) return null;
+  const left = invertTree(root.left);
+  const right = invertTree(root.right);
+  root.left = right;
+  root.right = left;
+  return root;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Maximum Depth of Binary Tree <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/" target="_blank" rel="noopener">LeetCode: Maximum Depth of Binary Tree</a>)</span></h4>
+    <p>Given the root of a binary tree, return its maximum depth — the number of nodes along the
+      longest path from the root down to the farthest leaf.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>You don't need BFS or DFS by name here —
+      think recursively about what "depth" means in terms of a node's two subtrees' own depths.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function maxDepth(root) {
+  if (!root) return 0;
+  return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. Binary Tree Level Order Traversal <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/binary-tree-level-order-traversal/" target="_blank" rel="noopener">LeetCode: Binary Tree Level Order Traversal</a>)</span></h4>
+    <p>Given the root of a binary tree, return the values of its nodes grouped level by level (an
+      array of arrays, one per depth) — today's BFS, applied directly.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>This is today's BFS almost unchanged — the
+      only new idea is capturing "how many nodes are currently in the queue" right before the
+      inner loop starts, so you know exactly where one level ends and the next begins.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function levelOrder(root) {
+  const result = [];
+  if (!root) return result;
+  const queue = [root];
+  while (queue.length) {
+    const levelSize = queue.length;
+    const level = [];
+    for (let i = 0; i < levelSize; i++) {
+      const node = queue.shift();
+      level.push(node.val);
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+    result.push(level);
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="queue" data-explain="A FIFO queue ensures the first node discovered is the first one expanded — that's exactly what makes BFS process one full level before moving to the next.">
+    <p class="q-text">1. Which data structure does BFS use to control visiting order?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="queue">A FIFO queue</button>
+      <button class="btn dsa-quiz-option" data-value="stack">A LIFO stack</button>
+      <button class="btn dsa-quiz-option" data-value="pq">A priority queue, sorted by value</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="stack" data-explain="A LIFO stack — the most recently pushed node is the next one popped and visited, which is what drives DFS to go deep before it goes wide." >
+    <p class="q-text">2. Which data structure does today's iterative DFS use?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="stack">A LIFO stack</button>
+      <button class="btn dsa-quiz-option" data-value="queue">A FIFO queue</button>
+      <button class="btn dsa-quiz-option" data-value="none">None — iterative DFS can't use an explicit data structure</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="labeling" data-explain="BFS visits by structural level, not by value — the order only looks like ascending numbers here because the nodes were deliberately labeled 1-7 in level order for this lesson. Shuffle the values and BFS still visits root, then both children, then all four grandchildren, just with different numbers attached.">
+    <p class="q-text">3. On today's tree, why does BFS's visit order come out as exactly 1, 2, 3, 4, 5, 6, 7 — the same as the node labels?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="labeling">The tree's values were deliberately assigned in level order for this lesson — it's a labeling choice, not a general BFS property</button>
+      <button class="btn dsa-quiz-option" data-value="ascending">BFS always visits nodes in ascending numeric order</button>
+      <button class="btn dsa-quiz-option" data-value="bst">This tree happens to be a binary search tree, so BFS follows sorted order</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="bfsblows" data-explain="BFS's queue must hold the entire widest level at once — nearly 1000 nodes here — while DFS's stack only ever holds O(h), a couple of frames, since the tree is just two levels deep." >
+    <p class="q-text">4. On a tree that's wide but shallow (one root with 1,000 direct children), which traversal's extra space blows up the most?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bfsblows">BFS — its queue must hold the entire widest level at once</button>
+      <button class="btn dsa-quiz-option" data-value="dfsblows">DFS — recursion depth would be enormous</button>
+      <button class="btn dsa-quiz-option" data-value="neither">Neither — both are always O(log n) space</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="empty" data-explain="An empty tree is a completely valid input — skipping the null check causes a crash the instant the queue or stack tries to read node.val off a null root." >
+    <p class="q-text">5. What should bfs(null) (or dfs(null)) return, and why does it matter?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="empty">An empty array — every traversal must guard for a null root before touching .val</button>
+      <button class="btn dsa-quiz-option" data-value="undefined">undefined, since there's nothing to process</button>
+      <button class="btn dsa-quiz-option" data-value="throw">It should throw — an empty tree is invalid input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 19 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day18.html">← Day 18: Queues &amp; Deques</a>
+    <a class="btn" href="day20.html">Day 20: Binary Search Trees →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 19;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- shared tree shape: 7 nodes, complete binary tree, values assigned in level order ----
+  // index 0 = root, 1 = root.left, 2 = root.right, 3/4 = left's children, 5/6 = right's children
+  const NODE_IDS = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7'];
+  const NODE_POS = {
+    n1: { x: 380, y: 50 },
+    n2: { x: 220, y: 140 }, n3: { x: 540, y: 140 },
+    n4: { x: 140, y: 230 }, n5: { x: 300, y: 230 }, n6: { x: 460, y: 230 }, n7: { x: 620, y: 230 },
+  };
+  const CHILD_MAP = { n1: ['n2', 'n3'], n2: ['n4', 'n5'], n3: ['n6', 'n7'], n4: [], n5: [], n6: [], n7: [] };
+  const TREE_EDGES = [
+    { from: 'n1', to: 'n2', directed: true }, { from: 'n1', to: 'n3', directed: true },
+    { from: 'n2', to: 'n4', directed: true }, { from: 'n2', to: 'n5', directed: true },
+    { from: 'n3', to: 'n6', directed: true }, { from: 'n3', to: 'n7', directed: true },
+  ];
+  const GRAPH_W = 760, GRAPH_H = 320;
+
+  function makeNodes(values) {
+    return NODE_IDS.map((id, i) => ({ id, x: NODE_POS[id].x, y: NODE_POS[id].y, label: String(values[i]) }));
+  }
+
+  function paintTree(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {}, {});
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = graph.svg;
+    function addText(x, y, txt, fill, size) {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', x);
+      t.setAttribute('y', y);
+      t.setAttribute('font-size', size || 12);
+      t.setAttribute('fill', fill || '#818896');
+      t.textContent = txt;
+      svg.appendChild(t);
+    }
+    addText(20, 280, step.queueLine, '#61AEEE', 12);
+    addText(20, 305, step.visitedLine, '#98C379', 12);
+  }
+
+  // ---- viz 1: BFS (queue, level order) — mirrors bfs() from "The code" step by step ----
+  function buildBFSSteps(values) {
+    const nodes = makeNodes(values);
+    const valueOf = (id) => nodes.find((n) => n.id === id).label;
+    const snapNodes = () => nodes.map((n) => Object.assign({}, n));
+    const steps = [];
+    const sortedIds = [];
+    let queue = ['n1'];
+
+    steps.push({
+      narration: `Start: enqueue the root. queue = [${values[0]}].`,
+      nodes: snapNodes(), edges: TREE_EDGES, states: { n1: 'pointer' },
+      queueLine: `Queue (front→back): [${values[0]}]`,
+      visitedLine: `Visited so far: []`,
+    });
+
+    const visitedOrder = [];
+    while (queue.length) {
+      const id = queue.shift();
+      visitedOrder.push(valueOf(id));
+      const children = CHILD_MAP[id];
+      children.forEach((c) => queue.push(c));
+      sortedIds.push(id);
+      const states = {};
+      sortedIds.forEach((sid) => { states[sid] = sid === id ? 'active' : 'sorted'; });
+      queue.forEach((qid) => { if (!states[qid]) states[qid] = 'pointer'; });
+      const childDesc = children.length
+        ? `enqueue its children (${children.map(valueOf).join(', ')})`
+        : `it's a leaf — nothing to enqueue`;
+      steps.push({
+        narration: `Dequeue ${valueOf(id)} → visit it (order ${visitedOrder.length}). ${childDesc}.`,
+        nodes: snapNodes(), edges: TREE_EDGES, states,
+        queueLine: `Queue (front→back): [${queue.map(valueOf).join(', ') || 'empty'}]`,
+        visitedLine: `Visited so far: [${visitedOrder.join(', ')}]`,
+      });
+    }
+
+    const finalStates = {};
+    sortedIds.forEach((id) => { finalStates[id] = 'sorted'; });
+    steps.push({
+      narration: `BFS complete. Full visit order: [${visitedOrder.join(', ')}].`,
+      nodes: snapNodes(), edges: TREE_EDGES, states: finalStates,
+      queueLine: `Queue (front→back): [empty]`,
+      visitedLine: `Visited so far: [${visitedOrder.join(', ')}]`,
+    });
+    return steps;
+  }
+
+  function randomDistinct(n, min, max) {
+    const pool = [];
+    for (let v = min; v <= max; v++) pool.push(v);
+    return DSA.shuffleArray(pool).slice(0, n);
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const graph1 = new DSA.Graph(viz1Stage, { width: GRAPH_W, height: GRAPH_H });
+  let BASE1 = [1, 2, 3, 4, 5, 6, 7];
+  let steps1 = buildBFSSteps(BASE1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1100,
+    onStep(step) { paintTree(graph1, step || steps1[0]); },
+    onShuffle() {
+      BASE1 = randomDistinct(7, 1, 99);
+      steps1 = buildBFSSteps(BASE1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: DFS (stack, preorder) — mirrors dfs() from "The code" step by step ----
+  function buildDFSSteps(values) {
+    const nodes = makeNodes(values);
+    const valueOf = (id) => nodes.find((n) => n.id === id).label;
+    const snapNodes = () => nodes.map((n) => Object.assign({}, n));
+    const steps = [];
+    const sortedIds = [];
+    let stack = ['n1'];
+
+    steps.push({
+      narration: `Start: push the root. stack = [${values[0]}].`,
+      nodes: snapNodes(), edges: TREE_EDGES, states: { n1: 'pointer' },
+      queueLine: `Stack (bottom→top): [${values[0]}]`,
+      visitedLine: `Visited so far: []`,
+    });
+
+    const visitedOrder = [];
+    while (stack.length) {
+      const id = stack.pop();
+      visitedOrder.push(valueOf(id));
+      const children = CHILD_MAP[id]; // [leftId, rightId]
+      const leftId = children[0], rightId = children[1];
+      if (rightId) stack.push(rightId); // push right first...
+      if (leftId) stack.push(leftId);   // ...so left ends up on top, popped next
+      sortedIds.push(id);
+      const states = {};
+      sortedIds.forEach((sid) => { states[sid] = sid === id ? 'active' : 'sorted'; });
+      stack.forEach((qid) => { if (!states[qid]) states[qid] = 'pointer'; });
+      const pushedDesc = [rightId, leftId].filter(Boolean).map(valueOf);
+      const childDesc = pushedDesc.length
+        ? `push its children, right then left (${pushedDesc.join(', ')})`
+        : `it's a leaf — nothing to push`;
+      steps.push({
+        narration: `Pop ${valueOf(id)} → visit it (order ${visitedOrder.length}). ${childDesc}.`,
+        nodes: snapNodes(), edges: TREE_EDGES, states,
+        queueLine: `Stack (bottom→top): [${stack.map(valueOf).join(', ') || 'empty'}]`,
+        visitedLine: `Visited so far: [${visitedOrder.join(', ')}]`,
+      });
+    }
+
+    const finalStates = {};
+    sortedIds.forEach((id) => { finalStates[id] = 'sorted'; });
+    steps.push({
+      narration: `DFS complete. Full visit order: [${visitedOrder.join(', ')}].`,
+      nodes: snapNodes(), edges: TREE_EDGES, states: finalStates,
+      queueLine: `Stack (bottom→top): [empty]`,
+      visitedLine: `Visited so far: [${visitedOrder.join(', ')}]`,
+    });
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const graph2 = new DSA.Graph(viz2Stage, { width: GRAPH_W, height: GRAPH_H });
+  let BASE2 = [1, 2, 3, 4, 5, 6, 7];
+  let steps2 = buildDFSSteps(BASE2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1100,
+    onStep(step) { paintTree(graph2, step || steps2[0]); },
+    onShuffle() {
+      BASE2 = randomDistinct(7, 1, 99);
+      steps2 = buildDFSSteps(BASE2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
