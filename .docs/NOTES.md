@@ -331,11 +331,13 @@ manual verification pass, exactly as expected:
 - Day 18 review dispatched, pending as of this note.
 
 ## Not started yet
-- Day 16 (Linked Lists II — Fast/Slow & Reverse), then Days 19-30 (Week 3: Trees, BSTs — Days
-  19-21; Week 4: advanced + interview sim — Days 22-30). Use Days 1-15/17/18 as the template
-  (now in the theme below), apply every point in "Lesson template" above and the lessons-learned
-  noted here — especially the 3 recurring bug classes just documented — and review each via
-  `.docs/REVIEW-CHECKLIST.md`.
+- Day 21 (Week 3 Review — now unblocked, Days 19+20 both done), Day 26 (DP II), Day 27 (Greedy),
+  Day 28 (Pattern Recognition Masterclass), Day 29 (Mock Interview Day), Day 30 (Final Review).
+  Days 28-30 synthesize/reference the whole curriculum — build those last, likely solo rather
+  than via agent, once everything else is done. Use Days 1-25 as the template (now in the theme
+  below), apply every point in "Lesson template" above and the lessons-learned noted here —
+  especially the 3 recurring bug classes and the directed-edge-arrowhead fix — and review each
+  via `.docs/REVIEW-CHECKLIST.md`.
 - **Open decision, not yet actioned:** whether to vendor the actual JetBrains Mono font file
   (self-hosted, OFL-licensed, offline-safe) so headings/code render in true JetBrains Mono
   instead of falling back to a system monospace font. Asked the user; awaiting their answer.
@@ -420,6 +422,52 @@ needs to see the actual implementation for consistency, not just the topic descr
 **Standing process note:** every agent-drafted lesson still needs the full same verification I've
 been doing solo (browser console/animation/quiz/mobile checks, content-advisor review, fix,
 commit) — parallelism speeds up first-draft writing, not the verification gate.
+
+## Done — Days 16, 19, 20, 22, 23, 24 (Linked Lists II through Graphs II)
+- **Day 16** (Linked Lists II — Fast/Slow & Reverse): built solo, since it needed Day 15's real
+  `Node`/`LinkedList` class for consistency. `reverseList`, `middleNode`, `hasCycle` (Floyd's),
+  `reorderList`. Self-caught an off-canvas NULL-label bug and an overlapping arrow/label before
+  review; review caught a narration/visual contradiction in the fast/slow middle-finding
+  animation (a marker rendered on a valid node while narration said "past the end" for
+  even-length arrays) — fixed by passing the raw out-of-bounds index through instead of clamping
+  it for display.
+- **Day 19** (Trees — BFS & DFS): agent-built. `TreeNode`, `bfs` (queue), `dfs` (stack,
+  push-right-then-left for preorder). Fixed two un-wrapped wide dry-run tables and an illegal
+  quiz example that violated the lesson's own max-2-children binary-tree definition.
+- **Day 20** (Binary Search Trees): agent-built. `insert`/`search`/`isValidBST` (min/max-bound).
+  Independently node-verified the "locally-fine-but-globally-invalid" trap by writing a
+  deliberately-wrong local-only validator alongside the real one and confirming they diverge on
+  the trap tree. Fixed overlapping left/right-subtree caption text in one diagram.
+- **Day 22** (Heaps & Priority Queues): agent-built. `MinHeap` with `insert`/`bubbleUp`/
+  `extractMin`/`bubbleDown`. Node-verified with a heap-invariant checker after every operation
+  plus a 30-value fuzz test. Zero bugs found in browser-testing or review — cleanest build of
+  the batch.
+- **Day 23** (Graphs — BFS & DFS): agent-built. Adjacency-list `bfs`/`dfs` on a 7-node graph with
+  one 4-cycle. Node-verified traversal orders, cycle termination, and `cloneGraph`'s cycle-safe
+  deep copy. Fixed one un-wrapped complexity table.
+- **Day 24** (Graphs II — Shortest Path & Topo Sort): built solo. `bfsShortestPath` (BFS +
+  distance map) and `topoSortKahn` (Kahn's algorithm), reusing Day 23's exact graph for the BFS
+  half. Node-verified both algorithms plus `findJudge`/`canFinish`/`updateMatrix` against their
+  LeetCode semantics. Fixed a clipped caption line in the "why a cycle blocks topo sort" diagram
+  (text ran past the viewBox — same recurring bug class, split into two lines + taller viewBox).
+
+## Found + fixed — directed-edge arrowheads were invisible in every `DSA.Graph` animation
+While browser-testing Day 24's Kahn's-algorithm visualization, noticed directed edges (parent→
+child, next-pointer, prerequisite→dependent) rendered with no visible arrowhead at all, despite
+`marker-end` being set correctly. Root cause: the edge `<line>` ran all the way to the target
+node's *center*, and the `<marker>` (which paints right at the line's endpoint) landed dead
+inside the node `<circle>` — which is drawn *after* edges in the same `render()` pass and so
+paints over it completely. This silently affected every directed graph on the site since Day 15
+first used `DSA.Graph` — Days 15, 16, 19, 20, and 24 all lost their directional cue without
+anyone (agent or reviewer) noticing, because the *shape* of the traversal still looked plausible
+without arrows. Fixed centrally in `js/engine.js`'s `Graph.render()`: for `directed: true` edges,
+the line's endpoint is now pulled back along the edge vector by the node radius (18) before the
+marker is attached, so the arrowhead renders just outside the node's rim instead of underneath
+it. Verified the fix on Day 24 (now-visible arrows on the Kahn's-algorithm graph) and spot-
+checked Day 19's tree diagram — arrows now correctly point parent→child with no layout
+regression. This is a good example of the "diagram looks right on skim, but a specific visual
+element is silently missing" failure mode — worth explicitly checking marker/arrow visibility,
+not just overlap/clipping, in future Graph-based lesson reviews.
 
 ## Environment for local preview
 ```bash
