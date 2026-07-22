@@ -14,7 +14,7 @@
   --bg-raised-2: #21252B; /* sideBar.background / editorWidget.background */
   --btn-bg: #404754;      /* button.background — real theme value, used for secondary buttons */
   --border: #3E4452;      /* focusBorder */
-  --text: #ABB2BF;        /* editor.foreground / mono-1 */
+  --text: #e2e3e7;        /* editor.foreground / mono-1 */
   --text-dim: #818896;    /* mono-2 */
   --heading: #DCDFE4;     /* brightened foreground for headings/logos/important labels */
   --accent: #61AEEE;      /* hue-2 / textLink.foreground — buttons, links, nav highlights */

@@ -395,30 +395,111 @@ const DSA = (function () {
   // comment | string (single/double/template) | number | identifier | anything else (1 char)
   const TOKEN_RE = /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|(\b\d+\.?\d*\b)|([A-Za-z_$][\w$]*)|([\s\S])/g;
 
-  function highlightJS(code) {
-    let out = '';
+  // Tokenizes `code` and returns an array of highlighted HTML strings, one
+  // per source line. Any single token that itself contains a newline (a
+  // multi-line template literal, or — via the catch-all group — a plain
+  // newline character) is split at the line boundary so every returned
+  // string is self-contained, well-formed HTML (no span left open/closed
+  // across a line break).
+  function highlightLines(code) {
+    const lines = [];
+    let current = '';
     let m;
     TOKEN_RE.lastIndex = 0;
     while ((m = TOKEN_RE.exec(code)) !== null) {
       const [, comment, str, num, ident, other] = m;
-      if (comment) out += `<span class="tok-comment">${escapeHtml(comment)}</span>`;
-      else if (str) out += `<span class="tok-string">${escapeHtml(str)}</span>`;
-      else if (num) out += `<span class="tok-number">${escapeHtml(num)}</span>`;
-      else if (ident) {
-        if (JS_KEYWORDS.has(ident)) out += `<span class="tok-keyword">${escapeHtml(ident)}</span>`;
-        else if (JS_LITERALS.has(ident)) out += `<span class="tok-literal">${escapeHtml(ident)}</span>`;
-        else out += escapeHtml(ident);
-      } else out += escapeHtml(other);
+      const text = comment || str || num || ident || other;
+      let cls = null;
+      if (comment) cls = 'tok-comment';
+      else if (str) cls = 'tok-string';
+      else if (num) cls = 'tok-number';
+      else if (ident && JS_KEYWORDS.has(ident)) cls = 'tok-keyword';
+      else if (ident && JS_LITERALS.has(ident)) cls = 'tok-literal';
+
+      const segments = text.split('\n');
+      segments.forEach((seg, i) => {
+        if (i > 0) { lines.push(current); current = ''; }
+        if (seg) current += cls ? `<span class="${cls}">${escapeHtml(seg)}</span>` : escapeHtml(seg);
+      });
     }
-    return out;
+    lines.push(current);
+    return lines;
   }
 
-  // Applied automatically on every page (see DOMContentLoaded below) — no
-  // lesson file needs to call this itself.
+  // Rebuilds a <pre><code> block into a line-numbered, horizontally
+  // scrollable card with a copy-to-clipboard button — applied automatically
+  // on every page (see DOMContentLoaded below), no lesson file needs to call
+  // this itself.
+  function buildCodeBlock(pre, codeEl) {
+    const rawText = codeEl.textContent;
+    const lines = highlightLines(rawText);
+
+    const scroll = document.createElement('div');
+    scroll.className = 'dsa-code-scroll';
+
+    const gutter = document.createElement('div');
+    gutter.className = 'dsa-code-gutter';
+    gutter.setAttribute('aria-hidden', 'true');
+
+    const codeLines = document.createElement('div');
+    codeLines.className = 'dsa-code-lines';
+
+    lines.forEach((lineHtml, i) => {
+      const num = document.createElement('div');
+      num.className = 'dsa-code-lineno';
+      num.textContent = String(i + 1);
+      gutter.appendChild(num);
+
+      const lineEl = document.createElement('div');
+      lineEl.className = 'dsa-code-line';
+      lineEl.innerHTML = lineHtml || '​'; // zero-width space keeps empty lines at full height
+      codeLines.appendChild(lineEl);
+    });
+
+    scroll.appendChild(gutter);
+    scroll.appendChild(codeLines);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'dsa-copy-btn';
+    copyBtn.textContent = 'Copy';
+    function flashCopied() {
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('dsa-copy-btn-done');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.remove('dsa-copy-btn-done');
+      }, 1500);
+    }
+    function fallbackCopy() {
+      // navigator.clipboard needs a secure context — unavailable on file://,
+      // which this site must still support (opened directly, fully offline).
+      const ta = document.createElement('textarea');
+      ta.value = rawText;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); flashCopied(); } catch (e) { /* clipboard unavailable */ }
+      document.body.removeChild(ta);
+    }
+    copyBtn.addEventListener('click', () => {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(rawText).then(flashCopied, fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+    });
+
+    pre.innerHTML = '';
+    pre.classList.add('dsa-code-block');
+    pre.appendChild(copyBtn);
+    pre.appendChild(scroll);
+  }
+
   function highlightCode(root) {
     (root || document).querySelectorAll('pre > code').forEach((codeEl) => {
-      codeEl.innerHTML = highlightJS(codeEl.textContent);
-      codeEl.classList.add('dsa-hl');
+      buildCodeBlock(codeEl.parentElement, codeEl);
     });
   }
 

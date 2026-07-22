@@ -16,7 +16,8 @@ html, body {
   color: var(--text);
   font-family: var(--font-body);
   font-weight: 400;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 body { padding-bottom: 4rem; }
@@ -28,8 +29,8 @@ h1, h2, h3, h4, .mono {
   font-weight: 700;
 }
 
-h1 { font-size: 1.9rem; margin: 0 0 0.5rem; }
-h2 { font-size: 1.4rem; margin-top: 2.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; }
+h1 { font-size: 32px; font-weight: 700; line-height: 1.25; margin: 0 0 0.5rem; }
+h2 { font-size: 24px; line-height: 1.3; margin-top: 2.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; }
 h3 { font-size: 1.1rem; margin-top: 1.5rem; }
 
 a { color: var(--accent); }
@@ -38,21 +39,103 @@ a:hover { color: var(--accent-hover); text-decoration: none; }
 code, pre {
   font-family: var(--font-head);
   font-size: 0.92em;
+  /* Some monospace fonts (JetBrains Mono, Fira Code) merge operators like
+     <= or => into a single ligature glyph. Disable it — this is a teaching
+     site, code should render exactly as it would if pasted into an editor. */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
 }
 
+code {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+/* pre > code (real code blocks) gets rebuilt into .dsa-code-block by
+   js/engine.js's highlightCode() — undo the inline-code chrome above so it
+   doesn't double up with the card styling below. */
 pre {
+  padding: 0;
+  overflow: hidden;
+}
+pre > code {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.dsa-code-block {
+  position: relative;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem;
-  overflow-x: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
+.dsa-code-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding: 2.4rem 0 1rem;
+}
+
+.dsa-code-gutter {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.85rem 0 1rem;
+  margin-right: 1rem;
+  border-right: 1px solid var(--border);
+  user-select: none;
+}
+
+.dsa-code-lineno {
+  font-family: var(--font-head);
+  font-size: 0.92em;
+  line-height: 1.6;
+  color: var(--text-dim);
+  text-align: right;
+  opacity: 0.6;
+}
+
+.dsa-code-lines {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 1.25rem;
+}
+
+.dsa-code-line {
+  font-family: var(--font-head);
+  font-size: 0.92em;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.dsa-copy-btn {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  background: var(--bg-raised-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.dsa-copy-btn:hover { color: var(--heading); background: var(--btn-bg); }
+.dsa-copy-btn.dsa-copy-btn-done { color: var(--bg); background: var(--accent-2); border-color: var(--accent-2); }
+
 /* syntax highlighting — tokens applied by js/engine.js's highlightCode() */
-.dsa-hl .tok-keyword { color: var(--c-active); }
-.dsa-hl .tok-string { color: var(--c-sorted); }
-.dsa-hl .tok-comment { color: var(--text-dim); font-style: italic; }
-.dsa-hl .tok-number, .dsa-hl .tok-literal { color: var(--warn); }
+.tok-keyword { color: var(--c-active); }
+.tok-string { color: var(--c-sorted); }
+.tok-comment { color: var(--text-dim); font-style: italic; }
+.tok-number, .tok-literal { color: var(--warn); }
 
 p code, li code {
   background: var(--bg-raised);
@@ -192,32 +275,40 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
 .day-list {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0;
+  position: relative;
+}
+
+/* the connecting timeline line, threaded behind every badge in the week */
+.day-list::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  bottom: 20px;
+  width: 1px;
+  background: var(--border);
+  z-index: 0;
 }
 
 .day-row {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 1.1rem;
   text-decoration: none;
   color: var(--text);
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.7rem 1rem;
-  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s, background 0.15s;
+  padding: 0.9rem 0.75rem;
+  position: relative;
+  z-index: 1;
+  transition: background-color 0.15s;
 }
-.day-row:hover {
-  border-color: var(--accent);
-  transform: translateX(3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-}
-.day-row.done { border-color: var(--c-sorted); }
+.day-row:hover { background: var(--bg-raised); }
 
 .day-badge {
   flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--bg-raised-2);
   border: 1px solid var(--border);
@@ -227,7 +318,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   font-family: var(--font-head);
   font-weight: 700;
   font-size: 0.85rem;
-  color: var(--text-dim);
+  color: var(--heading);
+  position: relative;
+  z-index: 1;
 }
 .day-row.done .day-badge {
   background: var(--c-sorted);
@@ -235,18 +328,26 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   border-color: var(--c-sorted);
 }
 
-.day-info { flex: 1 1 auto; min-width: 0; }
+.day-info { flex: 1 1 auto; min-width: 0; padding-top: 0.1rem; }
 .day-info .day-title {
+  font-size: 1.15rem;
   font-weight: 600;
+  color: var(--heading);
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.day-info .day-blurb {
+.day-info .day-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text-dim);
-  font-size: 0.83rem;
-  margin-top: 0.15rem;
+  margin-top: 0.3rem;
+}
+.day-meta-icon { flex: 0 0 auto; width: 14px; height: 14px; color: var(--text-dim); }
+.day-info .day-blurb {
+  font-size: 0.85rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -256,18 +357,35 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
   font-family: var(--font-head);
   font-size: 0.76rem;
   color: var(--text-dim);
 }
 .day-row.done .day-status { color: var(--c-sorted); }
-.day-status .chevron { color: var(--text-dim); font-size: 1rem; }
+
+.chevron-circle {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+}
+.chevron-circle svg { width: 15px; height: 15px; }
+.day-row:hover .chevron-circle { border-color: var(--accent); color: var(--accent); }
+.day-row.done .chevron-circle { border-color: var(--c-sorted); background: var(--c-sorted); color: var(--c-sorted-text); }
 
 @media (max-width: 560px) {
   .day-info .day-blurb { display: none; }
+  .day-meta-icon { display: none; }
   .day-status .status-text { display: none; }
-  .day-row { gap: 0.75rem; padding: 0.6rem 0.85rem; }
+  .day-row { gap: 0.75rem; padding: 0.75rem 0.5rem; }
 }
 
 .how-to-list { display: grid; gap: 0.6rem; }
@@ -541,7 +659,7 @@ footer.site-footer {
 }
 
 @media (max-width: 480px) {
-  h1 { font-size: 1.5rem; }
+  h1 { font-size: 26px; }
   .container, .container-wide { padding: 1rem 0.85rem; }
   .viz-controls { justify-content: center; }
   .viz-counter { margin-left: 0; width: 100%; text-align: center; }
