@@ -482,6 +482,26 @@ baseline near its start — fixed by moving the label row up for clearance, same
 "element overlaps an adjacent element" bug class as before, just arc-vs-label instead of
 text-vs-text this time.
 
+## Done — Day 21 (Week 3 Review)
+Built solo, following the Day 7/14 review-day template (decision-checklist diagram, one synthesis
+visualization, cheat sheet, complexity table, interview corner, 5 mixed practice problems, quiz).
+Synthesizes Days 15-20 around one question: what access pattern (LIFO, FIFO, pointer-chain,
+level-order, sorted-order) does the problem actually need. The synthesis visualization validates
+a BST via **iterative inorder traversal with an explicit stack** instead of Day 20's recursive
+min/max bounds — reuses Day 20's exact base-tree layout/positions for visual continuity, plus a
+second "corrupted" variant (one node's value swapped to reproduce Day 20's locally-fine-but-
+globally-invalid trap) that Shuffle toggles to, showing the stack-based approach correctly
+detecting the same violation Day 20's bounds-tracking caught. Node-verified the traversal against
+both the valid tree (pop order 20/30/40/50/60/70/80) and the corrupted one (stops at 35 right
+after 50, matching Day 20's trap). Also node-verified all 5 mixed practice problems (Palindrome
+Linked List, Implement Stack using Queues — the mirror of Day 18's problem 1 — Kth Smallest
+Element in a BST, Binary Tree Zigzag Level Order Traversal, Lowest Common Ancestor of a BST)
+against known examples before writing them up. Browser-tested clean: zero console errors, both
+animation branches (valid/invalid) matched their node-verified traces exactly, directional arrows
+rendered correctly on the tree (confirming the earlier arrowhead fix holds up), zero mobile
+overflow, quiz/reveal/mark-complete all work. No bugs found — first review-day build with a clean
+pass on the first try.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
