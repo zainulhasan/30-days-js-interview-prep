@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 24: Graphs II — Shortest Path &amp; Topo Sort — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Extend Day 23's BFS with a distance map to get shortest path in an unweighted graph for free, then use Kahn's algorithm to topologically sort a DAG and detect cycles as a side effect." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 24 / 30 &middot; WEEK 4</p>
+  <h1>Graphs II — Shortest Path &amp; Topo Sort</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Extend Day 23's BFS with exactly one new piece of bookkeeping — a <strong>distance
+      map</strong> — to get the shortest path (fewest edges) in an unweighted graph, essentially
+      for free.</li>
+    <li>Learn <strong>topological sort</strong> via <strong>Kahn's algorithm</strong>: order the
+      nodes of a directed graph with no cycles so that every edge points from an earlier node to
+      a later one.</li>
+    <li>Understand that topological sort only makes sense on a <strong>directed, acyclic</strong>
+      graph (a DAG) — and that Kahn's algorithm detects a cycle as a natural side effect, instead
+      of needing separate cycle-detection logic bolted on.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p><strong>Shortest path in an unweighted graph.</strong> Day 23's <code>bfs</code> already does
+    almost all of the work here — it just never told you how far away each node was. BFS explores
+    level by level: it fully processes every node at distance 1 from the start before it ever
+    looks at a node at distance 2. That ordering guarantee means the very first time BFS discovers
+    a node, it has found that node by the shortest possible path (fewest edges). So the only new
+    idea is to track a <code>distance</code> map alongside the visited set: <code>distance[start] =
+    0</code>, and every time a neighbor is discovered for the first time, it gets
+    <code>distance[current] + 1</code>. Same queue, same visited-on-discovery rule, same traversal
+    — one extra assignment per newly discovered node.</p>
+  <p><strong>Topological sort.</strong> Picture a semester's prerequisite chart: Intro CS unlocks
+    both Discrete Math and Data Structures; Discrete Math and Data Structures both feed into
+    Algorithms; Data Structures also unlocks Databases; and Algorithms and Databases both feed
+    into Systems Design. A <strong>topological sort</strong> answers "what order can I safely take
+    these courses in?" — an ordering where every prerequisite appears before the course that
+    depends on it. The exact same question shows up as "in what order do I compile these files
+    given their <code>#include</code> dependencies?" or "in what order do I run these build
+    steps?". <strong>Kahn's algorithm</strong> answers it with a BFS-shaped idea: compute every
+    node's <strong>in-degree</strong> (how many prerequisites it still has), start a queue with
+    every node whose in-degree is already 0 (no prerequisites), then repeatedly dequeue a node,
+    append it to the result, and decrement the in-degree of everything it points to — enqueuing
+    any neighbor that just dropped to 0.</p>
+  <p>Two things only make sense together here, and both are worth saying out loud in an interview:
+    topological sort requires a <strong>directed</strong> graph (an undirected edge has no
+    "prerequisite comes first" direction to exploit), and it only <em>exists</em> if that directed
+    graph has <strong>no cycle</strong>. If Data Structures secretly required Systems Design and
+    Systems Design required Data Structures, there would be no valid place to start — every course
+    in that cycle is stuck waiting on another course in the same cycle. Kahn's algorithm doesn't
+    need a separate check for this: if the graph has a cycle, some nodes never reach in-degree 0,
+    so the final result comes up short of the total node count — a cycle announces itself by
+    absence rather than by a crash or an infinite loop.</p>
+  <p>One deliberate scope note: today's shortest-path technique only works because every edge
+    "costs" the same — one hop. If edges have different weights (e.g. road distances, flight
+    prices), BFS's level-by-level order no longer lines up with the lowest-total-weight path, and
+    you'd reach for <strong>Dijkstra's algorithm</strong> (BFS with a priority queue instead of a
+    plain queue) instead. That's a topic for another day — the unweighted case below is what most
+    interview "shortest path" questions on a plain graph actually want.</p>
+
+  <h2>Diagram: BFS distances radiating from a start node</h2>
+  <svg class="diagram" viewBox="0 0 900 400" role="img" aria-label="The same 7-node graph from Day 23, now with each node labeled by its BFS distance from start node A. A has distance 0. B and C, A's direct neighbors, have distance 1. D has distance 2. E and G have distance 3. F has distance 4.">
+    <text x="20" y="22" font-size="13" fill="#61AEEE" font-weight="bold">Same graph as Day 23 — BFS from A, now labeling each node's distance</text>
+    <g font-size="13">
+      <line x1="90" y1="70" x2="250" y2="70" stroke="#3E4452" stroke-width="2"/>
+      <line x1="90" y1="70" x2="90" y2="190" stroke="#3E4452" stroke-width="2"/>
+      <line x1="250" y1="70" x2="250" y2="190" stroke="#3E4452" stroke-width="2"/>
+      <line x1="90" y1="190" x2="250" y2="190" stroke="#3E4452" stroke-width="2"/>
+      <line x1="250" y1="190" x2="380" y2="130" stroke="#3E4452" stroke-width="2"/>
+      <line x1="380" y1="130" x2="460" y2="130" stroke="#3E4452" stroke-width="2"/>
+      <line x1="250" y1="190" x2="250" y2="300" stroke="#3E4452" stroke-width="2"/>
+
+      <circle cx="90" cy="70" r="18" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="90" y="75" text-anchor="middle" fill="#DCDFE4">A</text>
+      <circle cx="250" cy="70" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="75" text-anchor="middle" fill="#DCDFE4">B</text>
+      <circle cx="90" cy="190" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="90" y="195" text-anchor="middle" fill="#DCDFE4">C</text>
+      <circle cx="250" cy="190" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="195" text-anchor="middle" fill="#DCDFE4">D</text>
+      <circle cx="380" cy="130" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="380" y="135" text-anchor="middle" fill="#DCDFE4">E</text>
+      <circle cx="460" cy="130" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="460" y="135" text-anchor="middle" fill="#DCDFE4">F</text>
+      <circle cx="250" cy="300" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="250" y="305" text-anchor="middle" fill="#DCDFE4">G</text>
+    </g>
+    <g font-size="12" fill="#98C379" font-family="monospace">
+      <text x="116" y="48">d=0</text>
+      <text x="276" y="48">d=1</text>
+      <text x="116" y="168">d=1</text>
+      <text x="276" y="168">d=2</text>
+      <text x="406" y="108">d=3</text>
+      <text x="486" y="108">d=4</text>
+      <text x="276" y="278">d=3</text>
+    </g>
+    <text x="20" y="345" font-size="12" fill="#DCDFE4">B and C are A's direct neighbors, so both get distance 1. D is 2 hops away, reachable</text>
+    <text x="20" y="365" font-size="12" fill="#DCDFE4">only through B or C. E and G are 3 hops out through D, and F is the farthest at 4 hops.</text>
+  </svg>
+
+  <h2>Diagram: a DAG with a valid topological order</h2>
+  <svg class="diagram" viewBox="0 0 820 440" role="img" aria-label="A 6-course prerequisite DAG. Intro CS (A) points to Discrete Math (B) and Data Structures (C). Discrete Math and Data Structures both point to Algorithms (D). Data Structures also points to Databases (E). Algorithms and Databases both point to Systems Design (F). A valid topological order is A, B, C, D, E, F.">
+    <defs>
+      <marker id="topoArrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#61AEEE"/></marker>
+    </defs>
+    <text x="20" y="22" font-size="13" fill="#61AEEE" font-weight="bold">Course prerequisites as a DAG — every edge points from prereq to dependent</text>
+    <g stroke="#61AEEE" stroke-width="2" marker-end="url(#topoArrow)">
+      <line x1="106" y1="200" x2="264" y2="118"/>
+      <line x1="106" y1="220" x2="264" y2="308"/>
+      <line x1="296" y1="105" x2="474" y2="105"/>
+      <line x1="296" y1="315" x2="474" y2="118"/>
+      <line x1="296" y1="322" x2="474" y2="322"/>
+      <line x1="506" y1="105" x2="684" y2="200"/>
+      <line x1="506" y1="315" x2="684" y2="220"/>
+    </g>
+    <g font-size="14">
+      <circle cx="90" cy="210" r="18" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/>
+      <text x="90" y="215" text-anchor="middle" fill="#DCDFE4">A</text>
+      <circle cx="280" cy="110" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="280" y="115" text-anchor="middle" fill="#DCDFE4">B</text>
+      <circle cx="280" cy="320" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="280" y="325" text-anchor="middle" fill="#DCDFE4">C</text>
+      <circle cx="490" cy="110" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="490" y="115" text-anchor="middle" fill="#DCDFE4">D</text>
+      <circle cx="490" cy="320" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="490" y="325" text-anchor="middle" fill="#DCDFE4">E</text>
+      <circle cx="700" cy="210" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="700" y="215" text-anchor="middle" fill="#DCDFE4">F</text>
+    </g>
+    <g font-size="11" fill="#818896" text-anchor="middle">
+      <text x="90" y="248">Intro CS</text>
+      <text x="280" y="148">Discrete Math</text>
+      <text x="280" y="358">Data Structures</text>
+      <text x="490" y="148">Algorithms</text>
+      <text x="490" y="358">Databases</text>
+      <text x="700" y="248">Systems Design</text>
+    </g>
+    <text x="20" y="395" font-size="12" fill="#DCDFE4">Valid order: A → B → C → D → E → F — every arrow points from an earlier course to a later one.</text>
+    <text x="20" y="415" font-size="12" fill="#DCDFE4">A → C → B → D → E → F is valid too — a DAG can have more than one correct topological order.</text>
+  </svg>
+
+  <h2>Diagram: why a cycle makes topological sort impossible</h2>
+  <svg class="diagram" viewBox="0 0 700 320" role="img" aria-label="A 3-node directed cycle: X points to Y, Y points to Z, Z points to X. Every node depends on a node that eventually depends back on it, so there is no valid starting point and no topological order exists.">
+    <defs>
+      <marker id="cycleArrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#E06C75"/></marker>
+    </defs>
+    <text x="20" y="22" font-size="13" fill="#61AEEE" font-weight="bold">A directed 3-cycle: X needs Y, Y needs Z, Z needs X</text>
+    <g stroke="#E06C75" stroke-width="2" marker-end="url(#cycleArrow)">
+      <line x1="338" y1="76" x2="253" y2="155"/>
+      <line x1="263" y1="170" x2="447" y2="170"/>
+      <line x1="462" y1="155" x2="362" y2="76"/>
+    </g>
+    <g font-size="13">
+      <circle cx="350" cy="60" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="350" y="65" text-anchor="middle" fill="#DCDFE4">X</text>
+      <circle cx="240" cy="170" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="240" y="175" text-anchor="middle" fill="#DCDFE4">Y</text>
+      <circle cx="460" cy="170" r="18" fill="#2C313A" stroke="#3E4452"/>
+      <text x="460" y="175" text-anchor="middle" fill="#DCDFE4">Z</text>
+    </g>
+    <text x="20" y="220" font-size="12" fill="#E06C75">Every node is stuck waiting on a node that's waiting on it — no node ever has in-degree 0.</text>
+    <text x="20" y="242" font-size="12" fill="#E06C75">Kahn's algorithm's queue starts (and stays) empty — order.length is 0, never 3.</text>
+    <text x="20" y="267" font-size="12" fill="#DCDFE4">That gap (0 processed nodes out of 3 total) is exactly how Kahn's algorithm</text>
+    <text x="20" y="289" font-size="12" fill="#DCDFE4">reports "no valid order."</text>
+  </svg>
+
+  <h2>Interactive visualization: BFS shortest path (distance tracking)</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> in the queue (distance recorded, waiting)</span>
+    <span><i class="lg-active"></i> dequeued, checking neighbors now</span>
+    <span><i class="lg-sorted"></i> fully processed — distance finalized</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>Interactive visualization: Kahn's algorithm (topological sort)</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> in-degree just hit 0 — enqueued, waiting</span>
+    <span><i class="lg-active"></i> dequeued now — decrementing its neighbors' in-degree</span>
+    <span><i class="lg-sorted"></i> added to the topological order</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code: BFS shortest path and Kahn's topological sort</h2>
+  <pre><code>// Shortest path (fewest edges) in an UNWEIGHTED graph — Day 23's bfs()
+// with one new line: a distance map built up as each node is discovered.
+function bfsShortestPath(graph, start) {
+  const distance = { [start]: 0 };   // start is 0 hops from itself
+  const queue = [start];
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+    for (const neighbor of graph[node]) {
+      if (!(neighbor in distance)) {
+        distance[neighbor] = distance[node] + 1;  // one hop further than `node`
+        queue.push(neighbor);
+      }
+    }
+  }
+  return distance; // { nodeId: distanceFromStart }
+}
+
+// Topological sort of a DIRECTED ACYCLIC graph — Kahn's algorithm.
+// graph[node] = array of nodes that DEPEND ON node (node must come first).
+function topoSortKahn(graph, nodes) {
+  const inDegree = {};
+  nodes.forEach((n) => { inDegree[n] = 0; });
+  for (const n of nodes) {
+    for (const neighbor of graph[n]) {
+      inDegree[neighbor] = (inDegree[neighbor] || 0) + 1;
+    }
+  }
+
+  const queue = nodes.filter((n) => inDegree[n] === 0); // no prerequisites
+  const order = [];
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+    order.push(node);
+    for (const neighbor of graph[node]) {
+      inDegree[neighbor]--;
+      if (inDegree[neighbor] === 0) queue.push(neighbor);
+    }
+  }
+
+  const hasCycle = order.length !== nodes.length;
+  return { order, hasCycle };
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>bfsShortestPath</code>: identical shape to Day 23's <code>bfs</code> — a queue, a
+      "mark on discovery" rule — except the visited set is now a <code>distance</code> object.
+      Membership in <code>distance</code> (via <code>neighbor in distance</code>) does the same job
+      the visited <code>Set</code> did before; the value it stores is the new information.</li>
+    <li><code>distance[neighbor] = distance[node] + 1</code> is the one genuinely new line. It's
+      correct precisely because of BFS's level-by-level guarantee: by the time <code>node</code> is
+      being processed, <code>distance[node]</code> is already final, so anything discovered from it
+      is exactly one hop further out.</li>
+    <li>Just like Day 23's trap, the neighbor must be marked (here: given a distance) at
+      <strong>discovery</strong> time, not at dequeue time — otherwise the same node could be
+      discovered through two different paths before either finishes processing, and whichever one
+      happens to run last could overwrite a correct short distance with a longer, wrong one.</li>
+    <li><code>topoSortKahn</code> starts by computing every node's <strong>in-degree</strong>
+      (count of incoming edges — prerequisites still owed) with one full pass over every node's
+      neighbor list. This costs O(E) up front, separate from the traversal that follows.</li>
+    <li>The queue seeds with every node that already has in-degree 0 — no prerequisites, safe to
+      process immediately. This can be more than one node (as in the diagram above, where only A
+      starts at 0, but a differently-shaped DAG could start with several).</li>
+    <li>Each dequeue appends to <code>order</code> and decrements the in-degree of everything that
+      node points to — "one of your prerequisites is now satisfied." A neighbor only joins the
+      queue the instant its in-degree reaches exactly 0, i.e. every one of its prerequisites has
+      been processed.</li>
+    <li><code>hasCycle = order.length !== nodes.length</code> is the whole cycle check. If every
+      node eventually reaches in-degree 0, they all get processed and <code>order</code> has every
+      node. If some nodes are stuck in a cycle, they never reach 0, the queue empties out early, and
+      <code>order</code> comes up short — that gap <em>is</em> the cycle detection, no separate scan
+      required.</li>
+  </ul>
+
+  <h3>Dry run: BFS shortest path from A (same graph as Day 23)</h3>
+  <div style="overflow-x:auto;">
+  <table class="dryrun-table">
+    <thead><tr><th>Queue (before)</th><th>Dequeue</th><th>Neighbor checks</th><th>Distance map (after)</th></tr></thead>
+    <tbody>
+      <tr><td>[A]</td><td>A (dist 0)</td><td>B new → dist 1, enqueue; C new → dist 1, enqueue</td><td>{A:0, B:1, C:1}</td></tr>
+      <tr><td>[B, C]</td><td>B (dist 1)</td><td>A has a distance, skip; D new → dist 2, enqueue</td><td>{A:0, B:1, C:1, D:2}</td></tr>
+      <tr><td>[C, D]</td><td>C (dist 1)</td><td>A has a distance, skip; D has a distance, skip</td><td>{A:0, B:1, C:1, D:2}</td></tr>
+      <tr><td>[D]</td><td>D (dist 2)</td><td>B, C have distances, skip; E new → dist 3, enqueue; G new → dist 3, enqueue</td><td>{A:0, B:1, C:1, D:2, E:3, G:3}</td></tr>
+      <tr><td>[E, G]</td><td>E (dist 3)</td><td>D has a distance, skip; F new → dist 4, enqueue</td><td>{..., F:4}</td></tr>
+      <tr><td>[G, F]</td><td>G (dist 3)</td><td>D has a distance, skip</td><td>{..., F:4}</td></tr>
+      <tr><td>[F]</td><td>F (dist 4)</td><td>E has a distance, skip</td><td>{A:0, B:1, C:1, D:2, E:3, F:4, G:3}</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Final distances from A: A=0, B=1, C=1, D=2,
+    E=3, G=3, F=4 — the same BFS order as Day 23 (A → B → C → D → E → G → F), just now with a
+    number attached to each node the first time it's discovered.</p>
+
+  <h3>Dry run: Kahn's algorithm on the course-prerequisite DAG</h3>
+  <div style="overflow-x:auto;">
+  <table class="dryrun-table">
+    <thead><tr><th>Queue (before)</th><th>Dequeue → order</th><th>Decrement neighbors' in-degree</th><th>Newly 0 → enqueue</th><th>Queue (after)</th></tr></thead>
+    <tbody>
+      <tr><td>[A]</td><td>A</td><td>B: 1→0, C: 1→0</td><td>B, C</td><td>[B, C]</td></tr>
+      <tr><td>[B, C]</td><td>B</td><td>D: 2→1</td><td>(none, still waiting on C)</td><td>[C]</td></tr>
+      <tr><td>[C]</td><td>C</td><td>D: 1→0, E: 1→0</td><td>D, E</td><td>[D, E]</td></tr>
+      <tr><td>[D, E]</td><td>D</td><td>F: 2→1</td><td>(none, still waiting on E)</td><td>[E]</td></tr>
+      <tr><td>[E]</td><td>E</td><td>F: 1→0</td><td>F</td><td>[F]</td></tr>
+      <tr><td>[F]</td><td>F</td><td>(no neighbors — nothing depends on F)</td><td>(none)</td><td>[]</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Final order: A → B → C → D → E → F — all 6
+    of 6 nodes processed, so <code>hasCycle</code> is false. This matches the diagram above exactly.</p>
+
+  <h2>Complexity</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>BFS shortest path (distance tracking)</td><td>O(V + E)</td><td>O(V)</td><td>Exactly Day 23's plain BFS — every vertex is enqueued and processed once, every edge is examined once per endpoint. Recording a distance is O(1) extra work per newly discovered node, so it doesn't change the bound.</td></tr>
+      <tr><td>Topological sort (Kahn's algorithm)</td><td>O(V + E)</td><td>O(V)</td><td>Computing every node's in-degree scans all edges once (O(E)). Each node enters and leaves the queue exactly once (O(V)), and each edge is examined exactly once when decrementing a neighbor's in-degree (O(E)) — no node or edge is revisited.</td></tr>
+      <tr><td>Cycle detection (side effect of Kahn's)</td><td>O(1) extra</td><td>O(1) extra</td><td>Just compare order.length to the total node count after the algorithm finishes — no separate traversal is needed to detect the cycle.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why does plain BFS naturally give you the shortest path in an unweighted
+      graph?</strong> BFS explores strictly level by level — everything at distance 1 is fully
+      discovered before anything at distance 2 is even looked at. So the very first time a node is
+      discovered, it's necessarily been reached by the fewest possible edges; there's no shorter
+      path still waiting to be found later.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> this
+      guarantee is specific to unweighted graphs, where every edge counts as exactly 1 hop. The
+      instant edges have different weights (distances, costs, times), BFS's level order no longer
+      matches the lowest-total-weight path — that needs Dijkstra's algorithm (a priority queue
+      instead of a plain queue), not plain BFS.</span></li>
+    <li><strong>Does the enqueue-vs-dequeue timing trap from Day 23 still apply here?</strong>
+      Yes, in an even more consequential form. <code>distance[neighbor]</code> must be assigned the
+      moment a node is discovered (enqueued), not when it's later dequeued — a node can be
+      "discoverable" through more than one path before it's ever processed, and marking at dequeue
+      time risks a later, longer path overwriting the correct, already-found shortest distance.</li>
+    <li><strong>Why does topological sort only make sense on a directed, acyclic graph?</strong>
+      "Topological order" means "every prerequisite before its dependent," which requires a
+      direction to even ask the question — an undirected edge has no defined "which one comes
+      first." And if the graph has a cycle, some node ends up (directly or transitively)
+      depending on itself — no linear order can satisfy that, so no valid ordering exists at all,
+      not just an ambiguous one.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How do you
+      detect that cycle instead of just returning something wrong?" — that's Kahn's algorithm's
+      built-in signal: if <code>order.length</code> ends up less than the total node count, the
+      leftover nodes never reached in-degree 0, meaning they're stuck in (or depend on) a cycle.</span></li>
+    <li><strong>What breaks if you skip checking <code>order.length === nodes.length</code> and
+      just trust whatever Kahn's algorithm produced?</strong><br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> on a cyclic
+      graph you'd silently return a partial, incomplete order and the caller might treat it as
+      valid. In "Course Schedule" terms: you'd incorrectly report that all courses can be
+      completed when some are actually stuck in a prerequisite cycle. Always check the length —
+      this is the single most-tested edge case for this algorithm.</span></li>
+    <li><strong>Is Kahn's algorithm the only way to topologically sort a graph?</strong> No — a
+      DFS-based approach also works: run DFS from every unvisited node, and prepend each node to
+      the result the moment its DFS call finishes (post-order), which naturally puts dependents
+      after their dependencies. Kahn's is usually preferred in interviews because the in-degree
+      bookkeeping doubles as cycle detection with no extra code, where the DFS version needs a
+      separate "currently on this DFS path" set to catch a cycle.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> for shortest path, say the connection first
+    — "this is the same BFS as Day 23, I'm just adding a distance map that increments by one each
+    time I discover a new node" — so the interviewer hears you reusing a known-correct traversal
+    rather than inventing something new. For topological sort, name the two preconditions before
+    writing a line of code — "this only works because the graph is directed and, I'm assuming,
+    acyclic — I'll use Kahn's algorithm with in-degree counting, and if the result comes up short
+    of the total node count, that tells me there's a cycle and no valid order exists." Interviewers
+    on both of these are listening for whether you state the underlying guarantee (BFS's
+    level-order; the DAG requirement) rather than just producing code that happens to work on the
+    one example in front of you.</p>
+
+  <h2>Practice problems</h2>
+  <p style="color:var(--text-dim);font-size:0.88rem;">Note: this set is intentionally Easy/Medium/
+    Medium rather than Easy/Medium/Hard — there's no clean, distinct Easy-tier problem that
+    exercises real topological-sort mechanics beyond in-degree counting, so problem 1 uses the
+    in-degree idea alone (no queue/ordering) as the easy on-ramp, and problems 2-3 cover the two
+    core techniques from today at Medium difficulty each.</p>
+
+  <div class="problem">
+    <h4>1. Find the Town Judge <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/find-the-town-judge/" target="_blank" rel="noopener">LeetCode: Find the Town Judge</a>)</span></h4>
+    <p>In a town of <code>n</code> people, the judge trusts nobody but is trusted by everyone else.
+      Given a list of <code>[a, b]</code> "a trusts b" pairs, find the judge, or return -1 if none
+      exists.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>This is the same in-degree/out-degree
+      bookkeeping Kahn's algorithm uses, without the queue. Track two counts per person:
+      out-degree (how many people they trust) and in-degree (how many people trust them). The
+      judge is the one person with out-degree 0 and in-degree exactly n - 1.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function findJudge(n, trust) {
+  const inDegree = new Array(n + 1).fill(0);  // trusted-by count
+  const outDegree = new Array(n + 1).fill(0); // trusts count
+  for (const [a, b] of trust) {
+    outDegree[a]++;
+    inDegree[b]++;
+  }
+  for (let person = 1; person <= n; person++) {
+    if (outDegree[person] === 0 && inDegree[person] === n - 1) return person;
+  }
+  return -1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Course Schedule <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/course-schedule/" target="_blank" rel="noopener">LeetCode: Course Schedule</a>)</span></h4>
+    <p>Given <code>numCourses</code> and a list of <code>[course, prerequisite]</code> pairs,
+      return whether it's possible to finish all courses. The direct, unmodified application of
+      today's Kahn's algorithm.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Build the directed graph as
+      <code>prerequisite → course</code>, run Kahn's algorithm exactly as in today's code, and
+      compare how many courses got processed against <code>numCourses</code> — if fewer, some
+      courses are stuck in a prerequisite cycle and can never be taken.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function canFinish(numCourses, prerequisites) {
+  const adj = Array.from({ length: numCourses }, () => []);
+  const inDegree = new Array(numCourses).fill(0);
+  for (const [course, pre] of prerequisites) {
+    adj[pre].push(course);
+    inDegree[course]++;
+  }
+
+  const queue = [];
+  for (let i = 0; i < numCourses; i++) if (inDegree[i] === 0) queue.push(i);
+
+  let visited = 0;
+  while (queue.length > 0) {
+    const node = queue.shift();
+    visited++;
+    for (const neighbor of adj[node]) {
+      inDegree[neighbor]--;
+      if (inDegree[neighbor] === 0) queue.push(neighbor);
+    }
+  }
+  return visited === numCourses; // false means a cycle blocked some courses
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. 01 Matrix <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/01-matrix/" target="_blank" rel="noopener">LeetCode: 01 Matrix</a>)</span></h4>
+    <p>Given a binary matrix, return a matrix where each cell holds the distance to its nearest
+      0-cell. Today's distance-tracking BFS, generalized to start from every 0-cell at once
+      instead of a single start node — multi-source BFS.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Seed the queue with every 0-cell at
+      distance 0 simultaneously (not just one), same as any BFS but with multiple starting points
+      instead of one. Everything else — level-by-level expansion, marking distance the instant a
+      cell is first discovered — is identical to today's <code>bfsShortestPath</code>.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function updateMatrix(mat) {
+  const rows = mat.length, cols = mat[0].length;
+  const dist = Array.from({ length: rows }, () => new Array(cols).fill(-1));
+  const queue = [];
+
+  // seed the queue with EVERY 0-cell at distance 0, not just one start node
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (mat[r][c] === 0) { dist[r][c] = 0; queue.push([r, c]); }
+    }
+  }
+
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  let qi = 0;
+  while (qi < queue.length) {
+    const [r, c] = queue[qi++];
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && dist[nr][nc] === -1) {
+        dist[nr][nc] = dist[r][c] + 1;
+        queue.push([nr, nc]);
+      }
+    }
+  }
+  return dist;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="levelorder" data-explain="BFS explores strictly level by level — everything at distance 1 is fully discovered before anything at distance 2 is looked at — so the first time a node is discovered, it's necessarily by the fewest possible edges.">
+    <p class="q-text">1. Why does plain BFS find the shortest path (fewest edges) in an unweighted graph?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="levelorder">Because BFS explores level by level, so the first discovery of any node is always via the fewest edges</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">Because BFS always processes nodes in alphabetical/sorted order</button>
+      <button class="btn dsa-quiz-option" data-value="onlyone">It doesn't — BFS and DFS find equally short paths on any graph</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="dijkstra" data-explain="Plain BFS's level-order only matches lowest-total-cost when every edge counts as exactly 1. Once edges have different weights, you need Dijkstra's algorithm — BFS with a priority queue ordered by running distance instead of a plain FIFO queue.">
+    <p class="q-text">2. When would BFS's shortest-path approach give the WRONG answer, and what would you use instead?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="dijkstra">When edges have different weights — use Dijkstra's algorithm (a priority queue) instead</button>
+      <button class="btn dsa-quiz-option" data-value="never">Never — BFS always finds the true shortest path on any graph, weighted or not</button>
+      <button class="btn dsa-quiz-option" data-value="dfsinstead">When the graph is directed — use DFS instead</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="cycle" data-explain="If Kahn's algorithm's result has fewer nodes than the graph's total node count, some nodes never reached in-degree 0 — they're stuck in (or depend on) a cycle, so no valid topological order exists.">
+    <p class="q-text">3. In Kahn's algorithm, what does it mean when order.length ends up less than the total number of nodes?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cycle">The graph has a cycle — the leftover nodes never reached in-degree 0</button>
+      <button class="btn dsa-quiz-option" data-value="disconnected">The graph is simply disconnected, which is fine and expected</button>
+      <button class="btn dsa-quiz-option" data-value="bug">It always means there's a bug in the in-degree calculation</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="zerodeg" data-explain="Kahn's algorithm seeds the queue with every node whose in-degree is already 0 — no prerequisites owed — since those are the only nodes safe to process immediately.">
+    <p class="q-text">4. In Kahn's algorithm, which nodes go into the queue first?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="zerodeg">Every node whose in-degree is already 0 — no unmet prerequisites</button>
+      <button class="btn dsa-quiz-option" data-value="highest">The node with the highest number of outgoing edges</button>
+      <button class="btn dsa-quiz-option" data-value="random">Any single arbitrary starting node, same as BFS/DFS traversal</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="vplusE" data-explain="Computing in-degrees scans every edge once (O(E)); each of the V nodes enters and leaves the queue exactly once, and each of the E edges is examined exactly once when decrementing a neighbor's in-degree — giving O(V + E) total, the same bound as plain BFS/DFS.">
+    <p class="q-text">5. What is the time complexity of Kahn's algorithm, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="vplusE">O(V + E) — every node and edge is processed exactly once, same as BFS/DFS</button>
+      <button class="btn dsa-quiz-option" data-value="vsquared">O(V²) — every node must be compared against every other node</button>
+      <button class="btn dsa-quiz-option" data-value="elogv">O(E log V) — it needs a priority queue like Dijkstra's algorithm</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 24 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day23.html">← Day 23: Graphs — BFS &amp; DFS</a>
+    <a class="btn" href="day25.html">Day 25: Dynamic Programming I →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 24;
+  DSAProgress.setLastDay(THE_DAY);
+
+  const GRAPH_W = 700, GRAPH_H = 380;
+
+  // ---- viz 1 data: SAME graph as Day 23 (7 nodes, one 4-cycle A-B-D-C-A), undirected ----
+  const POS = { A: [150, 70], B: [330, 70], C: [150, 200], D: [330, 200], E: [480, 135], F: [620, 135], G: [330, 320] };
+  const ADJ = { A: ['B', 'C'], B: ['A', 'D'], C: ['A', 'D'], D: ['B', 'C', 'E', 'G'], E: ['D', 'F'], F: ['E'], G: ['D'] };
+  const EDGE_LIST = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['C', 'D'], ['D', 'E'], ['E', 'F'], ['D', 'G']];
+
+  function buildNodesEdges() {
+    const nodes = Object.keys(POS).map((id) => ({ id, label: id, x: POS[id][0], y: POS[id][1] }));
+    const edges = EDGE_LIST.map(([a, b]) => ({ from: a, to: b })); // undirected — no `directed` flag
+    return { nodes, edges };
+  }
+
+  function paintGraph(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {}, {});
+  }
+
+  // ---- BFS-with-distance step generator (mirrors bfsShortestPath() exactly) ----
+  function buildBFSDistanceSteps(adj, start) {
+    const { nodes, edges } = buildNodesEdges();
+    const steps = [];
+    const distance = { [start]: 0 };
+    const queue = [start];
+    const done = new Set();
+
+    function labelFor(id) {
+      return id in distance ? `${id}:${distance[id]}` : id;
+    }
+    function nodesSnapshot() {
+      return nodes.map((n) => Object.assign({}, n, { label: labelFor(n.id) }));
+    }
+    function stateSnapshot(current) {
+      const s = {};
+      done.forEach((id) => { s[id] = 'sorted'; });
+      queue.forEach((id) => { if (!done.has(id)) s[id] = 'pointer'; });
+      if (current) s[current] = 'active';
+      return s;
+    }
+    function pushStep(narration, states) {
+      steps.push({ narration, nodes: nodesSnapshot(), edges: edges.slice(), states: states || {} });
+    }
+
+    pushStep(`Start BFS at ${start}. distance[${start}] = 0. Queue: [${queue.join(', ')}].`, stateSnapshot());
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      pushStep(`Dequeue ${cur} (distance ${distance[cur]}) — check its neighbors.`, stateSnapshot(cur));
+      for (const nb of adj[cur]) {
+        if (nb in distance) {
+          pushStep(`${cur} → ${nb}: already has distance ${distance[nb]} — skip, first discovery already recorded the shortest one.`, stateSnapshot(cur));
+        } else {
+          distance[nb] = distance[cur] + 1;
+          queue.push(nb);
+          pushStep(`${cur} → ${nb}: first time seen — distance[${nb}] = distance[${cur}] + 1 = ${distance[nb]}. Enqueue ${nb}.`, stateSnapshot(cur));
+        }
+      }
+      done.add(cur);
+      pushStep(`${cur} fully processed — distance ${distance[cur]} is final.`, stateSnapshot());
+    }
+    const summary = Object.keys(distance).map((id) => `${id}=${distance[id]}`).join(', ');
+    pushStep(`BFS complete. Final distances from ${start}: ${summary}.`, stateSnapshot());
+    return steps;
+  }
+
+  // ---- viz 2 data: a 6-course prerequisite DAG (directed) ----
+  const POS2 = { A: [80, 190], B: [260, 90], C: [260, 290], D: [460, 90], E: [460, 290], F: [620, 190] };
+  const ADJ2 = { A: ['B', 'C'], B: ['D'], C: ['D', 'E'], D: ['F'], E: ['F'], F: [] };
+  const EDGE_LIST2 = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['C', 'D'], ['C', 'E'], ['D', 'F'], ['E', 'F']];
+  const NODES2 = Object.keys(POS2);
+
+  function buildNodesEdges2() {
+    const nodes = Object.keys(POS2).map((id) => ({ id, label: id, x: POS2[id][0], y: POS2[id][1] }));
+    const edges = EDGE_LIST2.map(([a, b]) => ({ from: a, to: b, directed: true }));
+    return { nodes, edges };
+  }
+
+  // ---- Kahn's algorithm step generator (mirrors topoSortKahn() exactly) ----
+  function buildKahnSteps(adj, nodes) {
+    const { nodes: gNodes, edges } = buildNodesEdges2();
+    const steps = [];
+    const inDegree = {};
+    nodes.forEach((n) => { inDegree[n] = 0; });
+    for (const n of nodes) {
+      for (const nb of adj[n]) inDegree[nb] = (inDegree[nb] || 0) + 1;
+    }
+    const queue = nodes.filter((n) => inDegree[n] === 0);
+    const order = [];
+    const finishedProcessing = new Set();
+
+    function labelFor(id) {
+      return `${id}(${inDegree[id]})`;
+    }
+    function nodesSnapshot() {
+      return gNodes.map((n) => Object.assign({}, n, { label: labelFor(n.id) }));
+    }
+    function stateSnapshot(current) {
+      const s = {};
+      finishedProcessing.forEach((id) => { s[id] = 'sorted'; });
+      queue.forEach((id) => { if (!finishedProcessing.has(id)) s[id] = 'pointer'; });
+      if (current) s[current] = 'active';
+      return s;
+    }
+    function pushStep(narration, states) {
+      steps.push({ narration, nodes: nodesSnapshot(), edges: edges.slice(), states: states || {} });
+    }
+
+    pushStep(`In-degrees: ${nodes.map((n) => `${n}=${inDegree[n]}`).join(', ')}. Seed the queue with every in-degree-0 node: [${queue.join(', ')}].`, stateSnapshot());
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      order.push(cur);
+      pushStep(`Dequeue ${cur} — add to order. Order so far: [${order.join(', ')}].`, stateSnapshot(cur));
+      for (const nb of adj[cur]) {
+        inDegree[nb]--;
+        if (inDegree[nb] === 0) {
+          queue.push(nb);
+          pushStep(`${cur} → ${nb}: in-degree drops to 0 — enqueue ${nb}.`, stateSnapshot(cur));
+        } else {
+          pushStep(`${cur} → ${nb}: in-degree drops to ${inDegree[nb]} — still waiting on other prerequisites.`, stateSnapshot(cur));
+        }
+      }
+      finishedProcessing.add(cur);
+      pushStep(`${cur} fully processed — all its outgoing edges relaxed.`, stateSnapshot());
+    }
+    const hasCycle = order.length !== nodes.length;
+    pushStep(hasCycle
+      ? `Queue empty but order has only ${order.length}/${nodes.length} nodes — a cycle exists, no valid topological order.`
+      : `Kahn's algorithm complete. Topological order: ${order.join(' → ')}.`, stateSnapshot());
+    return steps;
+  }
+
+  // ---- viz 1: BFS shortest path ----
+  const viz1Stage = document.getElementById('viz1Stage');
+  const graph1 = new DSA.Graph(viz1Stage, { width: GRAPH_W, height: GRAPH_H });
+  let start1 = 'A';
+  let steps1 = buildBFSDistanceSteps(ADJ, start1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 900,
+    onStep(step) { paintGraph(graph1, step || steps1[0]); },
+    onShuffle() {
+      const others = Object.keys(ADJ).filter((id) => id !== start1);
+      start1 = others[Math.floor(Math.random() * others.length)];
+      steps1 = buildBFSDistanceSteps(ADJ, start1);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: Kahn's algorithm ----
+  const viz2Stage = document.getElementById('viz2Stage');
+  const graph2 = new DSA.Graph(viz2Stage, { width: GRAPH_W, height: GRAPH_H });
+  let steps2 = buildKahnSteps(ADJ2, NODES2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 900,
+    onStep(step) { paintGraph(graph2, step || steps2[0]); },
+    onShuffle() {
+      // Reorder each node's neighbor list (edges unchanged) so ties between
+      // multiple in-degree-0 nodes resolve differently — demonstrates that a
+      // DAG can have more than one valid topological order.
+      const shuffled = {};
+      Object.keys(ADJ2).forEach((k) => { shuffled[k] = DSA.shuffleArray(ADJ2[k]); });
+      steps2 = buildKahnSteps(shuffled, NODES2);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>

@@ -208,10 +208,20 @@ const DSA = (function () {
         const line = document.createElementNS(ns, 'line');
         line.setAttribute('x1', a.x);
         line.setAttribute('y1', a.y);
-        line.setAttribute('x2', b.x);
-        line.setAttribute('y2', b.y);
+        // Directed edges: pull the endpoint back to the target node's rim (radius 18) instead of
+        // its center — otherwise the arrowhead marker lands dead-center under the node circle,
+        // which is painted afterward and covers it completely, making the arrow invisible.
+        if (e.directed) {
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          line.setAttribute('x2', b.x - (dx / dist) * 18);
+          line.setAttribute('y2', b.y - (dy / dist) * 18);
+          line.setAttribute('marker-end', 'url(#dsa-arrow)');
+        } else {
+          line.setAttribute('x2', b.x);
+          line.setAttribute('y2', b.y);
+        }
         line.setAttribute('class', 'dsa-edge ' + (edgeStates[i] ? 'dsa-edge-' + edgeStates[i] : ''));
-        if (e.directed) line.setAttribute('marker-end', 'url(#dsa-arrow)');
         this.svg.appendChild(line);
       });
 
