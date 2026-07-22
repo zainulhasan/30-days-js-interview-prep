@@ -124,11 +124,33 @@ complete all work, mobile width has no overflow (added an overflow-x:auto wrappe
 7-column live table — note for future lessons: any table with many columns or number-heavy
 cells that can't word-wrap needs this wrapper, not just wide-text tables).
 
+## Review process is now standardized
+See `.docs/REVIEW-CHECKLIST.md` — every lesson gets a content-advisor review dispatched with a
+short prompt pointing at that checklist (template prompt included in the file), instead of
+re-writing full criteria each time. Both Day 2 and Day 3 reviews found real must-fix bugs using
+it (Day 3: a flatly-wrong "string mutation never throws" claim — it does under strict mode/
+modules/classes — repeated in 6+ places, and a viz that colored buggy leftovers green/"correct"
+while narrating them as wrong). Keep using this file and its dispatch template for every
+remaining lesson.
+
+**Testing gotcha:** the Chrome DevTools MCP browser can serve a stale cached `js/engine.js`
+after editing it — always reload with `type: reload, ignoreCache: true` (not a plain `navigate`)
+after changing shared JS, and spot check via `DSA.Bars.toString().includes('<new code>')` if a
+feature seems to silently not work — it may just be cache, not a real bug.
+
+## Done — Day 3 lesson (`lessons/day03.html`)
+Core string ops (slice/indexOf/includes/split/charAt), string immutability (with an accurate
+strict-mode-throws hedge after review caught the unhedged version), and the mutate-while-
+iterating array bug (forEach+splice skipping elements). Extended `js/engine.js`'s `Bars` with a
+`uniform: true` mode (fixed-height bars, non-numeric labels) to visualize string characters —
+reusable by any future lesson that needs to show a string as boxes. Two interactive
+visualizations. Reviewed and fixed (see above). Verified in-browser incl. the new uniform-bars
+rendering.
+
 ## Not started yet
-- Lesson pages `lessons/day03.html` … `day30.html` — use Day 1 and Day 2 as the template, apply
-  every point in "Lesson template" above, and get each one reviewed the same way before moving
-  on. Build order per DECISIONS.md: rest of Week 1 (Days 3–7) next, verify each in-browser, then
-  Weeks 2–4.
+- Lesson pages `lessons/day04.html` … `day30.html` — use Days 1-3 as the template, apply every
+  point in "Lesson template" above, review each via `.docs/REVIEW-CHECKLIST.md` before moving
+  on. Build order per DECISIONS.md: rest of Week 1 (Days 4–7) next, then Weeks 2–4.
 - GitHub Pages not yet enabled in repo settings (Settings → Pages → Deploy from branch `main`).
 
 ## Environment for local preview
