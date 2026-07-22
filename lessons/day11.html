@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 11: Quick Sort — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Pick a pivot, partition around it, recurse — watch the pivot land in its final sorted position every time." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 11 / 30 &middot; WEEK 2</p>
+  <h1>Quick Sort</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Implement quicksort: pick a pivot, partition around it, recurse on both sides.</li>
+    <li>Understand why the average case is O(n log n) but the worst case is O(n²).</li>
+    <li>Watch the pivot land in its exact final sorted position on every partition step.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>Line up a group of people to sort by height. Pick one person as a reference point — the
+    <strong>pivot</strong> — and have everyone shorter step to their left, everyone taller step
+    to their right. Once that's done, the pivot is standing in <em>exactly</em> the spot they'll
+    occupy in the final sorted line — nobody will ever move them again. Now repeat the same
+    process independently on the "shorter" group and the "taller" group, each shrinking the
+    problem until every group has 0 or 1 people left.</p>
+  <p>This is different from Day 10's merge sort: merge sort does easy splits (always exactly in
+    half) but hard combines (a real merge step). Quicksort does hard splits (the partition does
+    real work) but trivial combines (there's nothing left to do — once both sides are sorted,
+    the whole array is sorted, because the pivot was already in place).</p>
+
+  <h2>Diagram</h2>
+  <svg class="diagram" viewBox="0 0 620 190" role="img" aria-label="Partitioning an array around a pivot: elements smaller than the pivot move to its left, larger elements stay to its right, and the pivot lands in its final sorted position">
+    <text x="20" y="18" font-size="13" fill="#61AEEE" font-weight="bold">Partition around pivot = 3 (last element)</text>
+    <g font-size="12">
+      <rect x="20" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="40" y="51" text-anchor="middle" fill="#DCDFE4">5</text>
+      <rect x="64" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="84" y="51" text-anchor="middle" fill="#DCDFE4">2</text>
+      <rect x="108" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="128" y="51" text-anchor="middle" fill="#DCDFE4">8</text>
+      <rect x="152" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="172" y="51" text-anchor="middle" fill="#DCDFE4">1</text>
+      <rect x="196" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="216" y="51" text-anchor="middle" fill="#61AEEE">3</text>
+    </g>
+    <text x="260" y="51" font-size="16" fill="#818896">→</text>
+    <g font-size="12">
+      <rect x="300" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#98C379"/><text x="320" y="51" text-anchor="middle" fill="#98C379">2</text>
+      <rect x="344" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#98C379"/><text x="364" y="51" text-anchor="middle" fill="#98C379">1</text>
+      <rect x="388" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#61AEEE" stroke-width="2"/><text x="408" y="51" text-anchor="middle" fill="#61AEEE">3</text>
+      <rect x="432" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="452" y="51" text-anchor="middle" fill="#DCDFE4">5</text>
+      <rect x="476" y="30" width="40" height="32" rx="4" fill="#2C313A" stroke="#3E4452"/><text x="496" y="51" text-anchor="middle" fill="#DCDFE4">8</text>
+    </g>
+    <text x="300" y="82" font-size="11" fill="#98C379">smaller ≤ pivot</text>
+    <text x="432" y="82" font-size="11" class="dim">not yet partitioned</text>
+    <text x="20" y="115" font-size="12" class="dim">3 is now at index 2 — its FINAL position. Everything left of it is</text>
+    <text x="20" y="132" font-size="12" class="dim">≤ 3, everything right is not yet sorted but will never contain a</text>
+    <text x="20" y="149" font-size="12" class="dim">value that belongs to the left of index 2. Recurse on each side.</text>
+  </svg>
+
+  <h2>Interactive visualization: full sort, partition + recurse</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> pivot</span>
+    <span><i class="lg-compare"></i> comparing to pivot</span>
+    <span><i class="lg-swap"></i> swapping</span>
+    <span><i class="lg-sorted"></i> in final position</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>function quickSort(arr, lo = 0, hi = arr.length - 1) {
+  if (lo < hi) {
+    const p = partition(arr, lo, hi);
+    quickSort(arr, lo, p - 1);   // everything left of the pivot
+    quickSort(arr, p + 1, hi);   // everything right of the pivot
+  }
+  return arr;
+}
+
+function partition(arr, lo, hi) {
+  const pivot = arr[hi];   // pick the last element as pivot
+  let i = lo - 1;          // boundary of "elements ≤ pivot seen so far"
+  for (let j = lo; j < hi; j++) {
+    if (arr[j] <= pivot) {
+      i++;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+  [arr[i + 1], arr[hi]] = [arr[hi], arr[i + 1]]; // pivot into its final slot
+  return i + 1; // the pivot's final index
+}
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>partition</code> — <code>i</code> tracks the boundary of the "small" region. Every
+      time <code>arr[j] &lt;= pivot</code>, we grow that region by one and swap the new small
+      element into it. Everything between <code>i+1</code> and <code>j</code> at any moment is
+      "seen, but bigger than pivot."</li>
+    <li>The final swap places the pivot right after the last "small" element — that's its
+      permanent, correct position. This is why quicksort needs no separate merge step, unlike
+      Day 10.</li>
+    <li><code>quickSort</code>'s <code>if (lo &lt; hi)</code> is the base case: a range of 0 or
+      1 elements needs no work.</li>
+  </ul>
+
+  <h3>Dry run: partition([5, 2, 8, 1, 3], lo=0, hi=4, pivot=3)</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>j</th><th>arr[j]</th><th>≤ pivot?</th><th>Action</th><th>Array after</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>5</td><td>No</td><td>—</td><td>[5, 2, 8, 1, 3]</td></tr>
+      <tr><td>1</td><td>2</td><td>Yes</td><td>i=0, swap(0,1)</td><td>[2, 5, 8, 1, 3]</td></tr>
+      <tr><td>2</td><td>8</td><td>No</td><td>—</td><td>[2, 5, 8, 1, 3]</td></tr>
+      <tr><td>3</td><td>1</td><td>Yes</td><td>i=1, swap(1,3)</td><td>[2, 1, 8, 5, 3]</td></tr>
+      <tr><td>—</td><td>—</td><td>—</td><td>final swap(2, 4)</td><td>[2, 1, 3, 5, 8]</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">3 lands at index 2 — everything before it
+    (2, 1) is ≤ 3, everything after (5, 8) is not yet sorted but is guaranteed &gt; 3.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Case</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Average</td><td>O(n log n)</td><td>O(log n)</td><td>Pivots tend to roughly halve the array — log n levels of recursion, O(n) work per level.</td></tr>
+      <tr><td>Worst</td><td>O(n²)</td><td>O(n)</td><td>A consistently bad pivot (e.g. always the smallest/largest) splits n elements into 1 and n−1 — n levels deep instead of log n.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Space is the recursion depth, not extra
+    arrays — quicksort partitions <em>in place</em>, unlike merge sort's O(n) auxiliary arrays.
+    That's quicksort's main practical advantage.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What causes quicksort's O(n²) worst case?</strong> Consistently picking a bad
+      pivot — the smallest or largest remaining element every time. On an already-sorted array,
+      always picking the last element as pivot (like today's code) triggers exactly this.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "How do you
+      avoid this?" — pick a random pivot, or the median of the first/middle/last elements,
+      instead of always the same position. This makes the worst case astronomically unlikely,
+      not impossible.</span></li>
+    <li><strong>Quicksort vs. merge sort — when would you choose each?</strong> Quicksort is
+      usually faster in practice (better cache locality, in-place, smaller constant factor), but
+      merge sort has a <em>guaranteed</em> O(n log n) and is stable. If worst-case guarantees
+      matter (e.g. real-time systems) or ties must preserve order, merge sort wins.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't say
+      "quicksort is always faster" — it's faster <em>on average</em>, with a worse worst case.
+      Precision here signals real understanding.</span></li>
+    <li><strong>Is quicksort stable?</strong> No — the partition step swaps elements across
+      potentially large distances, which can reorder equal elements relative to each other.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> name the trade-off explicitly —
+    "quicksort partitions in place, so it avoids merge sort's O(n) extra space, but that
+    trade-off is a worst case that depends on pivot choice." Following up with how you'd choose
+    a pivot to avoid the worst case (random or median-of-three) shows you know the failure mode
+    and how to defend against it, not just the happy path.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Partition Array According to Given Pivot <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/partition-array-according-to-given-pivot/" target="_blank" rel="noopener">LeetCode: Partition Array According to Given Pivot</a>)</span></h4>
+    <p>Given an array <code>nums</code> and a value <code>pivot</code>, rearrange the elements so
+      everything less than <code>pivot</code> comes first, then everything equal to it, then
+      everything greater — but unlike today's in-place partition, you must preserve each group's
+      original relative order.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Today's swap-based partition doesn't
+      preserve order, so it won't work here directly. Instead, walk the array once and push each
+      value into one of three separate arrays (less / equal / greater), then concatenate them —
+      same three-way split, different mechanism.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function pivotArray(nums, pivot) {
+  const less = [], equal = [], greater = [];
+  for (const n of nums) {
+    if (n < pivot) less.push(n);
+    else if (n === pivot) equal.push(n);
+    else greater.push(n);
+  }
+  return [...less, ...equal, ...greater];
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Kth Largest Element in an Array <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank" rel="noopener">LeetCode: Kth Largest Element in an Array</a>)</span></h4>
+    <p>Find the kth largest element in an unsorted array. (You solved this with a selection-sort
+      approach on Day 8b — today, solve it faster.)</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>You don't need to fully sort the array —
+      partition, check which side the kth-largest position falls in, then only recurse into
+      that one side. This is "quickselect," a close cousin of today's algorithm.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>// Quickselect: like quicksort, but only recurse into the side that
+// contains the answer — average O(n) instead of O(n log n).
+function findKthLargest(nums, k) {
+  const target = nums.length - k; // index of kth largest in sorted order
+  let lo = 0, hi = nums.length - 1;
+  while (true) {
+    const p = partition(nums, lo, hi);
+    if (p === target) return nums[p];
+    else if (p < target) lo = p + 1;
+    else hi = p - 1;
+  }
+}
+function partition(arr, lo, hi) {
+  const pivot = arr[hi];
+  let i = lo - 1;
+  for (let j = lo; j < hi; j++) {
+    if (arr[j] <= pivot) { i++; [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  }
+  [arr[i + 1], arr[hi]] = [arr[hi], arr[i + 1]];
+  return i + 1;
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. 3Sum <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/3sum/" target="_blank" rel="noopener">LeetCode: 3Sum</a>)</span></h4>
+    <p>Given an array of integers, find all unique triplets that sum to zero. (Combines Day 4's
+      two-pointer technique with sorting — a classic pairing of today's and an earlier day's
+      ideas.)</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Sort the array first (any O(n log n) sort,
+      including today's). Then fix each element in turn as the first of the triplet, and run
+      Day 4's two-pointer scan on the rest of the array to find pairs that complete the sum to
+      zero. Skip duplicate values as you go to avoid duplicate triplets.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function threeSum(nums) {
+  nums = [...nums].sort((a, b) => a - b);
+  const result = [];
+  for (let i = 0; i < nums.length - 2; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue; // skip duplicate first elements
+    let left = i + 1, right = nums.length - 1;
+    while (left < right) {
+      const sum = nums[i] + nums[left] + nums[right];
+      if (sum === 0) {
+        result.push([nums[i], nums[left], nums[right]]);
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
+        left++; right--;
+      } else if (sum < 0) left++;
+      else right--;
+    }
+  }
+  return result;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="badpivot" data-explain="Consistently picking the smallest or largest remaining element as pivot splits n elements into 1 and n-1 every time — n levels of recursion instead of log n.">
+    <p class="q-text">1. What causes quicksort's O(n²) worst case?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="badpivot">Consistently picking a bad pivot (always smallest/largest)</button>
+      <button class="btn dsa-quiz-option" data-value="always">It always runs in O(n²) — that's its normal complexity</button>
+      <button class="btn dsa-quiz-option" data-value="toolarge">The array being too large to fit in memory</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="final" data-explain="After partition, the pivot sits in its exact final sorted position — nothing will ever move it again." >
+    <p class="q-text">2. After one call to partition(), what's guaranteed about the pivot's position?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="final">It's in its final, correct sorted position</button>
+      <button class="btn dsa-quiz-option" data-value="middle">It's exactly in the middle of the array</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — it might move again later</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="inplace" data-explain="Quicksort partitions the array in place, needing only O(log n) space for recursion — merge sort needs O(n) auxiliary arrays to merge into." >
+    <p class="q-text">3. What's quicksort's main practical advantage over merge sort?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="inplace">It sorts in place — much less extra memory than merge sort's O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="stable">It's stable and merge sort isn't</button>
+      <button class="btn dsa-quiz-option" data-value="guaranteed">It guarantees O(n log n) in every case</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="no" data-explain="The partition step can swap elements across large distances in the array, which can change the relative order of equal elements." >
+    <p class="q-text">4. Is the standard (Lomuto partition) quicksort stable?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="no">No</button>
+      <button class="btn dsa-quiz-option" data-value="yes">Yes</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="random" data-explain="A random (or median-of-three) pivot makes the O(n²) worst case astronomically unlikely on any given input, rather than depending on the input already being adversarial." >
+    <p class="q-text">5. What's the standard defense against quicksort's worst case?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="random">Pick a random (or median-of-three) pivot instead of always the same position</button>
+      <button class="btn dsa-quiz-option" data-value="sort">Sort the array first</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — the worst case is unavoidable</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 11 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day10.html">← Day 10: Merge Sort</a>
+    <a class="btn" href="day12.html">Day 12: Binary Search →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 11;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz: full quicksort, partition + recurse ----
+  function buildQuickSortSteps(input) {
+    const a = input.slice();
+    const steps = [{ narration: `Start: [${a.join(', ')}].`, values: a.slice(), states: {} }];
+    const finalized = new Set();
+
+    function rangeStates(lo, hi, extra) {
+      const s = {};
+      for (let i = lo; i <= hi; i++) s[i] = 'compare';
+      finalized.forEach((idx) => { s[idx] = 'sorted'; });
+      return Object.assign(s, extra);
+    }
+
+    function quickSort(lo, hi) {
+      if (lo >= hi) {
+        if (lo === hi) finalized.add(lo);
+        return;
+      }
+      const pivotVal = a[hi];
+      steps.push({ narration: `Partition [${a.slice(lo, hi + 1).join(', ')}] — pivot = ${pivotVal} (last element).`, values: a.slice(), states: rangeStates(lo, hi, { [hi]: 'pointer' }) });
+      let i = lo - 1;
+      for (let j = lo; j < hi; j++) {
+        const isSmaller = a[j] <= pivotVal;
+        steps.push({ narration: `Compare ${a[j]} to pivot ${pivotVal} — ${isSmaller ? 'smaller or equal, belongs on the left' : 'bigger, stays on the right for now'}.`, values: a.slice(), states: rangeStates(lo, hi, { [hi]: 'pointer', [j]: 'compare' }) });
+        if (isSmaller) {
+          i++;
+          if (i !== j) {
+            [a[i], a[j]] = [a[j], a[i]];
+            steps.push({ narration: `Swap index ${i} and ${j}: [${a.slice(lo, hi + 1).join(', ')}].`, values: a.slice(), states: rangeStates(lo, hi, { [hi]: 'pointer', [i]: 'swap' }) });
+          }
+        }
+      }
+      [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+      const pivotFinal = i + 1;
+      finalized.add(pivotFinal);
+      steps.push({ narration: `Place pivot ${pivotVal} at index ${pivotFinal} — its final position. [${a.slice(lo, hi + 1).join(', ')}]`, values: a.slice(), states: rangeStates(lo, hi, {}) });
+      quickSort(lo, pivotFinal - 1);
+      quickSort(pivotFinal + 1, hi);
+    }
+
+    quickSort(0, a.length - 1);
+    const finalStates = {};
+    for (let i = 0; i < a.length; i++) finalStates[i] = 'sorted';
+    steps.push({ narration: `Done. Sorted: [${a.join(', ')}].`, values: a.slice(), states: finalStates });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const BASE1 = [5, 2, 8, 1, 9, 3];
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 10 });
+  bars1.setData(BASE1);
+  let steps1 = buildQuickSortSteps(BASE1);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1, narrationEl: document.getElementById('viz1Narration'), counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'), stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'), shuffleBtn: document.getElementById('viz1Shuffle'), speed: 900,
+    onStep(step) { if (!step) { bars1.paint({}, BASE1); return; } bars1.paint(step.states, step.values); },
+    onShuffle() { const a = DSA.randomArray(6, 1, 9); steps1 = buildQuickSortSteps(a); bars1.setData(a); player1.setSteps(steps1); },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
