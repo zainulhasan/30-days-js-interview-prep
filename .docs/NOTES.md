@@ -550,6 +550,26 @@ console errors, zero mobile overflow, all 13 quiz blocks (8 drill + 5 formal) ve
 mark-complete and reveal panels confirmed, diagram screenshot showed no overlap/clipping. No bugs
 found.
 
+## Done — Day 29 (Mock Interview Day)
+Built solo. First lesson with a genuinely new interactive primitive: a self-contained countdown-
+timer widget (`createTimer()` factory — Start/Pause/Reset, double-start guarded, independent
+per-problem instances) built inline in the page rather than added to `js/engine.js`, since it's a
+one-off UI pattern rather than a reusable visualizer. 4 timed Medium problems chosen to span
+different pattern categories and NOT reuse any prior day's problem: Longest Palindromic Substring
+(expand-around-center), Merge Intervals (sort + linear pass — distinct mechanic from Day 27's
+Non-overlapping Intervals despite the shared "intervals" theme), Rotting Oranges (multi-source
+BFS, same family as Day 24's 01 Matrix), and Longest Common Subsequence (the course's first 2D DP
+table). Node-verified all 4 solutions against known LeetCode examples before writing them up. A
+time-budget diagram (2/3/5/10/5-minute phase breakdown of a 25-minute problem) plus an
+interview-strategy quiz (not an algorithm quiz — how to use extra time, what to do when the timer
+runs out, etc.) round out the lesson. **Fixed one bug**: the diagram's closing caption line ran
+past the viewBox's right edge and got visually clipped — same recurring "SVG text exceeds viewBox
+width" bug class as several earlier lessons — fixed by splitting it across two lines and growing
+the viewBox height to fit. Browser-tested the timer directly (Start decrements correctly over a
+real ~2.5s wait, Pause halts it, Reset restores the initial value, double-clicking Start doesn't
+double the countdown speed, and all 4 timers run independently) — zero console errors, zero mobile
+overflow, quiz/reveal/mark-complete all confirmed working.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
