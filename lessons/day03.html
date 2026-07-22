@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day 3: Arrays & Strings — 30 Days of DSA in JavaScript</title>
+<meta name="description" content="Core string operations, why strings are immutable, and the #1 array mistake: mutating an array while you loop over it." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2358a6ff'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="../index.html">← All days</a></nav>
+</header>
+
+<main class="container">
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DAY 3 / 30 &middot; WEEK 1</p>
+  <h1>Arrays &amp; Strings</h1>
+
+  <h2>Goal of the day</h2>
+  <ul class="goal-list">
+    <li>Use the core string operations — <code>slice</code>, <code>indexOf</code>, <code>includes</code>, <code>split</code>, <code>charAt</code> — as fluently as you use array operations.</li>
+    <li>Understand <em>why</em> strings are immutable in JS, and how that changes the way you build new strings.</li>
+    <li>Spot and fix the #1 array mistake: mutating an array while you're looping over it.</li>
+  </ul>
+
+  <h2>Concept</h2>
+  <p>An array is like a whiteboard — you can erase and rewrite any square directly, in place.
+    A string is like a printed page — you can never edit a single letter on it. Every "change"
+    to a string actually prints a brand new page. That's why <code>str[0] = 'b'</code> does
+    <strong>nothing</strong> in ordinary JS — no error, no effect, it's silently ignored,
+    because strings are immutable. (In <code>"use strict"</code> code, ES modules, or inside a
+    <code>class</code> body, that same line throws a <code>TypeError</code> instead — same
+    root cause, stricter enforcement. Either way, it never actually changes the string.) To
+    change a string, you always build a new one: <code>'b' + str.slice(1)</code>.</p>
+  <p>The second big idea today is a trap, not a feature: <strong>modifying an array while you
+    loop over it.</strong> When you <code>splice()</code> an item out mid-loop, every element
+    after it shifts down one index — but your loop counter keeps counting up regardless. The
+    result: you silently skip checking the very next element. This bites experienced developers,
+    not just beginners, because the code runs without any error — it just gives a quietly wrong
+    answer.</p>
+
+  <h2>Diagrams</h2>
+
+  <h3>1. String immutability</h3>
+  <svg class="diagram" viewBox="0 0 620 200" role="img" aria-label="Attempting str[0] = 'b' has no effect on a string; building a new string with slice and concatenation is the only way to change it">
+    <text x="20" y="20" font-size="13" class="dim">str = "cat"</text>
+    <g font-size="16">
+      <rect x="20" y="30" width="46" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="43" y="58" text-anchor="middle" fill="#e6edf3">c</text>
+      <rect x="70" y="30" width="46" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="93" y="58" text-anchor="middle" fill="#e6edf3">a</text>
+      <rect x="120" y="30" width="46" height="44" rx="6" fill="#30394a" stroke="#2a3140"/>
+      <text x="143" y="58" text-anchor="middle" fill="#e6edf3">t</text>
+    </g>
+    <text x="190" y="58" font-size="20" fill="#e5534b">✗</text>
+    <text x="215" y="52" font-size="12" fill="#e5534b">str[0] = 'b'</text>
+    <text x="215" y="68" font-size="12" fill="#e5534b">no effect (or TypeError in strict mode)</text>
+
+    <line x1="20" y1="100" x2="600" y2="100" stroke="#2a3140" stroke-dasharray="4 4"/>
+
+    <text x="20" y="122" font-size="13" class="dim">newStr = 'b' + str.slice(1)  (a brand new string)</text>
+    <g font-size="16">
+      <rect x="20" y="132" width="46" height="44" rx="6" fill="#1c2330" stroke="#3fb950" stroke-dasharray="4 3"/>
+      <text x="43" y="160" text-anchor="middle" fill="#3fb950">b</text>
+      <rect x="70" y="132" width="46" height="44" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="93" y="160" text-anchor="middle" fill="#3fb950">a</text>
+      <rect x="120" y="132" width="46" height="44" rx="6" fill="#1c2330" stroke="#3fb950"/>
+      <text x="143" y="160" text-anchor="middle" fill="#3fb950">t</text>
+    </g>
+    <text x="190" y="160" font-size="12" class="dim">str itself is still "cat" — completely unchanged.</text>
+  </svg>
+
+  <h3>2. The mutate-while-iterating trap</h3>
+  <svg class="diagram" viewBox="0 0 620 170" role="img" aria-label="Removing even numbers from an array while looping over it with forEach and splice skips elements because indices shift">
+    <text x="20" y="20" font-size="13" class="dim">Goal: remove every even number from [2, 4, 6, 8, 10] — expected result: []</text>
+    <g font-size="14">
+      <rect x="20" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
+      <text x="42" y="58" text-anchor="middle" fill="#e6edf3">2</text>
+      <rect x="70" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
+      <text x="92" y="58" text-anchor="middle" fill="#e6edf3">4</text>
+      <rect x="120" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
+      <text x="142" y="58" text-anchor="middle" fill="#e6edf3">6</text>
+      <rect x="170" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
+      <text x="192" y="58" text-anchor="middle" fill="#e6edf3">8</text>
+      <rect x="220" y="32" width="44" height="40" rx="6" fill="#30394a" stroke="#e5534b"/>
+      <text x="242" y="58" text-anchor="middle" fill="#e6edf3">10</text>
+    </g>
+    <text x="290" y="58" font-size="18" class="dim">→</text>
+    <text x="320" y="52" font-size="13" fill="#e5534b">Buggy forEach+splice result:</text>
+    <g font-size="14">
+      <rect x="320" y="60" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b"/>
+      <text x="342" y="86" text-anchor="middle" fill="#e5534b">4</text>
+      <rect x="370" y="60" width="44" height="40" rx="6" fill="#1c2330" stroke="#e5534b"/>
+      <text x="392" y="86" text-anchor="middle" fill="#e5534b">8</text>
+    </g>
+    <text x="425" y="86" font-size="12" fill="#e5534b">← left behind by accident!</text>
+    <text x="20" y="130" font-size="12" class="dim">Every splice() shifts later elements left by one, but the loop's</text>
+    <text x="20" y="147" font-size="12" class="dim">index keeps climbing — so every other element gets skipped.</text>
+  </svg>
+
+  <h2>Interactive visualizations</h2>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current index</span>
+    <span><i class="lg-swap"></i> being removed / has no effect</span>
+    <span><i class="lg-sorted"></i> new / correct result</span>
+    <span><i class="lg-neutral"></i> untouched</span>
+  </div>
+
+  <h3>1. String immutability, step by step</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>2. The mutate-while-iterating bug, live</h3>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <button class="btn" id="viz2Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h2>The code</h2>
+  <pre><code>// --- core string operations ---
+const str = "hello world";
+str.length;              // 11 — same idea as arrays
+str[0];                  // "h"      — index access, O(1)
+str.charAt(0);            // "h"      — same thing, older API
+str.slice(0, 5);          // "hello"  — start inclusive, end EXCLUSIVE (same as arrays!)
+str.indexOf("world");     // 6        — position of first match, -1 if not found
+str.includes("wor");      // true     — just "does this exist", no position
+str.split(" ");           // ["hello", "world"]  — string -> array
+["a","b"].join("-");      // "a-b"                — array -> string (the reverse)
+
+// --- strings are immutable: this never changes s ---
+let s = "cat";
+s[0] = "b";
+console.log(s);  // still "cat" (sloppy mode: silently ignored;
+                  // "use strict" / modules / classes: throws TypeError instead)
+
+// --- to "change" a string, build a new one ---
+const newS = "b" + s.slice(1); // "bat" — a brand new string
+
+// --- THE TRAP: mutating an array while looping over it ---
+function removeEvensBuggy(arr) {
+  arr.forEach((val, i) => {
+    if (val % 2 === 0) arr.splice(i, 1); // shifts everything after i left!
+  });
+  return arr;
+}
+removeEvensBuggy([2, 4, 6, 8, 10]); // [4, 8] — WRONG, expected []
+
+// --- THE FIX: use a non-mutating method instead ---
+function removeEvensFixed(arr) {
+  return arr.filter((val) => val % 2 !== 0); // builds a NEW array, no index shifting
+}
+removeEvensFixed([2, 4, 6, 8, 10]); // [] — correct
+</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>str.slice(0, 5)</code> — just like array slicing: the end index is
+      <strong>exclusive</strong>. This is the #1 off-by-one trap with strings.</li>
+    <li><code>str.split(" ")</code> / <code>arr.join("-")</code> — your two converters between
+      strings and arrays. Almost every string interview problem starts with
+      <code>str.split('')</code> to turn it into an array you can index and mutate freely.</li>
+    <li><code>s[0] = "b"</code> — assignment to a string index never changes the string. In
+      ordinary (sloppy-mode) code it's silently ignored — no error, which is exactly what makes
+      this bug sneaky. In <code>"use strict"</code> code, ES modules, or a <code>class</code>
+      body, it throws a <code>TypeError</code> instead.</li>
+    <li><code>removeEvensBuggy</code> — <code>splice(i, 1)</code> removes the element at index
+      <code>i</code> and shifts everything after it one slot left. But <code>forEach</code>'s
+      internal counter still moves to <code>i + 1</code> next — which is now a <em>different</em>
+      element than you'd expect, so the one that shifted into slot <code>i</code> never gets
+      checked.</li>
+    <li><code>removeEvensFixed</code> — <code>filter</code> builds a brand new array by testing
+      every original element exactly once. No indices ever shift out from under you.</li>
+  </ul>
+
+  <h3>Dry run: removeEvensBuggy([2, 4, 6, 8, 10])</h3>
+  <table class="dryrun-table">
+    <thead><tr><th>i</th><th>arr before</th><th>val (arr[i])</th><th>action</th><th>arr after</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>[2,4,6,8,10]</td><td>2</td><td>even → splice(0,1)</td><td>[4,6,8,10]</td></tr>
+      <tr><td>1</td><td>[4,6,8,10]</td><td>6</td><td>even → splice(1,1)</td><td>[4,8,10]</td></tr>
+      <tr><td>2</td><td>[4,8,10]</td><td>10</td><td>even → splice(2,1)</td><td>[4,8]</td></tr>
+      <tr><td>3</td><td>[4,8]</td><td>undefined (out of bounds)</td><td>skipped — no element there</td><td>[4,8]</td></tr>
+      <tr><td>4</td><td>[4,8]</td><td>undefined (out of bounds)</td><td>skipped — no element there</td><td>[4,8]</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.88rem;">4 and 8 were never re-checked after the
+    array shifted under the loop — they survive by accident, not because they're odd.</p>
+
+  <h2>Complexity</h2>
+  <table class="complexity-table">
+    <thead><tr><th>Operation</th><th>Time</th><th>Space</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>str[i]</code> / <code>str.charAt(i)</code></td><td>O(1)</td><td>O(1)</td><td>Same direct-index trick as arrays.</td></tr>
+      <tr><td><code>str.slice(a, b)</code></td><td>O(b - a)</td><td>O(b - a)</td><td>Has to copy every character in the range into a new string.</td></tr>
+      <tr><td><code>str.indexOf</code> / <code>includes</code></td><td>O(n)</td><td>O(1)</td><td>Worst case, scans the whole string looking for a match.</td></tr>
+      <tr><td><code>str1 + str2</code></td><td>O(n)</td><td>O(n)</td><td>n = combined length — building the new string touches every character.</td></tr>
+      <tr><td><code>str += x</code> inside an n-iteration loop</td><td>O(n²) worst case</td><td>O(n)</td><td>Naively, each concatenation copies the whole string built so far. Some engines optimize repeated concatenation internally — but O(n²) is still the safe assumption to state in an interview.</td></tr>
+      <tr><td><code>arr.splice(i, 1)</code></td><td>O(n)</td><td>O(1)</td><td>Same reason as <code>shift()</code> — everything after index i shifts left.</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">The <code>str += x</code> row is why, when
+    you're building a huge string piece by piece in a loop, it's often faster to push pieces
+    into an array and <code>.join('')</code> them once at the end.</p>
+
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What happens when you run <code>str[0] = 'x'</code>?</strong> It never changes
+      the string either way — but whether it errors depends on mode. In ordinary (sloppy-mode)
+      script code it's a silent no-op: JS treats it like trying to write to a read-only
+      property and just ignores it. In <code>"use strict"</code> code, ES modules, or a
+      <code>class</code> body — increasingly the default in real codebases — that same line
+      throws a <code>TypeError</code>. Know both, and say "it depends on strict mode" rather
+      than asserting either one universally.</li>
+    <li><strong>How would you reverse a string in JS?</strong> <code>str.split('').reverse().join('')</code>
+      is the idiomatic one-liner — split into an array (which IS mutable), reverse it in place,
+      join back into a string.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "Can you do it
+      without the built-ins?" — two pointers from both ends swapping into a new array/char list,
+      O(n) time, O(n) space (you can't avoid the space since you can't mutate the original
+      string). We formalize the two-pointer pattern itself on Day 4.</span></li>
+    <li><strong>What's wrong with removing items from an array inside a <code>forEach</code> or
+      a forward <code>for</code> loop?</strong> Explained in today's Concept and Diagram —
+      indices shift under you and you silently skip elements.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> "just loop
+      backwards instead" is a real fix (shifting elements you've already passed doesn't affect
+      indices you haven't reached yet), but <code>filter()</code> is almost always clearer and
+      safer — mention both, but reach for <code>filter</code> first.</span></li>
+    <li><strong>What's the time complexity of <code>str1 + str2</code>?</strong> O(n), where n
+      is the combined length — every character has to be copied into the new string.</li>
+  </ul>
+  <p><strong>How to talk through it out loud:</strong> when you catch yourself writing
+    <code>arr.splice()</code> or <code>arr.push()</code> inside a loop that's also iterating
+    over that same array, say so out loud: "I need to be careful here — I'm mutating the array
+    I'm looping over, so I'll either loop backwards or switch to <code>filter</code>/<code>map</code>
+    to avoid shifting indices." Naming the risk before it becomes a bug is exactly what
+    interviewers are listening for.</p>
+
+  <h2>Practice problems</h2>
+
+  <div class="problem">
+    <h4>1. Reverse String <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/reverse-string/" target="_blank" rel="noopener">LeetCode: Reverse String</a>)</span></h4>
+    <p>Reverse an array of characters <code>s</code> in place.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p1-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p1-hint" hidden>Swap the first and last characters, then
+      move one step inward from each end, and repeat until the two pointers meet.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p1-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p1-sol" hidden><pre><code>function reverseString(s) {
+  let left = 0, right = s.length - 1;
+  while (left < right) {
+    [s[left], s[right]] = [s[right], s[left]]; // swap via destructuring
+    left++;
+    right--;
+  }
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>2. Valid Palindrome <span class="leetcode-link">(Easy — <a href="https://leetcode.com/problems/valid-palindrome/" target="_blank" rel="noopener">LeetCode: Valid Palindrome</a>)</span></h4>
+    <p>Given a string, return true if it reads the same forwards and backwards, ignoring
+      non-alphanumeric characters and case.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p2-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p2-hint" hidden>Clean the string first (lowercase, strip
+      non-alphanumeric characters with a regex), then compare it to its own reverse.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p2-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p2-sol" hidden><pre><code>function isPalindrome(s) {
+  const clean = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return clean === clean.split('').reverse().join('');
+}</code></pre></div>
+  </div>
+
+  <div class="problem">
+    <h4>3. String Compression <span class="leetcode-link">(Medium — <a href="https://leetcode.com/problems/string-compression/" target="_blank" rel="noopener">LeetCode: String Compression</a>)</span></h4>
+    <p>Compress an array of characters in place: consecutive repeated characters become the
+      character followed by the count (a group of 1 is written with no count). Return the new
+      length.</p>
+    <button class="btn dsa-reveal-toggle" data-target="p3-hint" data-hide-label="Hide hint">Show hint</button>
+    <div class="dsa-reveal-panel" id="p3-hint" hidden>Use two pointers: one (<code>read</code>)
+      scans through looking for where a run of repeats ends, the other (<code>write</code>)
+      writes the compressed result back into the same array.</div>
+    <button class="btn dsa-reveal-toggle" data-target="p3-sol" data-hide-label="Hide solution">Show solution</button>
+    <div class="dsa-reveal-panel" id="p3-sol" hidden><pre><code>function compress(chars) {
+  let write = 0, read = 0;
+  while (read < chars.length) {
+    const char = chars[read];
+    let count = 0;
+    while (read < chars.length && chars[read] === char) { read++; count++; }
+    chars[write++] = char;
+    if (count > 1) {
+      for (const digit of String(count)) chars[write++] = digit;
+    }
+  }
+  return write;
+}</code></pre></div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="cat" data-explain="Strings are immutable — in ordinary (sloppy-mode) code like this snippet, index assignment is silently ignored. (Under 'use strict', a module, or a class, this same line would throw a TypeError instead of printing anything.)">
+    <p class="q-text">1. In ordinary (non-strict) code, what does this print? <code>let s = "cat"; s[0] = "b"; console.log(s);</code></p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cat">"cat"</button>
+      <button class="btn dsa-quiz-option" data-value="bat">"bat"</button>
+      <button class="btn dsa-quiz-option" data-value="err">Throws an error</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="el" data-explain="slice(1,3) takes index 1 up to (not including) index 3 — that's 'e' and 'l'.">
+    <p class="q-text">2. What does <code>"hello".slice(1, 3)</code> return?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="hel">"hel"</button>
+      <button class="btn dsa-quiz-option" data-value="el">"el"</button>
+      <button class="btn dsa-quiz-option" data-value="ell">"ell"</button>
+      <button class="btn dsa-quiz-option" data-value="llo">"llo"</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="on" data-explain="Building the combined string requires copying n characters, where n is the total combined length.">
+    <p class="q-text">3. What's the time complexity of <code>str1 + str2</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="o1">O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="on">O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="on2">O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="skip" data-explain="splice() shifts every later element one index left, but the loop's counter keeps climbing — so the element that shifted into the current slot never gets visited.">
+    <p class="q-text">4. What goes wrong with <code>arr.forEach((v, i) => { if (cond) arr.splice(i, 1); })</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="err">It throws an error</button>
+      <button class="btn dsa-quiz-option" data-value="skip">It silently skips checking some elements</button>
+      <button class="btn dsa-quiz-option" data-value="infinite">It loops forever</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="arr" data-explain="split('') breaks a string into an array of its individual characters — the standard way to make a string mutable and indexable like an array.">
+    <p class="q-text">5. What does <code>"abc".split('')</code> return?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="arr">['a', 'b', 'c']</button>
+      <button class="btn dsa-quiz-option" data-value="same">"abc"</button>
+      <button class="btn dsa-quiz-option" data-value="err">Throws an error</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark Day 3 as complete</button>
+  </div>
+
+  <nav class="lesson-nav">
+    <a class="btn" href="day02.html">← Day 2: Big-O Notation</a>
+    <a class="btn" href="day04.html">Day 4: Two-Pointer Pattern →</a>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/curriculum.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const THE_DAY = 3;
+  DSAProgress.setLastDay(THE_DAY);
+
+  // ---- viz 1: string immutability ----
+  function buildImmutabilitySteps(word, replaceChar) {
+    const chars = word.split('');
+    const newChars = [replaceChar, ...chars.slice(1)];
+    return [
+      { narration: `str = "${word}".`, values: chars, states: {} },
+      { narration: `str[0] = "${replaceChar}" — attempting to mutate index 0 directly.`, values: chars, states: { 0: 'pointer' } },
+      { narration: `Nothing changed! Strings are immutable — in ordinary code that assignment is silently ignored (in strict mode it would throw instead). str is still "${word}".`, values: chars, states: { 0: 'swap' } },
+      { narration: `newStr = "${replaceChar}" + str.slice(1) builds a brand new string instead.`, values: newChars, states: { 0: 'sorted' } },
+      { narration: `newStr = "${newChars.join('')}" — a completely separate string. The original str is untouched.`, values: newChars, states: {} },
+    ];
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const WORDS = ['cat', 'dog', 'sun', 'map', 'pen'];
+  const bars1 = new DSA.Bars(viz1Stage, { uniform: true });
+  bars1.setData('cat'.split(''));
+
+  let steps1 = buildImmutabilitySteps('cat', 'b');
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1600,
+    onStep(step) {
+      if (!step) { bars1.setData('cat'.split('')); return; }
+      if (step.values.length !== bars1.data.length) bars1.setData(step.values);
+      bars1.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const word = WORDS[Math.floor(Math.random() * WORDS.length)];
+      const replaceChar = 'xyzqw'[Math.floor(Math.random() * 5)];
+      steps1 = buildImmutabilitySteps(word, replaceChar);
+      bars1.setData(word.split(''));
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- viz 2: mutate-while-iterating bug ----
+  function buildBuggyLoopSteps(base) {
+    const steps = [{ narration: `arr = [${base.join(', ')}]. Goal: remove every even number.`, values: base.slice(), states: {}, pointer: null }];
+    let arr = base.slice();
+    let i = 0;
+    while (i < base.length) {
+      if (i >= arr.length) {
+        steps.push({ narration: `i=${i}: out of bounds (arr now only has ${arr.length} elements) — skipped, no element to check.`, values: arr.slice(), states: {}, pointer: null });
+        i++;
+        continue;
+      }
+      const val = arr[i];
+      if (val % 2 === 0) {
+        steps.push({ narration: `i=${i}: value ${val} is even → splice(${i}, 1) removes it. Everything after shifts left one slot.`, values: arr.slice(), states: { [i]: 'swap' }, pointer: i });
+        arr.splice(i, 1);
+        steps.push({ narration: `arr is now [${arr.join(', ') || 'empty'}]. The loop's index still moves to i=${i + 1} next.`, values: arr.slice(), states: {}, pointer: null });
+      } else {
+        steps.push({ narration: `i=${i}: value ${val} is odd → left alone.`, values: arr.slice(), states: { [i]: 'pointer' }, pointer: i });
+      }
+      i++;
+    }
+    steps.push({
+      narration: `Loop ends. Result: [${arr.join(', ') || 'empty'}] — ${arr.length ? 'WRONG, these evens survived by accident!' : 'correctly empty.'} The fix: arr.filter(v => v % 2 !== 0).`,
+      values: arr.slice(),
+      states: Object.fromEntries(arr.map((_, idx) => [idx, arr.length ? 'swap' : 'sorted'])),
+      pointer: null,
+    });
+    return steps;
+  }
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const BASE2 = [2, 4, 6, 8, 10];
+  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: 12 });
+  bars2.setData(BASE2);
+
+  let steps2 = buildBuggyLoopSteps(BASE2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    shuffleBtn: document.getElementById('viz2Shuffle'),
+    speed: 1500,
+    onStep(step) {
+      if (!step) { bars2.setData(BASE2); return; }
+      if (step.values.length !== bars2.data.length) bars2.setData(step.values);
+      bars2.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const evens = DSA.randomArray(5, 1, 6).map((v) => v * 2);
+      steps2 = buildBuggyLoopSteps(evens);
+      bars2.setData(evens);
+      player2.setSteps(steps2);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = DSAProgress.isDone(THE_DAY);
+    completeBtn.textContent = done ? `✓ Day ${THE_DAY} complete — click to undo` : `Mark Day ${THE_DAY} as complete`;
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    DSAProgress.toggle(THE_DAY);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>

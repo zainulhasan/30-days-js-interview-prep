@@ -118,10 +118,13 @@ const DSA = (function () {
   // ---- Bars renderer -------------------------------------------------
   // For arrays: sorting, two-pointer, sliding window, binary search.
   class Bars {
-    constructor(container, { min = 0, max = 100 } = {}) {
+    // uniform: true renders every bar at the same height, and treats values as
+    // opaque labels (e.g. characters) instead of numbers used for height math.
+    constructor(container, { min = 0, max = 100, uniform = false } = {}) {
       this.container = container;
       this.min = min;
       this.max = max;
+      this.uniform = uniform;
       this.container.classList.add('dsa-bars');
     }
 
@@ -147,8 +150,12 @@ const DSA = (function () {
       const range = Math.max(1, this.max - this.min);
       this.bars.forEach((bar, i) => {
         const v = data[i];
-        const pct = 10 + (90 * (v - this.min)) / range;
-        bar.style.height = pct + '%';
+        if (this.uniform) {
+          bar.style.height = '60%';
+        } else {
+          const pct = 10 + (90 * (v - this.min)) / range;
+          bar.style.height = pct + '%';
+        }
         bar.querySelector('.dsa-bar-label').textContent = v;
         bar.className = STATE_CLASS[states[i] || 'default'] + ' dsa-bar';
       });
