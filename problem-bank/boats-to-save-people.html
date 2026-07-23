@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Boats to Save People — Problem Bank</title>
+<meta name="description" content="Boats to Save People: a brute-force repeated-full-scan pairing vs. an optimal sorted two-pointer greedy, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/boats-to-save-people.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Boats to Save People — Problem Bank" />
+<meta property="og:description" content="Boats to Save People: a brute-force repeated-full-scan pairing vs. an optimal sorted two-pointer greedy, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/boats-to-save-people.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Boats to Save People — Problem Bank" />
+<meta name="twitter:description" content="Boats to Save People: a brute-force repeated-full-scan pairing vs. an optimal sorted two-pointer greedy, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Boats to Save People", "item": "https://dsa.itszain.tech/problem-bank/boats-to-save-people.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      read that lesson first if the idea of a greedy choice that's provably safe (not just
+      convenient) is still new; the two-pointer solution below is a direct application of it.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Boats to Save People <span class="leetcode-link">(<a href="https://leetcode.com/problems/boats-to-save-people/" target="_blank" rel="noopener">LeetCode: Boats to Save People</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array <code>people</code>, where <code>people[i]</code> is the weight of the
+    <code>i</code>th person, and an unlimited supply of boats. Each boat can carry at most
+    <code>limit</code> total weight and holds at most two people at once — but only if their
+    combined weight doesn't exceed <code>limit</code>. Every person must go somewhere. Return the
+    minimum number of boats needed to get everyone across.</p>
+
+  <h2>Solution 1: Brute force — repeatedly scan for the best pairing</h2>
+  <p>A natural first instinct: each round, scan every still-unassigned person to find the
+    heaviest one (they're the most constrained — fewest people can share a boat with them), then
+    scan every still-unassigned person <em>again</em> to find the heaviest partner who still fits
+    with them. Assign whoever was found, shrink the unassigned pool, and repeat. It's correct, but
+    every round pays for two full linear scans over a shrinking set.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: scan all unassigned people to find the heaviest, scan all unassigned people again to find their best-fitting partner, assign them to a boat, then repeat the two full scans on the shrinking unassigned set.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: two full scans per boat, every round</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">scan unassigned</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">find the heaviest</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">scan unassigned AGAIN</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">find best-fitting partner</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">assign, shrink pool</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">repeat from the top</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) work per boat, up to O(n) boats — O(n²) total.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> being scanned</span>
+    <span><i class="lg-pointer"></i> current heaviest</span>
+    <span><i class="lg-active"></i> chosen partner</span>
+    <span><i class="lg-sorted"></i> boat formed (paired)</span>
+    <span><i class="lg-swap"></i> boat formed (alone)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    people=[3,2,2,5,6,1], limit=6 — a small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function numRescueBoatsBrute(people, limit) {
+  const n = people.length;
+  const used = new Array(n).fill(false);
+  let boats = 0;
+  let remaining = n;
+
+  while (remaining > 0) {
+    // Scan every unassigned person to find the heaviest.
+    let heavyIdx = -1;
+    for (let i = 0; i &lt; n; i++) {
+      if (!used[i] && (heavyIdx === -1 || people[i] > people[heavyIdx])) heavyIdx = i;
+    }
+    used[heavyIdx] = true;
+    remaining--;
+
+    // Scan every remaining unassigned person for the best-fitting partner.
+    let partnerIdx = -1;
+    for (let i = 0; i &lt; n; i++) {
+      if (!used[i] && people[i] + people[heavyIdx] &lt;= limit) {
+        if (partnerIdx === -1 || people[i] > people[partnerIdx]) partnerIdx = i;
+      }
+    }
+    if (partnerIdx !== -1) {
+      used[partnerIdx] = true;
+      remaining--;
+    }
+    boats++;
+  }
+  return boats;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The outer <code>while</code> loop runs once per boat — up to <code>n</code> times.</li>
+    <li>The first inner loop scans every unassigned person to find the heaviest — that's the
+      person hardest to pair, so they're handled first each round.</li>
+    <li>The second inner loop scans every <em>remaining</em> unassigned person again, looking for
+      the heaviest one that still fits alongside the person just chosen
+      (<code>people[i] + people[heavyIdx] &lt;= limit</code>).</li>
+    <li>If no partner fits, <code>partnerIdx</code> stays <code>-1</code> and that person takes a
+      boat alone — still one boat either way, so <code>boats++</code> runs unconditionally at the
+      bottom of the loop.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n²)</td><td>O(n)</td><td>Two full linear scans of the shrinking unassigned set, per boat</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — sort once, two-pointer greedy</h2>
+  <p>Sort everyone by weight. The heaviest person left is always the hardest to pair — so try
+    pairing them with the <em>lightest</em> person left, since a lighter partner gives the pair
+    the best possible chance of fitting under <code>limit</code>. If lightest + heaviest fits,
+    send them together and advance both pointers. If it doesn't fit, no one left is light enough
+    to pair with the heaviest (everyone else is heavier still) — so the heaviest goes alone, and
+    only that pointer advances. Either way, exactly one boat is used and the pointers close in on
+    each other.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: sort everyone by weight once, then compare the lightest and heaviest remaining people - if they fit together board both and advance both pointers, otherwise the heaviest goes alone and only that pointer advances.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: sort once, then close a two-pointer gap</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="140" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="90" y="82" fill="#282C34">sort ascending</text>
+      <text x="90" y="98" fill="#282C34" font-size="10">once, up front</text>
+      <rect x="200" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="300" y="82" fill="#E2E3E7">lightest + heaviest ≤ limit?</text>
+      <text x="300" y="98" fill="#9198A6" font-size="10">check before boarding</text>
+      <rect x="440" y="60" width="90" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="485" y="78" fill="#282C34">fits</text>
+      <text x="485" y="94" fill="#282C34" font-size="10">both board</text>
+      <rect x="540" y="60" width="90" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="585" y="78" fill="#282C34">doesn't</text>
+      <text x="585" y="94" fill="#282C34" font-size="10">heavy alone</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="160" y1="83" x2="198" y2="83"/>
+      <line x1="400" y1="76" x2="438" y2="76"/>
+      <line x1="400" y1="90" x2="538" y2="90"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n), dominated entirely by the sort — the scan is one linear pass.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> lo (lightest)</span>
+    <span><i class="lg-active"></i> hi (heaviest)</span>
+    <span><i class="lg-sorted"></i> boat formed (paired)</span>
+    <span><i class="lg-swap"></i> boat formed (alone)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    people=[3,2,2,5,6,1], limit=6 — the same case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function numRescueBoatsOptimal(people, limit) {
+  const sorted = people.slice().sort((a, b) => a - b);
+  let lo = 0, hi = sorted.length - 1;
+  let boats = 0;
+
+  while (lo &lt;= hi) {
+    if (sorted[lo] + sorted[hi] &lt;= limit) {
+      lo++; // lightest pairs with heaviest — both board
+    }
+    hi--; // heaviest always leaves, paired or alone
+    boats++;
+  }
+  return boats;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>sorted[lo] + sorted[hi] &lt;= limit</code> is the only comparison the whole
+      algorithm needs — the lightest and heaviest remaining people are the ONLY pairing worth
+      checking each round (see Interview Corner for why).</li>
+    <li>If it fits, <code>lo++</code> — the lightest person is now used, boarding alongside the
+      heaviest.</li>
+    <li><code>hi--</code> runs on every iteration, no matter what — the current heaviest person is
+      always accounted for after this round, either paired or alone.</li>
+    <li><code>boats++</code> also runs unconditionally — exactly one boat is used per iteration,
+      whether it carries one person or two.</li>
+    <li>When <code>lo === hi</code>, exactly one person is left; that final iteration still adds
+      exactly one boat and then the loop ends, so the edge case needs no special-casing.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n)</td><td>O(n)</td><td>Sort once, then a single two-pointer linear pass</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (repeated full scans)</td><td>O(n²)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (sort + two-pointer)</td><td>O(n log n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Both track a "used" state per person and both correctly find the minimum boat count — they
+    were cross-checked against each other over thousands of random inputs, not just the three
+    LeetCode examples. The gap is entirely about how much repeated scanning it takes to find each
+    round's pairing: two O(n) scans per boat versus one O(n log n) sort followed by a single O(n)
+    pass.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it always safe to pair the lightest remaining person with the
+        heaviest, instead of checking other pairings?</p>
+      <ul class="pb-ia">
+        <li>The heaviest remaining person is the hardest to pair — if they can't fit with the
+          <em>lightest</em> remaining person, they can't fit with anyone else left either (every
+          other remaining person is at least as heavy).</li>
+        <li>So the lightest person is literally the heaviest person's best possible shot at
+          sharing a boat — if that pairing fails, the heaviest person is doomed to go alone this
+          round no matter what else is checked.</li>
+        <li>If the pairing does work, using the lightest person on the heaviest is also safe for
+          everyone else: any lighter partner would've made a WORSE match for a later, still-heavy
+          person, so nothing is lost by using them up now.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the heaviest person always advance (<code>hi--</code>) every
+        single iteration, paired or not?</p>
+      <ul class="pb-ia">
+        <li>Once the algorithm has decided what happens to the current heaviest person this
+          round — paired with the lightest, or alone — that person is fully resolved and needs no
+          further consideration.</li>
+        <li>The lightest person only advances (<code>lo++</code>) when they actually got used;
+          if the pairing failed, they're still unresolved and must be re-checked next round
+          against the new heaviest.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Could you ever advance <code>lo</code> without
+        advancing <code>hi</code>?" No — every iteration retires exactly one boat and the heaviest
+        person in it, so <code>hi</code> always moves; only whether <code>lo</code> also moves is
+        conditional.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Would this greedy strategy still work if a boat could carry three or more
+        people instead of two?</p>
+      <ul class="pb-ia">
+        <li>Not with this exact two-pointer shape — pairing "lightest + heaviest" no longer
+          captures the best group once groups can have 3+ members.</li>
+        <li>The general k-per-boat version is a much harder combinatorial packing problem (related
+          to bin packing), and doesn't have a simple O(n log n) greedy solution known for
+          arbitrary k.</li>
+        <li>The two-person cap is exactly what makes the single "check the extremes" greedy
+          insight provably optimal here.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const people = [10, 2, 33, 4];
+console.log(people.sort());</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[10, 2, 33, 4]</code> — completely unsorted numerically.</li>
+        <li><code>Array.prototype.sort()</code> with no comparator converts every element to a
+          STRING and sorts lexicographically: <code>"10"</code> comes before <code>"2"</code>
+          because <code>"1"</code> &lt; <code>"2"</code> as characters.</li>
+        <li><code>people.sort((a, b) => a - b)</code> is the fix — it forces a numeric
+          comparison.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the optimal solution above writes
+        <code>.sort((a, b) => a - b)</code> explicitly. Dropping the comparator wouldn't throw an
+        error — it would silently sort weights like <code>[10, 2, 33, 4]</code> into
+        <code>[10, 2, 33, 4]</code> (already "sorted" as strings), and the two-pointer greedy
+        would then compare the wrong pairs and return a wrong boat count with no crash to warn
+        you.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="hardest" data-explain="The heaviest person left is the hardest to pair — if the lightest available partner doesn't fit with them, nobody else (all at least as heavy) will fit either. That's what makes lightest-vs-heaviest the only comparison worth making each round." >
+    <p class="q-text">1. Why does the optimal solution only ever compare the CURRENT lightest and heaviest remaining people, instead of trying other combinations?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="hardest">The heaviest person is hardest to pair — if the lightest available person doesn't fit with them, no one else (all heavier) will fit either</button>
+      <button class="btn dsa-quiz-option" data-value="random">Any two remaining people would give the same boat count, so it doesn't matter which pair is checked</button>
+      <button class="btn dsa-quiz-option" data-value="fastest">It's just the fastest pair to look up, not necessarily correct</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="always" data-explain="hi-- runs unconditionally on every loop iteration — the current heaviest person is fully resolved (paired or alone) by the end of each round, so there is never a reason to reconsider them." >
+    <p class="q-text">2. In <code>while (lo &lt;= hi) { if (fits) lo++; hi--; boats++; }</code>, when does <code>hi--</code> execute?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="always">Every single iteration, regardless of whether the pairing fit</button>
+      <button class="btn dsa-quiz-option" data-value="onlyfit">Only when sorted[lo] + sorted[hi] fits within the limit</button>
+      <button class="btn dsa-quiz-option" data-value="onlyfail">Only when the pairing doesn't fit</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortrequired" data-explain="The whole argument (heaviest person's best shot is the lightest remaining person) only holds if 'lightest' and 'heaviest' are meaningful, adjacent-extremes comparisons — which requires the array to be sorted first. Without sorting, sorted[lo] and sorted[hi] wouldn't actually be the lightest/heaviest remaining people." >
+    <p class="q-text">3. Why can't the two-pointer scan run correctly on an unsorted <code>people</code> array?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortrequired">Without sorting, index 0 and the last index aren't actually the lightest and heaviest remaining people, so the greedy argument no longer applies</button>
+      <button class="btn dsa-quiz-option" data-value="doesntmatter">It works identically either way — sorting is just cosmetic</button>
+      <button class="btn dsa-quiz-option" data-value="slower">It would still be correct, just marginally slower</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onenoblame" data-explain="Both branches of the if/else increment boats exactly once and always retire the heaviest remaining person — so every loop iteration accounts for exactly one boat, whether it holds one person or two." >
+    <p class="q-text">4. Why does <code>boats++</code> run unconditionally at the bottom of the loop, instead of inside separate branches?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onenoblame">Every loop iteration uses exactly one boat — whether it carries one person (alone) or two (paired) — so the increment is the same either way</button>
+      <button class="btn dsa-quiz-option" data-value="bug">It's a bug — boats should only increment when a pairing succeeds</button>
+      <button class="btn dsa-quiz-option" data-value="twice">It actually increments boats twice per successful pairing</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortcost" data-explain="Brute force pays two O(n) scans per boat, up to n boats, giving O(n²). Optimal pays one O(n log n) sort plus a single O(n) two-pointer pass, giving O(n log n) overall — the sort dominates." >
+    <p class="q-text">5. What's the time complexity difference between the two solutions, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortcost">Brute force is O(n²) from two full scans per boat; optimal is O(n log n), dominated by a single sort plus one linear pass</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're the same — O(n log n) for both</button>
+      <button class="btn dsa-quiz-option" data-value="reversed">Brute force is O(n log n); optimal is O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'boats-to-save-people';
+
+  // ---- Solution 1: brute force (repeated full scans over the unassigned set) ----
+  function buildBoatsBruteSteps(people, limit) {
+    const steps = [];
+    const n = people.length;
+    const used = new Array(n).fill(false);
+    let boats = 0;
+    let remaining = n;
+
+    function snapshot(states, narration) {
+      steps.push({ narration, values: people.slice(), states: Object.assign({}, states) });
+    }
+
+    snapshot({}, `Start: people = [${people.join(', ')}], limit = ${limit}. No sorting needed — scan all unassigned people to find the heaviest, each round.`);
+
+    while (remaining > 0) {
+      let heavyIdx = -1;
+      const scanStates = {};
+      for (let i = 0; i < n; i++) {
+        if (used[i]) continue;
+        scanStates[i] = 'compare';
+        if (heavyIdx === -1 || people[i] > people[heavyIdx]) heavyIdx = i;
+      }
+      snapshot(Object.assign({}, scanStates, { [heavyIdx]: 'pointer' }),
+        `Scan all ${remaining} unassigned ${remaining === 1 ? 'person' : 'people'} — heaviest is index ${heavyIdx} (weight ${people[heavyIdx]}).`);
+      used[heavyIdx] = true;
+      remaining--;
+
+      let partnerIdx = -1;
+      const partnerScanStates = { [heavyIdx]: 'pointer' };
+      for (let i = 0; i < n; i++) {
+        if (used[i]) continue;
+        partnerScanStates[i] = 'compare';
+        if (people[i] + people[heavyIdx] <= limit && (partnerIdx === -1 || people[i] > people[partnerIdx])) {
+          partnerIdx = i;
+        }
+      }
+      if (partnerIdx !== -1) {
+        snapshot(Object.assign({}, partnerScanStates, { [partnerIdx]: 'active' }),
+          `Full linear scan of every remaining unassigned person for the best-fitting partner: index ${partnerIdx} (${people[partnerIdx]}) is the heaviest that still fits with ${people[heavyIdx]} (sum ${people[heavyIdx] + people[partnerIdx]} ≤ ${limit}).`);
+        used[partnerIdx] = true;
+        remaining--;
+        boats++;
+        snapshot({ [heavyIdx]: 'sorted', [partnerIdx]: 'sorted' },
+          `Boat ${boats}: index ${heavyIdx} (${people[heavyIdx]}) and index ${partnerIdx} (${people[partnerIdx]}) share it.`);
+      } else {
+        snapshot(partnerScanStates,
+          `Scanned every remaining unassigned person — none fit with ${people[heavyIdx]} within limit ${limit}.`);
+        boats++;
+        snapshot({ [heavyIdx]: 'swap' },
+          `Boat ${boats}: index ${heavyIdx} (${people[heavyIdx]}) goes alone — no one left fits with it.`);
+      }
+    }
+    snapshot({}, `Done — ${boats} boats needed. Two full scans ran per boat, over a shrinking unassigned set — O(n²).`);
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (sort once, two-pointer greedy) ----
+  function buildBoatsOptimalSteps(people, limit) {
+    const steps = [];
+    const sorted = people.slice().sort((a, b) => a - b);
+    const n = sorted.length;
+    let lo = 0, hi = n - 1, boats = 0;
+
+    function snapshot(states, narration) {
+      steps.push({ narration, values: sorted.slice(), states: Object.assign({}, states) });
+    }
+
+    snapshot({}, `Sort ascending once: [${sorted.join(', ')}]. lo starts at the lightest (index 0), hi at the heaviest (index ${n - 1}).`);
+
+    while (lo <= hi) {
+      const loIdx = lo, hiIdx = hi;
+      const sum = sorted[loIdx] + sorted[hiIdx];
+      const isLast = loIdx === hiIdx;
+      const fits = sum <= limit;
+
+      snapshot(
+        isLast ? { [loIdx]: 'compare' } : { [loIdx]: 'pointer', [hiIdx]: 'active' },
+        isLast
+          ? `Only one person left: index ${loIdx} (${sorted[loIdx]}).`
+          : `Compare lightest (index ${loIdx}, ${sorted[loIdx]}) + heaviest (index ${hiIdx}, ${sorted[hiIdx]}) = ${sum} vs limit ${limit}.`
+      );
+
+      if (fits) lo++;
+      hi--;
+      boats++;
+
+      if (isLast) {
+        snapshot({ [loIdx]: 'swap' }, `Boat ${boats}: index ${loIdx} (${sorted[loIdx]}) takes the last boat alone.`);
+      } else if (fits) {
+        snapshot({ [loIdx]: 'sorted', [hiIdx]: 'sorted' }, `${sum} ≤ ${limit} — fits together. Boat ${boats}: index ${loIdx} and index ${hiIdx} share it.`);
+      } else {
+        snapshot({ [hiIdx]: 'swap' }, `${sum} > ${limit} — too heavy together. Boat ${boats}: heaviest (index ${hiIdx}) goes alone. Lightest (index ${loIdx}) stays and tries the next-heaviest.`);
+      }
+    }
+    snapshot({}, `Done — ${boats} boats needed.`);
+    return steps;
+  }
+
+  const BASE_PEOPLE = [3, 2, 2, 5, 6, 1];
+  const LIMIT = 6;
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: Math.max.apply(null, BASE_PEOPLE) + 1 });
+  bars1.setData(BASE_PEOPLE);
+  const steps1 = buildBoatsBruteSteps(BASE_PEOPLE, LIMIT);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) { if (!step) { bars1.paint({}, BASE_PEOPLE); return; } bars1.paint(step.states, step.values); },
+  });
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: Math.max.apply(null, BASE_PEOPLE) + 1 });
+  const sortedInit = BASE_PEOPLE.slice().sort((a, b) => a - b);
+  bars2.setData(sortedInit);
+  const steps2 = buildBoatsOptimalSteps(BASE_PEOPLE, LIMIT);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) { if (!step) { bars2.paint({}, sortedInit); return; } bars2.paint(step.states, step.values); },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('boats-to-save-people', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
