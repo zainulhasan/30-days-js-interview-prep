@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gas Station — Problem Bank</title>
+<meta name="description" content="Gas Station: a brute-force O(n²) simulate-every-start solution vs. an optimal O(n) greedy single pass, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/gas-station.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Gas Station — Problem Bank" />
+<meta property="og:description" content="Gas Station: a brute-force O(n²) simulate-every-start solution vs. an optimal O(n) greedy single pass, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/gas-station.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Gas Station — Problem Bank" />
+<meta name="twitter:description" content="Gas Station: a brute-force O(n²) simulate-every-start solution vs. an optimal O(n) greedy single pass, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Gas Station", "item": "https://dsa.itszain.tech/problem-bank/gas-station.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      the optimal solution below is a single greedy pass; read that lesson first if "make the
+      locally obvious choice and never look back" is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Gas Station <span class="leetcode-link">(<a href="https://leetcode.com/problems/gas-station/" target="_blank" rel="noopener">LeetCode: Gas Station</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p><code>n</code> gas stations sit around a circular route. Station <code>i</code> has
+    <code>gas[i]</code> gas, and it costs <code>cost[i]</code> gas to drive from station
+    <code>i</code> to the next station <code>(i + 1) % n</code>. Your car starts with an empty
+    tank at whichever station you pick. Given <code>gas</code> and <code>cost</code>, return the
+    index of the station you must start at to complete the full loop exactly once — or
+    <code>-1</code> if no starting station works. If a solution exists, it's guaranteed to be
+    unique.</p>
+
+  <h2>Solution 1: Brute force — simulate the whole lap from every start</h2>
+  <p>The direct reading of the problem: for every candidate starting station, drive the full
+    circular lap and watch the tank. If it ever dips below zero, that start doesn't work — move
+    on to the next candidate. The first start that survives the whole lap is the answer.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: pick a starting station i, simulate a full lap adding gas and subtracting cost at each station, and if the tank ever goes negative, discard this start and try the next one.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: re-simulate the full lap from every candidate start</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">pick start i</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">0 ≤ i &lt; n</text>
+      <rect x="210" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="310" y="82" fill="#E2E3E7">simulate the full lap</text>
+      <text x="310" y="98" fill="#9198A6" font-size="10">tank += gas[j] − cost[j], all n stops</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">tank went negative?</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">yes → discard i, try i+1</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n²) — every one of the n starts re-walks up to n stations from scratch.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Bars show <code>gas[i] − cost[i]</code> (the
+    net gas gained or lost at each station) for a small 5-station example — the same values
+    verified above.</p>
+  <div class="legend">
+    <span><i class="lg-active"></i> station being tried as the start</span>
+    <span><i class="lg-pointer"></i> station reached this lap</span>
+    <span><i class="lg-swap"></i> tank went negative here — start fails</span>
+    <span><i class="lg-sorted"></i> full lap completed — this is the answer</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function canCompleteCircuitBrute(gas, cost) {
+  const n = gas.length;
+  for (let start = 0; start < n; start++) {
+    let tank = 0;
+    let ok = true;
+    for (let step = 0; step < n; step++) {
+      const i = (start + step) % n;
+      tank += gas[i] - cost[i];
+      if (tank < 0) { ok = false; break; }
+    }
+    if (ok) return start;
+  }
+  return -1;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The outer loop tries every station as a candidate start — <code>n</code> candidates.</li>
+    <li><code>(start + step) % n</code> walks the route circularly: once <code>step</code> pushes
+      past the last station, the index wraps back to <code>0</code>.</li>
+    <li><code>tank += gas[i] - cost[i]</code> is the net change in fuel at each stop — arrive with
+      <code>gas[i]</code> more, leave with <code>cost[i]</code> less to reach the next station.</li>
+    <li>The moment <code>tank &lt; 0</code>, this candidate is provably impossible and the inner
+      loop bails immediately — but the work already done simulating up to that point is thrown
+      away and redone (possibly overlapping) for the next candidate.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n²)</td><td>O(1)</td><td>Simulate the full lap from every candidate start</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — one greedy pass, no restarting</h2>
+  <p>Key insight: if the tank goes negative trying to reach station <code>i</code> from candidate
+    start <code>s</code>, then <em>no</em> station between <code>s</code> and <code>i</code> can be
+    the answer either — starting anywhere in that range only means arriving at <code>i</code> with
+    an equal or smaller running tank, since every station from <code>s</code> up to that point
+    contributed a non-negative running total up until it broke. So the moment the tank dips below
+    zero, immediately move the candidate start to <code>i + 1</code> and reset the tank to
+    <code>0</code> — never re-walk the discarded range. One separate running total across the
+    entire circuit answers the yes/no feasibility question: if the total net gas is negative, no
+    start can ever work, full stop.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the greedy one-pass solution: walk the route once tracking a running tank and a running total, and whenever the tank goes negative, reset the candidate start to the next station and zero the tank, since the whole discarded range is provably invalid.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one linear pass, reset the candidate on failure, never look back</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">walk once, i = 0..n-1</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">tank += diff, total += diff</text>
+      <rect x="230" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="330" y="82" fill="#282C34">tank &lt; 0?</text>
+      <text x="330" y="98" fill="#282C34" font-size="10">reset start = i+1, tank = 0</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">total ≥ 0 → start</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">total &lt; 0 → -1</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="430" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every station is visited exactly once, no re-walking.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same 5-station example, same net values — watch
+    how few steps the greedy pass needs compared to Solution 1 above.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> station just processed</span>
+    <span><i class="lg-active"></i> stations since the current candidate start</span>
+    <span><i class="lg-swap"></i> candidate start just discarded (tank went negative)</span>
+    <span><i class="lg-sorted"></i> the winning start's full loop</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function canCompleteCircuitOptimal(gas, cost) {
+  const n = gas.length;
+  let total = 0;
+  let tank = 0;
+  let start = 0;
+
+  for (let i = 0; i < n; i++) {
+    const diff = gas[i] - cost[i];
+    total += diff;
+    tank += diff;
+    if (tank < 0) {
+      start = i + 1;
+      tank = 0;
+    }
+  }
+
+  return total >= 0 ? start : -1;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>total</code> accumulates the net gas across the ENTIRE circuit, regardless of any
+      resets — it answers "does a valid start exist at all?"</li>
+    <li><code>tank</code> accumulates the net gas since the current candidate <code>start</code>
+      only — it answers "does THIS candidate survive?"</li>
+    <li><code>if (tank &lt; 0)</code> — the candidate just failed. <code>start = i + 1</code> and
+      <code>tank = 0</code> throw away the whole failed range in O(1), never revisiting it.</li>
+    <li><code>total &gt;= 0 ? start : -1</code> — if the whole circuit's net gas is negative, no
+      start could ever work, so return <code>-1</code> regardless of what <code>start</code> holds.
+      Otherwise, the last <code>start</code> the loop settled on is guaranteed correct.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Single greedy pass, reset candidate on failure</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (simulate every start)</td><td>O(n²)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (greedy single pass)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic improvement, not just a constant-factor speedup — brute force
+    re-walks the route from scratch for every candidate (up to n stations, n times), while the
+    greedy pass touches each station exactly once, total, across the whole run.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it safe to skip every station between the failed start and the
+        failure point, instead of trying them one at a time?</p>
+      <ul class="pb-ia">
+        <li>Say the tank goes negative trying to reach station <code>i</code> starting from
+          <code>s</code>.</li>
+        <li>For any candidate <code>s'</code> strictly between <code>s</code> and <code>i</code>,
+          the tank arriving at <code>i</code> starting from <code>s'</code> can be at best equal to
+          starting from <code>s</code> — every station from <code>s</code> up to <code>s'</code>
+          contributed a non-negative running sum (otherwise the failure would've happened earlier).</li>
+        <li>Dropping that non-negative prefix only removes fuel that was helping, so
+          <code>s'</code> fails at <code>i</code> too, or fails even earlier. Either way it's never
+          the answer — safe to skip straight to <code>i + 1</code>.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does checking only <code>total &gt;= 0</code> at the very end correctly
+        decide feasibility, when <code>tank</code> was reset to 0 possibly several times along
+        the way?</p>
+      <ul class="pb-ia">
+        <li><code>total</code> never resets — it's the sum of every <code>gas[i] - cost[i]</code>
+          across the whole circuit, independent of which candidate is currently active.</li>
+        <li>If <code>total &lt; 0</code>, the circuit can never be completed from any start,
+          period — there simply isn't enough total gas for the total cost, so no
+          <code>tank</code> could ever stay non-negative for a full lap.</li>
+        <li>If <code>total &gt;= 0</code>, the problem's own guarantee (a solution is unique when
+          one exists) plus the elimination argument above means the last surviving
+          <code>start</code> is exactly that solution.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if you didn't have that uniqueness
+        guarantee?" The same <code>total &gt;= 0</code> logic still proves at least one valid
+        start exists; you'd just need to double-check that the specific returned <code>start</code>
+        is one of them by re-simulating once, an extra O(n) pass.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How is this the same shape as Kadane's algorithm (maximum subarray)?</p>
+      <ul class="pb-ia">
+        <li>Kadane's also tracks a running sum that resets to <code>0</code> the moment it goes
+          negative, because a negative-sum prefix can never help a future subarray sum.</li>
+        <li>Here, <code>tank</code> resets the moment it goes negative for the exact same reason —
+          a failing prefix can never help a future candidate start succeed.</li>
+        <li>The circular <code>(i + 1) % n</code> wraparound and the separate <code>total</code>
+          feasibility check are the only real differences from a plain Kadane's scan.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const stations = ['A', 'B', 'C', 'D', 'E'];
+const n = stations.length;
+const i = 0;
+console.log(stations[(i - 1) % n]);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>undefined</code>, not <code>'E'</code>.</li>
+        <li>JavaScript's <code>%</code> is a remainder operator, not a true mathematical modulo —
+          it keeps the sign of the dividend. <code>(0 - 1) % 5</code> is <code>-1</code>, not
+          <code>4</code>.</li>
+        <li><code>stations[-1]</code> isn't the last element (there's no Python-style negative
+          indexing) — it's simply <code>undefined</code>.</li>
+        <li>The fix is <code>((i - 1) + n) % n</code>, which is always non-negative.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this problem's own <code>(i + 1) % n</code> forward wraparound
+        never hits this bug because <code>i + 1</code> is never negative — but the instant a
+        variant of this problem asks you to look backward (previous station, previous index), this
+        exact off-by-sign bug is waiting.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="elimination" data-explain="If the tank goes negative reaching station i from start s, every station strictly between s and i arrived with a non-negative running contribution — dropping that non-negative prefix can only hurt, never help, a later candidate. So none of them can be the answer either, and it's safe to jump straight to i + 1." >
+    <p class="q-text">1. Why does the greedy solution jump the candidate start all the way to <code>i + 1</code> the moment the tank goes negative, instead of just trying <code>s + 1</code> next?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="elimination">Every station between s and i is provably eliminated too — none of them can reach i without also going negative</button>
+      <button class="btn dsa-quiz-option" data-value="speed">It's purely a speed shortcut with no correctness guarantee — it just usually happens to work</button>
+      <button class="btn dsa-quiz-option" data-value="random">The choice of i + 1 vs s + 1 doesn't affect correctness, only which valid answer gets returned</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="wholecircuit" data-explain="total accumulates gas[i] - cost[i] across the ENTIRE circuit and never resets, unlike tank. If the whole circuit doesn't have enough net gas, no starting point could ever complete it — that's a fact about the whole route, not about any one candidate." >
+    <p class="q-text">2. What does the separate <code>total</code> variable track that <code>tank</code> alone couldn't tell you?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="wholecircuit">Whether the whole circuit has enough net gas at all — a fact independent of which candidate start is currently active</button>
+      <button class="btn dsa-quiz-option" data-value="duplicate">Nothing — total and tank always hold the exact same value throughout the loop</button>
+      <button class="btn dsa-quiz-option" data-value="index">The index of the very first station that ever failed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="cantsolve" data-explain="If the sum of every gas[i] - cost[i] across the whole circuit is negative, there is strictly less total gas than total cost to make one full loop — no starting point, however cleverly chosen, changes that total. It's mathematically unsolvable." >
+    <p class="q-text">3. Why does <code>total &lt; 0</code> guarantee <code>-1</code> is correct, no matter which station you start from?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cantsolve">Total net gas across the whole circuit is negative, so no starting point can ever complete a full lap</button>
+      <button class="btn dsa-quiz-option" data-value="needsimulate">It doesn't guarantee that — you'd still need to brute-force check every start to be sure</button>
+      <button class="btn dsa-quiz-option" data-value="onlyfirst">It only rules out starting at station 0, not the other stations</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="quadratic" data-explain="Brute force re-simulates a full lap (up to n stations) for every one of the n candidate starts — that's n candidates times up to n stations each, O(n²). The greedy pass touches every station exactly once total, across the whole run, O(n)." >
+    <p class="q-text">4. Why is brute force O(n²) while the greedy pass is O(n), given both eventually look at every station?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="quadratic">Brute force re-walks up to n stations for each of the n candidate starts; greedy visits every station exactly once, total</button>
+      <button class="btn dsa-quiz-option" data-value="samecost">They're actually the same complexity — O(n) for both</button>
+      <button class="btn dsa-quiz-option" data-value="spacecost">The difference is about space, not time — both are O(n) time</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="kadane" data-explain="Both reset a running sum to a fresh baseline the instant it goes negative, because a negative-sum prefix can only drag down (never help) whatever comes after it. The circular wraparound and the separate whole-circuit feasibility check are what's unique to Gas Station." >
+    <p class="q-text">5. Which other well-known pattern does the "reset the running tank to 0 the moment it goes negative" trick mirror?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="kadane">Kadane's algorithm for maximum subarray sum</button>
+      <button class="btn dsa-quiz-option" data-value="binarysearch">Binary search over a sorted array</button>
+      <button class="btn dsa-quiz-option" data-value="dijkstra">Dijkstra's shortest-path algorithm</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'gas-station';
+
+  // Shared 5-station example for both animations — verified against the brute-force
+  // and optimal functions via `node -e` before this page was written.
+  const DEMO_GAS = [1, 2, 3, 4, 5];
+  const DEMO_COST = [3, 4, 5, 1, 2];
+
+  // ---- Solution 1: brute force — simulate the full lap from every candidate start ----
+  function buildGasBruteSteps(gas, cost) {
+    const n = gas.length;
+    const net = gas.map((g, i) => g - cost[i]);
+    const steps = [];
+    function snapshot(narration, states) {
+      steps.push({ narration, values: net.slice(), states: states.slice() });
+    }
+    const baseStates = new Array(n).fill('default');
+    snapshot(`Net gas per station (gas[i] − cost[i]): [${net.join(', ')}]. Try every possible starting station.`, baseStates);
+
+    for (let start = 0; start < n; start++) {
+      const tryStates = baseStates.slice();
+      tryStates[start] = 'active';
+      snapshot(`Try starting at station ${start} (net ${net[start] >= 0 ? '+' : ''}${net[start]}).`, tryStates);
+      let tank = 0;
+      let failed = false;
+      for (let step = 0; step < n; step++) {
+        const i = (start + step) % n;
+        tank += net[i];
+        const stepStates = baseStates.slice();
+        for (let k = 0; k <= step; k++) {
+          const idx = (start + k) % n;
+          stepStates[idx] = tank < 0 && k === step ? 'swap' : 'pointer';
+        }
+        if (tank < 0) {
+          snapshot(`Station ${i}: tank = ${tank} — negative! Start ${start} fails, the tank can never go negative mid-route.`, stepStates);
+          failed = true;
+          break;
+        } else {
+          snapshot(`Station ${i}: tank = ${tank}. Still non-negative, keep going.`, stepStates);
+        }
+      }
+      if (!failed) {
+        const doneStates = baseStates.slice();
+        for (let k = 0; k < n; k++) doneStates[(start + k) % n] = 'sorted';
+        snapshot(`Completed the full lap from station ${start} without the tank ever going negative! Answer: ${start}.`, doneStates);
+        return steps;
+      }
+    }
+    snapshot('No starting station completes the full lap — return -1.', baseStates);
+    return steps;
+  }
+
+  // ---- Solution 2: optimal — one greedy pass, reset candidate on failure ----
+  function buildGasOptimalSteps(gas, cost) {
+    const n = gas.length;
+    const net = gas.map((g, i) => g - cost[i]);
+    const steps = [];
+    function snapshot(narration, states) {
+      steps.push({ narration, values: net.slice(), states: states.slice() });
+    }
+    const baseStates = new Array(n).fill('default');
+    snapshot(`Net gas per station (gas[i] − cost[i]): [${net.join(', ')}]. One linear pass: track a running tank (since the candidate start) and a running total (whole circuit).`, baseStates);
+
+    let total = 0, tank = 0, start = 0;
+    for (let i = 0; i < n; i++) {
+      const diff = net[i];
+      total += diff;
+      tank += diff;
+      const computeStates = baseStates.slice();
+      for (let k = start; k < i; k++) computeStates[k] = 'active';
+      computeStates[i] = 'pointer';
+      snapshot(`Station ${i}: diff ${diff >= 0 ? '+' : ''}${diff} → tank = ${tank}, total = ${total}.`, computeStates);
+
+      if (tank < 0) {
+        const failStates = baseStates.slice();
+        for (let k = start; k <= i; k++) failStates[k] = 'swap';
+        snapshot(`tank < 0 — no station from ${start} to ${i} can be the start. Reset: candidate start = station ${i + 1}, tank = 0.`, failStates);
+        start = i + 1;
+        tank = 0;
+      } else {
+        const okStates = baseStates.slice();
+        for (let k = start; k <= i; k++) okStates[k] = 'active';
+        snapshot(`tank ≥ 0 — candidate start stays at station ${start}.`, okStates);
+      }
+    }
+    const finalStates = baseStates.slice();
+    const result = total >= 0 ? start : -1;
+    if (result >= 0) for (let k = 0; k < n; k++) finalStates[(result + k) % n] = 'sorted';
+    snapshot(`Total over the whole circuit = ${total} ${total >= 0 ? '≥' : '<'} 0, so a valid start ${total >= 0 ? 'exists' : "doesn't exist"}. Answer: ${result}.`, finalStates);
+    return steps;
+  }
+
+  const NET_MIN = Math.min.apply(null, DEMO_GAS.map((g, i) => g - DEMO_COST[i]));
+  const NET_MAX = Math.max.apply(null, DEMO_GAS.map((g, i) => g - DEMO_COST[i]));
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: NET_MIN, max: NET_MAX });
+  const steps1 = buildGasBruteSteps(DEMO_GAS, DEMO_COST);
+  bars1.setData(steps1[0].values);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.paint({}, steps1[0].values); return; }
+      bars1.paint(step.states, step.values);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: NET_MIN, max: NET_MAX });
+  const steps2 = buildGasOptimalSteps(DEMO_GAS, DEMO_COST);
+  bars2.setData(steps2[0].values);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.paint({}, steps2[0].values); return; }
+      bars2.paint(step.states, step.values);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('gas-station', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
