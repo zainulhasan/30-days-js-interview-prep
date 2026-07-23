@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Merge Triplets to Form Target Triplet — Problem Bank</title>
+<meta name="description" content="Merge Triplets to Form Target Triplet: a brute-force simulation of real merges vs. an optimal O(n) greedy scan that needs no merging at all, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/merge-triplets-to-form-target-triplet.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Merge Triplets to Form Target Triplet — Problem Bank" />
+<meta property="og:description" content="Merge Triplets to Form Target Triplet: a brute-force simulation of real merges vs. an optimal O(n) greedy scan that needs no merging at all, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/merge-triplets-to-form-target-triplet.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Merge Triplets to Form Target Triplet — Problem Bank" />
+<meta name="twitter:description" content="Merge Triplets to Form Target Triplet: a brute-force simulation of real merges vs. an optimal O(n) greedy scan that needs no merging at all, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Merge Triplets to Form Target Triplet", "item": "https://dsa.itszain.tech/problem-bank/merge-triplets-to-form-target-triplet.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      this problem is a clean example of a greedy scan that needs no sorting and no backtracking;
+      read that lesson first if "prove the local choice is always safe" is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Merge Triplets to Form Target Triplet <span class="leetcode-link">(<a href="https://leetcode.com/problems/merge-triplets-to-form-target-triplet/" target="_blank" rel="noopener">LeetCode: Merge Triplets to Form Target Triplet</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>A triplet is just an array of 3 integers, <code>[a, b, c]</code>. You're given a list of
+    triplets and a <code>target</code> triplet. The only operation you're allowed is: pick any two
+    triplets <code>i</code> and <code>j</code>, and overwrite <code>triplets[j]</code> with the
+    coordinate-wise maximum of the two — <code>[max(a_i, a_j), max(b_i, b_j), max(c_i, c_j)]</code>.
+    You can do this any number of times, on any pair, in any order. Return <code>true</code> if
+    some sequence of these merges can turn one of the triplets into exactly <code>target</code>.</p>
+  <p>The trap is that this reads like a search problem — "try combinations of merges until one
+    works" — when it's actually a single-pass filtering problem in disguise.</p>
+
+  <h2>Solution 1: Brute force — actually simulate the merges</h2>
+  <p>Take the operation literally: merge every pair of currently-known triplets, keep any result
+    that's new, and repeat until a full round produces nothing new (a fixed point) or
+    <code>target</code> shows up. This is honest and correct — it explores every triplet reachable
+    by some sequence of merges — but it does real work for something that turns out not to need
+    any merging at all.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: merge every pair of known triplets, collect any new results into the known set, and repeat the whole process until a round produces nothing new or the target appears.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: actually merge every pair, repeat until stable</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">merge every pair</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">i, j in known set</text>
+      <rect x="230" y="60" width="170" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">keep new results</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">grow known set</text>
+      <rect x="440" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">repeat / check target</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">until fixed point</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-mt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-mt)">
+      <line x1="190" y1="83" x2="228" y2="83"/>
+      <line x1="400" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup2;) pairs per round, repeated until nothing new appears — the known set can grow every round.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> pair being merged this step</span>
+    <span><i class="lg-pointer"></i> newly discovered triplet</span>
+    <span><i class="lg-sorted"></i> matches target</span>
+    <span><i class="lg-active"></i> target (reference row)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function mergeTripletsBruteForce(triplets, target) {
+  let known = triplets.map((t) => t.slice());
+
+  const has = (t) => known.some((k) => k[0] === t[0] && k[1] === t[1] && k[2] === t[2]);
+  if (has(target)) return true;
+
+  let progress = true;
+  while (progress) {
+    progress = false;
+    const n = known.length;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const merged = [
+          Math.max(known[i][0], known[j][0]),
+          Math.max(known[i][1], known[j][1]),
+          Math.max(known[i][2], known[j][2]),
+        ];
+        if (!has(merged)) {
+          known.push(merged);
+          progress = true;
+          if (has(target)) return true;
+        }
+      }
+    }
+  }
+  return has(target);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>known</code> starts as a copy of the input and only ever grows — a triplet, once
+      discovered as reachable, is never thrown away, since the real operation lets you choose
+      freely which pair to merge next.</li>
+    <li><code>i &lt; j</code> (not all ordered pairs) is enough — merging <code>i</code> into
+      <code>j</code> and <code>j</code> into <code>i</code> produce the same coordinate-wise max,
+      so trying both directions would be redundant work.</li>
+    <li><code>const n = known.length</code> is captured once per round, so triplets discovered
+      mid-round get merged against each other on the <em>next</em> round, not this one — that's
+      what makes "round" a meaningful, countable unit of work.</li>
+    <li><code>progress</code> tracks whether a round added anything; when a full round adds
+      nothing new, the known set has stabilized and no further merge can ever produce
+      <code>target</code>.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup2;) per round &times; rounds until fixed point</td><td>O(n&sup2;) worst case (growing known set)</td><td>Literal merge simulation, BFS over reachable triplets</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — greedy check, no merging needed</h2>
+  <p>The key insight: merging only ever takes a coordinate-wise <em>maximum</em>, so merging never
+    makes any coordinate smaller. That means a triplet that already has a coordinate exceeding
+    <code>target</code> can never be merged into anything useful — including it in any merge chain
+    would carry that overshoot forward forever. So the only triplets worth looking at are the
+    "usable" ones: <code>a &le; x &amp;&amp; b &le; y &amp;&amp; c &le; z</code>. Among those, just
+    track which of <code>target</code>'s 3 coordinates get hit exactly by <em>some</em> usable
+    triplet. If all 3 get hit, merging all the triplets that hit them (in one shot) produces
+    exactly <code>target</code> — no actual merge operation needs to be simulated to know that.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: for each triplet, check whether all 3 coordinates fit within target - if any coordinate overshoots, discard it, otherwise mark any target coordinates it matches exactly as achieved. After checking every triplet, return true only if all 3 coordinates were achieved.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: filter usable triplets, track achieved coordinates</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="105" y="82" fill="#282C34">usable? a&le;x, b&le;y, c&le;z</text>
+      <text x="105" y="98" fill="#282C34" font-size="10">else discard, no merging</text>
+      <rect x="230" y="60" width="170" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">mark exact matches</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">achieved.add(coord)</text>
+      <rect x="440" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">achieved.size === 3?</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">one linear pass</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-mt2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-mt2)">
+      <line x1="190" y1="83" x2="228" y2="83"/>
+      <line x1="400" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every triplet is looked at exactly once, no merge operation ever actually runs.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> checking this triplet</span>
+    <span><i class="lg-swap"></i> discarded — overshoots target</span>
+    <span><i class="lg-pointer"></i> usable — kept</span>
+    <span><i class="lg-sorted"></i> target coordinate achieved</span>
+    <span><i class="lg-active"></i> target coordinate not yet achieved</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function mergeTripletsOptimal(triplets, target) {
+  const [x, y, z] = target;
+  const achieved = new Set();
+
+  for (const [a, b, c] of triplets) {
+    if (a <= x && b <= y && c <= z) {
+      if (a === x) achieved.add('x');
+      if (b === y) achieved.add('y');
+      if (c === z) achieved.add('z');
+    }
+  }
+
+  return achieved.size === 3;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>a &lt;= x &amp;&amp; b &lt;= y &amp;&amp; c &lt;= z</code> is the usability gate —
+      all three coordinates must fit, since a triplet is atomic: you can't merge in just its good
+      coordinates and leave the bad one behind.</li>
+    <li>The three <code>if</code> checks after the gate use strict equality
+      (<code>=== </code>, not <code>&lt;=</code>) — a coordinate is only "achieved" once some
+      usable triplet hits it exactly, since <code>max</code> of several values below
+      <code>target</code> would still be below <code>target</code>, never equal to it.</li>
+    <li><code>achieved</code> is a <code>Set</code> of at most 3 possible members
+      (<code>'x'</code>, <code>'y'</code>, <code>'z'</code>) — it doesn't matter which triplets
+      contribute which coordinate, or in what order they're checked, only that all 3 end up
+      covered by <em>some</em> usable triplet.</li>
+    <li><code>achieved.size === 3</code> is the only thing that matters at the end — no merge is
+      ever actually performed, because merging all the contributing usable triplets together is
+      guaranteed to reproduce <code>target</code> exactly.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Single linear pass, greedy filter + achieved-coordinate tracking</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (simulate real merges)</td><td>O(n&sup2;) per round &times; rounds until fixed point</td><td>O(n&sup2;) worst case</td></tr>
+      <tr><td>Optimal (greedy filter + achieved set)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why doesn't the optimal solution need to perform any actual merge
+        operation?</p>
+      <ul class="pb-ia">
+        <li>The only operation available is coordinate-wise <code>max</code>, which never
+          decreases a value.</li>
+        <li>A triplet that already overshoots <code>target</code> on some coordinate stays
+          overshooting forever — merging it into anything only carries that overshoot along.</li>
+        <li>So a triplet's <em>own</em> coordinates, unmerged, already tell you everything you
+          need: is it safe to use, and which target coordinates does it already hit exactly.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why must all 3 coordinates of a triplet fit under target, instead of
+        checking each coordinate independently across different triplets?</p>
+      <ul class="pb-ia">
+        <li>A triplet is atomic — merging it in applies <code>max</code> to all 3 of its
+          coordinates simultaneously, you can't take only the "good" ones.</li>
+        <li>Example: <code>[2, 9, 3]</code> against target <code>[5, 7, 5]</code> — its
+          <code>a</code> and <code>c</code> look fine, but <code>b = 9 &gt; 7</code> poisons the
+          whole triplet for use, no matter how good the other two coordinates are.</li>
+        <li>That's exactly why the code checks all three conditions together before it ever looks
+          at individual coordinate matches.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Could two different usable triplets that each achieve different
+        coordinates actually be merged together to reach target, or is that just assumed?</p>
+      <ul class="pb-ia">
+        <li>It's guaranteed, not assumed — every usable triplet has all 3 coordinates &le; the
+          corresponding target coordinate.</li>
+        <li>Merging any set of usable triplets takes the coordinate-wise max across all of them,
+          which can never exceed target on any coordinate (since none of the inputs do).</li>
+        <li>If every target coordinate is hit exactly by at least one triplet in that set, the max
+          on that coordinate is exactly <code>target</code>'s value — so the merged result equals
+          target on all 3 coordinates simultaneously.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Do you need to know which specific triplets to
+        merge?" No — for a yes/no reachability answer, only the count of achieved coordinates
+        matters. (To actually construct the merge sequence, you'd separately track one
+        contributing triplet per coordinate.)</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const triplets = [[2, 5, 3], [1, 8, 4]];
+const target = [2, 5, 3];
+console.log(triplets.includes(target));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>false</code> — even though <code>[2, 5, 3]</code> is right there as
+          <code>triplets[0]</code>.</li>
+        <li><code>Array.prototype.includes</code> compares with <code>===</code>, and two
+          different array literals with identical contents are never <code>===</code> equal —
+          they're different objects in memory.</li>
+        <li><code>triplets.includes(target)</code> would only return <code>true</code> if
+          <code>target</code> were the exact same array reference already inside
+          <code>triplets</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why both solutions above compare triplets
+        coordinate-by-coordinate (<code>k[0] === t[0] &amp;&amp; k[1] === t[1] &amp;&amp; k[2]
+        === t[2]</code>, or per-coordinate <code>=== </code> checks) instead of leaning on
+        <code>.includes()</code> or <code>===</code> on the arrays themselves.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="nodecrease" data-explain="The merge operation only ever takes a coordinate-wise maximum, which can never make a value smaller. So a triplet that already overshoots target on some coordinate will overshoot on that coordinate forever, no matter what it gets merged with — it can never contribute to reaching target." >
+    <p class="q-text">1. Why is a triplet with any coordinate greater than target's corresponding coordinate permanently unusable?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nodecrease">Merging only takes a max, which never decreases a value — an overshoot can never be undone by a later merge</button>
+      <button class="btn dsa-quiz-option" data-value="toobig">Triplets with large values are always processed last, so they get skipped by convention</button>
+      <button class="btn dsa-quiz-option" data-value="random">It's an arbitrary rule with no connection to how the merge operation actually works</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="atomic" data-explain="A triplet's 3 coordinates are merged together as a unit — max is applied to all of them at once. You can't selectively bring in only the coordinates that happen to fit; a single overshooting coordinate disqualifies the whole triplet from ever being merged in." >
+    <p class="q-text">2. Why does usability require ALL 3 coordinates to fit under target, rather than checking each coordinate across triplets independently?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="atomic">A triplet is merged in as a whole — you can't take only its safe coordinates and leave the unsafe one out</button>
+      <button class="btn dsa-quiz-option" data-value="fastest">Checking all 3 together is just faster to type, not logically necessary</button>
+      <button class="btn dsa-quiz-option" data-value="onematters">Only the first coordinate actually matters for correctness</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="strictequal" data-explain="max() of several values that are all strictly below target's coordinate will still be strictly below it, never equal. So the only way a coordinate can end up exactly matching target after merging is if at least one contributing triplet already equals target on that coordinate before any merge happens." >
+    <p class="q-text">3. Why does marking a coordinate "achieved" require an exact match (===), not just <=?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="strictequal">max() of values all below target's coordinate stays below it — only an exact match can ever reach target exactly on that coordinate</button>
+      <button class="btn dsa-quiz-option" data-value="stylechoice">It's just a stylistic preference; <= would work identically</button>
+      <button class="btn dsa-quiz-option" data-value="performance">Exact match is only used to make the loop run faster</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="anysubset" data-explain="It doesn't matter which usable triplets end up contributing which coordinate, or what order they're checked in — the moment all 3 coordinates have SOME usable triplet matching them exactly, merging that whole subset together is guaranteed to produce target exactly, since usable triplets never exceed target on any coordinate." >
+    <p class="q-text">4. Why is it enough to just count which coordinates get achieved, without tracking which specific triplets are merged together?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="anysubset">Merging any subset of usable, coordinate-matching triplets together reproduces target exactly — the specific combination doesn't change the outcome</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It happens to work on the LeetCode examples but isn't actually guaranteed in general</button>
+      <button class="btn dsa-quiz-option" data-value="onetriplet">Only a single triplet can ever be usable at a time, so there's nothing to track</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="ntime" data-explain="Brute force actually performs merges — each round costs O(n²) to try every pair, and the known set can keep growing round after round before it stabilizes. The optimal solution looks at each triplet exactly once and never performs a merge, giving O(n) time and O(1) extra space." >
+    <p class="q-text">5. What's the practical time cost difference between the two solutions, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="ntime">Brute force costs O(n²) per round across possibly many rounds; optimal is a single O(n) pass with no merges performed</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're identical — both are O(n) since they check the same triplets</button>
+      <button class="btn dsa-quiz-option" data-value="reversed">Brute force is O(n) and optimal is O(n²), because tracking achieved coordinates requires nested loops</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'merge-triplets-to-form-target-triplet';
+
+  // ---- Solution 1: brute force — actually simulate merges (DSA.Grid: rows = known triplets, last row = target) ----
+  function buildBruteSteps(triplets, target) {
+    const steps = [];
+    const CANDIDATE_ROWS = 6; // fixed grid capacity for the worked example (3 given + headroom for derived triplets)
+    const TARGET_ROW = CANDIDATE_ROWS;
+    let known = triplets.map((t) => t.slice());
+
+    function baseStates() {
+      const s = {};
+      s[TARGET_ROW + ',0'] = 'active'; s[TARGET_ROW + ',1'] = 'active'; s[TARGET_ROW + ',2'] = 'active';
+      return s;
+    }
+    function snapshot(narration, extraStates) {
+      const values = [];
+      for (let r = 0; r < CANDIDATE_ROWS; r++) values.push(known[r] ? known[r].slice() : ['', '', '']);
+      values.push(target.slice());
+      steps.push({ narration, values, states: Object.assign(baseStates(), extraStates || {}) });
+    }
+
+    const has = (t) => known.some((k) => k[0] === t[0] && k[1] === t[1] && k[2] === t[2]);
+
+    snapshot(`Start: ${known.length} given triplets (rows 0-${known.length - 1}), target in the bottom row. Naive idea: actually perform merges and see what we can reach.`);
+
+    if (has(target)) {
+      snapshot('Target is already present among the given triplets.');
+      return steps;
+    }
+
+    let progress = true;
+    let round = 0;
+    while (progress) {
+      progress = false;
+      round++;
+      const n = known.length;
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const merged = [Math.max(known[i][0], known[j][0]), Math.max(known[i][1], known[j][1]), Math.max(known[i][2], known[j][2])];
+          const cmp = {};
+          cmp[i + ',0'] = 'compare'; cmp[i + ',1'] = 'compare'; cmp[i + ',2'] = 'compare';
+          cmp[j + ',0'] = 'compare'; cmp[j + ',1'] = 'compare'; cmp[j + ',2'] = 'compare';
+          if (!has(merged)) {
+            known.push(merged);
+            progress = true;
+            const newIdx = known.length - 1;
+            const found = merged[0] === target[0] && merged[1] === target[1] && merged[2] === target[2];
+            const rowState = found ? 'sorted' : 'pointer';
+            cmp[newIdx + ',0'] = rowState; cmp[newIdx + ',1'] = rowState; cmp[newIdx + ',2'] = rowState;
+            snapshot(`Round ${round}: merge row ${i} and row ${j} → [${merged.join(', ')}] — new, store it in row ${newIdx}.`, cmp);
+            if (found) {
+              snapshot(`Row ${newIdx} now matches the target — reachable via real merges. Return true.`, cmp);
+              return steps;
+            }
+          } else {
+            snapshot(`Round ${round}: merge row ${i} and row ${j} → [${merged.join(', ')}] — already known, nothing new.`, cmp);
+          }
+        }
+      }
+    }
+    snapshot('A full round produced no new triplets — fixed point reached, target never appeared. Return false.');
+    return steps;
+  }
+
+  const grid1 = new DSA.Grid(document.getElementById('viz1Stage'));
+  grid1.setData(7, 3, ['0', '1', '2', '3', '4', '5', 'target'], ['a', 'b', 'c']);
+  const bruteSteps = buildBruteSteps([[2, 5, 3], [1, 8, 4], [1, 7, 5]], [2, 7, 5]);
+  const bruteplayer = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1200,
+    onStep(step) {
+      if (!step) { grid1.paint(Array.from({ length: 7 }, () => ['', '', ''])); return; }
+      grid1.paint(step.values, step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal — greedy filter + achieved-coordinate tracking (DSA.Grid) ----
+  function buildOptimalSteps(triplets, target) {
+    const steps = [];
+    const n = triplets.length;
+    const TARGET_ROW = n;
+    const [x, y, z] = target;
+    const achieved = new Set();
+    const rowState = new Array(n).fill('default');
+
+    function snapshot(narration, curRow, curCellState) {
+      const values = triplets.map((t) => t.slice());
+      values.push(target.slice());
+      const states = {};
+      for (let r = 0; r < n; r++) {
+        const st = r === curRow ? (curCellState || 'compare') : rowState[r];
+        states[r + ',0'] = st; states[r + ',1'] = st; states[r + ',2'] = st;
+      }
+      ['x', 'y', 'z'].forEach((k, ci) => {
+        states[TARGET_ROW + ',' + ci] = achieved.has(k) ? 'sorted' : 'active';
+      });
+      steps.push({ narration, values, states });
+    }
+
+    snapshot(`Start: target [${x}, ${y}, ${z}] in the bottom row. No coordinate achieved yet. Check each triplet once, in order.`, -1);
+
+    for (let r = 0; r < n; r++) {
+      const [a, b, c] = triplets[r];
+      snapshot(`Row ${r}: [${a}, ${b}, ${c}] — checking if it's usable (no coordinate may exceed target).`, r, 'compare');
+
+      const usable = a <= x && b <= y && c <= z;
+      if (!usable) {
+        rowState[r] = 'swap';
+        snapshot(`Row ${r}: [${a}, ${b}, ${c}] overshoots target on at least one coordinate — discard, it can never be part of a valid merge chain.`, r, 'swap');
+        continue;
+      }
+      rowState[r] = 'pointer';
+      const before = new Set(achieved);
+      if (a === x) achieved.add('x');
+      if (b === y) achieved.add('y');
+      if (c === z) achieved.add('z');
+      const newly = Array.from(achieved).filter((k) => !before.has(k));
+      const msg = newly.length
+        ? `Row ${r}: [${a}, ${b}, ${c}] is usable and matches target on ${newly.join(', ')} — mark achieved.`
+        : `Row ${r}: [${a}, ${b}, ${c}] is usable but matches no new coordinate exactly.`;
+      snapshot(msg, r, 'pointer');
+    }
+
+    const result = achieved.size === 3;
+    snapshot(`Done — achieved coordinates: {${Array.from(achieved).join(', ')}}. ${result ? 'All 3 achieved — return true.' : 'Not all 3 achieved — return false.'}`, -1);
+    return steps;
+  }
+
+  const grid2 = new DSA.Grid(document.getElementById('viz2Stage'));
+  grid2.setData(4, 3, ['0', '1', '2', 'target'], ['a', 'b', 'c']);
+  const optimalSteps = buildOptimalSteps([[2, 5, 3], [1, 8, 4], [1, 7, 5]], [2, 7, 5]);
+  const optimalPlayer = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1000,
+    onStep(step) {
+      if (!step) { grid2.paint(Array.from({ length: 4 }, () => ['', '', ''])); return; }
+      grid2.paint(step.values, step.states);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('merge-triplets-to-form-target-triplet', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
