@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Permutations — Problem Bank</title>
+<meta name="description" content="Permutations: generating all orderings of an array via a brute-force O(n² · n!) slice-and-concat approach vs. an optimal O(n · n!) in-place swap, both animated." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/permutations.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Permutations — Problem Bank" />
+<meta property="og:description" content="Permutations: generating all orderings of an array via a brute-force O(n² · n!) slice-and-concat approach vs. an optimal O(n · n!) in-place swap, both animated." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/permutations.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Permutations — Problem Bank" />
+<meta name="twitter:description" content="Permutations: generating all orderings of an array via a brute-force O(n² · n!) slice-and-concat approach vs. an optimal O(n · n!) in-place swap, both animated." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Permutations", "item": "https://dsa.itszain.tech/problem-bank/permutations.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day09.html">Day 9: Recursion &amp; the Call Stack</a></strong> —
+      both solutions below are recursive backtracking; read that lesson first if the call-stack
+      mental model is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BACKTRACKING &middot; MEDIUM</p>
+  <h1>Permutations <span class="leetcode-link">(<a href="https://leetcode.com/problems/permutations/" target="_blank" rel="noopener">LeetCode: Permutations</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given an array <code>nums</code> of distinct integers, return all possible permutations, in
+    any order.</p>
+
+  <h2>Solution 1: Brute force — remove-and-recurse (array copy each step)</h2>
+  <p>At each step, pick one element from what's left, build a NEW array with it removed (via
+    <code>slice</code> + <code>concat</code>), and recurse on that shorter array. This is simple
+    and correct, but rebuilding the "remaining" array costs O(n) at every single step of the
+    recursion.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: pick an element from what remains, build a brand new array with it removed via slice and concat, then recurse on that shorter array.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: remove an element by copying the rest — O(n) per pick</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">pick remaining[i]</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">add it to path</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">slice + concat</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">O(n) copy to remove it</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">recurse on new array</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">repeat until empty</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) extra work at every single recursion node.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces nums=[1,2] — a small
+    case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function permuteBrute(nums) {
+  const result = [];
+  function dfs(remaining, path) {
+    if (remaining.length === 0) { result.push(path.slice()); return; }
+    for (let i = 0; i < remaining.length; i++) {
+      const next = remaining.slice(0, i).concat(remaining.slice(i + 1));
+      path.push(remaining[i]);
+      dfs(next, path);
+      path.pop();
+    }
+  }
+  dfs(nums, []);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>remaining.slice(0, i).concat(remaining.slice(i + 1))</code> builds an entirely new
+      array missing index <code>i</code> — this is the O(n) cost paid at every node.</li>
+    <li>The recursion's base case (<code>remaining.length === 0</code>) is reached exactly when
+      every element has been placed into <code>path</code>.</li>
+    <li><code>path.slice()</code> is used when recording, for the same reason it matters in every
+      other backtracking problem in this batch — <code>path</code> is a shared, mutating
+      array.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n² &times; n!)</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — in-place swap</h2>
+  <p>Instead of building new arrays, swap the chosen element into position <code>k</code>
+    directly inside the original array, recurse, then swap back — O(1) per pick instead of
+    O(n).</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: swap the chosen element into position k in place, recurse on position k+1, then swap back to restore the array before trying the next element.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: swap in place — O(1) per pick</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">swap arr[k], arr[i]</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">O(1), no copy</text>
+      <rect x="220" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="310" y="82" fill="#E2E3E7">recurse on k+1</text>
+      <text x="310" y="98" fill="#9198A6" font-size="10">same array, one position over</text>
+      <rect x="420" y="60" width="200" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="520" y="82" fill="#282C34">swap back</text>
+      <text x="520" y="98" fill="#282C34" font-size="10">restore before next i</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(1) extra work per recursion node instead of O(n).</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation also traces nums=[1,2] — the
+    same small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function permuteOptimal(nums) {
+  const result = [];
+  const arr = nums.slice();
+  function dfs(k) {
+    if (k === arr.length) { result.push(arr.slice()); return; }
+    for (let i = k; i < arr.length; i++) {
+      [arr[k], arr[i]] = [arr[i], arr[k]];
+      dfs(k + 1);
+      [arr[k], arr[i]] = [arr[i], arr[k]];
+    }
+  }
+  dfs(0);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>[arr[k], arr[i]] = [arr[i], arr[k]]</code> swaps two positions with destructuring
+      assignment — no temp variable needed, no new array allocated.</li>
+    <li><code>dfs(k + 1)</code> fixes position <code>k</code> and recurses on everything after
+      it — by the time <code>k === arr.length</code>, every position has been fixed by exactly
+      one swap.</li>
+    <li>Swapping back (<code>[arr[k], arr[i]] = [arr[i], arr[k]]</code> again) after the
+      recursive call is essential — without it, the array's order would stay permanently
+      scrambled for the NEXT iteration of the loop.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n &times; n!)</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Extra space per node</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (slice+concat)</td><td>O(n² &times; n!)</td><td>O(n) array copy</td></tr>
+      <tr><td>Optimal (in-place swap)</td><td>O(n &times; n!)</td><td>O(1) swap</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Unlike Subsets, this IS a genuine asymptotic improvement — the brute-force version pays an
+    extra O(n) at every single recursion node just to remove one element, while the optimal
+    version does that in O(1) with a swap.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you extend this to handle duplicate values, like [1,1,2],
+        without duplicate permutations in the output?</p>
+      <ul class="pb-ia">
+        <li>Sort the array first.</li>
+        <li>At each recursion level, track which values have already been used at THIS specific
+          position, and skip a duplicate value if an identical earlier value at this level
+          wasn't used yet — a specific, well-known duplicate-skipping condition for permutations
+          with repeats.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the optimal solution still need <code>arr.slice()</code> when
+        recording into <code>result</code>, even though it swaps instead of slicing to build the
+        permutation?</p>
+      <ul class="pb-ia">
+        <li><code>arr</code> is still ONE shared, mutating array throughout the whole recursion,
+          exactly like every other backtracking problem in this batch.</li>
+        <li>The same reference-copy trap applies here too, just triggered by swaps instead of
+          push/pop.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What's the space complexity of each solution, beyond the O(n &middot; n!)
+        needed just to store the output?</p>
+      <ul class="pb-ia">
+        <li>Brute force — O(n) extra per recursion level for the sliced "remaining" array, times
+          O(n) recursion depth, giving O(n²) auxiliary space beyond the output.</li>
+        <li>Optimal — O(1) extra per recursion level, so only O(n) auxiliary space total, for the
+          recursion depth itself.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const nums = [10, 2, 1];
+console.log(JSON.stringify(nums.sort()));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[1,10,2]</code>, not <code>[1,2,10]</code>.</li>
+        <li><code>.sort()</code> with no comparator converts every element to a STRING and
+          compares them lexicographically (character by character).</li>
+        <li>"10" sorts before "2" because '1' comes before '2' as a character, even though 10 >
+          2 numerically.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: the correct fix is <code>nums.sort((a, b) => a - b)</code> —
+        always pass an explicit numeric comparator when sorting numbers in JavaScript, never rely
+        on the default.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="copy" data-explain="The brute-force solution rebuilds a new 'remaining' array via slice+concat at every single recursive call — an O(n) copy — multiplying the total work by an extra factor of n.">
+    <p class="q-text">1. Why does the brute-force solution have worse complexity than the optimal
+      one, even though both produce the same n! permutations?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="copy">The brute-force solution rebuilds a new 'remaining' array via slice+concat at every single recursive call — an O(n) copy — multiplying the total work by an extra factor of n</button>
+      <button class="btn dsa-quiz-option" data-value="same">It doesn't — both have identical complexity</button>
+      <button class="btn dsa-quiz-option" data-value="more">The brute-force solution visits more permutations than the optimal one</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="swaptrick" data-explain="It tries placing each remaining element at position k in-place (O(1) per swap), explores that choice fully, then undoes the swap before trying the next element.">
+    <p class="q-text">2. What does the optimal solution's swap-then-recurse-then-swap-back
+      pattern accomplish?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="swaptrick">It tries placing each remaining element at position k in-place (O(1) per swap), explores that choice fully, then undoes the swap before trying the next element</button>
+      <button class="btn dsa-quiz-option" data-value="sorts">It sorts the array before each recursive call</button>
+      <button class="btn dsa-quiz-option" data-value="dedup">It removes duplicate elements from the array</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="corrupt" data-explain="Without undoing the swap, the array's order would stay permanently scrambled for the NEXT iteration of the loop, corrupting every subsequent permutation generated from that point.">
+    <p class="q-text">3. Why is swapping back after the recursive call essential, not
+      optional?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="corrupt">Without undoing the swap, the array's order would stay permanently scrambled for the NEXT iteration of the loop, corrupting every subsequent permutation generated from that point</button>
+      <button class="btn dsa-quiz-option" data-value="notessential">It isn't essential — the algorithm works identically either way</button>
+      <button class="btn dsa-quiz-option" data-value="infinite">It's required to avoid an infinite loop</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="samesemantics" data-explain="No — it's the same swap semantics, just written differently; destructuring assignment for swapping is a syntax choice, not a different algorithm.">
+    <p class="q-text">4. Would replacing <code>[arr[k], arr[i]] = [arr[i], arr[k]]</code> with a
+      naive two-line swap using a temp variable change the result?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="samesemantics">No — it's the same swap semantics, just written differently; destructuring assignment for swapping is a syntax choice, not a different algorithm</button>
+      <button class="btn dsa-quiz-option" data-value="faster">Yes — the temp-variable version would be asymptotically faster</button>
+      <button class="btn dsa-quiz-option" data-value="fewer">Yes — the temp-variable version would visit fewer permutations</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="ntimesnfact" data-explain="Brute force is O(n² · n!) from the extra O(n) array copy per node; optimal is O(n · n!) from an O(1) swap per node.">
+    <p class="q-text">5. What's the time complexity difference between the two solutions?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="ntimesnfact">Brute force is O(n² &middot; n!) from the extra O(n) array copy per node; optimal is O(n &middot; n!) from an O(1) swap per node</button>
+      <button class="btn dsa-quiz-option" data-value="nofactordiff">Both are O(n!), with no meaningful difference</button>
+      <button class="btn dsa-quiz-option" data-value="swapped">Brute force is O(n!) and optimal is O(n² &middot; n!)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'permutations';
+
+  // ---- Solution 1: brute-force remove-and-recurse (DSA.CallStack) ----
+  function buildPermuteBruteSteps(nums) {
+    const steps = [];
+    const callStack = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(remaining, path) {
+      callStack.push(`dfs(remaining=[${remaining.join(',')}], path=[${path.join(',')}])`);
+      pushStep(`Enter dfs — remaining=[${remaining.join(',')}], path=[${path.join(',')}].`);
+      if (remaining.length === 0) {
+        pushStep(`remaining is empty — record [${path.join(',')}] as a full permutation.`);
+      } else {
+        for (let i = 0; i < remaining.length; i++) {
+          const next = remaining.slice(0, i).concat(remaining.slice(i + 1));
+          path.push(remaining[i]);
+          pushStep(`Pick ${remaining[i]} (index ${i}) — build a NEW remaining array via slice+concat (O(n) copy).`);
+          dfs(next, path);
+          path.pop();
+        }
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs(nums, []);
+    return steps;
+  }
+
+  const callStack1 = new DSA.CallStack(document.getElementById('viz1Stage'));
+  const steps1 = buildPermuteBruteSteps([1, 2]);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 700,
+    onStep(step) { callStack1.render(step ? step.frames : []); },
+  });
+  callStack1.render([]);
+
+  // ---- Solution 2: optimal in-place swap (DSA.CallStack) ----
+  function buildPermuteOptimalSteps(nums) {
+    const steps = [];
+    const callStack = [];
+    const arr = nums.slice();
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(k) {
+      callStack.push(`dfs(k=${k}), arr=[${arr.join(',')}]`);
+      pushStep(`Enter dfs — k=${k}, arr=[${arr.join(',')}] (first k are fixed).`);
+      if (k === arr.length) {
+        pushStep(`k reached the end — record [${arr.join(',')}] as a full permutation.`);
+      } else {
+        for (let i = k; i < arr.length; i++) {
+          [arr[k], arr[i]] = [arr[i], arr[k]];
+          pushStep(`Swap positions ${k} and ${i} — arr is now [${arr.join(',')}].`);
+          dfs(k + 1);
+          [arr[k], arr[i]] = [arr[i], arr[k]];
+          pushStep(`Swap back — arr restored to [${arr.join(',')}].`);
+        }
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs(0);
+    return steps;
+  }
+
+  const callStack2 = new DSA.CallStack(document.getElementById('viz2Stage'));
+  const steps2 = buildPermuteOptimalSteps([1, 2]);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 700,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+  });
+  callStack2.render([]);
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
