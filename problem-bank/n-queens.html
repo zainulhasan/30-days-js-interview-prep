@@ -153,7 +153,7 @@
   <div class="legend">
     <span><i class="lg-active"></i> queen just placed</span>
     <span><i class="lg-sorted"></i> valid final board</span>
-    <span><i class="lg-swap"></i> full board checked, invalid</span>
+    <span><i class="lg-swap"></i> column/diagonal conflict — skip, no recursion</span>
   </div>
   <div class="viz-panel">
     <div class="viz-stage"><div id="viz2Stage"></div></div>
@@ -188,9 +188,9 @@
   <p><strong>Line by line:</strong></p>
   <ul>
     <li><code>cols</code> tracks occupied columns directly. <code>diag1</code> tracks
-      <code>row - col</code>, which is CONSTANT along every "/"-direction diagonal — any two cells
-      on the same "/" diagonal share the same <code>row - col</code> value. <code>diag2</code>
-      tracks <code>row + col</code>, constant along every "\"-direction diagonal.</li>
+      <code>row - col</code>, which is CONSTANT along every "\"-direction diagonal — any two cells
+      on the same "\" diagonal share the same <code>row - col</code> value. <code>diag2</code>
+      tracks <code>row + col</code>, constant along every "/"-direction diagonal.</li>
     <li><code>if (cols.has(col) || diag1.has(row - col) || diag2.has(row + col)) continue</code> is
       the entire optimization — an O(1) check per column, skipping instantly instead of recursing
       into a doomed branch.</li>
@@ -281,10 +281,10 @@ console.log(s.has(NaN), NaN === NaN);</code></pre>
     <p class="dsa-quiz-feedback" hidden></p>
   </div>
 
-  <div class="dsa-quiz" data-answer="diagonals" data-explain="The two families of diagonals a queen attacks: row minus col is constant along every &quot;/&quot; diagonal, and row plus col is constant along every &quot;\&quot; diagonal." >
+  <div class="dsa-quiz" data-answer="diagonals" data-explain="The two families of diagonals a queen attacks: row minus col is constant along every &quot;\&quot; diagonal, and row plus col is constant along every &quot;/&quot; diagonal." >
     <p class="q-text">2. What do the <code>diag1</code> and <code>diag2</code> sets represent in the optimal solution?</p>
     <div class="dsa-quiz-options">
-      <button class="btn dsa-quiz-option" data-value="diagonals">The two families of diagonals a queen attacks: row − col constant on "/", row + col constant on "\"</button>
+      <button class="btn dsa-quiz-option" data-value="diagonals">The two families of diagonals a queen attacks: row − col constant on "\", row + col constant on "/"</button>
       <button class="btn dsa-quiz-option" data-value="colors">The two colors of squares on a chessboard</button>
       <button class="btn dsa-quiz-option" data-value="freerowscols">The rows and columns that still have no queen placed</button>
     </div>
