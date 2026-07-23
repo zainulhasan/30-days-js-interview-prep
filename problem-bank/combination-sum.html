@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Combination Sum — Problem Bank</title>
+<meta name="description" content="Combination Sum: brute-force backtracking that checks the target only after recursing, vs. an optimal sorted-and-pruned version that checks before recursing, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/combination-sum.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Combination Sum — Problem Bank" />
+<meta property="og:description" content="Combination Sum: brute-force backtracking that checks the target only after recursing, vs. an optimal sorted-and-pruned version that checks before recursing, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/combination-sum.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Combination Sum — Problem Bank" />
+<meta name="twitter:description" content="Combination Sum: brute-force backtracking that checks the target only after recursing, vs. an optimal sorted-and-pruned version that checks before recursing, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Combination Sum", "item": "https://dsa.itszain.tech/problem-bank/combination-sum.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day09.html">Day 9: Recursion &amp; the Call Stack</a></strong> —
+      both solutions below are recursive backtracking; read that lesson first if the call stack
+      mental model is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BACKTRACKING &middot; MEDIUM</p>
+  <h1>Combination Sum <span class="leetcode-link">(<a href="https://leetcode.com/problems/combination-sum/" target="_blank" rel="noopener">LeetCode: Combination Sum</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given an array of distinct positive integers <code>candidates</code> and a target integer
+    <code>target</code>, return all unique combinations of <code>candidates</code> where the
+    chosen numbers sum to <code>target</code>. The same number may be chosen from
+    <code>candidates</code> an unlimited number of times. Two combinations are unique if the
+    frequency of at least one chosen number differs.</p>
+
+  <h2>Solution 1: Brute force — explore every branch, check afterward</h2>
+  <p>At each step, try every remaining candidate (allowing reuse), recurse regardless of whether
+    the running sum has already gone too high, and only check whether the target was hit
+    <em>after</em> descending. This wastes time exploring branches that could have been ruled out
+    immediately.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: try any candidate, recurse without checking if the running sum already exceeds the target, then check whether remain is zero or negative only after the recursive call returns.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: try any candidate, check remain only after descending</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">try candidates[i]</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">no check before recursing</text>
+      <rect x="220" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="310" y="82" fill="#E2E3E7">recurse one level deeper</text>
+      <text x="310" y="98" fill="#9198A6" font-size="10">remain -= candidates[i]</text>
+      <rect x="420" y="60" width="200" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="520" y="82" fill="#282C34">check remain now</text>
+      <text x="520" y="98" fill="#282C34" font-size="10">0 = valid, &lt;0 = wasted branch</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: many branches get fully explored before being discarded.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    candidates=[2,3], target=5 — a small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function combinationSumBrute(candidates, target) {
+  const result = [];
+  function dfs(start, remain, path) {
+    if (remain === 0) { result.push(path.slice()); return; }
+    if (remain &lt; 0) return;
+    for (let i = start; i &lt; candidates.length; i++) {
+      path.push(candidates[i]);
+      dfs(i, remain - candidates[i], path);
+      path.pop();
+    }
+  }
+  dfs(0, target, []);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>dfs(start, remain, path)</code> tracks which index is still allowed to be reused
+      from (<code>start</code>, since numbers can repeat) and how much of the target is still
+      unassigned (<code>remain</code>).</li>
+    <li><code>remain === 0</code> is a complete valid combination — record a COPY of
+      <code>path</code> via <code>.slice()</code> (not the live array, which keeps mutating as
+      the recursion continues).</li>
+    <li><code>remain &lt; 0</code> means this branch already overshot — but notice the candidate
+      was already pushed and a full recursive call already happened before this gets caught.</li>
+    <li>The loop always tries every remaining candidate, with no check on whether
+      <code>candidates[i]</code> alone could possibly still fit.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Branches explored</th><th>Recursion depth</th></tr></thead>
+    <tbody><tr><td>Every branch, even past target</td><td>O(target / min(candidates))</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — sort + prune before recursing</h2>
+  <p>Sort candidates first. Once a candidate is bigger than what's left to reach the target,
+    every later candidate (sorted ascending) is guaranteed too big as well — break the loop
+    immediately instead of wasting a recursive call finding that out.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: sort candidates ascending, then for each candidate check if it exceeds the remaining target before recursing - if it does, break the loop immediately since every later candidate is also too big.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: sort ascending, prune before recursing</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">sort ascending</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">once, up front</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">candidates[i] &gt; remain?</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">check BEFORE recursing</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">break — no recursion</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">every later one is bigger too</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: invalid branches never get a stack frame at all.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    candidates=[2,3], target=5 — a small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function combinationSumOptimal(candidates, target) {
+  const sorted = candidates.slice().sort((a, b) => a - b);
+  const result = [];
+  function dfs(start, remain, path) {
+    if (remain === 0) { result.push(path.slice()); return; }
+    for (let i = start; i &lt; sorted.length; i++) {
+      if (sorted[i] > remain) break;
+      path.push(sorted[i]);
+      dfs(i, remain - sorted[i], path);
+      path.pop();
+    }
+  }
+  dfs(0, target, []);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>Sorting once up front is what makes the <code>break</code> safe — without sorting, a
+      later candidate might still be small enough even if the current one wasn't.</li>
+    <li><code>if (sorted[i] &gt; remain) break</code> is the entire optimization: skip the
+      recursive call (and the pop that would've undone it) for every remaining candidate in this
+      loop, not just this one.</li>
+    <li><code>remain === 0</code> still ends a valid path — nothing about the base case changed,
+      only how many invalid branches get explored on the way there.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Branches explored</th><th>Recursion depth</th></tr></thead>
+    <tbody><tr><td>Prunes overshooting branches before recursing</td><td>O(target / min(candidates))</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Branches explored</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force</td><td>Every branch, even past target</td></tr>
+      <tr><td>Optimal</td><td>Prunes overshooting branches before recursing</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Both share the same worst-case complexity class — this is a search problem, not one with a
+    different asymptotic solution — but the optimal version prunes dramatically better in
+    practice by cutting off entire invalid subtrees before recursing into them, instead of
+    discovering they're invalid one level too late.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is <code>path.slice()</code> needed when recording each result?</p>
+      <ul class="pb-ia">
+        <li><code>path</code> is the SAME array object mutated throughout the whole recursion
+          (pushed and popped repeatedly).</li>
+        <li>Pushing the live reference into <code>result</code> would mean every recorded answer
+          ends up reflecting <code>path</code>'s state whenever the WHOLE recursion finishes, not
+          its state at that specific moment.</li>
+        <li><code>.slice()</code> makes an independent snapshot, so each result stays frozen at
+          exactly the combination it represented.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you extend this to Combination Sum II, where candidates may
+        contain duplicates and each number can only be used once?</p>
+      <ul class="pb-ia">
+        <li>Sort the candidates first (needed for both correctness and duplicate-skipping).</li>
+        <li>Advance the start index by <code>i + 1</code> (not <code>i</code>) in the recursive
+          call, since each number is now used at most once.</li>
+        <li>Skip over a duplicate value at the same recursion depth
+          (<code>if (candidates[i] === candidates[i-1] &amp;&amp; i &gt; start) continue</code>)
+          to avoid generating the same combination twice.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What's the maximum possible recursion depth for this problem?</p>
+      <ul class="pb-ia">
+        <li>Bounded by <code>target / min(candidates)</code> — you can never place more
+          candidates than that before overshooting the target.</li>
+        <li>This bounds both the call stack depth and the <code>path</code> array's length.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const result = [];
+function dfs(path) {
+  if (path.length === 2) { result.push(path); return; }
+  path.push(1);
+  dfs(path);
+  path.pop();
+}
+dfs([]);
+console.log(JSON.stringify(result));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[[]]</code>, not <code>[[1,1]]</code>.</li>
+        <li><code>path</code> is the same mutable array reused throughout the recursion.</li>
+        <li>By the time the recursion fully unwinds (every <code>path.pop()</code> has run), the
+          array that was pushed into <code>result</code> has been mutated back down to empty.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly the bug the real Combination Sum solution above
+        avoids by using <code>path.slice()</code> instead of pushing <code>path</code> directly.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="sameindex" data-explain="dfs(i, ...) passes the SAME index i (not i+1) as the next start index, keeping the current candidate eligible again on the next recursive call — that's what allows unlimited reuse." >
+    <p class="q-text">1. Why can the same candidate be reused multiple times in one combination?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sameindex">dfs(i, ...) passes the SAME index i (not i+1) as the next start index, keeping the current candidate eligible again</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">Because the candidates array is sorted first</button>
+      <button class="btn dsa-quiz-option" data-value="cant">It can't — each candidate is used at most once</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="overshoot" data-explain="remain < 0 catches an overshoot, but only AFTER a candidate was already pushed and a full recursive call already happened — the branch was invalid the whole time, it just wasn't caught before the wasted call." >
+    <p class="q-text">2. What's the purpose of the <code>remain &lt; 0</code> check in the brute-force solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="overshoot">It detects an overshoot AFTER already recursing one level too deep — the branch is invalid but wasn't caught before the wasted call</button>
+      <button class="btn dsa-quiz-option" data-value="sorts">It sorts the candidates before recursing</button>
+      <button class="btn dsa-quiz-option" data-value="prevents">It prevents any candidate from being reused</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="ascendingsafe" data-explain="Because the array is sorted ascending, once one candidate exceeds remain, every candidate after it in the loop is guaranteed to be at least as large — so breaking out of the loop entirely is safe, not just skipping that one candidate." >
+    <p class="q-text">3. Why does sorting first make the <code>break</code> in the optimal solution safe?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="ascendingsafe">Once one candidate is too big, every later candidate (ascending order) is guaranteed too big as well</button>
+      <button class="btn dsa-quiz-option" data-value="dedupe">Sorting removes duplicate candidates automatically</button>
+      <button class="btn dsa-quiz-option" data-value="samewithout">It doesn't — the break works the same with or without sorting</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="snapshot" data-explain="path is the same mutable array reused throughout the recursion — every push and pop happens on that one object. Pushing the live reference would record whatever path looks like once the ENTIRE recursion finishes, not the moment the combination was found. .slice() takes an independent snapshot." >
+    <p class="q-text">4. Why must <code>path.slice()</code> be used when recording a result, instead of pushing <code>path</code> directly?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="snapshot">path is the same mutable array reused throughout the recursion — pushing the live reference would record its FINAL state, not its state when the combination was found</button>
+      <button class="btn dsa-quiz-option" data-value="syntax">.slice() is required by the recursion syntax</button>
+      <button class="btn dsa-quiz-option" data-value="identical">It isn't needed — pushing path directly works identically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="prunesearlier" data-explain="Both solutions share the same worst-case Big-O — sorting and pruning doesn't change the asymptotic class. What changes is practical branch count: the optimal version cuts off invalid subtrees before recursing into them at all, instead of discovering they're invalid one level too late." >
+    <p class="q-text">5. What's the key difference in branches explored between the two solutions, given they share the same worst-case complexity class?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="prunesearlier">The optimal solution prunes overshooting branches BEFORE recursing into them, so its practical branch count is much smaller</button>
+      <button class="btn dsa-quiz-option" data-value="smallerbigo">The optimal solution has a genuinely smaller Big-O class</button>
+      <button class="btn dsa-quiz-option" data-value="nodifference">There's no real difference between them</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  function buildCombinationSumBruteSteps(candidates, target) {
+    const steps = [];
+    const callStack = [];
+    const results = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(start, remain, path) {
+      callStack.push(`dfs(start=${start}, remain=${remain}, path=[${path.join(',')}])`);
+      pushStep(`Enter dfs — start=${start}, remain=${remain}, path=[${path.join(',')}].`);
+      if (remain === 0) {
+        results.push(path.slice());
+        pushStep(`remain === 0 — record [${path.join(',')}] as a valid combination.`);
+      } else if (remain < 0) {
+        pushStep('remain < 0 — overshoot. Invalid branch; backtrack without recording.');
+      } else {
+        for (let i = start; i < candidates.length; i++) {
+          path.push(candidates[i]);
+          dfs(i, remain - candidates[i], path);
+          path.pop();
+        }
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs(0, target, []);
+    return steps;
+  }
+
+  function buildCombinationSumOptimalSteps(candidates, target) {
+    const sorted = candidates.slice().sort((a, b) => a - b);
+    const steps = [];
+    const callStack = [];
+    const results = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(start, remain, path) {
+      callStack.push(`dfs(start=${start}, remain=${remain}, path=[${path.join(',')}])`);
+      pushStep(`Enter dfs — start=${start}, remain=${remain}, path=[${path.join(',')}].`);
+      if (remain === 0) {
+        results.push(path.slice());
+        pushStep(`remain === 0 — record [${path.join(',')}] as a valid combination.`);
+      } else {
+        for (let i = start; i < sorted.length; i++) {
+          if (sorted[i] > remain) {
+            pushStep(`${sorted[i]} > remain (${remain}) — sorted, so every later candidate is bigger too. Prune: break the loop, no recursion.`);
+            break;
+          }
+          path.push(sorted[i]);
+          dfs(i, remain - sorted[i], path);
+          path.pop();
+        }
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs(0, target, []);
+    return steps;
+  }
+
+  const SLUG = 'combination-sum';
+
+  const callStack1 = new DSA.CallStack(document.getElementById('viz1Stage'));
+  const steps1 = buildCombinationSumBruteSteps([2, 3], 5);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 700,
+    onStep(step) { callStack1.render(step ? step.frames : []); },
+  });
+  callStack1.render([]);
+
+  const callStack2 = new DSA.CallStack(document.getElementById('viz2Stage'));
+  const steps2 = buildCombinationSumOptimalSteps([2, 3], 5);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 700,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+  });
+  callStack2.render([]);
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
