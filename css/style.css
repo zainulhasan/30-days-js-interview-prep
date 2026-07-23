@@ -50,6 +50,7 @@ code {
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: 4px;
+  color: var(--warn);
   padding: 0.1em 0.35em;
 }
 
@@ -64,6 +65,7 @@ pre > code {
   background: none;
   border: none;
   border-radius: 0;
+  color: inherit;
   padding: 0;
 }
 
@@ -209,7 +211,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   background: var(--btn-bg);
   color: var(--heading);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 8px;
   padding: 0.55rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
