@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Can Place Flowers — Problem Bank</title>
+<meta name="description" content="Can Place Flowers: a brute-force full-array rescan per placement vs. an optimal single left-to-right greedy pass, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/can-place-flowers.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Can Place Flowers — Problem Bank" />
+<meta property="og:description" content="Can Place Flowers: a brute-force full-array rescan per placement vs. an optimal single left-to-right greedy pass, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/can-place-flowers.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Can Place Flowers — Problem Bank" />
+<meta name="twitter:description" content="Can Place Flowers: a brute-force full-array rescan per placement vs. an optimal single left-to-right greedy pass, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Can Place Flowers", "item": "https://dsa.itszain.tech/problem-bank/can-place-flowers.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong>
+      — read that lesson first if "locally best choice, never reconsidered" is a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; EASY</p>
+  <h1>Can Place Flowers <span class="leetcode-link">(<a href="https://leetcode.com/problems/can-place-flowers/" target="_blank" rel="noopener">LeetCode: Can Place Flowers</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You have a long flowerbed, represented as an array of <code>0</code>s and <code>1</code>s —
+    <code>0</code> means an empty plot, <code>1</code> means a plot that already has a flower.
+    Flowers can never sit in two adjacent plots. Given the flowerbed and a number <code>n</code>,
+    decide whether <code>n</code> new flowers can be planted somewhere in it without ever putting
+    two flowers next to each other.</p>
+
+  <h2>Solution 1: Brute force — plant, then rescan the WHOLE array</h2>
+  <p>The cautious way to check "is this placement legal?" is to actually place it and then
+    re-verify the entire flowerbed from scratch, checking every adjacent pair for a conflict.
+    For every empty plot, try planting there, rescan everything, and keep the flower only if the
+    full rescan comes back clean. It's correct — but each rescan is O(len) work, and there can be
+    up to O(len) candidate plots, so the whole thing costs O(len²).</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: for every empty plot, tentatively plant a flower there, rescan the entire array for any adjacent pair of flowers, then keep the flower if the rescan found nothing wrong or discard it otherwise.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: plant, then rescan the entire array to check</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">for each empty plot</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">tentatively plant a flower</text>
+      <rect x="210" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">rescan WHOLE array</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">check every adjacent pair — O(len)</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="525" y="82" fill="#E2E3E7">keep it, or discard it</text>
+      <text x="525" y="98" fill="#9198A6" font-size="10">based on the rescan result</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-bf" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-bf)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(len²) — up to O(len) candidate plots, each paying a full O(len) rescan.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> tentative plant, being rescanned</span>
+    <span><i class="lg-swap"></i> rejected — rescan found a conflict</span>
+    <span><i class="lg-sorted"></i> flower committed</span>
+    <span><i class="lg-pointer"></i> occupied, skipped</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    flowerbed=[0,0,1,0,0,0,1], n=2 — verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function isValidFull(bed) {
+  for (let i = 0; i < bed.length; i++) {
+    if (bed[i] === 1 && i + 1 < bed.length && bed[i + 1] === 1) return false;
+  }
+  return true;
+}
+
+function canPlaceBruteForce(flowerbed, n) {
+  const bed = flowerbed.slice();
+  let count = 0;
+  for (let i = 0; i < bed.length; i++) {
+    if (bed[i] === 0) {
+      const trial = bed.slice();
+      trial[i] = 1;
+      if (isValidFull(trial)) {
+        bed[i] = 1;
+        count++;
+      }
+    }
+  }
+  return count >= n;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>isValidFull</code> walks every plot and flags a conflict if two adjacent plots are
+      both <code>1</code> — a full O(len) check, run from scratch every time it's called.</li>
+    <li>For every empty plot, <code>trial</code> is a fresh copy of the working bed with a flower
+      dropped in at <code>i</code> — the original <code>bed</code> is never mutated until the
+      trial is confirmed safe.</li>
+    <li><code>isValidFull(trial)</code> re-checks the ENTIRE array, not just the two neighbors of
+      <code>i</code> — that's the wasted work, since only those two neighbors could possibly have
+      changed.</li>
+    <li>Only on success is the real <code>bed</code> updated and <code>count</code> incremented —
+      a rejected trial is simply thrown away.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(len²)</td><td>O(len)</td><td>Per-plot trial + full-array rescan</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — one greedy left-to-right pass</h2>
+  <p>You don't need to rescan the whole array — a plot's legality only ever depends on its own
+    two immediate neighbors, and once you've moved past a plot, nothing you do later can make it
+    illegal again. So walk once, left to right: if a plot is empty and both neighbors are empty
+    (or off the edge of the array), plant immediately and never look back. That's the greedy
+    insight — the locally best choice at each plot is also globally optimal, because planting as
+    early as possible only ever helps future plots, never hurts them.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal one-pass solution: walk the array left to right, at each plot check only its two immediate neighbors in constant time, and plant immediately if both are clear - no rescan needed.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, check only the 2 immediate neighbors</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">walk left → right</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">visit each plot once</text>
+      <rect x="210" y="60" width="210" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">check left &amp; right only</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">out-of-bounds counts as empty — O(1)</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">plant now, move on</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">never revisited</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-opt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-opt)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(len) — every plot is looked at exactly once, in constant time.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> plot being examined</span>
+    <span><i class="lg-sorted"></i> has a flower (original or newly planted)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    flowerbed=[0,0,1,0,0,0,1], n=2 — the same input as Solution 1, verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function canPlaceOptimal(flowerbed, n) {
+  const bed = flowerbed.slice();
+  let count = 0;
+  for (let i = 0; i < bed.length; i++) {
+    const leftEmpty = i === 0 || bed[i - 1] === 0;
+    const rightEmpty = i === bed.length - 1 || bed[i + 1] === 0;
+    if (bed[i] === 0 && leftEmpty && rightEmpty) {
+      bed[i] = 1;
+      count++;
+    }
+  }
+  return count >= n;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>bed = flowerbed.slice()</code> works on a private copy purely so this demo never
+      mutates the caller's array — the algorithm itself needs no extra array at all beyond a
+      running counter, so its own extra space is O(1).</li>
+    <li><code>leftEmpty</code> / <code>rightEmpty</code> treat the edges of the array as empty —
+      <code>i === 0</code> short-circuits before <code>bed[i - 1]</code> is ever read, same for
+      <code>i === bed.length - 1</code> before <code>bed[i + 1]</code>.</li>
+    <li>The moment a plot is planted, <code>bed[i] = 1</code> updates the SAME array the next
+      iteration's <code>leftEmpty</code> check reads — that's what makes two flowers ending up
+      adjacent structurally impossible, with no extra bookkeeping.</li>
+    <li>Each plot is visited exactly once and every check is O(1) — that's the whole O(len).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(len)</td><td>O(1)</td><td>Single greedy left-to-right pass</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (trial + full rescan)</td><td>O(len²)</td><td>O(len)</td></tr>
+      <tr><td>Optimal (greedy one pass)</td><td>O(len)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it safe to plant greedily as early as possible, without ever
+        reconsidering that choice later?</p>
+      <ul class="pb-ia">
+        <li>Planting a flower can only ever block its own two immediate neighbors — it never
+          affects any plot further away.</li>
+        <li>Planting as EARLY as possible (the first legal moment) leaves the maximum possible
+          room for future plots, compared to waiting.</li>
+        <li>So the locally best choice at each plot — plant now if you legally can — never costs
+          you a better global outcome later. That's exactly what makes this greedy, not just
+          "an approximation."</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the brute-force version need a full array rescan instead of just
+        checking the two neighbors, like the optimal version does?</p>
+      <ul class="pb-ia">
+        <li>It doesn't NEED to — that's exactly the point of this problem. The rescan is strictly
+          wasted work.</li>
+        <li>Structurally, only plot <code>i-1</code> and plot <code>i+1</code> could possibly
+          conflict with a flower newly planted at <code>i</code> — nothing else in the array
+          changed.</li>
+        <li>Checking the whole array is a "safe but naive" habit — it's correct, but it pays
+          O(len) per placement when O(1) would do.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you handle a circular flowerbed, where the first and last plots
+        are also considered adjacent?</p>
+      <ul class="pb-ia">
+        <li>Change the edge cases: instead of treating <code>i === 0</code> and
+          <code>i === bed.length - 1</code> as "automatically empty," wrap around and read
+          <code>bed[bed.length - 1]</code> and <code>bed[0]</code> respectively.</li>
+        <li>The rest of the single-pass logic is unchanged — still O(len), still one greedy pass.</li>
+        <li>Worth calling out explicitly in an interview: this is exactly the kind of boundary
+          assumption that's easy to silently get wrong if you don't ask about it first.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — does this throw an error?</p>
+      <pre><code>const bed = [1, 0, 0];
+console.log(bed[-1]);
+console.log(bed[10]);
+console.log(bed[-1] === 0);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: no error either time. Both log <code>undefined</code>.</li>
+        <li>JavaScript array indexing never throws on an out-of-bounds index (positive or
+          negative) — it just returns <code>undefined</code>, silently.</li>
+        <li>So <code>bed[-1] === 0</code> is <code>false</code> — <code>undefined</code> is not
+          loosely OR strictly equal to <code>0</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the optimal solution's boundary check is
+        written as <code>i === 0 || bed[i - 1] === 0</code> and never as a bare
+        <code>bed[i - 1] === 0</code>. Relying on <code>bed[-1] === 0</code> being "empty" would
+        silently be <code>false</code> at the left edge — the explicit <code>i === 0</code> check
+        comes first specifically to short-circuit before that out-of-bounds read ever happens.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="localonly" data-explain="Planting a flower can only ever conflict with its own two immediate neighbors — nothing further away in the array is affected, so re-checking the entire array is provably unnecessary work." >
+    <p class="q-text">1. Why does the optimal solution only need to check a plot's two immediate neighbors, instead of rescanning the whole array like brute force does?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="localonly">A newly planted flower can only possibly conflict with its own two immediate neighbors — nothing farther away changed</button>
+      <button class="btn dsa-quiz-option" data-value="smallinput">It only works because the example inputs are small</button>
+      <button class="btn dsa-quiz-option" data-value="approx">It's an approximation that trades some correctness for speed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="earliest" data-explain="Planting at the earliest legal opportunity always leaves at least as much room for future plots as waiting would — so the greedy choice is never worse than any alternative, which is what makes it provably optimal, not just a fast approximation." >
+    <p class="q-text">2. What is the core greedy insight that makes "plant as early as legally possible" the globally optimal strategy, not just a fast approximation?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="earliest">Planting at the earliest legal plot never leaves LESS room for future plots than waiting would — so it's never a worse choice</button>
+      <button class="btn dsa-quiz-option" data-value="random">Greedy choices are always optimal for every problem, by definition</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It happens to work only on the specific test cases shown here</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="boundscheck" data-explain="i === 0 (and i === bed.length - 1) short-circuits the OR before bed[i - 1] (or bed[i + 1]) is ever read, treating the edge of the array as if an empty plot were there — without it, bed[-1] would silently evaluate to undefined, not 0." >
+    <p class="q-text">3. In <code>leftEmpty = i === 0 || bed[i - 1] === 0</code>, what is the <code>i === 0</code> check actually protecting against?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="boundscheck">It short-circuits before an out-of-bounds read like bed[-1], which would silently be undefined rather than 0</button>
+      <button class="btn dsa-quiz-option" data-value="perf">It's a performance optimization with no correctness impact</button>
+      <button class="btn dsa-quiz-option" data-value="unused">It's dead code — bed[-1] would throw anyway so it's never reached</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="mutateread" data-explain="bed[i] = 1 updates the very array that the next iteration's leftEmpty check reads via bed[i - 1] — so a flower planted at i is automatically visible as 'occupied' when the loop considers i + 1, with no separate bookkeeping needed." >
+    <p class="q-text">4. After the optimal solution plants a flower at index <code>i</code> (<code>bed[i] = 1</code>), how does the next iteration "know" that plot is now occupied?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="mutateread">The next iteration's leftEmpty check reads bed[i - 1] from the SAME array that was just mutated, so the update is automatically visible</button>
+      <button class="btn dsa-quiz-option" data-value="separate">A separate "planted" set is checked alongside bed on every iteration</button>
+      <button class="btn dsa-quiz-option" data-value="doesnt">It doesn't — that's a latent bug in the algorithm</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="quadraticvslinear" data-explain="Brute force pays a full O(len) rescan for up to O(len) candidate plots, giving O(len²) total. Optimal checks only 2 neighbors per plot in O(1), giving O(len) total for one pass." >
+    <p class="q-text">5. What's the time complexity difference between the two solutions, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="quadraticvslinear">Brute force is O(len²) from rescanning the whole array per candidate plot; optimal is O(len) from checking only 2 neighbors per plot</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're the same — O(len) for both</button>
+      <button class="btn dsa-quiz-option" data-value="reversed">Brute force is O(len); optimal is O(len²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'can-place-flowers';
+
+  function labelsFor(arr) { return arr.map((v) => (v === 1 ? '🌱' : '·')); }
+
+  // ---- Solution 1: brute force (trial plant + full-array rescan) ----
+  function buildBruteSteps(flowerbed, n) {
+    const steps = [];
+    const bed = flowerbed.slice();
+    let count = 0;
+    const len = bed.length;
+    function statesBase() { return bed.map((v) => (v === 1 ? 'sorted' : 'default')); }
+
+    steps.push({
+      narration: `Start: ${len} plots, need ${n} more flower${n === 1 ? '' : 's'}. Working copy: [${bed.join(', ')}].`,
+      data: labelsFor(bed),
+      states: bed.map(() => 'default'),
+    });
+
+    for (let i = 0; i < len; i++) {
+      if (bed[i] === 1) {
+        const states = statesBase();
+        states[i] = 'pointer';
+        steps.push({ narration: `Plot ${i} is already occupied — skip it.`, data: labelsFor(bed), states });
+        continue;
+      }
+      const trial = bed.slice();
+      trial[i] = 1;
+      const trialStates = statesBase();
+      trialStates[i] = 'compare';
+      steps.push({
+        narration: `Plot ${i} is empty — try planting here, then rescan the WHOLE array for any adjacent pair of flowers.`,
+        data: labelsFor(trial),
+        states: trialStates,
+      });
+
+      let valid = true;
+      for (let j = 0; j < len; j++) {
+        if (trial[j] === 1 && j + 1 < len && trial[j + 1] === 1) { valid = false; break; }
+      }
+      if (valid) {
+        bed[i] = 1;
+        count++;
+        const states = statesBase();
+        states[i] = 'sorted';
+        steps.push({
+          narration: `Full rescan found no adjacent flowers — valid! Plant at ${i}. Planted so far: ${count}/${n}.`,
+          data: labelsFor(bed),
+          states,
+        });
+      } else {
+        const states = statesBase();
+        states[i] = 'swap';
+        steps.push({
+          narration: `Full rescan found an adjacent conflict — invalid. Discard the trial; plot ${i} stays empty.`,
+          data: labelsFor(bed),
+          states,
+        });
+      }
+    }
+    const success = count >= n;
+    steps.push({
+      narration: `Done — planted ${count} flower${count === 1 ? '' : 's'} total, needed ${n}. Result: ${success}. Every trial paid a full O(len) rescan, for O(len²) total.`,
+      data: labelsFor(bed),
+      states: bed.map(() => 'sorted'),
+    });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (single greedy left-to-right pass) ----
+  function buildOptimalSteps(flowerbed, n) {
+    const steps = [];
+    const bed = flowerbed.slice();
+    let count = 0;
+    const len = bed.length;
+    function statesBase() { return bed.map((v) => (v === 1 ? 'sorted' : 'default')); }
+
+    steps.push({
+      narration: `Start: ${len} plots, need ${n} more flower${n === 1 ? '' : 's'}. Single left-to-right pass — no rescans.`,
+      data: labelsFor(bed),
+      states: statesBase(),
+    });
+
+    for (let i = 0; i < len; i++) {
+      const leftEmpty = i === 0 || bed[i - 1] === 0;
+      const rightEmpty = i === len - 1 || bed[i + 1] === 0;
+      const states = statesBase();
+      states[i] = 'pointer';
+
+      if (bed[i] === 1) {
+        steps.push({ narration: `Plot ${i} already has a flower — move on.`, data: labelsFor(bed), states });
+        continue;
+      }
+      if (leftEmpty && rightEmpty) {
+        const leftDesc = i === 0 ? 'left edge' : 'left neighbor empty';
+        const rightDesc = i === len - 1 ? 'right edge' : 'right neighbor empty';
+        steps.push({
+          narration: `Plot ${i}: ${leftDesc}, ${rightDesc} — both clear, plant here.`,
+          data: labelsFor(bed),
+          states,
+        });
+        bed[i] = 1;
+        count++;
+        const states2 = statesBase();
+        states2[i] = 'sorted';
+        steps.push({
+          narration: `Planted at ${i}. Planted so far: ${count}/${n}.`,
+          data: labelsFor(bed),
+          states: states2,
+        });
+      } else {
+        const blocker = !leftEmpty ? 'left neighbor occupied' : 'right neighbor occupied';
+        steps.push({ narration: `Plot ${i}: ${blocker} — can't plant here, move on.`, data: labelsFor(bed), states });
+      }
+    }
+    const success = count >= n;
+    steps.push({
+      narration: `Done — planted ${count} flower${count === 1 ? '' : 's'}, needed ${n}. Result: ${success}. One pass, O(len) total.`,
+      data: labelsFor(bed),
+      states: bed.map(() => 'sorted'),
+    });
+    return steps;
+  }
+
+  const DEMO_BED = [0, 0, 1, 0, 0, 0, 1];
+  const DEMO_N = 2;
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData(labelsFor(DEMO_BED));
+  const bruteSteps = buildBruteSteps(DEMO_BED, DEMO_N);
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData(labelsFor(DEMO_BED)); return; }
+      bars1.paint(step.states, step.data);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData(labelsFor(DEMO_BED));
+  const optimalSteps = buildOptimalSteps(DEMO_BED, DEMO_N);
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.setData(labelsFor(DEMO_BED)); return; }
+      bars2.paint(step.states, step.data);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('can-place-flowers', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
