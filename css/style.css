@@ -274,6 +274,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   white-space: nowrap;
 }
 
+.bank-more-note {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 2rem 0 1rem;
+}
+
 .day-list {
   display: flex;
   flex-direction: column;
