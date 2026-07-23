@@ -93,3 +93,19 @@ const PROBLEM_BANK_PATTERNS = [
 function problemBankInfo(slug) {
   return PROBLEM_BANK.find((p) => p.slug === slug) || null;
 }
+
+// Other problems sharing the same pattern, in PROBLEM_BANK order, wrapping
+// around after the given slug so every problem in a pattern gets a varied set
+// of neighbors instead of always seeing the same fixed "next 3".
+function relatedProblems(slug, limit) {
+  const current = problemBankInfo(slug);
+  if (!current) return [];
+  const samePattern = PROBLEM_BANK.filter((p) => p.pattern === current.pattern && p.slug !== slug);
+  const startIndex = PROBLEM_BANK.findIndex((p) => p.slug === slug);
+  samePattern.sort((a, b) => {
+    const distA = (PROBLEM_BANK.indexOf(a) - startIndex + PROBLEM_BANK.length) % PROBLEM_BANK.length;
+    const distB = (PROBLEM_BANK.indexOf(b) - startIndex + PROBLEM_BANK.length) % PROBLEM_BANK.length;
+    return distA - distB;
+  });
+  return samePattern.slice(0, limit);
+}
