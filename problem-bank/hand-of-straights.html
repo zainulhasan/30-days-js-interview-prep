@@ -478,7 +478,7 @@ console.log(Object.keys(counts));</code></pre>
     function snapshot(narration, highlightIdx) {
       const data = sortedValues.map((v) => `${v}×${count.get(v)}`);
       const states = sortedValues.map((v, i) => {
-        if (i === highlightIdx) return 'active';
+        if (i === highlightIdx) return count.get(v) === 0 ? 'sorted' : 'active';
         return count.get(v) === 0 ? 'sorted' : 'default';
       });
       steps.push({ narration, data, states });
