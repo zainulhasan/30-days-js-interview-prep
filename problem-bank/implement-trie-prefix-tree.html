@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Implement Trie (Prefix Tree) — Problem Bank</title>
+<meta name="description" content="Implement Trie (Prefix Tree): brute-force word Set vs. an optimal Trie of Map nodes, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/implement-trie-prefix-tree.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Implement Trie (Prefix Tree) — Problem Bank" />
+<meta property="og:description" content="Implement Trie (Prefix Tree): brute-force word Set vs. an optimal Trie of Map nodes, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/implement-trie-prefix-tree.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Implement Trie (Prefix Tree) — Problem Bank" />
+<meta name="twitter:description" content="Implement Trie (Prefix Tree): brute-force word Set vs. an optimal Trie of Map nodes, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Implement Trie (Prefix Tree)", "item": "https://dsa.itszain.tech/problem-bank/implement-trie-prefix-tree.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day19.html">Day 19: Trees — BFS & DFS</a></strong> —
+      a Trie is a tree where each node is one character; read that lesson first if tree traversal
+      is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">TRIE &middot; MEDIUM</p>
+  <h1>Implement Trie (Prefix Tree) <span class="leetcode-link">(<a href="https://leetcode.com/problems/implement-trie-prefix-tree/" target="_blank" rel="noopener">LeetCode: Implement Trie (Prefix Tree)</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Design a data structure that supports three operations: <code>insert(word)</code> — add a
+    word; <code>search(word)</code> — return true only if that exact word was previously
+    inserted; <code>startsWith(prefix)</code> — return true if any previously inserted word
+    starts with that prefix. All three should stay fast even with many words sharing common
+    prefixes, like <code>"app"</code>, <code>"apple"</code>, and <code>"application"</code>.</p>
+
+  <h2>Solution 1: Brute force — a Set of whole words</h2>
+  <p>The simplest thing that could work: keep every inserted word in a <code>Set</code>.
+    <code>insert</code> is trivial. <code>search</code> is a direct membership check. But
+    <code>startsWith</code> has no shortcut — nothing about a <code>Set</code> knows which words
+    share a prefix, so it has to check every single stored word.</p>
+
+  <svg class="diagram" viewBox="0 0 640 200" role="img" aria-label="Diagram of the brute-force trie: three words, apple, banana, and app, stored as plain strings in a Set. A search for app must scan every stored word one at a time until a match is found or the set is exhausted.">
+    <text x="20" y="28" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: one flat Set of whole words</text>
+    <g font-family="var(--font-head)" font-size="13">
+      <rect x="20" y="50" width="140" height="40" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="90" y="75" text-anchor="middle" fill="#E2E3E7">"apple"</text>
+      <rect x="180" y="50" width="140" height="40" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="250" y="75" text-anchor="middle" fill="#E2E3E7">"banana"</text>
+      <rect x="340" y="50" width="140" height="40" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="410" y="75" text-anchor="middle" fill="#E2E3E7">"app"</text>
+    </g>
+    <text x="20" y="130" font-size="12" fill="#DCDFE4">search("app") has to check every entry in order — there's no</text>
+    <text x="20" y="148" font-size="12" fill="#DCDFE4">shortcut for shared prefixes like "apple" and "app".</text>
+    <text x="20" y="180" font-size="12" fill="#E06C75">Cost: O(n &times; m) per search, where n = word count and m = word length.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> currently checking</span>
+    <span><i class="lg-sorted"></i> match found</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>class TrieBruteForce {
+  constructor() {
+    this.words = new Set();
+  }
+  insert(word) {
+    this.words.add(word);
+  }
+  search(word) {
+    return this.words.has(word);
+  }
+  startsWith(prefix) {
+    for (const w of this.words) {
+      if (w.startsWith(prefix)) return true;
+    }
+    return false;
+  }
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>insert</code> is O(word length) — just hashing the string into the Set.</li>
+    <li><code>search</code> is a direct <code>Set.has</code> lookup — also fast on its own.</li>
+    <li><code>startsWith</code> is the expensive one: it has to loop over every stored word and
+      call <code>.startsWith(prefix)</code> on each, because a flat Set has no structure that
+      groups words by their shared prefixes.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>insert</th><th>search</th><th>startsWith</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(m)</td><td>O(n &times; m)</td><td>O(n &times; m)</td><td>O(n &times; m)</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — a Trie of Map nodes</h2>
+  <p>Instead of storing whole words, store one node per character. Words that share a prefix
+    share the same chain of nodes — <code>"app"</code> and <code>"apple"</code> both walk through
+    the same <code>a → p → p</code> nodes before diverging. Each node knows whether it's the end
+    of a real inserted word via an <code>isWord</code> flag.</p>
+
+  <svg class="diagram" viewBox="0 0 640 220" role="img" aria-label="Diagram of a trie holding the words app and apple: root connects to a, which connects to p, which connects to a second p marked as end-of-word for app, which connects to l, which connects to e marked as end-of-word for apple. Shared prefix characters are stored only once.">
+    <text x="20" y="28" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one Trie node per character, shared prefixes stored once</text>
+    <g stroke="#3E4452" stroke-width="2">
+      <line x1="60" y1="90" x2="140" y2="90"/>
+      <line x1="140" y1="90" x2="220" y2="90"/>
+      <line x1="220" y1="90" x2="300" y2="90"/>
+      <line x1="300" y1="90" x2="380" y2="90"/>
+      <line x1="380" y1="90" x2="460" y2="90"/>
+    </g>
+    <g font-family="var(--font-head)" font-size="13" text-anchor="middle">
+      <circle cx="60" cy="90" r="18" fill="#282C34" stroke="#61AEEE" stroke-width="2"/>
+      <text x="60" y="95" fill="#61AEEE">•</text>
+      <circle cx="140" cy="90" r="18" fill="#3E4452" stroke="#21252B"/>
+      <text x="140" y="95" fill="#E2E3E7">a</text>
+      <circle cx="220" cy="90" r="18" fill="#3E4452" stroke="#21252B"/>
+      <text x="220" y="95" fill="#E2E3E7">p</text>
+      <circle cx="300" cy="90" r="18" fill="#98C379" stroke="#21252B"/>
+      <text x="300" y="95" fill="#282C34">p</text>
+      <circle cx="380" cy="90" r="18" fill="#3E4452" stroke="#21252B"/>
+      <text x="380" y="95" fill="#E2E3E7">l</text>
+      <circle cx="460" cy="90" r="18" fill="#98C379" stroke="#21252B"/>
+      <text x="460" y="95" fill="#282C34">e</text>
+    </g>
+    <text x="300" y="140" font-size="11" fill="#98C379" text-anchor="middle">green = end of a word (isWord)</text>
+    <text x="20" y="180" font-size="12" fill="#DCDFE4">"app" and "apple" share the a-p-p prefix — it's stored once, not once per word.</text>
+    <text x="20" y="198" font-size="12" fill="#E06C75">Cost: O(m) per operation, where m = word/prefix length — independent of word count.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> node just created</span>
+    <span><i class="lg-pointer"></i> traversal path</span>
+    <span><i class="lg-sorted"></i> end of a word</span>
+    <span><i class="lg-swap"></i> path exists but not a full word</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces the exact sequence
+    verified above: insert("apple"), search("apple"), search("app"), startsWith("app"),
+    insert("app"), search("app").</p>
+
+  <h3>The code</h3>
+  <pre><code>class TrieNode {
+  constructor() {
+    this.children = new Map();
+    this.isWord = false;
+  }
+}
+
+class Trie {
+  constructor() {
+    this.root = new TrieNode();
+  }
+  insert(word) {
+    let node = this.root;
+    for (const ch of word) {
+      if (!node.children.has(ch)) node.children.set(ch, new TrieNode());
+      node = node.children.get(ch);
+    }
+    node.isWord = true;
+  }
+  _walk(str) {
+    let node = this.root;
+    for (const ch of str) {
+      if (!node.children.has(ch)) return null;
+      node = node.children.get(ch);
+    }
+    return node;
+  }
+  search(word) {
+    const node = this._walk(word);
+    return node !== null && node.isWord;
+  }
+  startsWith(prefix) {
+    return this._walk(prefix) !== null;
+  }
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>insert</code> walks one character at a time, creating a child node only when that
+      character isn't already there — this is exactly what makes shared prefixes free.</li>
+    <li><code>_walk</code> is shared by both <code>search</code> and <code>startsWith</code> — it
+      returns the node reached by following a string's characters, or <code>null</code> the
+      moment a character has no matching child.</li>
+    <li><code>search</code> additionally requires <code>isWord</code> to be true — reaching a
+      node isn't enough, since that node might only represent a prefix, not a full inserted word
+      (this is the <code>search("app")</code> before <code>insert("app")</code> case).</li>
+    <li><code>startsWith</code> only needs the path to exist — it doesn't care whether the final
+      node is a complete word.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>insert</th><th>search</th><th>startsWith</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(m)</td><td>O(m)</td><td>O(m)</td><td>O(total characters across all words, shared prefixes counted once)</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>insert</th><th>search</th><th>startsWith</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (Set of words)</td><td>O(m)</td><td>O(n &times; m)</td><td>O(n &times; m)</td></tr>
+      <tr><td>Optimal (Trie, Map children)</td><td>O(m)</td><td>O(m)</td><td>O(m)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="scans" data-explain="The brute-force Set has no structure grouping words by shared prefixes — every search or startsWith call has to scan stored words one at a time, so more words directly means more comparisons per call.">
+    <p class="q-text">1. Why does the brute-force Set approach get slower as more words are added, even for a single search?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="scans">It has no shared-prefix structure, so it scans stored words one at a time</button>
+      <button class="btn dsa-quiz-option" data-value="constant">It doesn't — Set lookups are always O(1) regardless of word count</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">Sets keep words in sorted order, which slows lookups down</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="complete" data-explain="isWord marks that the path leading to this node spells out a complete word that was actually inserted — not just a prefix that happens to exist because a longer word passes through it.">
+    <p class="q-text">2. What does each Trie node's <code>isWord</code> flag mean?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="complete">The path to this node spells out a complete inserted word</button>
+      <button class="btn dsa-quiz-option" data-value="haschildren">This node has at least one child</button>
+      <button class="btn dsa-quiz-option" data-value="rootonly">This node is the root of the trie</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="reuse" data-explain="Inserting 'apple' already created the a, p, p nodes as a shared prefix chain. Inserting 'app' afterward just reuses that exact chain and flips the second p node's isWord flag to true — no new nodes needed." >
+    <p class="q-text">3. Why doesn't inserting "app" after "apple" create 3 new nodes?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="reuse">The a-p-p prefix chain already exists from inserting "apple" — it's reused</button>
+      <button class="btn dsa-quiz-option" data-value="ignored">"app" is ignored because it's shorter than an existing word</button>
+      <button class="btn dsa-quiz-option" data-value="auto">Tries automatically deduplicate every operation regardless of characters</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="isword" data-explain="Both walk the exact same nodes for a shared string. search additionally checks the final node's isWord flag; startsWith only cares that the path exists at all." >
+    <p class="q-text">4. <code>search("app")</code> and <code>startsWith("app")</code> both walk the same 3 nodes (a, p, p). What's the one difference between them?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="isword">search additionally checks the final node's isWord flag</button>
+      <button class="btn dsa-quiz-option" data-value="nowalk">search doesn't walk the tree at all</button>
+      <button class="btn dsa-quiz-option" data-value="faster">startsWith is always faster because it stops early</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="om" data-explain="Every Trie operation only ever touches nodes along the path for the given string, so the cost depends purely on that string's length m, never on how many words n are stored." >
+    <p class="q-text">5. What's the time complexity of the optimal Trie's insert/search, in terms of word length m and word count n?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="om">O(m) — independent of n</button>
+      <button class="btn dsa-quiz-option" data-value="onm">O(n &times; m) — same as the brute force</button>
+      <button class="btn dsa-quiz-option" data-value="logn">O(log n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'implement-trie-prefix-tree';
+
+  // ---- Solution 1: brute-force word scan (DSA.Bars, uniform — words as opaque labels) ----
+  function buildBruteForceTrieSteps(words, query) {
+    const steps = [];
+    const states = words.map(() => 'default');
+    steps.push({ narration: `Words stored: ${words.map((w) => '"' + w + '"').join(', ')}. Searching for "${query}" — a plain linear scan.`, data: words.slice(), states: states.slice() });
+    let foundIndex = -1;
+    for (let i = 0; i < words.length; i++) {
+      states[i] = 'compare';
+      steps.push({ narration: `Checking "${words[i]}" against "${query}"...`, data: words.slice(), states: states.slice() });
+      if (words[i] === query) {
+        states[i] = 'sorted';
+        foundIndex = i;
+        steps.push({ narration: `Match — "${words[i]}" === "${query}", found after checking ${i + 1} word${i === 0 ? '' : 's'}.`, data: words.slice(), states: states.slice() });
+        break;
+      }
+    }
+    if (foundIndex === -1) {
+      steps.push({ narration: `Checked all ${words.length} words — "${query}" was never inserted, so search returns false.`, data: words.slice(), states: states.slice() });
+    }
+    return steps;
+  }
+
+  function randomTrieWords() {
+    const pool = ['cat', 'car', 'cart', 'dog', 'dodge', 'do', 'dove', 'ant', 'anthem', 'bee'];
+    const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+    const words = shuffled.slice(0, 3 + Math.floor(Math.random() * 2));
+    const query = Math.random() < 0.6 ? words[Math.floor(Math.random() * words.length)] : shuffled[shuffled.length - 1];
+    return { words, query };
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  let bf = randomTrieWords();
+  bars1.setData(bf.words);
+  let steps1 = buildBruteForceTrieSteps(bf.words, bf.query);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData(bf.words); return; }
+      bars1.paint(step.states, step.data);
+    },
+    onShuffle() {
+      bf = randomTrieWords();
+      bars1.setData(bf.words);
+      steps1 = buildBruteForceTrieSteps(bf.words, bf.query);
+      player1.setSteps(steps1);
+    },
+  });
+
+  // ---- Solution 2: optimal Trie (DSA.Graph, growing node/edge set per step) ----
+  const TRIE_X = (depth) => 60 + depth * 90;
+  const TRIE_Y = 100;
+
+  function buildTrieOptimalSteps() {
+    const steps = [];
+    const nodeMap = new Map();
+    nodeMap.set('', { id: 'root', label: '•', x: TRIE_X(0), y: TRIE_Y, isWord: false });
+
+    function snapshot() {
+      const nodes = Array.from(nodeMap.values()).map((n) => Object.assign({}, n));
+      const edges = [];
+      nodeMap.forEach((node, path) => {
+        if (path === '') return;
+        const parentPath = path.slice(0, -1);
+        edges.push({ from: nodeMap.get(parentPath).id, to: node.id, directed: true });
+      });
+      return { nodes, edges };
+    }
+
+    function stateFor(activeStates) {
+      const out = {};
+      nodeMap.forEach((node) => { if (node.isWord) out[node.id] = 'sorted'; });
+      Object.keys(activeStates).forEach((path) => { out[nodeMap.get(path).id] = activeStates[path]; });
+      return out;
+    }
+
+    function pushStep(narration, activeStates) {
+      const { nodes, edges } = snapshot();
+      steps.push({ narration, nodes, edges, states: stateFor(activeStates || {}) });
+    }
+
+    pushStep('Trie starts with just a root node — no characters stored yet.');
+
+    function insert(word) {
+      let path = '';
+      pushStep(`insert("${word}") — start at the root.`, { '': 'active' });
+      for (const ch of word) {
+        path += ch;
+        if (!nodeMap.has(path)) {
+          nodeMap.set(path, { id: path, label: ch, x: TRIE_X(path.length), y: TRIE_Y, isWord: false });
+          pushStep(`No child "${ch}" from here yet — create a new node.`, { [path]: 'active' });
+        } else {
+          pushStep(`Child "${ch}" already exists — reuse it (shared prefix, no new node).`, { [path]: 'active' });
+        }
+      }
+      nodeMap.get(path).isWord = true;
+      pushStep(`Mark the last node as end-of-word — "${word}" is now a complete word in the trie.`, { [path]: 'sorted' });
+    }
+
+    function walk(str, label) {
+      let path = '';
+      const seen = [''];
+      pushStep(`${label}("${str}") — start at the root.`, { '': 'pointer' });
+      for (const ch of str) {
+        path += ch;
+        seen.push(path);
+        const states = {};
+        seen.forEach((p) => { states[p] = 'pointer'; });
+        pushStep(`Follow "${ch}" — now at node "${path}".`, states);
+      }
+    }
+
+    insert('apple');
+    walk('apple', 'search');
+    pushStep('Reached the end of "apple" — isWord is true, so search returns true.', { apple: 'sorted' });
+
+    walk('app', 'search');
+    pushStep('Reached the end of "app" — isWord is false (only a prefix so far), so search returns false.', { app: 'swap' });
+
+    walk('app', 'startsWith');
+    pushStep('Reached the end of "app" — the path exists, so startsWith returns true regardless of isWord.', { app: 'sorted' });
+
+    insert('app');
+
+    walk('app', 'search');
+    pushStep('Reached the end of "app" — isWord is now true, so search returns true.', { app: 'sorted' });
+
+    return steps;
+  }
+
+  function paintTrieGraph(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {});
+  }
+
+  const graph2 = new DSA.Graph(document.getElementById('viz2Stage'), { width: 560, height: 200 });
+  const steps2 = buildTrieOptimalSteps();
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) { paintTrieGraph(graph2, step || steps2[0]); },
+  });
+  paintTrieGraph(graph2, steps2[0]);
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
