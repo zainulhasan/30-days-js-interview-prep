@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Candy — Problem Bank</title>
+<meta name="description" content="Candy: a brute-force repeated-rescan fix-up vs. an optimal two-pass greedy solution, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/candy.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Candy — Problem Bank" />
+<meta property="og:description" content="Candy: a brute-force repeated-rescan fix-up vs. an optimal two-pass greedy solution, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/candy.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Candy — Problem Bank" />
+<meta name="twitter:description" content="Candy: a brute-force repeated-rescan fix-up vs. an optimal two-pass greedy solution, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Candy", "item": "https://dsa.itszain.tech/problem-bank/candy.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      read that lesson first if "make the locally-best choice and trust it holds up globally"
+      is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; HARD</p>
+  <h1>Candy <span class="leetcode-link">(<a href="https://leetcode.com/problems/candy/" target="_blank" rel="noopener">LeetCode: Candy</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p><code>n</code> children stand in a line. Each child has a <code>rating</code>. You must hand
+    out candies so that: every child gets at least 1 candy, and any child with a higher rating
+    than an immediate neighbor gets strictly more candies than that neighbor. Return the minimum
+    total number of candies that satisfies both rules for every child.</p>
+  <p>The trap is that "higher rating → more candy" is a <em>local</em>, pairwise rule, but it has
+    to hold simultaneously in both directions at once — against the child on the left AND the
+    child on the right — for every single child in the line.</p>
+
+  <h2>Solution 1: Brute force — start at 1, repeatedly re-scan and fix violations</h2>
+  <p>Give every child 1 candy to start. Then keep re-scanning the whole line, left to right,
+    fixing any child whose candy count still violates a neighbor rule (bump them to one more
+    than whichever neighbor they're violating against). Keep re-scanning from the top until one
+    full pass makes zero fixes. This is correct — a fix can only ever increase a count, and
+    counts are bounded, so it's guaranteed to terminate — but a single fix on one side of the
+    line can force another fix several children away, which then needs its own pass to
+    propagate further. Worst case (e.g. a long strictly-increasing-then-strictly-decreasing
+    run), the fix has to ripple one child further per pass, so it converges slowly.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: start every child at 1 candy, re-scan the line checking both neighbors, fix any violation found, and repeat the whole re-scan until a full pass makes zero fixes.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: start at 1, re-scan and fix, repeat until stable</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="130" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="85" y="88" fill="#E2E3E7">all = 1 candy</text>
+      <rect x="180" y="60" width="150" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="255" y="82" fill="#282C34">re-scan, check</text>
+      <text x="255" y="98" fill="#282C34" font-size="10">both neighbors</text>
+      <rect x="360" y="60" width="130" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="425" y="88" fill="#282C34">fix violations</text>
+      <rect x="520" y="60" width="100" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="570" y="88" fill="#E2E3E7">repeat?</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="150" y1="83" x2="178" y2="83"/>
+      <line x1="330" y1="83" x2="358" y2="83"/>
+      <line x1="490" y1="83" x2="518" y2="83"/>
+      <path d="M570,60 C570,20 255,20 255,58" />
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: fixes can ripple one child per pass — slow to converge on long runs.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> child being checked</span>
+    <span><i class="lg-compare"></i> neighbor it's compared against</span>
+    <span><i class="lg-active"></i> just bumped this step</span>
+    <span><i class="lg-sorted"></i> final pass — stable, done</span>
+  </div>
+  <div class="viz-panel">
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0 0 0.35rem;">ratings (fixed input)</p>
+    <div class="viz-stage"><div id="viz1RatingsStage"></div></div>
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0.85rem 0 0.35rem;">candies (being fixed up)</p>
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function candyBruteForce(ratings) {
+  const n = ratings.length;
+  const candies = new Array(n).fill(1);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < n; i++) {
+      if (i > 0 && ratings[i] > ratings[i - 1] && candies[i] <= candies[i - 1]) {
+        candies[i] = candies[i - 1] + 1;
+        changed = true;
+      }
+      if (i < n - 1 && ratings[i] > ratings[i + 1] && candies[i] <= candies[i + 1]) {
+        candies[i] = candies[i + 1] + 1;
+        changed = true;
+      }
+    }
+  }
+  return candies.reduce((sum, c) => sum + c, 0);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>new Array(n).fill(1)</code> — every child starts at the minimum legal amount.</li>
+    <li>The outer <code>while (changed)</code> loop keeps re-scanning until a complete pass over
+      every index makes zero fixes — that's the stopping condition, not a fixed number of
+      passes.</li>
+    <li>The first <code>if</code> checks the left neighbor: if this child rates higher than the
+      child to their left but doesn't yet have strictly more candy, bump them to
+      <code>candies[i-1] + 1</code>.</li>
+    <li>The second <code>if</code> does the same check against the right neighbor. Both checks
+      run on every index every pass — a child can need fixing against either side, or both.</li>
+    <li>Because a fix in one spot can only be discovered as necessary <em>after</em> a
+      neighboring fix already landed (on a previous or even the same pass), violations can
+      require several passes to fully settle.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>Repeated re-scans until stable (qualitatively worse than O(n) — each pass is O(n), and a chain of violations can force roughly one extra pass per additional child in the chain, so it converges slowly on long monotonic runs)</td><td>O(n)</td><td>Start at 1, re-scan + fix until no pass makes changes</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — two linear passes, no re-scanning</h2>
+  <p>The key insight: a child's final candy count only ever depends on <em>one direction at a
+    time</em> if you handle the directions separately. Pass left→right and only enforce "beats
+    the left neighbor". Pass right→left and only enforce "beats the right neighbor", taking the
+    <strong>max</strong> with whatever the left pass already gave that child so neither pass
+    undoes the other's work. Both constraints end up satisfied after exactly two passes — no
+    re-scanning, no rippling.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: left-to-right pass enforces beating the left neighbor, right-to-left pass enforces beating the right neighbor using max so it never undoes the first pass, then sum the final array.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: two passes, one direction each, no re-scanning</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">left → right</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">beat left neighbor</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">right → left</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">beat right, via max()</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">sum candies[]</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">= answer</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — each pass touches every child exactly once, no repeats.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> child being checked</span>
+    <span><i class="lg-compare"></i> neighbor it's compared against</span>
+    <span><i class="lg-active"></i> just bumped this step</span>
+    <span><i class="lg-sorted"></i> final — both directions satisfied</span>
+  </div>
+  <div class="viz-panel">
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0 0 0.35rem;">ratings (fixed input)</p>
+    <div class="viz-stage"><div id="viz2RatingsStage"></div></div>
+    <p class="mono" style="color:var(--text-dim);font-size:0.78rem;margin:0.85rem 0 0.35rem;">candies (two clean passes)</p>
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function candyOptimal(ratings) {
+  const n = ratings.length;
+  const candies = new Array(n).fill(1);
+
+  // Pass 1: left → right — only the left-neighbor rule.
+  for (let i = 1; i < n; i++) {
+    if (ratings[i] > ratings[i - 1]) {
+      candies[i] = candies[i - 1] + 1;
+    }
+  }
+
+  // Pass 2: right → left — only the right-neighbor rule, via max().
+  for (let i = n - 2; i >= 0; i--) {
+    if (ratings[i] > ratings[i + 1]) {
+      candies[i] = Math.max(candies[i], candies[i + 1] + 1);
+    }
+  }
+
+  return candies.reduce((sum, c) => sum + c, 0);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>new Array(n).fill(1)</code> — same baseline as brute force: everyone starts legal.</li>
+    <li>Pass 1 only ever looks left (<code>ratings[i] > ratings[i-1]</code>). By the time it
+      reaches index <code>i</code>, index <code>i-1</code> is already finished for this pass, so
+      the whole left-side constraint is nailed in one clean sweep.</li>
+    <li>Pass 2 only ever looks right (<code>ratings[i] > ratings[i+1]</code>), walking backward
+      so <code>i+1</code> is already finished.</li>
+    <li><code>Math.max(candies[i], candies[i + 1] + 1)</code> is the crux: pass 1 may have
+      already given <code>candies[i]</code> a big value satisfying the left rule. Pass 2 must
+      not shrink that — it can only raise the count further if the right rule demands more.</li>
+    <li><code>candies.reduce((sum, c) => sum + c, 0)</code> — the answer is just the total candy
+      count once both constraints hold everywhere at once.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Two linear passes, one direction enforced per pass</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (re-scan + fix until stable)</td><td>Repeated O(n) passes — converges slowly on long runs, qualitatively worse than linear</td><td>O(n)</td></tr>
+      <tr><td>Optimal (two-pass greedy)</td><td>O(n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does doing one pass left-to-right and one pass right-to-left actually
+        satisfy BOTH neighbor constraints at once, for every child?</p>
+      <ul class="pb-ia">
+        <li>Each pass only ever writes based on comparing against a neighbor whose value for
+          that pass is already finalized — pass 1 never looks right, pass 2 never looks left.</li>
+        <li>Pass 1 alone guarantees "beats a higher-rated left neighbor" holds everywhere.</li>
+        <li>Pass 2's <code>max()</code> guarantees "beats a higher-rated right neighbor" holds
+          everywhere, without ever undoing what pass 1 already proved for the left side.</li>
+        <li>Since neither pass can lower a count, both proofs survive to the end — the final
+          array satisfies both directions simultaneously.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why <code>Math.max(candies[i], candies[i + 1] + 1)</code> in pass 2,
+        instead of just <code>candies[i] = candies[i + 1] + 1</code>?</p>
+      <ul class="pb-ia">
+        <li>Without <code>max</code>, pass 2 would blindly overwrite whatever pass 1 computed.</li>
+        <li>Example: ratings <code>[1, 3, 2]</code> — pass 1 gives index 1 two candies (beats
+          the left neighbor). Index 1 doesn't need fixing in pass 2 at all (3 &gt; 2 is false
+          the other way — index 1's rating isn't &gt; ratings[2]).</li>
+        <li>But in general, a plain overwrite risks shrinking a count that pass 1 legitimately
+          earned, silently breaking the left-side guarantee that pass 1 just established.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: it's tempting to think "later pass wins" the way state updates
+        often work — here the later pass must only ever raise the value, never simply replace
+        it.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Two adjacent children have the EQUAL ratings — does either need extra
+        candy?</p>
+      <ul class="pb-ia">
+        <li>No. The rule is "strictly higher rating → strictly more candy" — equal ratings carry
+          no ordering requirement between those two children at all.</li>
+        <li>Both conditions use strict <code>&gt;</code>, never <code>&gt;=</code>, so a
+          plateau of equal ratings never triggers a bump between those neighbors.</li>
+        <li>Each child in a plateau can independently sit at whatever its own left/right
+          constraints (from its OTHER neighbor) require — often just the baseline of 1.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const candies = [];
+console.log(candies.reduce((sum, c) => sum + c));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: it throws — <code>TypeError: Reduce of empty array with no initial
+          value</code>. Nothing is logged; the program crashes at that line.</li>
+        <li><code>.reduce()</code> without a second argument uses the array's first element as
+          the starting accumulator. An empty array has no first element, so there's nothing to
+          start from.</li>
+        <li>This is exactly why both solutions above call
+          <code>candies.reduce((sum, c) => sum + c, 0)</code> with an explicit
+          <code>0</code> — that initial value makes the reduce safe even in principle, regardless
+          of array length.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: LeetCode guarantees <code>n &gt;= 1</code> here so
+        <code>candies</code> is never actually empty in this problem — but the moment this
+        summing logic gets copy-pasted into different code without that guarantee, omitting the
+        <code>0</code> becomes a live crash waiting to happen.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="onedirection" data-explain="Each pass enforces exactly one neighbor direction using only information that pass has already finalized (pass 1 never looks right, pass 2 never looks left), so by the end of pass 2 both directions are proven correct at once — no re-scanning needed." >
+    <p class="q-text">1. Why is it enough to make just ONE left-to-right pass and ONE right-to-left pass, instead of repeatedly re-scanning like brute force?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onedirection">Each pass only enforces one neighbor direction using already-finalized values, so one pass per direction is provably sufficient</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It isn't provably enough — it just happens to work on the LeetCode examples</button>
+      <button class="btn dsa-quiz-option" data-value="random">The number of passes needed depends on shuffling the input first</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="preventundo" data-explain="Pass 1 already proved the left-neighbor rule for every child. Pass 2's max() lets it raise a count further for the right-neighbor rule, but never lets it shrink a count and silently break what pass 1 already established." >
+    <p class="q-text">2. What would go wrong if pass 2 used a plain assignment (<code>candies[i] = candies[i+1] + 1</code>) instead of <code>Math.max(candies[i], candies[i+1] + 1)</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="preventundo">It could shrink a count pass 1 already earned, breaking the left-neighbor guarantee pass 1 just proved</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — the two forms are always equivalent</button>
+      <button class="btn dsa-quiz-option" data-value="slower">Nothing changes correctness-wise, it's only slightly slower</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="strict" data-explain="Both the brute-force checks and the optimal passes use strict greater-than (>), so a plateau of equal ratings never forces either neighbor to get more candy than the other." >
+    <p class="q-text">3. Why don't two adjacent children with the SAME rating ever need different candy counts because of each other?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="strict">Every comparison uses strict > — equal ratings never trigger a bump between those two neighbors</button>
+      <button class="btn dsa-quiz-option" data-value="always1">Equal ratings always force both children to exactly 1 candy each</button>
+      <button class="btn dsa-quiz-option" data-value="average">The algorithm averages their candy counts together</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="ripple" data-explain="Brute force fixes one violated neighbor pair at a time, and a fix can only be recognized as needed after the neighbor that causes it has already been fixed — on a long strictly increasing or decreasing run, that forces roughly one extra pass per additional child before the whole line stabilizes." >
+    <p class="q-text">4. Why can brute force need MANY passes on a long strictly-increasing (or decreasing) run of ratings, instead of settling in one or two?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="ripple">A fix can only be discovered as needed after a neighboring fix already landed, so violations ripple roughly one child further per pass</button>
+      <button class="btn dsa-quiz-option" data-value="bug">It's a bug — a correctly written brute force would always finish in exactly one pass</button>
+      <button class="btn dsa-quiz-option" data-value="random2">The number of passes is unrelated to the shape of the ratings array</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="linearvsrescans" data-explain="Optimal is a clean O(n): exactly two passes, each touching every child once. Brute force's total work isn't a fixed small multiple of n — the number of full re-scans needed can grow with how long the monotonic runs in the input are, so it's qualitatively slower even though a single pass of it is also O(n)." >
+    <p class="q-text">5. What's the honest complexity difference between the two solutions?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="linearvsrescans">Optimal is a fixed O(n) (two passes); brute force repeats O(n) passes an input-dependent number of times, converging slowly on long runs</button>
+      <button class="btn dsa-quiz-option" data-value="same2">They're asymptotically identical in every case</button>
+      <button class="btn dsa-quiz-option" data-value="reversed2">Brute force is always faster because it can stop after one pass on easy inputs</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'candy';
+
+  // ---- Solution 1: brute force (start at 1, repeatedly re-scan + fix until stable) ----
+  function buildCandyBruteSteps(ratings) {
+    const n = ratings.length;
+    const candies = new Array(n).fill(1);
+    const steps = [];
+    const snap = (narration, states) => steps.push({ narration, values: candies.slice(), states });
+
+    snap(`Start: every child gets 1 candy. ratings = [${ratings.join(', ')}]. Brute force re-scans repeatedly, fixing one broken neighbor pair at a time, until a full pass makes zero changes.`, {});
+
+    let changed = true;
+    let pass = 0;
+    while (changed) {
+      changed = false;
+      pass++;
+      snap(`Pass ${pass} begins — re-scan every child left to right, checking both neighbors.`, {});
+      for (let i = 0; i < n; i++) {
+        const states = { [i]: 'pointer' };
+        let localChanged = false;
+        const notes = [];
+        if (i > 0 && ratings[i] > ratings[i - 1] && candies[i] <= candies[i - 1]) {
+          candies[i] = candies[i - 1] + 1;
+          changed = true;
+          localChanged = true;
+          states[i - 1] = 'compare';
+          states[i] = 'active';
+          notes.push(`left neighbor: ratings[]>ratings[] and candies[${i}]≤candies[${i - 1}] → bumped to ${candies[i]}`);
+        }
+        if (i < n - 1 && ratings[i] > ratings[i + 1] && candies[i] <= candies[i + 1]) {
+          candies[i] = candies[i + 1] + 1;
+          changed = true;
+          localChanged = true;
+          states[i + 1] = 'compare';
+          states[i] = 'active';
+          notes.push(`right neighbor: ratings[]>ratings[] and candies[${i}]≤candies[${i + 1}] → bumped to ${candies[i]}`);
+        }
+        snap(localChanged ? `Index ${i}: ${notes.join('; ')}.` : `Index ${i}: both neighbor constraints already satisfied — no change.`, states);
+      }
+      const passStates = {};
+      if (!changed) candies.forEach((_, i) => { passStates[i] = 'sorted'; });
+      snap(`Pass ${pass} finished: candies = [${candies.join(', ')}]. ${changed ? 'Something changed — another full pass is required.' : 'No changes this pass — done.'}`, passStates);
+    }
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (two clean linear passes, no re-scanning) ----
+  function buildCandyOptimalSteps(ratings) {
+    const n = ratings.length;
+    const candies = new Array(n).fill(1);
+    const steps = [];
+    const snap = (narration, states) => steps.push({ narration, values: candies.slice(), states });
+
+    snap(`Start: every one of the ${n} children gets 1 candy baseline. ratings = [${ratings.join(', ')}].`, {});
+    snap(`Left-to-right pass begins: walk from index 1, bumping a child's candies only when their rating beats the child to their left.`, { 0: 'pointer' });
+
+    for (let i = 1; i < n; i++) {
+      const states = { [i - 1]: 'compare', [i]: 'pointer' };
+      if (ratings[i] > ratings[i - 1]) {
+        candies[i] = candies[i - 1] + 1;
+        states[i] = 'active';
+        snap(`ratings[${i}]= > ratings[]=${ratings[i - 1]} → candies[${i}] = candies[${i - 1}] + 1 = ${candies[i]}.`, states);
+      } else {
+        snap(`ratings[${i}]=${ratings[i]} ≤ ratings[${i - 1}]=${ratings[i - 1]} → no change (candies[${i}] stays ${candies[i]}).`, states);
+      }
+    }
+    snap(`Left-to-right pass done: [${candies.join(', ')}]. Every "beats the left neighbor" edge is now satisfied.`, {});
+    snap(`Right-to-left pass begins: walk from the second-to-last index down to 0, bumping (using max, so pass 1's work is never undone) when a child's rating beats the child to their right.`, {});
+
+    for (let i = n - 2; i >= 0; i--) {
+      const states = { [i + 1]: 'compare', [i]: 'pointer' };
+      if (ratings[i] > ratings[i + 1]) {
+        const proposed = candies[i + 1] + 1;
+        const before = candies[i];
+        candies[i] = Math.max(candies[i], proposed);
+        if (candies[i] !== before) {
+          states[i] = 'active';
+          snap(`ratings[${i}]= > ratings[]=${ratings[i + 1]} → candies[${i}] = max(${before}, ${proposed}) = ${candies[i]}.`, states);
+        } else {
+          snap(`ratings[${i}]= > ratings[]=${ratings[i + 1]} but candies[${i}]=${before} already ≥ ${proposed} → no change needed.`, states);
+        }
+      } else {
+        snap(`ratings[${i}]=${ratings[i]} ≤ ratings[${i + 1}]=${ratings[i + 1]} → no change (candies[${i}] stays ${candies[i]}).`, states);
+      }
+    }
+    const total = candies.reduce((sum, c) => sum + c, 0);
+    const finalStates = {};
+    candies.forEach((_, i) => { finalStates[i] = 'sorted'; });
+    snap(`Done — both directions satisfied simultaneously. Final candies = [${candies.join(', ')}], total = ${total}.`, finalStates);
+    return steps;
+  }
+
+  const EXAMPLE = [1, 3, 2, 2, 1, 4];
+
+  // ---- Solution 1 wiring ----
+  const ratingsBars1 = new DSA.Bars(document.getElementById('viz1RatingsStage'), { min: 0, max: 5 });
+  ratingsBars1.setData(EXAMPLE);
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: 0, max: 4 });
+  let bruteRatings = EXAMPLE.slice();
+  let bruteSteps = buildCandyBruteSteps(bruteRatings);
+  bars1.setData(new Array(bruteRatings.length).fill(1));
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      const s = step || { values: new Array(bruteRatings.length).fill(1), states: {} };
+      bars1.paint(s.states, s.values);
+    },
+  });
+
+  // ---- Solution 2 wiring ----
+  const ratingsBars2 = new DSA.Bars(document.getElementById('viz2RatingsStage'), { min: 0, max: 5 });
+  ratingsBars2.setData(EXAMPLE);
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: 0, max: 4 });
+  let optimalRatings = EXAMPLE.slice();
+  let optimalSteps = buildCandyOptimalSteps(optimalRatings);
+  bars2.setData(new Array(optimalRatings.length).fill(1));
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      const s = step || { values: new Array(optimalRatings.length).fill(1), states: {} };
+      bars2.paint(s.states, s.values);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('candy', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
