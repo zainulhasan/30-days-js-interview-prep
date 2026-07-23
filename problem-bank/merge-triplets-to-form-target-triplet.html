@@ -150,8 +150,13 @@
   <h3>Complexity</h3>
   <table class="complexity-table">
     <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
-    <tbody><tr><td>O(n&sup2;) per round &times; rounds until fixed point</td><td>O(n&sup2;) worst case (growing known set)</td><td>Literal merge simulation, BFS over reachable triplets</td></tr></tbody>
+    <tbody><tr><td>O(n&sup2;) per round &times; rounds until fixed point</td><td>O(n&sup3;) worst case (growing known set)</td><td>Literal merge simulation, BFS over reachable triplets</td></tr></tbody>
   </table>
+  <p>The known set's growth is bounded by O(n&sup3;), not O(n&sup2;): a merged triplet's 3
+    coordinates are each drawn independently from up to <code>n</code> distinct a-values,
+    b-values, and c-values seen across the input, so the reachable set can grow past
+    n&sup2; before it stabilizes — it's bounded by the product of distinct values per
+    coordinate, not by the number of merge <em>pairs</em>.</p>
 
   <h2>Solution 2: Optimal — greedy check, no merging needed</h2>
   <p>The key insight: merging only ever takes a coordinate-wise <em>maximum</em>, so merging never
@@ -251,7 +256,7 @@
   <table class="complexity-table">
     <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
     <tbody>
-      <tr><td>Brute force (simulate real merges)</td><td>O(n&sup2;) per round &times; rounds until fixed point</td><td>O(n&sup2;) worst case</td></tr>
+      <tr><td>Brute force (simulate real merges)</td><td>O(n&sup2;) per round &times; rounds until fixed point</td><td>O(n&sup3;) worst case</td></tr>
       <tr><td>Optimal (greedy filter + achieved set)</td><td>O(n)</td><td>O(1)</td></tr>
     </tbody>
   </table>
@@ -434,15 +439,21 @@ console.log(triplets.includes(target));</code></pre>
         for (let j = i + 1; j < n; j++) {
           const merged = [Math.max(known[i][0], known[j][0]), Math.max(known[i][1], known[j][1]), Math.max(known[i][2], known[j][2])];
           const cmp = {};
-          cmp[i + ',0'] = 'compare'; cmp[i + ',1'] = 'compare'; cmp[i + ',2'] = 'compare';
-          cmp[j + ',0'] = 'compare'; cmp[j + ',1'] = 'compare'; cmp[j + ',2'] = 'compare';
+          if (i < CANDIDATE_ROWS) { cmp[i + ',0'] = 'compare'; cmp[i + ',1'] = 'compare'; cmp[i + ',2'] = 'compare'; }
+          if (j < CANDIDATE_ROWS) { cmp[j + ',0'] = 'compare'; cmp[j + ',1'] = 'compare'; cmp[j + ',2'] = 'compare'; }
           if (!has(merged)) {
             known.push(merged);
             progress = true;
             const newIdx = known.length - 1;
             const found = merged[0] === target[0] && merged[1] === target[1] && merged[2] === target[2];
             const rowState = found ? 'sorted' : 'pointer';
-            cmp[newIdx + ',0'] = rowState; cmp[newIdx + ',1'] = rowState; cmp[newIdx + ',2'] = rowState;
+            // Guard against newIdx colliding with TARGET_ROW (or falling off the grid
+            // entirely) when `known` grows past the fixed visual capacity — the algorithm
+            // itself must keep working for any input size, but the grid can only ever show
+            // CANDIDATE_ROWS candidate rows, so painting stops there.
+            if (newIdx < CANDIDATE_ROWS) {
+              cmp[newIdx + ',0'] = rowState; cmp[newIdx + ',1'] = rowState; cmp[newIdx + ',2'] = rowState;
+            }
             snapshot(`Round ${round}: merge row ${i} and row ${j} → [${merged.join(', ')}] — new, store it in row ${newIdx}.`, cmp);
             if (found) {
               snapshot(`Row ${newIdx} now matches the target — reachable via real merges. Return true.`, cmp);
