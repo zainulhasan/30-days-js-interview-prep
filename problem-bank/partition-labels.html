@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Partition Labels — Problem Bank</title>
+<meta name="description" content="Partition Labels: a brute-force re-scan that rechecks every character's occurrence range from scratch, vs. an optimal single pass using a precomputed last-occurrence map, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/partition-labels.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Partition Labels — Problem Bank" />
+<meta property="og:description" content="Partition Labels: a brute-force re-scan that rechecks every character's occurrence range from scratch, vs. an optimal single pass using a precomputed last-occurrence map, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/partition-labels.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Partition Labels — Problem Bank" />
+<meta name="twitter:description" content="Partition Labels: a brute-force re-scan that rechecks every character's occurrence range from scratch, vs. an optimal single pass using a precomputed last-occurrence map, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Partition Labels", "item": "https://dsa.itszain.tech/problem-bank/partition-labels.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      this problem is a textbook case of a greedy choice being provably optimal; read that lesson
+      first if the "make the locally obvious choice and never look back" idea is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Partition Labels <span class="leetcode-link">(<a href="https://leetcode.com/problems/partition-labels/" target="_blank" rel="noopener">LeetCode: Partition Labels</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given a string <code>s</code>. Cut it into as many contiguous pieces as possible so
+    that every letter that appears in <code>s</code> ends up entirely inside just one piece — no
+    letter is allowed to appear in two different pieces. Concatenating the pieces back together in
+    order must reproduce <code>s</code> exactly. Return the length of each piece, in order.</p>
+  <p>Canonical example: <code>s = "ababcbacadefegdehijhklij"</code> → <code>[9, 7, 8]</code>. The
+    first 9 characters (<code>ababcbaca</code>) contain every occurrence of <code>a</code>,
+    <code>b</code>, and <code>c</code> — none of those letters shows up again after index 8, so
+    the first piece can safely close there.</p>
+
+  <h2>Solution 1: Brute force — re-scan the whole string for every character</h2>
+  <p>The naive way to check "is it safe to close the partition here?" is to look, for every
+    character currently inside the growing window, at <em>where else in the entire string</em>
+    that character shows up — by scanning from index 0 to the end every single time. If any of
+    those re-scans turns up an occurrence past the current window boundary, the window has to
+    grow and the newly-included characters need re-scanning too. Only once a full pass over the
+    window confirms no character spills past it does the partition close.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: grow the current window, re-scan the entire string from scratch to find each window character's last occurrence, and only close the partition once a full pass confirms nothing spills past the window.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: grow window, re-scan whole string per character</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">grow window [start, end]</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">one char at a time</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">re-scan entire string</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">find this char's last occurrence</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">close only if no spillover</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">after a full window pass</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: every character in the window triggers a full O(n) re-scan — O(n&#178;) overall.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> character currently being re-scanned for</span>
+    <span><i class="lg-active"></i> inside the still-open window</span>
+    <span><i class="lg-sorted"></i> closed partition</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    s = "eaaabbbccd" — a short case, kept separate from the canonical example above so the whole
+    trace stays watchable.</p>
+
+  <h3>The code</h3>
+  <pre><code>function partitionLabelsBrute(s) {
+  const result = [];
+  let start = 0;
+  while (start &lt; s.length) {
+    let end = start;
+    let i = start;
+    while (i &lt;= end) {
+      const c = s[i];
+      let last = i;
+      for (let j = 0; j &lt; s.length; j++) {
+        if (s[j] === c) last = j;
+      }
+      if (last &gt; end) end = last;
+      i++;
+    }
+    result.push(end - start + 1);
+    start = end + 1;
+  }
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The outer <code>while (start &lt; s.length)</code> starts a fresh partition at whatever
+      index the previous one left off at.</li>
+    <li>The inner <code>while (i &lt;= end)</code> is the window-growth loop — <code>end</code> can
+      move forward mid-loop, which is exactly what lets the window keep expanding as long as it
+      needs to.</li>
+    <li>The <code>for (let j = 0; j &lt; s.length; j++)</code> loop is the wasteful part: it
+      re-scans the <em>entire</em> string, from index 0, just to find where one character last
+      occurs — and this runs once per character inside the window, not once per partition.</li>
+    <li><code>if (last &gt; end) end = last</code> grows the window only when the re-scan actually
+      found something past the current boundary.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&#178;)</td><td>O(1) extra</td><td>Grow window, re-scan whole string per character inside it</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — precomputed last-occurrence map, one pass</h2>
+  <p>Every one of those re-scans is answering the same question over and over: "where does this
+    character last appear?" That answer never changes once <code>s</code> is fixed, so compute it
+    <em>once</em>, for every character, in a single O(n) pass, and store it in a map. Then walk
+    <code>s</code> exactly once, growing a running boundary <code>end</code> to
+    <code>Math.max(end, lastOccurrence[s[i]])</code> at every index. The moment the scan index
+    <code>i</code> catches up to <code>end</code>, every character seen so far is guaranteed to
+    have shown its last occurrence already — the partition is safe to close.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal solution: build a last-occurrence map in one O(n) pass, then walk the string once extending end to the max of itself and each character's last occurrence, closing the partition the moment the scan index reaches end.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: precompute last-occurrence map, then one linear scan</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">build lastOccurrence map</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">one O(n) pass, up front</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">end = max(end, last[c])</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">O(1) lookup, no re-scan</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">close when i === end</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">boundary found, no lookback</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — the map replaces every re-scan with an O(1) lookup.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> scan index i</span>
+    <span><i class="lg-active"></i> current open partition window</span>
+    <span><i class="lg-sorted"></i> closed partition</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same string as above,
+    s = "eaaabbbccd", so the two traces are directly comparable.</p>
+
+  <h3>The code</h3>
+  <pre><code>function partitionLabelsOptimal(s) {
+  const last = {};
+  for (let i = 0; i &lt; s.length; i++) last[s[i]] = i;
+
+  const result = [];
+  let start = 0, end = 0;
+  for (let i = 0; i &lt; s.length; i++) {
+    end = Math.max(end, last[s[i]]);
+    if (i === end) {
+      result.push(end - start + 1);
+      start = i + 1;
+    }
+  }
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The first loop builds <code>last</code>, mapping every character to the highest index it
+      occurs at. Because it always overwrites with the current index, whatever's left after the
+      loop is necessarily each character's LAST occurrence.</li>
+    <li><code>end = Math.max(end, last[s[i]])</code> is the entire greedy rule: the current
+      partition can never close before the last occurrence of ANY character it has already
+      swallowed.</li>
+    <li><code>if (i === end)</code> is the closing condition — once the scan pointer walks all the
+      way up to the boundary without <code>end</code> having moved further out, there's nothing
+      left pending, so it's safe to cut here.</li>
+    <li><code>start = i + 1</code> resets the window for the next partition, right after
+      recording the size of the one that just closed.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1) extra</td><td>One pass to build the map, one pass to scan — map is bounded by the 26-letter lowercase alphabet</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (re-scan per character)</td><td>O(n&#178;)</td><td>O(1) extra</td></tr>
+      <tr><td>Optimal (last-occurrence map + one scan)</td><td>O(n)</td><td>O(1) extra</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Couldn't a character re-appear later and ruin a partition that already
+        looked closed?</p>
+      <ul class="pb-ia">
+        <li>No — that's exactly what <code>end = Math.max(end, last[s[i]])</code> prevents.</li>
+        <li>The moment any character enters the current window, its LAST occurrence anywhere in
+          the string immediately extends <code>end</code> to cover it.</li>
+        <li>The scan pointer <code>i</code> only reaches <code>end</code> after every character
+          between <code>start</code> and <code>end</code> has already contributed its own last
+          occurrence to that same boundary — there's no future re-appearance left to discover.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Does this greedy approach guarantee the MAXIMUM possible number of
+        partitions, or just some valid partition?</p>
+      <ul class="pb-ia">
+        <li>It guarantees the maximum. Any valid cut point must occur at an index where no letter
+          seen so far reappears later — call these "safe" indices.</li>
+        <li>The algorithm closes at the very first safe index it reaches (<code>i === end</code>
+          the instant that condition becomes true) — it never waits or over-extends.</li>
+        <li>Since closing earlier can only create room for more partitions later (never fewer),
+          taking every safe index the moment it appears is what maximizes the count.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Is this greedy choice exchange-argument provable?"
+        Yes — swapping an earlier valid cut for a later one can never increase the total count and
+        can only merge pieces, so greedy-closing-earliest dominates any other strategy.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would the approach change if the goal were to MINIMIZE the number of
+        partitions instead?</p>
+      <ul class="pb-ia">
+        <li>Trivial — the whole string is always one valid partition, so the minimum is always 1
+          (just return <code>[s.length]</code>).</li>
+        <li>There's no interesting algorithm to design for "minimize," which is why this problem
+          is always phrased as maximizing — that's the version with real constraints to reason
+          about.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const last = {};
+const s = "9213";
+for (let i = 0; i &lt; s.length; i++) last[s[i]] = i;
+console.log(Object.keys(last));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>['1', '2', '3', '9']</code> — NOT <code>['9', '2', '1', '3']</code>,
+          the insertion order.</li>
+        <li>Plain object keys that look like non-negative integers (a JS spec concept called
+          "array index" keys) are always iterated in ascending numeric order first, before any
+          string keys, regardless of insertion order.</li>
+        <li>A <code>Map</code> has no such special case — <code>new Map()</code> always preserves
+          true insertion order for every key type.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this can't bite the actual <code>last</code> map in this
+        problem's real code — LeetCode guarantees <code>s</code> is lowercase English letters
+        only, so its keys are never numeric-looking strings. But the moment a "map keyed by
+        characters" gets reused for digits, tokens, or any string that could be integer-like,
+        reaching for <code>Map</code> instead of <code>{}</code> avoids this silently-reordered-keys
+        surprise entirely.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="waituntil" data-explain="Closing as soon as a new max end appears would be wrong — that new max end is itself a promise that a character's occurrence extends out that far, and everything between the current scan position and that new end still needs to be checked before it's safe to cut." >
+    <p class="q-text">1. Why does the algorithm wait until the scan index <code>i</code> equals <code>end</code> to close a partition, instead of closing the instant <code>end</code> updates?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="waituntil">Every index between the current position and the new end still needs to be scanned — closing early could cut through a character's own last occurrence</button>
+      <button class="btn dsa-quiz-option" data-value="speed">Closing early would make the algorithm run faster</button>
+      <button class="btn dsa-quiz-option" data-value="noreason">There's no real reason — closing immediately would work identically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="breaks" data-explain="Using each character's FIRST occurrence instead of its LAST would make end too small — it would ignore any later re-appearance of that character entirely, letting the algorithm close a partition while that character still shows up again outside it, producing an invalid (too-small) partition." >
+    <p class="q-text">2. What would go wrong if <code>last[c]</code> stored each character's FIRST occurrence instead of its last?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="breaks">Partitions could close too early, splitting a character's occurrences across two pieces — an invalid result</button>
+      <button class="btn dsa-quiz-option" data-value="same">Nothing — the algorithm would produce the exact same output either way</button>
+      <button class="btn dsa-quiz-option" data-value="faster">It would just run faster with no change in correctness</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onelookup" data-explain="Precomputing last-occurrence turns 'where does this character reappear?' into a single O(1) map lookup. The brute force answers that same question by re-scanning the whole string from index 0 every time — that repeated linear work per character is exactly what makes it O(n^2)." >
+    <p class="q-text">3. What specifically makes the optimal solution O(n) instead of O(n&#178;)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onelookup">Each character's last occurrence is looked up in O(1) from a precomputed map, instead of being found by re-scanning the whole string</button>
+      <button class="btn dsa-quiz-option" data-value="shorter">It's tested on shorter example strings</button>
+      <button class="btn dsa-quiz-option" data-value="skips">It skips checking some characters entirely</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="never" data-explain="It's structurally impossible: end is always at least as large as every window character's last occurrence, so the window can never close (i === end) while any of those characters still has an unvisited occurrence ahead of end." >
+    <p class="q-text">4. Can the greedy algorithm ever produce an INVALID partition — one that splits a single character's occurrences across two pieces?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="never">No — end is always extended to cover every occurrence of every character already in the window, so a split can't happen</button>
+      <button class="btn dsa-quiz-option" data-value="rare">Only on very long strings, due to floating point limits</button>
+      <button class="btn dsa-quiz-option" data-value="ordermatters">Yes, if the string isn't sorted alphabetically first</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="earliest" data-explain="The algorithm closes at the earliest index where it's actually safe to do so, every single time. Since a later cut can only merge pieces that could have been split (never create extra ones), always taking the earliest safe cut is what guarantees the maximum count, not merely a valid one." >
+    <p class="q-text">5. Why does closing at the FIRST safe index guarantee the MAXIMUM number of partitions, rather than just A valid partition?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="earliest">Any later cut point could only merge pieces that were already safe to split — never create additional ones — so taking every earliest safe cut maximizes the count</button>
+      <button class="btn dsa-quiz-option" data-value="random">It doesn't guarantee the maximum — it's just one of several equally valid partitions</button>
+      <button class="btn dsa-quiz-option" data-value="alphabet">Because the alphabet is fixed at 26 letters, there's only ever one possible partition</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'partition-labels';
+
+  // ---- shared state-painting helper: 0..closedUpto is 'sorted', an optional open
+  // [windowStart, windowEnd] window is 'active', and an optional pointer index overlays
+  // 'compare' (unless that index is already inside the closed/sorted range). ----
+  function statesFor(closedUpto, windowStart, pointerI, windowEnd) {
+    const states = {};
+    for (let k = 0; k <= closedUpto; k++) states[k] = 'sorted';
+    if (windowStart !== undefined) {
+      for (let k = windowStart; k <= windowEnd; k++) {
+        if (states[k] === undefined) states[k] = 'active';
+      }
+    }
+    if (pointerI !== undefined && states[pointerI] !== 'sorted') states[pointerI] = 'compare';
+    return states;
+  }
+
+  // ---- Solution 1: brute force (re-scan whole string per window character) ----
+  function buildPartitionBruteSteps(s) {
+    const steps = [];
+    const n = s.length;
+    const chars = s.split('');
+    let start = 0;
+    const result = [];
+    let closedUpto = -1;
+    steps.push({ narration: `Start: s = "${s}" (${n} chars). For each character in a growing window we re-scan the ENTIRE string to find its last occurrence.`, data: chars.slice(), states: statesFor(-1) });
+    while (start < n) {
+      let end = start;
+      let i = start;
+      while (i <= end) {
+        const c = chars[i];
+        let last = i;
+        for (let j = 0; j < n; j++) {
+          if (chars[j] === c) last = j;
+        }
+        const grew = last > end;
+        if (grew) end = last;
+        steps.push({
+          narration: grew
+            ? `Re-scan the full string for '${c}' (index ${i}) — last seen at index ${last}, past the window end, so it grows to end=${end}.`
+            : `Re-scan the full string for '${c}' (index ${i}) — last seen at index ${last}, already inside the window (end=${end}), no growth.`,
+          data: chars.slice(),
+          states: statesFor(closedUpto, start, i, end),
+        });
+        i++;
+      }
+      result.push(end - start + 1);
+      closedUpto = end;
+      steps.push({
+        narration: `Every character in [${start}, ${end}] stayed inside that range on this pass — window closed. Partition size ${end - start + 1}.`,
+        data: chars.slice(),
+        states: statesFor(closedUpto),
+      });
+      start = end + 1;
+    }
+    steps.push({ narration: `Done — partitions: [${result.join(', ')}]. Correct, but every character triggered a full O(n) re-scan, giving O(n²) overall.`, data: chars.slice(), states: statesFor(n - 1) });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (precomputed last-occurrence map, one linear scan) ----
+  function buildPartitionOptimalSteps(s) {
+    const steps = [];
+    const n = s.length;
+    const chars = s.split('');
+    const last = {};
+    for (let i = 0; i < n; i++) last[chars[i]] = i;
+    const mapStr = Object.keys(last).map((c) => `${c}→${last[c]}`).join(', ');
+    steps.push({ narration: `Precompute the last-occurrence index of every character in one O(n) pass: {${mapStr}}. This map replaces every re-scan with an O(1) lookup.`, data: chars.slice(), states: {} });
+
+    let start = 0, end = 0;
+    const result = [];
+    let closedUpto = -1;
+    for (let i = 0; i < n; i++) {
+      const c = chars[i];
+      const prevEnd = end;
+      end = Math.max(end, last[c]);
+      const grew = end > prevEnd;
+      const closeNow = i === end;
+      if (!closeNow) {
+        steps.push({
+          narration: grew
+            ? `i=${i}, '${c}' last occurs at ${last[c]} → window boundary extends to end=${end} (one map lookup, O(1)).`
+            : `i=${i}, '${c}' last occurs at ${last[c]}, already ≤ end=${end} — no change (O(1) lookup, no re-scan).`,
+          data: chars.slice(),
+          states: statesFor(closedUpto, start, i, end),
+        });
+      } else {
+        result.push(end - start + 1);
+        steps.push({
+          narration: `i=${i} reaches end=${end} — every character seen so far stays inside [${start}, ${end}]. Partition closes, size ${end - start + 1}.`,
+          data: chars.slice(),
+          states: statesFor(end),
+        });
+        closedUpto = end;
+        start = i + 1;
+      }
+    }
+    steps.push({ narration: `Done — partitions: [${result.join(', ')}]. One pass to build the map, one pass to scan — O(n) total, no re-scanning.`, data: chars.slice(), states: statesFor(n - 1) });
+    return steps;
+  }
+
+  const EXAMPLE = 'eaaabbbccd';
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData(EXAMPLE.split(''));
+  const bruteSteps = buildPartitionBruteSteps(EXAMPLE);
+  const bruteplayer = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData(EXAMPLE.split('')); return; }
+      bars1.paint(step.states, step.data);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData(EXAMPLE.split(''));
+  const optimalSteps = buildPartitionOptimalSteps(EXAMPLE);
+  const optimalPlayer = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.setData(EXAMPLE.split('')); return; }
+      bars2.paint(step.states, step.data);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('partition-labels', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
