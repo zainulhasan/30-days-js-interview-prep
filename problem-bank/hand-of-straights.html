@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hand of Straights — Problem Bank</title>
+<meta name="description" content="Hand of Straights: a brute-force greedy using repeated linear scans and splices vs. an optimal greedy using a sorted frequency map, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/hand-of-straights.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Hand of Straights — Problem Bank" />
+<meta property="og:description" content="Hand of Straights: a brute-force greedy using repeated linear scans and splices vs. an optimal greedy using a sorted frequency map, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/hand-of-straights.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Hand of Straights — Problem Bank" />
+<meta name="twitter:description" content="Hand of Straights: a brute-force greedy using repeated linear scans and splices vs. an optimal greedy using a sorted frequency map, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Hand of Straights", "item": "https://dsa.itszain.tech/problem-bank/hand-of-straights.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      both solutions below repeatedly make the "obviously forced" locally-best choice; read that
+      lesson first if the greedy mental model is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Hand of Straights <span class="leetcode-link">(<a href="https://leetcode.com/problems/hand-of-straights/" target="_blank" rel="noopener">LeetCode: Hand of Straights</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Alice has a hand of cards, given as an array of integers <code>hand</code>. She wants to
+    rearrange every card into groups of exactly <code>groupSize</code>, where each group is made
+    of <code>groupSize</code> <em>consecutive</em> integers (like <code>{5, 6, 7}</code> for
+    <code>groupSize = 3</code>). Every card must end up in exactly one group. Return
+    <code>true</code> if this is possible, or <code>false</code> otherwise.</p>
+
+  <h2>Solution 1: Brute force — same greedy idea, repeated linear scans</h2>
+  <p>The greedy insight is unavoidable even in a naive version: the smallest card left in your
+    hand can never belong to any group except one that starts exactly at it, so you always pull
+    the current minimum and try to build a run from there. The brute-force version does exactly
+    that, but on a plain working array — <code>Math.min</code>-style linear scan to find the
+    smallest card, then <code>indexOf</code> + <code>splice</code> to find and remove each of the
+    next <code>groupSize - 1</code> consecutive values, one at a time. Every one of those
+    operations re-scans the array from scratch.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: linear scan finds the smallest remaining card, then indexOf and splice are called once per remaining group member to find and remove each consecutive value, repeated until the hand is empty or a value is missing.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: linear scan, then repeated indexOf + splice</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">scan for min card</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">O(n), every group</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">indexOf(next) + splice()</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">O(n), repeated groupSize-1 times</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="535" y="82" fill="#E2E3E7">repeat per group</text>
+      <text x="535" y="98" fill="#9198A6" font-size="10">until empty or stuck</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-h" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-h)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) work repeated O(n) times — every scan and splice starts over from scratch.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> card just found by a linear scan</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    hand=[1,2,3,6,2,3,4,7,8], groupSize=3 — LeetCode's own canonical example (expected: true),
+    verified above before any HTML was written.</p>
+
+  <h3>The code</h3>
+  <pre><code>function isNStraightHandBrute(hand, groupSize) {
+  if (hand.length % groupSize !== 0) return false;
+  const working = hand.slice();
+
+  while (working.length > 0) {
+    // Linear scan for the smallest remaining card.
+    let minIdx = 0;
+    for (let i = 1; i < working.length; i++) {
+      if (working[i] < working[minIdx]) minIdx = i;
+    }
+    const start = working[minIdx];
+    working.splice(minIdx, 1);
+
+    // One indexOf + splice per remaining group member.
+    for (let k = 1; k < groupSize; k++) {
+      const need = start + k;
+      const idx = working.indexOf(need);
+      if (idx === -1) return false;
+      working.splice(idx, 1);
+    }
+  }
+  return true;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>hand.length % groupSize !== 0</code> is a pigeonhole check — every card must land in
+      exactly one group, so the total count has to divide evenly. Fails fast, O(1).</li>
+    <li>The <code>for</code> loop that finds <code>minIdx</code> re-scans the entire remaining
+      <code>working</code> array from scratch, every single time a group starts.</li>
+    <li><code>working.indexOf(need)</code> is another full linear scan, and
+      <code>working.splice(idx, 1)</code> shifts every element after <code>idx</code> down by one
+      — both O(n), called <code>groupSize - 1</code> times per group.</li>
+    <li>The moment any required consecutive value is missing (<code>idx === -1</code>), the whole
+      function bails out immediately — there's no "try a different grouping" fallback, because
+      (as the interview corner below explains) there isn't a better alternative to fall back to.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n²)</td><td>O(n)</td><td>Same greedy order, but every scan/removal is a fresh O(n) pass over a plain array</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — greedy over a sorted frequency map</h2>
+  <p>Count how many of each card value you have in a frequency map, then look at the distinct
+    values in ascending order. The smallest value with a remaining count &gt; 0 is <em>forced</em>
+    to start new run(s) — nothing smaller is left in the hand to precede it. Consume one copy of
+    that value's count from each of the next <code>groupSize - 1</code> values immediately;
+    if any of them doesn't have enough copies, fail right away.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal solution: build a frequency map of card counts, sort only the distinct values ascending, then for the smallest value with count above zero, consume that many copies from each of the next groupSize minus one values, failing immediately if any is short.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: frequency map, sort distinct values, consume in bulk</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">count via Map</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">O(n), once</text>
+      <rect x="220" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">sort distinct values</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">O(m log m), m ≤ n</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">consume need× per value</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">fail fast if short</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-h)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="400" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n) — the sort of distinct values is the bottleneck, each count touched once.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> value being consumed this step</span>
+    <span><i class="lg-sorted"></i> count reached 0 — fully placed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Bars are labeled <code>value×count</code> —
+    same hand=[1,2,3,6,2,3,4,7,8], groupSize=3 as Solution 1, so you can compare step counts
+    directly.</p>
+
+  <h3>The code</h3>
+  <pre><code>function isNStraightHandOptimal(hand, groupSize) {
+  if (hand.length % groupSize !== 0) return false;
+
+  const count = new Map();
+  for (const card of hand) {
+    count.set(card, (count.get(card) || 0) + 1);
+  }
+  const sortedValues = Array.from(count.keys()).sort((a, b) => a - b);
+
+  for (const value of sortedValues) {
+    const need = count.get(value);
+    if (need > 0) {
+      for (let k = 0; k < groupSize; k++) {
+        const cur = value + k;
+        const have = count.get(cur) || 0;
+        if (have < need) return false;
+        count.set(cur, have - need);
+      }
+    }
+  }
+  return true;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The frequency map is built once — O(n) — then only the <em>distinct</em> values get
+      sorted, not the whole hand. Duplicates of the same value are handled together via
+      <code>need</code>, not sorted individually.</li>
+    <li><code>if (need > 0)</code> skips any value already fully consumed by an earlier, smaller
+      run — without this check the loop would try to re-start runs from cards that don't exist
+      anymore.</li>
+    <li>The inner <code>for (let k = 0; k &lt; groupSize; k++)</code> loop consumes
+      <code>need</code> copies of <code>value, value+1, ..., value+groupSize-1</code> all at
+      once — that's <code>need</code> whole groups processed in one pass, not one group at a
+      time.</li>
+    <li><code>if (have < need) return false</code> fails the instant any consecutive value can't
+      cover what's demanded — no backtracking, because the greedy choice that got us here was
+      forced, not a guess (see interview corner).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n)</td><td>O(n)</td><td>Frequency map + sort of distinct values, each count consumed in O(1) amortized per group</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (linear scan + indexOf/splice)</td><td>O(n²)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (sorted frequency map)</td><td>O(n log n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Both implement the exact same greedy rule — always start a run at the smallest remaining
+    card. The difference is purely the data structure: a plain array forces every "find" and
+    "remove" to be a fresh O(n) scan, while a sorted frequency map turns "remove one copy of a
+    value" into an O(1) map update, paying the sort cost only once, up front, over distinct
+    values instead of the whole hand.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why check <code>hand.length % groupSize !== 0</code> before doing any real
+        work?</p>
+      <ul class="pb-ia">
+        <li>Every card ends up in exactly one group of size <code>groupSize</code>, so the total
+          card count must be an exact multiple of <code>groupSize</code> — a pigeonhole
+          argument, not a heuristic.</li>
+        <li>If it doesn't divide evenly, no grouping can possibly exist, full stop.</li>
+        <li>Checking this first is O(1) and short-circuits every guaranteed-impossible input
+          before touching the (potentially large) frequency map or sort.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it always correct to start a new run at the smallest remaining
+        card, instead of trying other starting points?</p>
+      <ul class="pb-ia">
+        <li>Whatever group the smallest remaining card ends up in, it has to be the
+          <em>lowest</em> member of that group — every other member of a consecutive run is
+          strictly larger.</li>
+        <li>Since nothing smaller is left in the hand, no group could possibly need this card to
+          come after something else — it can only ever be a run's starting value.</li>
+        <li>That makes the greedy choice forced, not a guess: there's no alternative grouping
+          that keeps this card out of a run starting exactly here.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the optimal solution consume <code>need</code> copies at once
+        instead of peeling off one group at a time?</p>
+      <ul class="pb-ia">
+        <li>If a value has <code>need</code> copies remaining, all <code>need</code> of them must
+          simultaneously start <code>need</code> separate runs — there's no other place for
+          those extra copies to go.</li>
+        <li>Processing them together (one pass over <code>value..value+groupSize-1</code>,
+          subtracting <code>need</code> from each count) is equivalent to running the single-run
+          logic <code>need</code> times, but only touches each distinct value once.</li>
+        <li>That's what keeps the total work bounded by the number of distinct values times
+          <code>groupSize</code>, rather than the number of individual cards times
+          <code>groupSize</code>.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const counts = {};
+counts[100] = 'a';
+counts[7] = 'b';
+counts[50] = 'c';
+console.log(Object.keys(counts));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>['7', '50', '100']</code> — NOT insertion order
+          <code>['100', '7', '50']</code>.</li>
+        <li>Plain objects treat non-negative integer-like keys as special "array index" keys and
+          always enumerate them in ascending numeric order first, regardless of the order they
+          were assigned.</li>
+        <li>A real <code>Map</code> (like <code>count</code> in the solution above) has no such
+          rule — it always preserves insertion order, for any key type.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the optimal solution above explicitly calls
+        <code>.sort((a, b) => a - b)</code> on <code>sortedValues</code> instead of assuming any
+        implicit ordering — relying on an object's accidental numeric-key ordering would be
+        undocumented behavior to depend on, and it silently stops applying once a key is no
+        longer a valid array-index integer (e.g. negative numbers, or values ≥ 2³²-1).</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="pigeonhole" data-explain="Every card must land in exactly one group of size groupSize, so the total card count has to be an exact multiple of groupSize. If it isn't, no valid grouping can exist no matter what — an O(1) check that rules out guaranteed-impossible inputs immediately." >
+    <p class="q-text">1. Why does the optimal solution check <code>hand.length % groupSize !== 0</code> before building the frequency map at all?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="pigeonhole">Every card must end up in exactly one group, so the total count has to divide evenly — otherwise it's guaranteed impossible</button>
+      <button class="btn dsa-quiz-option" data-value="perf">It's a performance micro-optimization with no effect on correctness</button>
+      <button class="btn dsa-quiz-option" data-value="alwaystrue">It's always true for valid inputs, so the check never actually matters</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="forced" data-explain="Every other member of a consecutive run is strictly larger than the run's starting value. Since nothing smaller than the current minimum is left in the hand, that card can only ever be the LOWEST member of whatever group it lands in — meaning it's forced to start a run, not a heuristic guess among several options." >
+    <p class="q-text">2. Why must the smallest remaining card (with count &gt; 0) always start a brand-new run?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="forced">It can only ever be the lowest member of its group, since nothing smaller remains to precede it — so starting a run there is forced, not a guess</button>
+      <button class="btn dsa-quiz-option" data-value="fastest">Because scanning for the minimum happens to be the fastest operation available</button>
+      <button class="btn dsa-quiz-option" data-value="convention">It's just an arbitrary convention — any remaining card would work equally well as a starting point</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="distinctonly" data-explain="Duplicate copies of the same value don't need separate sort positions — they're handled together via the need count in one pass over value..value+groupSize-1. Sorting the full hand (including every duplicate) would do unnecessary comparison work that changes nothing about which runs get formed." >
+    <p class="q-text">3. Why does the optimal solution sort only the DISTINCT card values (<code>sortedValues</code>), not the entire <code>hand</code> array?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="distinctonly">Duplicates of the same value are handled together via their count, so sorting them individually would be wasted comparison work</button>
+      <button class="btn dsa-quiz-option" data-value="mustnotsort">Sorting the full hand would produce a wrong answer, not just a slower one</button>
+      <button class="btn dsa-quiz-option" data-value="mapforbids">A Map object throws an error if you try to sort more values than it contains</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="rescans" data-explain="The brute-force version finds the minimum with a fresh linear scan every group, and finds/removes each of the next groupSize-1 values with indexOf + splice — both full O(n) passes over the working array, repeated for every group. That repeated re-scanning, not a different algorithmic idea, is what makes it O(n²)." >
+    <p class="q-text">4. The brute-force solution implements the exact same greedy rule as the optimal one. What actually makes it O(n²) instead of O(n log n)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="rescans">It re-scans the working array from scratch for every minimum search, and again for every indexOf/splice — O(n) work repeated O(n) times</button>
+      <button class="btn dsa-quiz-option" data-value="differentrule">It uses a fundamentally different, less-correct greedy rule</button>
+      <button class="btn dsa-quiz-option" data-value="recursion">It relies on unbounded recursion instead of a loop</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="noalternative" data-explain="Since starting a run at the smallest remaining card was a FORCED choice (not one option among several), if that specific run can't be completed, there's no alternative grouping to fall back to that could have saved it — the answer is simply false, immediately." >
+    <p class="q-text">5. When a required consecutive value is missing partway through building a run, why can both solutions return <code>false</code> immediately instead of trying a different grouping?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="noalternative">The run's starting card was a forced choice, not a guess — if it can't complete, no other valid grouping existed either</button>
+      <button class="btn dsa-quiz-option" data-value="timelimit">Because trying alternatives would exceed a fixed time limit</button>
+      <button class="btn dsa-quiz-option" data-value="convention">By convention, returning early is simply faster to code, even though it's occasionally wrong</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'hand-of-straights';
+
+  // ---- Solution 1: brute force (DSA.Bars, non-uniform — raw card values shrink as removed) ----
+  function buildBruteSteps(hand, groupSize) {
+    const steps = [];
+    const working = hand.slice();
+    steps.push({
+      narration: `Start with ${working.length} cards. Need ${working.length / groupSize} groups of ${groupSize} consecutive values.`,
+      data: working.slice(),
+      states: working.map(() => 'default'),
+    });
+
+    while (working.length > 0) {
+      let minIdx = 0;
+      for (let i = 1; i < working.length; i++) {
+        if (working[i] < working[minIdx]) minIdx = i;
+      }
+      const start = working[minIdx];
+      steps.push({
+        narration: `Linear scan finds the smallest remaining card: ${start}.`,
+        data: working.slice(),
+        states: working.map((_, i) => (i === minIdx ? 'active' : 'default')),
+      });
+      working.splice(minIdx, 1);
+
+      let ok = true;
+      for (let k = 1; k < groupSize; k++) {
+        const need = start + k;
+        const idx = working.indexOf(need);
+        if (idx === -1) {
+          steps.push({
+            narration: `Need ${need} next but it isn't in the remaining hand — impossible.`,
+            data: working.slice(),
+            states: working.map(() => 'default'),
+          });
+          ok = false;
+          break;
+        }
+        steps.push({
+          narration: `indexOf(${need}) scans again, finds it at position ${idx} — splice() removes it.`,
+          data: working.slice(),
+          states: working.map((_, i) => (i === idx ? 'active' : 'default')),
+        });
+        working.splice(idx, 1);
+      }
+      if (!ok) {
+        steps.push({ narration: 'Result: false.', data: working.slice(), states: working.map(() => 'default') });
+        return steps;
+      }
+      steps.push({
+        narration: `Group [${start}..${start + groupSize - 1}] complete. ${working.length} cards remain.`,
+        data: working.slice(),
+        states: working.map(() => 'default'),
+      });
+    }
+    steps.push({ narration: 'All cards consumed into valid consecutive groups — true.', data: [], states: [] });
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: 0, max: 9, uniform: false });
+  bars1.setData([]);
+  const bruteSteps = buildBruteSteps([1, 2, 3, 6, 2, 3, 4, 7, 8], 3);
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData([]); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (DSA.Bars, uniform — "value×count" labels shrink toward 0) ----
+  function buildOptimalSteps(hand, groupSize) {
+    const steps = [];
+    const count = new Map();
+    for (const card of hand) count.set(card, (count.get(card) || 0) + 1);
+    const sortedValues = Array.from(count.keys()).sort((a, b) => a - b);
+
+    function snapshot(narration, highlightIdx) {
+      const data = sortedValues.map((v) => `${v}×${count.get(v)}`);
+      const states = sortedValues.map((v, i) => {
+        if (i === highlightIdx) return 'active';
+        return count.get(v) === 0 ? 'sorted' : 'default';
+      });
+      steps.push({ narration, data, states });
+    }
+
+    snapshot(`Build a frequency map, sort the ${sortedValues.length} distinct values ascending: ${sortedValues.join(', ')}.`, -1);
+
+    for (let vi = 0; vi < sortedValues.length; vi++) {
+      const value = sortedValues[vi];
+      const need = count.get(value);
+      if (need === 0) {
+        snapshot(`${value} is already fully used (count 0) — skip.`, vi);
+        continue;
+      }
+      snapshot(`Smallest value with count > 0 is ${value} (count ${need}) — it must start ${need} new run(s) now.`, vi);
+      let ok = true;
+      for (let k = 0; k < groupSize; k++) {
+        const cur = value + k;
+        const have = count.get(cur) || 0;
+        const curIdx = sortedValues.indexOf(cur);
+        if (have < need) {
+          snapshot(`Need ${need}× the value ${cur} but only ${have} available — impossible.`, curIdx === -1 ? vi : curIdx);
+          ok = false;
+          break;
+        }
+        count.set(cur, have - need);
+        snapshot(`Consume ${need}× ${cur} — ${cur} now has ${have - need} left.`, curIdx === -1 ? vi : curIdx);
+      }
+      if (!ok) {
+        steps.push({
+          narration: 'Result: false.',
+          data: sortedValues.map((v) => `${v}×${count.get(v)}`),
+          states: sortedValues.map(() => 'default'),
+        });
+        return steps;
+      }
+    }
+    snapshot('All counts reach 0 in valid consecutive runs — true.', -1);
+    return steps;
+  }
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData([]);
+  const optimalSteps = buildOptimalSteps([1, 2, 3, 6, 2, 3, 4, 7, 8], 3);
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.setData([]); return; }
+      bars2.setData(step.data);
+      bars2.paint(step.states);
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('hand-of-straights', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
