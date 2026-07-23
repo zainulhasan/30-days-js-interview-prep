@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Generate Parentheses — Problem Bank</title>
+<meta name="description" content="Generate Parentheses: brute-force generate-every-2n-length-string-then-filter backtracking vs. optimal constrained construction that's valid by design, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/generate-parentheses.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Generate Parentheses — Problem Bank" />
+<meta property="og:description" content="Generate Parentheses: brute-force generate-every-2n-length-string-then-filter backtracking vs. optimal constrained construction that's valid by design, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/generate-parentheses.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Generate Parentheses — Problem Bank" />
+<meta name="twitter:description" content="Generate Parentheses: brute-force generate-every-2n-length-string-then-filter backtracking vs. optimal constrained construction that's valid by design, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Generate Parentheses", "item": "https://dsa.itszain.tech/problem-bank/generate-parentheses.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day09.html">Day 9: Recursion &amp; the Call Stack</a></strong> —
+      both solutions below are recursive backtracking; read that lesson first if the call stack
+      mental model is still new. It also pairs well with Day 17's Valid Parentheses lesson — that
+      problem CHECKS balance on a given string; this one GENERATES strings that are balanced.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BACKTRACKING &middot; MEDIUM</p>
+  <h1>Generate Parentheses <span class="leetcode-link">(<a href="https://leetcode.com/problems/generate-parentheses/" target="_blank" rel="noopener">LeetCode: Generate Parentheses</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given <code>n</code> pairs of parentheses, generate all combinations of well-formed
+    (balanced) parentheses.</p>
+
+  <h2>Solution 1: Brute force — generate everything, filter at the end</h2>
+  <p>Build every possible string of length <code>2n</code> from <code>(</code> and
+    <code>)</code> — a full binary decision tree, adding either character unconditionally at
+    every position — then check each completed string for validity, using the same
+    running-balance idea as Day 17's Valid Parentheses check.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: at every position add either an open or close parenthesis unconditionally, repeat until the string reaches length 2n, then check balance only now.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: build every 2n-length string, validate at the end</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">add ( or )</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">no check either way</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">repeat until length 2n</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">2^(2n) total strings</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">check balance now</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">discard if invalid</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: most of the 2^(2n) strings built are wasted — invalid.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces n=2 (78 steps — even
+    this tiny case shows real waste) — a case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function isValidParens(s) {
+  let bal = 0;
+  for (const ch of s) { bal += ch === '(' ? 1 : -1; if (bal &lt; 0) return false; }
+  return bal === 0;
+}
+function generateParenthesisBrute(n) {
+  const len = 2 * n, result = [];
+  function dfs(path) {
+    if (path.length === len) { if (isValidParens(path)) result.push(path); return; }
+    dfs(path + '(');
+    dfs(path + ')');
+  }
+  dfs('');
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>dfs(path)</code> unconditionally branches into BOTH <code>path + "("</code> and
+      <code>path + ")"</code> at every position — nothing rules either choice out.</li>
+    <li>The base case only triggers once <code>path.length === 2n</code> — by then, the tree has
+      already fully explored every one of the 2^(2n) possible strings.</li>
+    <li><code>isValidParens</code> is the exact same running-balance idea as Day 17's Valid
+      Parentheses check — but here it's applied AFTER the string is fully built, instead of
+      catching an invalid state early.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(2^(2n) &times; n)</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — only add a paren if it can't possibly break validity</h2>
+  <p>Track how many <code>(</code> and <code>)</code> have been placed so far. Only add
+    <code>(</code> if there's still room (<code>open &lt; n</code>), and only add
+    <code>)</code> if there's an unmatched <code>(</code> to pair it with
+    (<code>close &lt; open</code>) — every string this produces is guaranteed valid by
+    construction, with no filtering step needed.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: add an open paren only if fewer than n have been placed, add a close paren only if fewer close parens than open parens have been placed, guaranteeing every generated string is already valid.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: only add a paren if it can't break validity</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="200" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="120" y="82" fill="#282C34">open &lt; n?</text>
+      <text x="120" y="98" fill="#282C34" font-size="10">then allowed to add (</text>
+      <rect x="240" y="60" width="200" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="340" y="82" fill="#282C34">close &lt; open?</text>
+      <text x="340" y="98" fill="#282C34" font-size="10">then allowed to add )</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="540" y="82" fill="#E2E3E7">length 2n reached</text>
+      <text x="540" y="98" fill="#9198A6" font-size="10">already guaranteed valid</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: only valid-or-still-completable strings are ever explored.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces n=2 — a case verified
+    above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function generateParenthesisOptimal(n) {
+  const result = [];
+  function dfs(path, open, close) {
+    if (path.length === 2 * n) { result.push(path); return; }
+    if (open &lt; n) dfs(path + '(', open + 1, close);
+    if (close &lt; open) dfs(path + ')', open, close + 1);
+  }
+  dfs('', 0, 0);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>open</code> and <code>close</code> track how many of each character have been
+      placed so far in the current path.</li>
+    <li><code>open &lt; n</code> guards adding <code>(</code> — never place more than
+      <code>n</code> open parens total.</li>
+    <li><code>close &lt; open</code> (not <code>close &lt; n</code>) is the key guard — a
+      <code>)</code> is only safe if there's an unmatched <code>(</code> still open to pair it
+      with; comparing against <code>open</code>, not <code>n</code>, is what guarantees the
+      string never goes unbalanced at any prefix.</li>
+    <li>No validity check is needed at the base case — the two guards already make it
+      structurally impossible to construct an invalid string.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>Bounded by the n-th Catalan number (much smaller than 2^(2n))</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Strings explored</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (generate-then-filter)</td><td>2^(2n) — most invalid</td></tr>
+      <tr><td>Optimal (constrained construction)</td><td>Bounded by the n-th Catalan number — all valid</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This IS a real asymptotic improvement, not just a constant-factor speedup — the
+    brute-force version explores every one of the 2^(2n) possible strings regardless of
+    validity, while the optimal version only ever explores paths that could still become valid,
+    a set bounded by the much smaller Catalan numbers.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you count the valid combinations without generating all of
+        them?</p>
+      <ul class="pb-ia">
+        <li>The count of valid parenthesizations for n pairs is exactly the n-th Catalan
+          number, <code>C(2n, n) / (n + 1)</code>.</li>
+        <li>No backtracking is needed at all if only the COUNT is required — it's a pure math
+          formula.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you extend this to support multiple bracket types, like
+        generating valid combinations of both () and []?</p>
+      <ul class="pb-ia">
+        <li>Track a STACK of currently-open bracket types instead of two plain counters.</li>
+        <li>A closing bracket is only valid if it matches whatever type is on TOP of that stack
+          (last-opened, first-closed) — the same LIFO idea Day 17's Valid Parentheses checker
+          uses, just generating instead of validating.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What's the recursion depth for this problem?</p>
+      <ul class="pb-ia">
+        <li>Always exactly <code>2n</code> — the string grows by exactly one character per call
+          until it reaches length <code>2n</code>.</li>
+        <li>This is shallower and more predictable than Combination Sum or Permutations, where
+          depth depends on the specific input values.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const fns = [];
+for (var i = 0; i &lt; 3; i++) { fns.push(() =&gt; i); }
+console.log('var:', fns.map(f =&gt; f()));
+const fns2 = [];
+for (let j = 0; j &lt; 3; j++) { fns2.push(() =&gt; j); }
+console.log('let:', fns2.map(f =&gt; f()));</code></pre>
+      <ul class="pb-ia">
+        <li>With <code>var</code>: <code>[3, 3, 3]</code> — every arrow function closes over the
+          SAME <code>i</code> variable, which is <code>3</code> by the time any of them actually
+          runs, since <code>var</code> is function-scoped, not block-scoped.</li>
+        <li>With <code>let</code>: <code>[0, 1, 2]</code> — <code>let</code> creates a FRESH
+          binding of the loop variable for each iteration, so each closure captures its own
+          separate value.</li>
+      </ul>
+      <p class="pb-follow">↳ This is a standalone JavaScript fundamental, not a bug in the
+        recursive code shown above — the loops on this page are synchronous, so <code>var</code>
+        vs <code>let</code> wouldn't actually change their behavior here. It matters the moment a
+        loop captures a variable in a callback that runs LATER (a <code>setTimeout</code>, an
+        event handler, a <code>.then()</code>) — exactly the situation this trick demonstrates.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="binarytree" data-explain="At each of the 2n positions it tries both '(' and ')' unconditionally, so the full binary decision tree has 2^(2n) leaves, valid or not." >
+    <p class="q-text">1. Why does the brute-force solution generate exactly 2^(2n) strings before filtering?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="binarytree">At each of the 2n positions it tries both '(' and ')' unconditionally, so the full binary decision tree has 2^(2n) leaves, valid or not</button>
+      <button class="btn dsa-quiz-option" data-value="sorts">Because it sorts every string before checking validity</button>
+      <button class="btn dsa-quiz-option" data-value="catalan">It generates exactly the n-th Catalan number of strings, same as the optimal solution</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="placedcount" data-explain="open and close track how many '(' and ')' characters have been placed so far in the current path — that's what the two guard conditions compare against." >
+    <p class="q-text">2. What do the <code>open</code> and <code>close</code> counters track in the optimal solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="placedcount">How many '(' and ')' characters have been placed so far in the current path</button>
+      <button class="btn dsa-quiz-option" data-value="foundcount">The total number of valid strings found so far</button>
+      <button class="btn dsa-quiz-option" data-value="depth">The current recursion depth</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="unmatched" data-explain="A ')' is only safe to add if there's an unmatched '(' still open to pair it with — comparing close against open is what guarantees the string never goes unbalanced." >
+    <p class="q-text">3. Why is <code>close &lt; open</code> (not <code>close &lt; n</code>) the correct condition for adding ')'?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="unmatched">A ')' is only safe to add if there's an unmatched '(' still open to pair it with — comparing close against open is what guarantees the string never goes unbalanced</button>
+      <button class="btn dsa-quiz-option" data-value="equivalent">Both conditions are equivalent — either one works</button>
+      <button class="btn dsa-quiz-option" data-value="morevalid">close &lt; n would allow more valid combinations to be found</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="structurallyimpossible" data-explain="Its two guard conditions (open<n, close<open) make it structurally impossible to ever construct an invalid string in the first place — there's nothing left to filter at the end." >
+    <p class="q-text">4. Why does the optimal solution never need a validity check at the end, unlike the brute-force one?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="structurallyimpossible">Its two guard conditions (open&lt;n, close&lt;open) make it structurally impossible to ever construct an invalid string in the first place</button>
+      <button class="btn dsa-quiz-option" data-value="missing">It does need one — the solution shown is missing that check</button>
+      <button class="btn dsa-quiz-option" data-value="checkedstart">Validity is checked once at the very start instead</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="wastedwork" data-explain="Both explore the same final set of 5 valid strings for n=3, but the brute-force solution wastes time constructing and discarding invalid strings along the way, while the optimal version only ever explores paths that could still become valid." >
+    <p class="q-text">5. Both solutions produce the same 5 valid strings for n=3 — what's the real difference between them?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="wastedwork">The brute-force solution wastes time constructing and discarding invalid strings; the optimal solution only ever explores paths that could still become valid</button>
+      <button class="btn dsa-quiz-option" data-value="samecount">There's no real difference — both explore the exact same number of strings</button>
+      <button class="btn dsa-quiz-option" data-value="differentorder">The optimal solution produces the strings in a different, non-equivalent order that changes the answer</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  function buildGenParenBruteSteps(n) {
+    const len = 2 * n;
+    const steps = [];
+    const callStack = [];
+    function isValid(s) {
+      let bal = 0;
+      for (const ch of s) { bal += ch === '(' ? 1 : -1; if (bal < 0) return false; }
+      return bal === 0;
+    }
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(path) {
+      callStack.push(`dfs(path="${path}")`);
+      pushStep(`Enter dfs — path="${path}" (length ${path.length}/${len}).`);
+      if (path.length === len) {
+        if (isValid(path)) pushStep(`Full length reached — "${path}" is valid, record it.`);
+        else pushStep(`Full length reached — "${path}" is invalid (unbalanced), discard.`);
+      } else {
+        dfs(path + '(');
+        dfs(path + ')');
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs('');
+    return steps;
+  }
+
+  function buildGenParenOptimalSteps(n) {
+    const steps = [];
+    const callStack = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(path, open, close) {
+      callStack.push(`dfs(path="${path}", open=${open}, close=${close})`);
+      pushStep(`Enter dfs — path="${path}", open=${open}, close=${close}.`);
+      if (path.length === 2 * n) {
+        pushStep(`Length ${2 * n} reached — "${path}" is guaranteed valid, record it.`);
+      } else {
+        if (open < n) {
+          pushStep(`open (${open}) < n (${n}) — allowed to add "(".`);
+          dfs(path + '(', open + 1, close);
+        }
+        if (close < open) {
+          pushStep(`close (${close}) < open (${open}) — allowed to add ")".`);
+          dfs(path + ')', open, close + 1);
+        }
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs('', 0, 0);
+    return steps;
+  }
+
+  const SLUG = 'generate-parentheses';
+
+  const callStack1 = new DSA.CallStack(document.getElementById('viz1Stage'));
+  const steps1 = buildGenParenBruteSteps(2);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 400,
+    onStep(step) { callStack1.render(step ? step.frames : []); },
+  });
+  callStack1.render([]);
+
+  const callStack2 = new DSA.CallStack(document.getElementById('viz2Stage'));
+  const steps2 = buildGenParenOptimalSteps(2);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 700,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+  });
+  callStack2.render([]);
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
