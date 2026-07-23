@@ -416,7 +416,7 @@ console.log(candies.reduce((sum, c) => sum + c));</code></pre>
           localChanged = true;
           states[i - 1] = 'compare';
           states[i] = 'active';
-          notes.push(`left neighbor: ratings[]>ratings[] and candies[${i}]≤candies[${i - 1}] → bumped to ${candies[i]}`);
+          notes.push(`left neighbor: ratings[${i}]=${ratings[i]}>ratings[${i - 1}]=${ratings[i - 1]} and candies[${i}]≤candies[${i - 1}] → bumped to ${candies[i]}`);
         }
         if (i < n - 1 && ratings[i] > ratings[i + 1] && candies[i] <= candies[i + 1]) {
           candies[i] = candies[i + 1] + 1;
@@ -424,7 +424,7 @@ console.log(candies.reduce((sum, c) => sum + c));</code></pre>
           localChanged = true;
           states[i + 1] = 'compare';
           states[i] = 'active';
-          notes.push(`right neighbor: ratings[]>ratings[] and candies[${i}]≤candies[${i + 1}] → bumped to ${candies[i]}`);
+          notes.push(`right neighbor: ratings[${i}]=${ratings[i]}>ratings[${i + 1}]=${ratings[i + 1]} and candies[${i}]≤candies[${i + 1}] → bumped to ${candies[i]}`);
         }
         snap(localChanged ? `Index ${i}: ${notes.join('; ')}.` : `Index ${i}: both neighbor constraints already satisfied — no change.`, states);
       }
@@ -450,7 +450,7 @@ console.log(candies.reduce((sum, c) => sum + c));</code></pre>
       if (ratings[i] > ratings[i - 1]) {
         candies[i] = candies[i - 1] + 1;
         states[i] = 'active';
-        snap(`ratings[${i}]= > ratings[]=${ratings[i - 1]} → candies[${i}] = candies[${i - 1}] + 1 = ${candies[i]}.`, states);
+        snap(`ratings[${i}]=${ratings[i]} > ratings[${i - 1}]=${ratings[i - 1]} → candies[${i}] = candies[${i - 1}] + 1 = ${candies[i]}.`, states);
       } else {
         snap(`ratings[${i}]=${ratings[i]} ≤ ratings[${i - 1}]=${ratings[i - 1]} → no change (candies[${i}] stays ${candies[i]}).`, states);
       }
@@ -466,9 +466,9 @@ console.log(candies.reduce((sum, c) => sum + c));</code></pre>
         candies[i] = Math.max(candies[i], proposed);
         if (candies[i] !== before) {
           states[i] = 'active';
-          snap(`ratings[${i}]= > ratings[]=${ratings[i + 1]} → candies[${i}] = max(${before}, ${proposed}) = ${candies[i]}.`, states);
+          snap(`ratings[${i}]=${ratings[i]} > ratings[${i + 1}]=${ratings[i + 1]} → candies[${i}] = max(${before}, ${proposed}) = ${candies[i]}.`, states);
         } else {
-          snap(`ratings[${i}]= > ratings[]=${ratings[i + 1]} but candies[${i}]=${before} already ≥ ${proposed} → no change needed.`, states);
+          snap(`ratings[${i}]=${ratings[i]} > ratings[${i + 1}]=${ratings[i + 1]} but candies[${i}]=${before} already ≥ ${proposed} → no change needed.`, states);
         }
       } else {
         snap(`ratings[${i}]=${ratings[i]} ≤ ratings[${i + 1}]=${ratings[i + 1]} → no change (candies[${i}] stays ${candies[i]}).`, states);
