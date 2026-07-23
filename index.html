@@ -242,6 +242,8 @@
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
     </div>
+    <div class="day-strip" id="dayStrip"></div>
+    <p class="streak-label" id="streakLabel" hidden></p>
     <div class="continue-row">
       <a class="btn btn-primary" id="continueBtn" href="lessons/day01.html">▶ Start Day 1</a>
     </div>
@@ -275,6 +277,9 @@
 
 <script src="js/curriculum.js"></script>
 <script src="js/progress.js"></script>
+<script src="js/problemBank.js"></script>
+<script src="js/problemBankProgress.js"></script>
+<script src="js/streak.js"></script>
 <script>
   function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -345,8 +350,33 @@
     }
   }
 
+  function renderDayStrip() {
+    const strip = document.getElementById('dayStrip');
+    strip.innerHTML = '';
+    for (let day = 1; day <= DSAProgress.TOTAL_DAYS; day++) {
+      const cell = document.createElement('a');
+      cell.className = 'day-strip-cell' + (DSAProgress.isDone(day) ? ' done' : '');
+      cell.href = `lessons/day${pad(day)}.html`;
+      cell.title = `Day ${day}`;
+      strip.appendChild(cell);
+    }
+  }
+
+  function renderStreak() {
+    const { current } = DSAStreak.compute();
+    const label = document.getElementById('streakLabel');
+    if (current >= 2) {
+      label.hidden = false;
+      label.textContent = `🔥 ${current}-day streak — keep it going`;
+    } else {
+      label.hidden = true;
+    }
+  }
+
   renderGrid();
   renderProgress();
+  renderDayStrip();
+  renderStreak();
 </script>
 </body>
 </html>

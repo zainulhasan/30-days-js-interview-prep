@@ -1,6 +1,9 @@
 /*
  * DSA course — progress tracking, stored in localStorage.
- * Key: "dsa-progress" -> { "1": true, "2": true, ... } (day number -> done)
+ * Key: "dsa-progress" -> { "1": <ms timestamp>, "2": <ms timestamp>, ... } (day number -> done-at time)
+ * Entries from before this timestamp change was added may still hold the literal
+ * boolean `true` instead of a timestamp — still truthy, so isDone()/completedCount()
+ * are unaffected, but completionTimestamps() skips those (no real date to report).
  */
 const DSAProgress = (function () {
   'use strict';
@@ -26,9 +29,14 @@ const DSAProgress = (function () {
 
   function setDone(day, done) {
     const data = load();
-    if (done) data[day] = true;
+    if (done) data[day] = Date.now();
     else delete data[day];
     save(data);
+  }
+
+  function completionTimestamps() {
+    const data = load();
+    return Object.values(data).filter((v) => typeof v === 'number');
   }
 
   function toggle(day) {
@@ -65,6 +73,7 @@ const DSAProgress = (function () {
     setDone,
     toggle,
     completedCount,
+    completionTimestamps,
     setLastDay,
     getLastDay,
     firstIncompleteDay,

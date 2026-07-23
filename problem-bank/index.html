@@ -45,6 +45,7 @@
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
     </div>
+    <p class="streak-label" id="streakLabel" hidden></p>
   </section>
 
   <div id="patternRoadmap"></div>
@@ -58,8 +59,10 @@
   30 Days of DSA in JavaScript — a personal study project.
 </footer>
 
+<script src="../js/progress.js"></script>
 <script src="../js/problemBank.js"></script>
 <script src="../js/problemBankProgress.js"></script>
+<script src="../js/streak.js"></script>
 <script>
   function renderPatternGroups() {
     const roadmap = document.getElementById('patternRoadmap');
@@ -115,8 +118,20 @@
     document.getElementById('progressFill').style.width = `${total ? (done / total) * 100 : 0}%`;
   }
 
+  function renderStreak() {
+    const { current } = DSAStreak.compute();
+    const label = document.getElementById('streakLabel');
+    if (current >= 2) {
+      label.hidden = false;
+      label.textContent = `🔥 ${current}-day streak — keep it going`;
+    } else {
+      label.hidden = true;
+    }
+  }
+
   renderPatternGroups();
   renderProgress();
+  renderStreak();
 </script>
 </body>
 </html>
