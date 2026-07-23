@@ -805,6 +805,58 @@ data, sitemap.xml, robots.txt, GSC submission).
   across 39 pages) is real but solvable much more cheaply than either migration. Not acted on
   further — purely a discussion, no plan requested.
 
+## Done — Greedy batch (12 problems, Problem Bank)
+- Jump Game II, Gas Station, Candy, Partition Labels, Valid Parenthesis String, Hand of Straights,
+  Merge Triplets to Form Target Triplet, Assign Cookies, Can Place Flowers, Boats to Save People,
+  Two City Scheduling, Minimum Number of Arrows to Burst Balloons — `js/problemBank.js` grew to 21
+  total problems across 5 patterns.
+- First batch built via **fully-delegated parallel dispatch**: each of the 12 builder agents got no
+  pre-verified algorithm code from the orchestrator at all — only the LeetCode problem statement and
+  the expected brute-force/optimal shape — and had to design, implement, and `node -e`-verify both
+  solutions itself before writing any HTML. Several agents independently caught that the
+  orchestrator's own suggested brute-force approach was actually wrong (not just naive) before
+  shipping anything.
+- Renderer mix: `DSA.Bars` for most; `DSA.CallStack` for Valid Parenthesis String's brute-force
+  backtracking solution; `DSA.Grid` for Merge Triplets (first non-numeric use of Grid — a
+  triplet-coordinate table with a target row); the interval-span painter (copied from Insert
+  Interval) for Minimum Arrows.
+- All 12 committed with `git add <exact-file>` only, dispatched after committing the shared
+  `problemBank.js` data change first — zero git-race recurrence this batch (see
+  [[parallel_agents_git_race]]), a direct result of the process fix from the earlier Backtracking
+  retrofit's race.
+- **Review pass found real bugs in 6 of the 12 pages** (2 recurring defect classes, now confirmed
+  across 3 separate batches — pilot, Backtracking, Greedy):
+  - Valid Parenthesis String: optimal viz set `states[i]='pointer'` then unconditionally overwrote
+    it before ever pushing a step — the legend's "current character" highlight could never actually
+    appear. Fixed by pushing an intermediate step while the state is still `pointer`.
+  - Hand of Straights: optimal viz painted an already-fully-used (skipped) value as `active`
+    ("being consumed") instead of `sorted`, contradicting both the legend and that step's own
+    narration. Fixed by checking `count.get(v) === 0` before returning `active`.
+  - Boats to Save People / Assign Cookies: both used the `compare` (yellow) state in a visualization
+    whose legend never defined it — orphan states, the recurring "state fires, no legend entry"
+    class. Fixed by adding the missing `lg-compare` legend entries.
+  - Merge Triplets — two issues: (1) the brute-force space complexity was claimed as O(n²) but is
+    actually bounded by O(n³) (a merged triplet's 3 coordinates are drawn independently from up to
+    n distinct a/b/c values each) — caught via an adversarial differential test, not just review-by-
+    reading; corrected both the per-solution and comparison tables. (2) A dormant row-index
+    collision: `CANDIDATE_ROWS` and `TARGET_ROW` aliased the same grid index (6), so any input whose
+    `known` set grows past 6 triplets would silently overwrite the target row's display state.
+    Doesn't trigger on the shipped demo but does on LeetCode's own 3rd canonical example (confirmed
+    via `node -e`, known-set reaches 12). Fixed by guarding every candidate-row state write with
+    `newIdx < CANDIDATE_ROWS` — the algorithm itself is untouched, only the visualization silently
+    stops painting rows once they exceed the grid's fixed visual capacity.
+  - Candy: the implementer's own HTML-entity cleanup (`&gt;`/`&lt;` → plain `>`/`<`) accidentally
+    deleted 5 template-literal narration strings' interpolated values in the process (e.g.
+    `ratings[]>ratings[]` instead of `ratings[3]=2>ratings[2]=1`) — caught by a re-dispatched
+    reviewer after the first review attempt stalled and failed at 600s. Fixed by restoring the
+    missing `${...}` interpolations.
+- All 6 fixes verified via direct `node -e`/`vm`-sandboxed re-execution against both the shipped
+  demo input (confirming unchanged behavior) and, for Merge Triplets, an adversarial input proven to
+  reach the previously-buggy code path (confirming the fix actually closes it) — then committed
+  individually and pushed together.
+- Remaining 6 of 12 pages (Jump Game II, Partition Labels, Minimum Arrows, Can Place Flowers, Gas
+  Station, Two City Scheduling) reviewed clean — Minor/cosmetic notes only, no fixes needed.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
