@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assign Cookies — Problem Bank</title>
+<meta name="description" content="Assign Cookies: a correct-but-naive per-child best-fit scan vs. the optimal sort-and-two-pointer greedy, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/assign-cookies.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Assign Cookies — Problem Bank" />
+<meta property="og:description" content="Assign Cookies: a correct-but-naive per-child best-fit scan vs. the optimal sort-and-two-pointer greedy, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/assign-cookies.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Assign Cookies — Problem Bank" />
+<meta name="twitter:description" content="Assign Cookies: a correct-but-naive per-child best-fit scan vs. the optimal sort-and-two-pointer greedy, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Assign Cookies", "item": "https://dsa.itszain.tech/problem-bank/assign-cookies.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      read that lesson first for the general "make the locally-best choice, don't look back" idea.
+      The optimal solution here is also a sorted two-pointer scan, the same shape as
+      <a href="../lessons/day04.html">Day 4's Two-Pointer Pattern</a> — worth a glance if pointer
+      convergence over sorted arrays is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; EASY</p>
+  <h1>Assign Cookies <span class="leetcode-link">(<a href="https://leetcode.com/problems/assign-cookies/" target="_blank" rel="noopener">LeetCode: Assign Cookies</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You have some cookies to hand out. Each child <code>i</code> has a greed factor
+    <code>g[i]</code> — the smallest cookie size that child will actually be happy with. Each
+    cookie <code>j</code> has a size <code>s[j]</code>. A cookie can go to a child only if
+    <code>s[j] &gt;= g[i]</code>, and each child gets at most one cookie. Given <code>g</code> and
+    <code>s</code>, return the maximum number of children you can make content.</p>
+
+  <h2>Solution 1: Brute force — for each child, scan every cookie for the best fit</h2>
+  <p>Don't sort anything. Just walk the children in whatever order they arrived, and for each one,
+    scan the <em>entire</em> cookie array looking for the smallest cookie that's still big enough
+    (a "best fit" search, not just the first fit you happen to run into — grabbing the first
+    sufficient cookie you see can waste a cookie that a later, pickier child actually needed, so
+    it has to be the smallest sufficient one). Mark it used and move to the next child. Every
+    child re-scans up to every cookie, so this is O(n&middot;m).</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: for each child, scan every unused cookie, remember the smallest one that still satisfies the greed factor, then assign it - repeated independently for every child, an O(n times m) process.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: every child rescans every cookie from scratch</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="95" y="82" fill="#E2E3E7">next child</text>
+      <text x="95" y="98" fill="#9198A6" font-size="10">no sorting</text>
+      <rect x="200" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="290" y="82" fill="#282C34">scan ALL cookies</text>
+      <text x="290" y="98" fill="#282C34" font-size="10">track smallest fit</text>
+      <rect x="410" y="60" width="210" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="515" y="82" fill="#282C34">repeat per child</text>
+      <text x="515" y="98" fill="#282C34" font-size="10">no memory of past scans</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="170" y1="83" x2="198" y2="83"/>
+      <line x1="380" y1="83" x2="408" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&middot;m) — each of the n children triggers a fresh O(m) scan over the cookies.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> child currently being matched</span>
+    <span><i class="lg-pointer"></i> best (smallest) fit found so far</span>
+    <span><i class="lg-swap"></i> cookie too small, rejected this pass</span>
+    <span><i class="lg-sorted"></i> assigned / content</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="width:100%;">
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:0 0 0.4rem;">CHILDREN (greed factor g)</p>
+        <div id="viz1ChildBars" style="height:110px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.3rem 0 0.4rem;">COOKIES (size s)</p>
+        <div id="viz1CookieBars" style="height:110px;"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces g=[5, 2, 3],
+    s=[3, 4, 1] — a small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function assignCookiesBruteForce(g, s) {
+  const used = new Array(s.length).fill(false);
+  let content = 0;
+
+  for (let i = 0; i < g.length; i++) {
+    let bestJ = -1;
+    for (let j = 0; j < s.length; j++) {
+      if (!used[j] && s[j] >= g[i] && (bestJ === -1 || s[j] < s[bestJ])) {
+        bestJ = j;
+      }
+    }
+    if (bestJ !== -1) {
+      used[bestJ] = true;
+      content++;
+    }
+  }
+  return content;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>used</code> tracks which cookies have already been handed out — a cookie can only go
+      to one child.</li>
+    <li>The inner loop scans <em>every</em> cookie for each child and keeps the smallest one that
+      still satisfies <code>s[j] &gt;= g[i]</code>. It must be the smallest sufficient cookie, not
+      just the first one found — handing a child a bigger cookie than necessary can rob a later,
+      pickier child of the only cookie that would have fit them.</li>
+    <li><code>bestJ === -1</code> after the scan means no cookie was big enough — that child stays
+      unsatisfied, and the loop moves on without incrementing <code>content</code>.</li>
+    <li>Nothing here is sorted, and nothing learned while scanning for one child carries over to
+      the next — that repeated O(m) work per child is exactly the O(n&middot;m) cost.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&middot;m)</td><td>O(m)</td><td>Best-fit linear scan per child, no sorting</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — sort both arrays, two-pointer greedy</h2>
+  <p>Sort <code>g</code> and <code>s</code> ascending. Now the pickiest unsatisfied child is
+    always at the front of <code>g</code>, and the smallest untried cookie is always at the front
+    of <code>s</code>. Walk both with pointers <code>i</code> (child) and <code>j</code> (cookie):
+    if the current cookie is big enough for the current child, it's the best possible use of that
+    cookie — match them and advance both pointers. If it's too small, it's too small for every
+    remaining (equal-or-larger) child too, since they're sorted ascending — throw it away and
+    advance only the cookie pointer. Neither pointer ever moves backward, so it's one linear pass
+    after the sort.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: sort both greed and cookie-size arrays ascending, then walk two pointers - match when the cookie is big enough, or discard the cookie forever when it is too small, since sorted order guarantees it will never fit any remaining child.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: sort once, then one two-pointer pass — nothing rescanned</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="150" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="95" y="82" fill="#282C34">sort g and s</text>
+      <text x="95" y="98" fill="#282C34" font-size="10">both ascending</text>
+      <rect x="200" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="300" y="82" fill="#282C34">compare s[j] vs g[i]</text>
+      <text x="300" y="98" fill="#282C34" font-size="10">fits → match; too small → discard</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">i, j only move forward</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">never rescanned</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="170" y1="83" x2="198" y2="83"/>
+      <line x1="400" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n + m log m) — the sorts dominate; the scan itself is O(n + m).</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current i / j pointer</span>
+    <span><i class="lg-sorted"></i> matched — content</span>
+    <span><i class="lg-swap"></i> discarded — too small, forever</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="width:100%;">
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:0 0 0.4rem;">CHILDREN (greed factor g, sorted)</p>
+        <div id="viz2ChildBars" style="height:110px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.3rem 0 0.4rem;">COOKIES (size s, sorted)</p>
+        <div id="viz2CookieBars" style="height:110px;"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces the same children and
+    cookies as Solution 1, sorted: g=[2, 3, 5], s=[1, 3, 4] — same input, same answer.</p>
+
+  <h3>The code</h3>
+  <pre><code>function assignCookiesOptimal(g, s) {
+  const sortedG = g.slice().sort((a, b) => a - b);
+  const sortedS = s.slice().sort((a, b) => a - b);
+
+  let i = 0, j = 0, content = 0;
+  while (i < sortedG.length && j < sortedS.length) {
+    if (sortedS[j] >= sortedG[i]) {
+      content++;
+      i++;
+      j++;
+    } else {
+      j++;
+    }
+  }
+  return content;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>.slice().sort((a, b) => a - b)</code> — sorts numerically ascending, and copies
+      first so the caller's original arrays aren't mutated.</li>
+    <li><code>sortedS[j] &gt;= sortedG[i]</code> is a match: the current cookie satisfies the
+      current (pickiest remaining) child, so it's used on them — <code>content++</code>, and both
+      pointers advance.</li>
+    <li>The <code>else</code> branch only advances <code>j</code>. Since <code>sortedG</code> is
+      ascending, every child after <code>i</code> is at least as picky as <code>g[i]</code> — a
+      cookie too small for <code>g[i]</code> is too small for all of them. It's permanently
+      wasted, not re-checked later.</li>
+    <li>The loop stops the moment either array runs out — there's nothing left to pair up.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n + m log m)</td><td>O(n + m)</td><td>Sort both arrays, then one two-pointer scan</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (best-fit scan per child)</td><td>O(n&middot;m)</td><td>O(m)</td></tr>
+      <tr><td>Optimal (sort + two-pointer)</td><td>O(n log n + m log m)</td><td>O(n + m)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does sorting both arrays before the two-pointer scan guarantee the
+        maximum number of content children?</p>
+      <ul class="pb-ia">
+        <li>Once sorted, the child at <code>g[i]</code> is the pickiest child not yet handled, and
+          the cookie at <code>s[j]</code> is the smallest cookie not yet used.</li>
+        <li>If that smallest available cookie can satisfy the pickiest remaining child, using any
+          <em>other</em> (larger) cookie on them instead only removes a bigger cookie from the
+          pool without helping — the smaller cookie was already good enough.</li>
+        <li>This is an exchange argument: any optimal solution can be rearranged, cookie-swap by
+          cookie-swap, into this smallest-sufficient-cookie-to-pickiest-child pairing without ever
+          reducing the total number of matches — so the greedy choice is never worse than optimal.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why give each child the SMALLEST sufficient cookie instead of the biggest
+        one available?</p>
+      <ul class="pb-ia">
+        <li>A cookie only needs to clear one bar: <code>s[j] &gt;= g[i]</code>. Any sufficient
+          cookie makes that child equally content — size beyond the requirement is wasted.</li>
+        <li>Handing out a large cookie when a small one would do "spends" a resource that a
+          different, pickier child might have specifically needed later.</li>
+        <li>Saving the larger cookies preserves the most options for children later in the sorted
+          order — who, by definition, need at least as much.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What happens if there are more children than cookies, or more cookies than
+        children — does the two-pointer solution still work unmodified?</p>
+      <ul class="pb-ia">
+        <li>Yes — the <code>while (i &lt; sortedG.length &amp;&amp; j &lt; sortedS.length)</code>
+          condition simply stops as soon as either array is exhausted.</li>
+        <li>More children than cookies: the loop ends when <code>j</code> runs out — the
+          leftover, pickiest children at the end of <code>sortedG</code> just never get matched.</li>
+        <li>More cookies than children: the loop ends when <code>i</code> runs out — the answer is
+          capped at <code>g.length</code> either way, since each child takes at most one cookie.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What's a hard upper bound on the answer, just from
+        the input sizes?" <code>Math.min(g.length, s.length)</code> — you can never content more
+        children than you have cookies, or more children than exist.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const g = [10, 2, 1];
+console.log(g.sort());</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[1, 10, 2]</code> — not <code>[1, 2, 10]</code>.</li>
+        <li>Array <code>.sort()</code> with no comparator converts every element to a
+          <em>string</em> and sorts lexicographically. <code>"10"</code> sorts before
+          <code>"2"</code> because <code>"1"</code> &lt; <code>"2"</code> as characters.</li>
+        <li>It also sorts <code>g</code> in place and returns the same array — it doesn't return a
+          new one.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why both solutions above always pass a numeric
+        comparator — <code>.sort((a, b) =&gt; a - b)</code> — to sort <code>g</code> and
+        <code>s</code>. Skip the comparator here and the two-pointer scan silently produces the
+        wrong count on any input with a two-digit value.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="exchange" data-explain="After sorting, the pickiest remaining child (g[i]) and the smallest remaining usable cookie (s[j]) form a pairing that any optimal solution can be rearranged into without losing matches — so greedily taking it is never worse than optimal." >
+    <p class="q-text">1. Why does matching the pickiest remaining child with the smallest sufficient cookie never lead to a worse total than some other strategy?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="exchange">Any optimal pairing can be rearranged into this one, swap by swap, without reducing the number of matches</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It happens to work on the two LeetCode examples, but isn't provably correct in general</button>
+      <button class="btn dsa-quiz-option" data-value="random">Because children and cookies are shuffled randomly before matching</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortedascending" data-explain="Because sortedG is ascending, every child after i is at least as picky as g[i]. A cookie too small for g[i] is therefore too small for all of them too — it can be discarded forever, not just skipped for this child." >
+    <p class="q-text">2. When a cookie is too small for the current child, why can it be discarded permanently instead of just skipped and reconsidered for a later child?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortedascending">Because children are sorted ascending by greed, every later child needs an equal or larger cookie too</button>
+      <button class="btn dsa-quiz-option" data-value="onlyone">Because there's only ever one cookie in the array</button>
+      <button class="btn dsa-quiz-option" data-value="random2">The choice is arbitrary — discarding it isn't actually required for correctness</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="waste" data-explain="A cookie only needs to clear the bar s[j] >= g[i]. Handing a child more size than required doesn't make them any more content, but it does remove a large cookie from the pool that a pickier child later on might specifically need." >
+    <p class="q-text">3. Why does the optimal solution always give a content child the SMALLEST sufficient cookie, never the largest available?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="waste">Using a bigger cookie than necessary wastes it — a pickier child later might have needed exactly that size</button>
+      <button class="btn dsa-quiz-option" data-value="faster">Smaller cookies are always processed faster by the sort</button>
+      <button class="btn dsa-quiz-option" data-value="norule">There's no reason — either choice gives the same final count every time</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="eitherempty" data-explain="The while condition checks both pointers, so the loop stops the instant either array is exhausted. If children run out first, every cookie left over is simply unused; if cookies run out first, every remaining child (the pickiest ones) simply never gets matched." >
+    <p class="q-text">4. What causes the two-pointer loop to terminate, and what does that imply about any children left unmatched?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="eitherempty">Either pointer running past the end of its array — leftover children (the pickiest ones) simply never get a cookie</button>
+      <button class="btn dsa-quiz-option" data-value="fixedcount">It always runs exactly g.length times, regardless of matches</button>
+      <button class="btn dsa-quiz-option" data-value="never">It never terminates until every child has been assigned some cookie</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortdominates" data-explain="The two-pointer scan itself is O(n + m), a single pass. What actually dominates the runtime is sorting both arrays first, which is O(n log n + m log m) — that's the real cost of the optimal solution." >
+    <p class="q-text">5. In the optimal solution's O(n log n + m log m) time complexity, what part of the algorithm is actually responsible for that cost?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortdominates">Sorting g and s — the two-pointer scan afterward is only O(n + m)</button>
+      <button class="btn dsa-quiz-option" data-value="scandominates">The two-pointer scan itself, since it compares every pair of child and cookie</button>
+      <button class="btn dsa-quiz-option" data-value="neither">Neither — the true cost is O(1) because pointers never move backward</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'assign-cookies';
+
+  // ---- Solution 1: brute force (best-fit scan per child, no sorting) ----
+  function buildBruteSteps(g, s) {
+    const steps = [];
+    const used = new Array(s.length).fill(false);
+    const childDone = new Array(g.length).fill(false);
+
+    function push(narration, childOverride, cookieOverride) {
+      const childStates = {};
+      for (let i = 0; i < g.length; i++) childStates[i] = childDone[i] ? 'sorted' : 'default';
+      const cookieStates = {};
+      for (let j = 0; j < s.length; j++) cookieStates[j] = used[j] ? 'sorted' : 'default';
+      if (childOverride) Object.assign(childStates, childOverride);
+      if (cookieOverride) Object.assign(cookieStates, cookieOverride);
+      steps.push({ narration, childStates, cookieStates });
+    }
+
+    push(`${g.length} children with greed [${g.join(', ')}], ${s.length} cookies with sizes [${s.join(', ')}]. Brute force: for each child, scan every cookie and remember the smallest one still big enough.`);
+
+    let content = 0;
+    for (let i = 0; i < g.length; i++) {
+      push(`Child ${i} needs greed ≥ ${g[i]} (purple). Scan every cookie for the smallest sufficient size.`, { [i]: 'active' });
+      let bestJ = -1;
+      for (let j = 0; j < s.length; j++) {
+        if (used[j]) continue;
+        if (s[j] >= g[i]) {
+          if (bestJ === -1 || s[j] < s[bestJ]) {
+            bestJ = j;
+            push(`Cookie ${j} (size ${s[j]}) fits and is the smallest fit seen so far for this child.`, { [i]: 'active' }, { [j]: 'pointer' });
+          } else {
+            push(`Cookie ${j} (size ${s[j]}) fits, but cookie ${bestJ} (size ${s[bestJ]}) is still the smaller fit — keep scanning.`, { [i]: 'active' }, { [j]: 'compare', [bestJ]: 'pointer' });
+          }
+        } else {
+          const cookieOverride = { [j]: 'swap' };
+          if (bestJ !== -1) cookieOverride[bestJ] = 'pointer';
+          push(`Cookie ${j} (size ${s[j]}) is too small for greed ${g[i]} — skip.`, { [i]: 'active' }, cookieOverride);
+        }
+      }
+      if (bestJ !== -1) {
+        used[bestJ] = true;
+        childDone[i] = true;
+        content++;
+        push(`Best fit for child ${i} is cookie ${bestJ} (size ${s[bestJ]}) — assign it. Content children so far: ${content}.`);
+      } else {
+        push(`No cookie is big enough for child ${i} (greed ${g[i]}) — this child stays unsatisfied.`);
+      }
+    }
+    push(`Done — ${content} of ${g.length} children are content. Correct, but each child required scanning up to ${s.length} cookies: O(n·m).`);
+    return steps;
+  }
+
+  const BRUTE_G = [5, 2, 3];
+  const BRUTE_S = [3, 4, 1];
+  const BRUTE_MAX = Math.max.apply(null, BRUTE_G.concat(BRUTE_S)) + 1;
+
+  const viz1ChildBars = new DSA.Bars(document.getElementById('viz1ChildBars'), { min: 0, max: BRUTE_MAX });
+  const viz1CookieBars = new DSA.Bars(document.getElementById('viz1CookieBars'), { min: 0, max: BRUTE_MAX });
+  viz1ChildBars.setData(BRUTE_G);
+  viz1CookieBars.setData(BRUTE_S);
+
+  const bruteSteps = buildBruteSteps(BRUTE_G, BRUTE_S);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) {
+      if (!step) { viz1ChildBars.paint({}); viz1CookieBars.paint({}); return; }
+      viz1ChildBars.paint(step.childStates);
+      viz1CookieBars.paint(step.cookieStates);
+    },
+  });
+
+  // ---- Solution 2: optimal (sort both, two-pointer) ----
+  function buildOptimalSteps(g, s) {
+    const sortedG = g.slice().sort((a, b) => a - b);
+    const sortedS = s.slice().sort((a, b) => a - b);
+    const steps = [];
+    const discarded = [];
+    let i = 0, j = 0, content = 0;
+
+    function childState() {
+      const st = {};
+      for (let k = 0; k < i; k++) st[k] = 'sorted';
+      if (i < sortedG.length) st[i] = 'pointer';
+      return st;
+    }
+    function cookieState() {
+      const st = {};
+      discarded.forEach((d) => { st[d] = 'swap'; });
+      for (let k = 0; k < j; k++) if (st[k] === undefined) st[k] = 'sorted';
+      if (j < sortedS.length && st[j] === undefined) st[j] = 'pointer';
+      return st;
+    }
+
+    steps.push({ narration: `Both arrays sorted ascending: children [${sortedG.join(', ')}], cookies [${sortedS.join(', ')}]. i (child pointer) and j (cookie pointer) both start at 0.`, childStates: childState(), cookieStates: cookieState() });
+
+    while (i < sortedG.length && j < sortedS.length) {
+      steps.push({ narration: `Compare cookie ${j} (size ${sortedS[j]}) against child ${i}'s greed (${sortedG[i]}).`, childStates: childState(), cookieStates: cookieState() });
+      if (sortedS[j] >= sortedG[i]) {
+        content++;
+        i++;
+        j++;
+        steps.push({ narration: `${sortedS[j - 1]} ≥ ${sortedG[i - 1]} — match! Assign cookie ${j - 1} to child ${i - 1}. Content children: ${content}.`, childStates: childState(), cookieStates: cookieState() });
+      } else {
+        discarded.push(j);
+        steps.push({ narration: `${sortedS[j]} < ${sortedG[i]} — too small. Sorted ascending means this cookie can never satisfy any remaining (equal-or-larger) child either — discard it, advance only the cookie pointer.`, childStates: childState(), cookieStates: cookieState() });
+        j++;
+      }
+    }
+    steps.push({ narration: `Loop ends (${i >= sortedG.length ? 'no children left' : 'no cookies left'}) — ${content} of ${g.length} children are content. Only n + m pointer moves total, no rescanning.`, childStates: childState(), cookieStates: cookieState() });
+    return steps;
+  }
+
+  const OPT_G = [2, 3, 5];
+  const OPT_S = [1, 3, 4];
+  const OPT_MAX = Math.max.apply(null, OPT_G.concat(OPT_S)) + 1;
+
+  const viz2ChildBars = new DSA.Bars(document.getElementById('viz2ChildBars'), { min: 0, max: OPT_MAX });
+  const viz2CookieBars = new DSA.Bars(document.getElementById('viz2CookieBars'), { min: 0, max: OPT_MAX });
+  viz2ChildBars.setData(OPT_G);
+  viz2CookieBars.setData(OPT_S);
+
+  const optimalSteps = buildOptimalSteps(OPT_G, OPT_S);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) {
+      if (!step) { viz2ChildBars.paint({}); viz2CookieBars.paint({}); return; }
+      viz2ChildBars.paint(step.childStates);
+      viz2CookieBars.paint(step.cookieStates);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('assign-cookies', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
