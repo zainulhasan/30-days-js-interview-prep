@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Two City Scheduling — Problem Bank</title>
+<meta name="description" content="Two City Scheduling: a combinatorial brute force that checks every way to split people between two cities, vs. an optimal greedy sort-by-savings solution, both animated with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/two-city-scheduling.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Two City Scheduling — Problem Bank" />
+<meta property="og:description" content="Two City Scheduling: a combinatorial brute force that checks every way to split people between two cities, vs. an optimal greedy sort-by-savings solution, both animated with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/two-city-scheduling.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Two City Scheduling — Problem Bank" />
+<meta name="twitter:description" content="Two City Scheduling: a combinatorial brute force that checks every way to split people between two cities, vs. an optimal greedy sort-by-savings solution, both animated with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Two City Scheduling", "item": "https://dsa.itszain.tech/problem-bank/two-city-scheduling.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      the optimal solution below is a one-line greedy insight on top of a sort; read that lesson
+      first if "sort by the right key, then take a prefix" is a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Two City Scheduling <span class="leetcode-link">(<a href="https://leetcode.com/problems/two-city-scheduling/" target="_blank" rel="noopener">LeetCode: Two City Scheduling</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>A company is interviewing <code>2n</code> people. Person <code>i</code> costs
+    <code>costs[i][0]</code> dollars to fly to city A, or <code>costs[i][1]</code> dollars to fly
+    to city B. Exactly <code>n</code> people must end up in each city. Return the minimum total
+    cost of flying everyone so that split is respected.</p>
+  <p>Every assignment is a choice of which <code>n</code> of the <code>2n</code> people fly to
+    city A — everyone else flies to city B. The question is which <code>n</code> to pick.</p>
+
+  <h2>Solution 1: Brute force — try every possible split</h2>
+  <p>The most literal reading of the problem: enumerate every possible group of <code>n</code>
+    people to send to city A (the rest automatically go to city B), total the cost for each
+    grouping, and keep the minimum. This is correct by definition — it is exactly what "minimum
+    cost over all valid assignments" means — but the number of groupings is
+    <code>C(2n, n)</code>, which grows combinatorially. It's only implemented and animated here
+    for a tiny 4-person example; it would never scale to real input sizes.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: brute force generates every combination of n people for city A, computes the total cost of each combination, and keeps the minimum - the number of combinations is C(2n, n), which explodes combinatorially as n grows.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: enumerate every C(2n, n) split, keep the minimum</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">generate every group</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">C(2n, n) ways to pick A</text>
+      <rect x="220" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">sum cost per group</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">A-cost + B-cost for all</text>
+      <rect x="420" y="60" width="200" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="520" y="82" fill="#282C34">keep the minimum</text>
+      <text x="520" y="98" fill="#282C34" font-size="10">discard the rest</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: C(2n, n) groups to check — C(20,10) is already 184,756.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> tried for city A</span>
+    <span><i class="lg-pointer"></i> tried for city B</span>
+    <span><i class="lg-sorted"></i> the winning assignment</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Bars show each person's cost under the
+    assignment currently being tried. Kept intentionally to 4 people (2n=4) — the point of this
+    animation is to watch the combinatorial blow-up happen, not to run it at real scale.</p>
+
+  <h3>The code</h3>
+  <pre><code>function combinations(arr, k) {
+  const results = [];
+  function backtrack(start, chosen) {
+    if (chosen.length === k) { results.push(chosen.slice()); return; }
+    for (let i = start; i < arr.length; i++) {
+      chosen.push(arr[i]);
+      backtrack(i + 1, chosen);
+      chosen.pop();
+    }
+  }
+  backtrack(0, []);
+  return results;
+}
+
+function twoCityBruteForce(costs) {
+  const total = costs.length;
+  const n = total / 2;
+  const indices = costs.map((_, i) => i);
+  const groupsA = combinations(indices, n);
+
+  let best = Infinity;
+  for (const groupA of groupsA) {
+    const setA = new Set(groupA);
+    let cost = 0;
+    for (let i = 0; i < total; i++) {
+      cost += setA.has(i) ? costs[i][0] : costs[i][1];
+    }
+    best = Math.min(best, cost);
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>combinations(indices, n)</code> generates every way to choose <code>n</code>
+      indices out of <code>2n</code> to represent "these people fly to city A" — there are
+      <code>C(2n, n)</code> of them.</li>
+    <li>For each candidate group, <code>setA.has(i)</code> decides per person whether to charge
+      <code>costs[i][0]</code> (city A) or <code>costs[i][1]</code> (city B) — everyone not
+      chosen for A automatically goes to B, so the split is always exactly <code>n</code> and
+      <code>n</code>.</li>
+    <li><code>best = Math.min(best, cost)</code> just keeps the cheapest total seen across every
+      group — no shortcuts, no pruning.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(C(2n, n) &middot; n) — combinatorial</td><td>O(n)</td><td>Enumerate every valid A/B split, sum, keep the min</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — greedy sort by savings</h2>
+  <p>Reframe the decision: sending person <code>i</code> to city A instead of city B changes the
+    cost by <code>aCost − bCost</code>. If that number is very negative, A is a big bargain for
+    that person; if it's very positive, B is the bargain. To minimize the total, greedily send the
+    <code>n</code> people with the smallest <code>aCost − bCost</code> (the biggest savings from
+    choosing A) to city A, and send the rest to city B. Sort once by that difference, ascending,
+    and split the sorted array down the middle — no combinatorial search needed.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: compute aCost minus bCost for every person, sort ascending by that difference, then send the first n people in sorted order to city A and the rest to city B.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: sort by aCost − bCost, split down the middle</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">diff = aCost − bCost</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">per person, once</text>
+      <rect x="220" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">sort ascending by diff</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">one O(n log n) sort</text>
+      <rect x="420" y="60" width="200" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="520" y="82" fill="#282C34">first n → A, rest → B</text>
+      <text x="520" y="98" fill="#282C34" font-size="10">no search left to do</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n) — dominated entirely by the sort.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> sent to city A</span>
+    <span><i class="lg-pointer"></i> sent to city B</span>
+    <span><i class="lg-sorted"></i> final assignment</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Bars show <code>aCost − bCost</code> for
+    each person, reordered into ascending sorted position — the same 4-person example as the
+    brute-force animation above, so the two answers can be compared directly.</p>
+
+  <h3>The code</h3>
+  <pre><code>function twoCityOptimal(costs) {
+  const n = costs.length / 2;
+  const sorted = costs.slice().sort((a, b) => (a[0] - a[1]) - (b[0] - b[1]));
+
+  let total = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    total += i < n ? sorted[i][0] : sorted[i][1];
+  }
+  return total;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>costs.slice()</code> copies the array first — sorting in place would silently
+      reorder the caller's original <code>costs</code>, which is rarely what's wanted.</li>
+    <li><code>.sort((a, b) => (a[0] - a[1]) - (b[0] - b[1]))</code> orders people ascending by
+      <code>aCost − bCost</code>: the biggest A-savings first, the biggest B-savings last.</li>
+    <li><code>i &lt; n</code> is the entire "decision" step — the first <code>n</code> people in
+      sorted order fly to A, everyone after flies to B. Because the array is sorted by exactly
+      the quantity that matters, this split is provably optimal — swapping any A/B pair across
+      the boundary can only make the total equal or worse, never better.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n)</td><td>O(n)</td><td>Sort by aCost − bCost, split the sorted array in half</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (enumerate every split)</td><td>O(C(2n, n) &middot; n) — combinatorial</td><td>O(n)</td></tr>
+      <tr><td>Optimal (greedy sort by savings)</td><td>O(n log n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Honest caveat: the brute-force code above is
+    only ever run against the small 4-person example on this page. <code>C(2n, n)</code> already
+    reaches 184,756 at 2n=20 and billions well before 2n=60 — it is not a "slow but usable"
+    fallback, it is asymptotically infeasible for any realistic input size.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does sorting by <code>aCost − bCost</code> guarantee the optimal
+        split, instead of just being a reasonable heuristic?</p>
+      <ul class="pb-ia">
+        <li>Every valid assignment sends exactly <code>n</code> people to A and <code>n</code>
+          to B — the total cost is (sum of everyone's bCost) + (sum of aCost − bCost for
+          whoever was sent to A).</li>
+        <li>The first term is fixed no matter which <code>n</code> people are chosen, so
+          minimizing the total means minimizing the sum of <code>aCost − bCost</code> over the
+          chosen A-group.</li>
+        <li>To minimize a sum of <code>n</code> values picked out of <code>2n</code>, pick the
+          <code>n</code> smallest — which is exactly "sort ascending by diff, take the first
+          n". That's a proof, not a guess.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What's an exchange-argument way to convince an interviewer this greedy
+        choice can't be beaten?</p>
+      <ul class="pb-ia">
+        <li>Suppose an optimal solution sends person X to B and person Y to A, but X's diff
+          (<code>aCost − bCost</code>) is smaller than Y's.</li>
+        <li>Swap them: send X to A and Y to B instead. The total cost changes by
+          <code>(X's diff) − (Y's diff)</code>, which is negative or zero since X's diff is
+          smaller — the swap never makes things worse, and strictly improves them if the diffs
+          differ.</li>
+        <li>So any solution that isn't sorted-by-diff can be transformed into one that is,
+          without increasing cost — meaning the sorted split is always at least as good as any
+          alternative.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you extend this if the two cities didn't need exactly equal
+        <code>n</code>/<code>n</code> splits — say, city A needs exactly <code>k</code> people
+        for some given <code>k</code>?</p>
+      <ul class="pb-ia">
+        <li>The same proof still holds — it never depended on <code>k</code> being exactly half.</li>
+        <li>Sort by <code>aCost − bCost</code> ascending, send the first <code>k</code> to A,
+          the remaining <code>2n − k</code> to B.</li>
+        <li>The only real requirement is that <code>k</code> people go to A and the rest go to
+          B — the greedy argument (swap any A/B pair sorted "wrong" without raising the total)
+          applies unchanged.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if a person can only be sent to one specific
+        city (a hard constraint)?" That breaks the simple sort — it becomes closer to an
+        assignment/flow problem, since some people are no longer free to be greedily
+        reassigned.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const costs = [[10, 20], [30, 200], [400, 50], [30, 20]];
+const sorted = costs.slice().sort();
+console.log(sorted[0]);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[10, 20]</code> — which happens to look plausible, but the whole
+          array is now wrong: <code>sorted</code> is
+          <code>[[10,20],[30,20],[30,200],[400,50]]</code>, not sorted by diff at all.</li>
+        <li><code>.sort()</code> with no comparator converts every element to a string and
+          compares lexicographically. <code>[400, 50]</code> becomes the string
+          <code>"400,50"</code>, which sorts before <code>"30,20"</code> — treating 4 as "less
+          than" 3 is nonsense for numbers, but that's how string comparison works.</li>
+        <li>It happens to put the actual answer first here purely by coincidence of these
+          specific numbers — it is not doing anything close to sorting by
+          <code>aCost − bCost</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the real solution always passes an explicit
+        comparator, <code>(a, b) =&gt; (a[0] - a[1]) - (b[0] - b[1])</code> — leaving it off
+        doesn't throw an error, it silently produces a different (and here, wrong) order.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="fixedterm" data-explain="Every valid assignment pays every person's bCost by default, plus (aCost − bCost) for whoever is switched to A. The bCost sum is identical across every valid split, so minimizing total cost is exactly minimizing the sum of diffs for the chosen A-group." >
+    <p class="q-text">1. Why does minimizing total cost reduce to minimizing the sum of (aCost − bCost) over just the people sent to city A?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="fixedterm">Because the sum of everyone's bCost is the same for every valid split, so only the A-group's diff sum varies</button>
+      <button class="btn dsa-quiz-option" data-value="alwayszero">Because aCost always equals bCost for half the people</button>
+      <button class="btn dsa-quiz-option" data-value="random">It doesn't reduce to that — the two are unrelated</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="smallestn" data-explain="To minimize the sum of n values chosen out of 2n, you pick the n smallest values — that's a basic fact about sums, and it's exactly what sorting the diffs ascending and taking a prefix achieves." >
+    <p class="q-text">2. Given the diff values are what matters, why does taking the SMALLEST n diffs (not the largest) minimize the total?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="smallestn">The sum of any n values out of 2n is minimized by choosing the n smallest of them</button>
+      <button class="btn dsa-quiz-option" data-value="largestn">Larger diffs always mean cheaper flights</button>
+      <button class="btn dsa-quiz-option" data-value="noeffect">Which n values are chosen never changes the total</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="swapargument" data-explain="If a pair is assigned the 'wrong' way around relative to sorted order, swapping them changes the total cost by (smaller diff − larger diff), which is ≤ 0 — so the swap never hurts, proving the sorted split is at least as good as any other." >
+    <p class="q-text">3. What's the core exchange-argument idea that proves the greedy split is optimal, not just a good guess?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="swapargument">Swapping any A/B pair that's out of sorted order never increases (and can only decrease) the total cost</button>
+      <button class="btn dsa-quiz-option" data-value="testing">It was checked against enough LeetCode examples to be confident</button>
+      <button class="btn dsa-quiz-option" data-value="luck">There's no proof — it's a heuristic that happens to score well</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="combinatorial" data-explain="Brute force enumerates every C(2n, n) way to pick the A-group — that count grows combinatorially (184,756 already at 2n=20), while the greedy solution needs only one O(n log n) sort." >
+    <p class="q-text">4. Why is the brute force fundamentally worse than "slow" — what makes it infeasible even for moderate n?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="combinatorial">The number of groupings it checks, C(2n, n), grows combinatorially — not linearly or even polynomially</button>
+      <button class="btn dsa-quiz-option" data-value="onlyslightly">It's only a small constant factor slower than the greedy solution</button>
+      <button class="btn dsa-quiz-option" data-value="samebigoh">It has the same Big O as the greedy solution, just with worse constants</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nocomparator" data-explain="Array.prototype.sort() with no comparator coerces elements to strings and compares them lexicographically — for numeric or nested-array data that is almost never the order you want, and it fails silently rather than throwing." >
+    <p class="q-text">5. What's the risk of writing <code>costs.sort()</code> instead of <code>costs.sort((a, b) =&gt; (a[0]-a[1]) - (b[0]-b[1]))</code> in this solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nocomparator">With no comparator, .sort() converts elements to strings and sorts lexicographically — silently the wrong order for this problem</button>
+      <button class="btn dsa-quiz-option" data-value="throws">It throws a TypeError immediately, so the bug is easy to catch</button>
+      <button class="btn dsa-quiz-option" data-value="noeffect">.sort() always falls back to numeric ascending order automatically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'two-city-scheduling';
+
+  // ---- shared combinatorics helper ----
+  function combinations(arr, k) {
+    const results = [];
+    function backtrack(start, chosen) {
+      if (chosen.length === k) { results.push(chosen.slice()); return; }
+      for (let i = start; i < arr.length; i++) {
+        chosen.push(arr[i]);
+        backtrack(i + 1, chosen);
+        chosen.pop();
+      }
+    }
+    backtrack(0, []);
+    return results;
+  }
+
+  // ---- Solution 1: brute force (DSA.Bars, non-uniform — per-person selected cost) ----
+  function buildBruteForceSteps(costs) {
+    const steps = [];
+    const total = costs.length;
+    const n = total / 2;
+    const indices = costs.map((_, i) => i);
+    const groups = combinations(indices, n);
+
+    steps.push({
+      narration: `${total} people, so n=${n} must fly to each city. Brute force tries every C(${total}, ${n}) = ${groups.length} way to choose which ${n} people go to city A — this is genuinely exponential growth (C(2n, n)), so it only stays feasible for tiny n like this.`,
+      values: costs.map((c) => c[0]),
+      states: costs.map(() => 'default'),
+    });
+
+    let best = Infinity;
+    let bestGroup = null;
+    let bestValues = null;
+    groups.forEach((groupA, gi) => {
+      const setA = new Set(groupA);
+      const values = costs.map((c, i) => (setA.has(i) ? c[0] : c[1]));
+      const states = costs.map((_, i) => (setA.has(i) ? 'active' : 'pointer'));
+      const cost = values.reduce((a, b) => a + b, 0);
+      const isNewBest = cost < best;
+      if (isNewBest) { best = cost; bestGroup = groupA.slice(); bestValues = values.slice(); }
+      const aList = groupA.map((i) => `person${i}`).join(', ');
+      steps.push({
+        narration: `Try ${gi + 1}/${groups.length}: send {${aList}} to city A, rest to city B → total = $${cost}.${isNewBest ? ' New best so far!' : ` Not better than the current best of $${best}.`}`,
+        values, states,
+      });
+    });
+
+    steps.push({
+      narration: `Checked all ${groups.length} combinations — minimum cost is $${best}, sending {${bestGroup.map((i) => `person${i}`).join(', ')}} to city A. With more people this search is C(2n, n), which explodes fast: even 2n=20 already means C(20,10) = 184,756 combinations to check.`,
+      values: bestValues,
+      states: bestValues.map(() => 'sorted'),
+    });
+
+    return steps;
+  }
+
+  // ---- Solution 2: optimal greedy (DSA.Bars, non-uniform — aCost − bCost, sorted) ----
+  function buildOptimalSteps(costs) {
+    const steps = [];
+    const total = costs.length;
+    const n = total / 2;
+    const diffs = costs.map((c) => c[0] - c[1]);
+
+    steps.push({
+      narration: `Compute diff = aCost − bCost for each person: [${diffs.join(', ')}]. A negative diff means city A is cheaper for that person; a positive diff means city B is cheaper.`,
+      values: diffs.slice(),
+      states: diffs.map(() => 'default'),
+    });
+
+    const order = costs.map((_, i) => i);
+    order.sort((i, j) => diffs[i] - diffs[j]);
+    const sortedDiffs = order.map((i) => diffs[i]);
+    steps.push({
+      narration: `Sort ascending by diff: [${order.map((i) => `person${i}(${diffs[i]})`).join(', ')}]. The people who save the most by flying A come first.`,
+      values: sortedDiffs.slice(),
+      states: sortedDiffs.map(() => 'default'),
+    });
+
+    let runningTotal = 0;
+    const states = sortedDiffs.map(() => 'default');
+    for (let pos = 0; pos < order.length; pos++) {
+      const personIdx = order[pos];
+      const toA = pos < n;
+      states[pos] = toA ? 'active' : 'pointer';
+      const cost = toA ? costs[personIdx][0] : costs[personIdx][1];
+      runningTotal += cost;
+      steps.push({
+        narration: `${toA ? `First n=${n}, so` : 'Remaining, so'} person${personIdx} (diff ${diffs[personIdx]}) → city ${toA ? 'A' : 'B'}, cost $${cost}. Running total = $${runningTotal}.`,
+        values: sortedDiffs.slice(),
+        states: states.slice(),
+      });
+    }
+
+    steps.push({
+      narration: `Done — total cost = $${runningTotal}, matching brute force's optimum, computed with one O(n log n) sort instead of checking every combination.`,
+      values: sortedDiffs.slice(),
+      states: states.map(() => 'sorted'),
+    });
+
+    return steps;
+  }
+
+  function randomFourPeopleCosts() {
+    const arr = [];
+    for (let i = 0; i < 4; i++) {
+      arr.push([1 + Math.floor(Math.random() * 150), 1 + Math.floor(Math.random() * 150)]);
+    }
+    return arr;
+  }
+
+  // ---- Solution 1 wiring ----
+  const CANONICAL_EXAMPLE = [[10, 20], [30, 200], [400, 50], [30, 20]];
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: 0, max: 420 });
+  bars1.setData(CANONICAL_EXAMPLE.map((c) => c[0]));
+  let bruteSteps = buildBruteForceSteps(CANONICAL_EXAMPLE);
+  const bruteplayer = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1200,
+    onStep(step) {
+      if (!step) { bars1.paint({}, bars1.data); return; }
+      bars1.paint(step.states, step.values);
+    },
+    onShuffle() {
+      const data = randomFourPeopleCosts();
+      bars1.setData(data.map((c) => c[0]));
+      bruteSteps = buildBruteForceSteps(data);
+      bruteplayer.setSteps(bruteSteps);
+    },
+  });
+
+  // ---- Solution 2 wiring ----
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: -200, max: 360 });
+  const optimalDiffs = CANONICAL_EXAMPLE.map((c) => c[0] - c[1]);
+  bars2.setData(optimalDiffs);
+  const optimalSteps = buildOptimalSteps(CANONICAL_EXAMPLE);
+  const optimalPlayer = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1200,
+    onStep(step) {
+      if (!step) { bars2.paint({}, bars2.data); return; }
+      bars2.paint(step.states, step.values);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('two-city-scheduling', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
