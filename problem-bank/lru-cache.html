@@ -267,27 +267,63 @@ class LRUCache {
   </div>
 
   <h2>Interview corner</h2>
-  <ul class="interview-list">
-    <li><strong>Why not just use a Map with a "last accessed" timestamp instead of a linked
-      list?</strong> You could track recency that way, but finding the least-recently-used entry
-      to evict would still require scanning every entry's timestamp — O(n), defeating the whole
-      point. The linked list is what makes <em>finding the LRU entry</em> O(1), not just looking
-      up a key by name.</li>
-    <li><strong>How would you extend this to LFU (Least Frequently Used) instead of LRU?</strong>
-      Track a use-count per key instead of (or alongside) recency, and evict the lowest count,
-      breaking ties by recency.<br>
-      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't
-      casually claim "just change what gets evicted" — LFU Cache is a genuinely harder, separate
-      LeetCode problem that needs a frequency-bucketed structure to stay O(1); it's not a small
-      tweak to this class.</span></li>
-    <li><strong>What should happen if capacity is 0?</strong> <code>get</code> should always
-      return -1, and <code>put</code> should never actually retain anything.<br>
-      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: trace it through
-      the code shown above — a <code>put</code> at capacity 0 inserts a node and then immediately
-      evicts it for being over capacity, which happens to produce the correct behavior. Worth
-      confirming out loud with the interviewer that capacity 0 is an input they actually want
-      handled, rather than silently assuming it.</span></li>
-  </ul>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why not just use a Map with a "last accessed" timestamp instead of a
+        linked list?</p>
+      <ul class="pb-ia">
+        <li>You could track recency that way.</li>
+        <li>But finding the least-recently-used entry to evict would still require scanning
+          every entry's timestamp — O(n), defeating the whole point.</li>
+        <li>The linked list is what makes <em>finding the LRU entry</em> O(1), not just looking
+          up a key by name.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you extend this to LFU (Least Frequently Used) instead of
+        LRU?</p>
+      <ul class="pb-ia">
+        <li>Track a use-count per key instead of (or alongside) recency.</li>
+        <li>Evict the lowest count, breaking ties by recency.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: don't casually claim "just change what gets evicted" — LFU Cache
+        is a genuinely harder, separate LeetCode problem that needs a frequency-bucketed
+        structure to stay O(1); it's not a small tweak to this class.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What should happen if capacity is 0?</p>
+      <ul class="pb-ia">
+        <li><code>get</code> should always return -1.</li>
+        <li><code>put</code> should never actually retain anything.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: trace it through the code above — a
+        <code>put</code> at capacity 0 inserts a node and then immediately evicts it for being
+        over capacity, which happens to produce correct behavior. Worth confirming out loud with
+        the interviewer that capacity 0 is an input they actually want handled, rather than
+        silently assuming it.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const cache = new LRUCache(2);
+cache.put(1, 1);
+const detachedGet = cache.get;
+console.log(detachedGet(1));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: it throws — <code>TypeError: Cannot read properties of undefined (reading
+          'map')</code>.</li>
+        <li>Class methods aren't auto-bound in JavaScript — <code>this</code> is only set
+          correctly when a method is called <em>as a property of its object</em>
+          (<code>cache.get(1)</code>).</li>
+        <li><code>detachedGet</code> is called with no receiver, so inside <code>get</code>,
+          <code>this</code> is <code>undefined</code> — and <code>this.map.has(key)</code>
+          crashes immediately.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is why libraries that hand out callbacks
+        (<code>array.map(cache.get)</code>, event handlers, etc.) either bind the method first
+        (<code>cache.get.bind(cache)</code>) or use an arrow-function wrapper — passing a bare
+        method reference silently loses its <code>this</code>.</p>
+    </div>
+  </div>
 
   <h2>Quiz</h2>
 

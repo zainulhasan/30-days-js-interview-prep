@@ -244,28 +244,63 @@ class Trie {
   </div>
 
   <h2>Interview corner</h2>
-  <ul class="interview-list">
-    <li><strong>Why not just use a Set for everything, given how simple it is?</strong> Because
-      <code>Set</code>'s <code>startsWith</code> requires scanning every stored word — nothing
-      about it knows which words share a prefix. A Trie makes prefix operations proportional to
-      the prefix length, not the number of words stored.<br>
-      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't claim
-      a Trie is "always better" — for small datasets, or when only exact <code>search</code>
-      matters and <code>startsWith</code> is never called, a flat <code>Set</code>'s simplicity
-      and lower per-node overhead can win in practice.</span></li>
-    <li><strong>How would you delete a word from a Trie?</strong> Walk down to the word's last
-      node and unset <code>isWord</code>, then walk back up removing any node that has no
-      children left AND isn't itself the end of another word.<br>
-      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if the
-      word being deleted is itself a prefix of another word?" Then you only unset
-      <code>isWord</code> — you can't delete any nodes, since the chain is still needed by the
-      longer word.</span></li>
-    <li><strong>What's the space tradeoff of a Trie vs. a Set for a large dictionary?</strong> A
-      Trie can use <em>more</em> memory than a flat Set when words don't share many prefixes
-      (each node carries overhead beyond just its character — a whole <code>Map</code> object),
-      but far <em>less</em> when there's heavy prefix sharing, like an autocomplete dictionary or
-      a phone contacts list. It's a data-dependent tradeoff, not a universal win either way.</li>
-  </ul>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why not just use a Set for everything, given how simple it is?</p>
+      <ul class="pb-ia">
+        <li><code>Set</code>'s <code>startsWith</code> requires scanning every stored word.</li>
+        <li>Nothing about a Set knows which words share a prefix.</li>
+        <li>A Trie makes prefix operations proportional to the prefix length (m), not the number
+          of words stored (n).</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: don't claim a Trie is "always better" — for small datasets, or
+        when only exact <code>search</code> matters and <code>startsWith</code> is never called, a
+        flat <code>Set</code>'s simplicity and lower per-node overhead can win in practice.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you delete a word from a Trie?</p>
+      <ul class="pb-ia">
+        <li>Walk down to the word's last node.</li>
+        <li>Unset that node's <code>isWord</code> flag.</li>
+        <li>Walk back up, removing any node that has no children left AND isn't itself the end of
+          another word.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if the word being deleted is itself a prefix
+        of another word?" Then you only unset <code>isWord</code> — no nodes get deleted, since
+        the chain is still needed by the longer word.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What's the space tradeoff of a Trie vs. a Set for a large dictionary?</p>
+      <ul class="pb-ia">
+        <li>A Trie can use <em>more</em> memory than a flat Set when words don't share many
+          prefixes — each node carries overhead beyond just its character, a whole
+          <code>Map</code> object.</li>
+        <li>A Trie uses far <em>less</em> memory when there's heavy prefix sharing, like an
+          autocomplete dictionary or a phone contacts list.</li>
+        <li>It's a data-dependent tradeoff, not a universal win either way.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const m = new Map();
+m.set("a", { note: "original subtree" });
+m.set("a", {});
+console.log(m.get("a"));
+console.log(m.size);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>{}</code>, then <code>1</code>.</li>
+        <li><code>Map.set</code> on an <em>existing</em> key overwrites the value — it does not
+          add a second entry.</li>
+        <li>The original <code>{ note: "original subtree" }</code> object is gone, replaced
+          entirely by <code>{}</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why <code>insert</code> above checks
+        <code>if (!node.children.has(ch))</code> before calling
+        <code>node.children.set(ch, new TrieNode())</code> — skipping that check and always
+        calling <code>set</code> would silently blow away an existing child's entire subtree
+        every time a shared prefix gets inserted again.</p>
+    </div>
+  </div>
 
   <h2>Quiz</h2>
 
