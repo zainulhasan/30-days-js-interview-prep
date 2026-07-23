@@ -327,6 +327,9 @@ console.log(s.has(NaN), NaN === NaN);</code></pre>
   <div class="continue-row">
     <a class="btn" href="index.html">← Back to Problem Bank</a>
   </div>
+
+  <h2>More Backtracking problems</h2>
+  <div class="day-list" id="relatedList"></div>
 </main>
 
 <footer class="site-footer">
@@ -457,6 +460,29 @@ console.log(s.has(NaN), NaN === NaN);</code></pre>
     refreshCompleteBtn();
   });
   refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    const related = relatedProblems(SLUG, 3);
+    related.forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info">
+          <span class="day-title">${title}</span>
+        </span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
 </script>
 </body>
 </html>
