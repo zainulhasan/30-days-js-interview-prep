@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LRU Cache — Problem Bank</title>
+<meta name="description" content="LRU Cache: a brute-force O(n) array solution vs. an optimal O(1) Map + doubly linked list, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/lru-cache.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="LRU Cache — Problem Bank" />
+<meta property="og:description" content="LRU Cache: a brute-force O(n) array solution vs. an optimal O(1) Map + doubly linked list, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/lru-cache.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="LRU Cache — Problem Bank" />
+<meta name="twitter:description" content="LRU Cache: a brute-force O(n) array solution vs. an optimal O(1) Map + doubly linked list, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "LRU Cache", "item": "https://dsa.itszain.tech/problem-bank/lru-cache.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day15.html">Day 15: Linked Lists</a></strong> —
+      the optimal solution below is a doubly linked list with node pointers moved by hand; read
+      that lesson first if pointer manipulation is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">DESIGN &middot; MEDIUM</p>
+  <h1>LRU Cache <span class="leetcode-link">(<a href="https://leetcode.com/problems/lru-cache/" target="_blank" rel="noopener">LeetCode: LRU Cache</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Design a fixed-capacity cache supporting <code>get(key)</code> and
+    <code>put(key, value)</code>, both ideally O(1). When the cache is full and a new key is
+    inserted, evict the <strong>least-recently-used</strong> entry — the one that hasn't been read
+    or written the longest.</p>
+
+  <h2>Solution 1: Brute force — a plain array</h2>
+  <p>Keep entries in one array, ordered from least-recently-used (front) to most-recently-used
+    (end). Every <code>get</code> or <code>put</code> that touches an existing key has to scan the
+    array to find it, then move it to the end.</p>
+
+  <svg class="diagram" viewBox="0 0 640 200" role="img" aria-label="Diagram of the brute-force LRU cache: a plain array of key-value pairs in least-to-most-recently-used order. get and put both need a linear scan to locate a key, then splice it out and push it to the end to mark it most recently used.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: a plain array, ordered LRU &rarr; MRU</text>
+    <text x="20" y="45" font-size="10" fill="#9198A6">&larr; least recently used</text>
+    <text x="320" y="45" font-size="10" fill="#9198A6" text-anchor="end">most recently used &rarr;</text>
+    <g font-family="var(--font-head)" font-size="13" text-anchor="middle">
+      <rect x="20" y="55" width="90" height="40" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="65" y="79" fill="#E2E3E7">1:1</text>
+      <rect x="120" y="55" width="90" height="40" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="165" y="79" fill="#E2E3E7">2:2</text>
+      <rect x="220" y="55" width="90" height="40" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="265" y="79" fill="#E2E3E7">3:3</text>
+    </g>
+    <text x="20" y="130" font-size="12" fill="#DCDFE4">get(1) has to scan from the front to find key 1 — O(n) — then splice it out</text>
+    <text x="20" y="148" font-size="12" fill="#DCDFE4">and push it to the end to mark it as just-used, also O(n) for the shift.</text>
+    <text x="20" y="180" font-size="12" fill="#E06C75">Cost: O(n) per get/put.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> scanning</span>
+    <span><i class="lg-swap"></i> found</span>
+    <span><i class="lg-sorted"></i> most recently used</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces the exact sequence
+    verified above, capacity 2: put(1,1), put(2,2), get(1), put(3,3), get(2), put(4,4), get(1),
+    get(3), get(4).</p>
+
+  <h3>The code</h3>
+  <pre><code>class LRUCacheArray {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.cache = []; // [key, value] pairs, front = LRU, end = MRU
+  }
+  get(key) {
+    const idx = this.cache.findIndex(([k]) => k === key);
+    if (idx === -1) return -1;
+    const [, value] = this.cache[idx];
+    this.cache.splice(idx, 1);
+    this.cache.push([key, value]);
+    return value;
+  }
+  put(key, value) {
+    const idx = this.cache.findIndex(([k]) => k === key);
+    if (idx !== -1) this.cache.splice(idx, 1);
+    this.cache.push([key, value]);
+    if (this.cache.length > this.capacity) this.cache.shift();
+  }
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>findIndex</code> is the O(n) cost — every <code>get</code>/<code>put</code> on an
+      existing key scans from the front.</li>
+    <li><code>get</code> splices the found entry out, then pushes it back at the end — that's
+      what marks it most-recently-used.</li>
+    <li><code>put</code> on an existing key removes the old entry first so the fresh
+      <code>push</code> doesn't leave a stale duplicate.</li>
+    <li><code>this.cache.shift()</code> evicts index 0 — by construction, the entry that's been
+      sitting at the front longest without being touched.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>get</th><th>put</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>O(capacity)</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — Map + doubly linked list</h2>
+  <p>Keep a doubly linked list ordered by recency (most-recently-used near a HEAD sentinel,
+    least-recently-used near a TAIL sentinel), plus a <code>Map</code> from key straight to its
+    list node. The Map turns "find this key" from an O(n) scan into an O(1) lookup; the linked
+    list turns "move this node to the front" and "remove the last real node" into O(1) pointer
+    updates.</p>
+
+  <svg class="diagram" viewBox="0 0 640 220" role="img" aria-label="Diagram of the optimal LRU cache: a doubly linked list with head and tail sentinel nodes, most-recently-used near the head and least-recently-used near the tail, plus a Map from key to its list node for O(1) lookup.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: Map (key &rarr; node) + doubly linked list (recency order)</text>
+    <g stroke="#3E4452" stroke-width="2">
+      <line x1="60" y1="100" x2="150" y2="100"/>
+      <line x1="150" y1="100" x2="240" y2="100"/>
+      <line x1="240" y1="100" x2="330" y2="100"/>
+      <line x1="330" y1="100" x2="420" y2="100"/>
+    </g>
+    <g font-family="var(--font-head)" font-size="11" text-anchor="middle">
+      <rect x="32" y="86" width="56" height="28" rx="4" fill="#282C34" stroke="#61AEEE"/>
+      <text x="60" y="104" fill="#61AEEE" font-size="10">HEAD</text>
+      <circle cx="150" cy="100" r="18" fill="#98C379"/>
+      <text x="150" y="104" fill="#282C34" font-size="12">3:3</text>
+      <circle cx="240" cy="100" r="18" fill="#3E4452"/>
+      <text x="240" y="104" fill="#E2E3E7" font-size="12">1:1</text>
+      <circle cx="330" cy="100" r="18" fill="#3E4452"/>
+      <text x="330" y="104" fill="#E2E3E7" font-size="12">2:2</text>
+      <rect x="392" y="86" width="56" height="28" rx="4" fill="#282C34" stroke="#61AEEE"/>
+      <text x="420" y="104" fill="#61AEEE" font-size="10">TAIL</text>
+    </g>
+    <text x="150" y="140" font-size="10" fill="#98C379" text-anchor="middle">most recently used</text>
+    <text x="330" y="140" font-size="10" fill="#E06C75" text-anchor="middle">evicted first</text>
+    <text x="20" y="180" font-size="12" fill="#DCDFE4">Map.get(key) jumps straight to a node — no scanning — and moving a node</text>
+    <text x="20" y="198" font-size="12" fill="#DCDFE4">to the front (or evicting the one before TAIL) is O(1) pointer surgery.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> new node inserted</span>
+    <span><i class="lg-pointer"></i> Map lookup hit</span>
+    <span><i class="lg-sorted"></i> moved to most-recently-used</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same operation sequence as Solution 1 —
+    watch the front of the chain track "most recently used" without ever scanning.</p>
+
+  <h3>The code</h3>
+  <pre><code>class DListNode {
+  constructor(key, value) {
+    this.key = key;
+    this.value = value;
+    this.prev = null;
+    this.next = null;
+  }
+}
+
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.map = new Map();
+    this.head = new DListNode(null, null); // sentinel, most-recent side
+    this.tail = new DListNode(null, null); // sentinel, least-recent side
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+  _remove(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+  }
+  _insertAtFront(node) {
+    node.next = this.head.next;
+    node.prev = this.head;
+    this.head.next.prev = node;
+    this.head.next = node;
+  }
+  get(key) {
+    if (!this.map.has(key)) return -1;
+    const node = this.map.get(key);
+    this._remove(node);
+    this._insertAtFront(node);
+    return node.value;
+  }
+  put(key, value) {
+    if (this.map.has(key)) {
+      const node = this.map.get(key);
+      node.value = value;
+      this._remove(node);
+      this._insertAtFront(node);
+      return;
+    }
+    const node = new DListNode(key, value);
+    this.map.set(key, node);
+    this._insertAtFront(node);
+    if (this.map.size > this.capacity) {
+      const lru = this.tail.prev;
+      this._remove(lru);
+      this.map.delete(lru.key);
+    }
+  }
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>Two sentinel nodes (<code>head</code>, <code>tail</code>) remove every edge case around
+      an empty list or a size-1 list — there's always a real <code>prev</code>/<code>next</code>
+      to link against.</li>
+    <li><code>_remove</code> only needs the node itself (not a predecessor lookup) because every
+      real node's <code>prev</code>/<code>next</code> pointers are always kept valid.</li>
+    <li><code>this.map.has(key)</code> is the O(1) replacement for the array solution's
+      <code>findIndex</code> — direct hash lookup instead of a scan.</li>
+    <li>Eviction reads <code>this.tail.prev</code> — with the sentinel tail, that's always the
+      real least-recently-used node, never <code>undefined</code>.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>get</th><th>put</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(1)</td><td>O(1)</td><td>O(capacity)</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>get</th><th>put</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (array)</td><td>O(n)</td><td>O(n)</td><td>O(capacity)</td></tr>
+      <tr><td>Optimal (Map + doubly linked list)</td><td>O(1)</td><td>O(1)</td><td>O(capacity)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="scan" data-explain="Both get and put need to locate a key first, and a plain array has no faster way to do that than findIndex — an O(n) linear scan in the worst case." >
+    <p class="q-text">1. Why is the array-based solution O(n) per operation?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="scan">get/put both need findIndex, an O(n) scan, to locate the key</button>
+      <button class="btn dsa-quiz-option" data-value="sortcost">Arrays require sorting before every access</button>
+      <button class="btn dsa-quiz-option" data-value="alwaysfast">It isn't — array access is always O(1)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="removeinsert" data-explain="A doubly linked list makes both removing a node from anywhere and inserting a node at the front O(1), because every node holds direct pointers to its neighbors — no shifting or scanning required, unlike an array." >
+    <p class="q-text">2. What two operations does the doubly linked list make O(1) that an array can't?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="removeinsert">Removing a node from anywhere, and inserting a node at the front</button>
+      <button class="btn dsa-quiz-option" data-value="sorting">Sorting the whole list by key</button>
+      <button class="btn dsa-quiz-option" data-value="searching">Searching for a value directly, without a Map</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="lookup" data-explain="The linked list alone can't jump to a key's node without walking from head or tail — that's still O(n). The Map is what supplies the O(1) key-to-node lookup that makes the whole design fast." >
+    <p class="q-text">3. Why is a Map required in addition to the doubly linked list?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="lookup">Without it, finding a node by key would still require an O(n) list walk</button>
+      <button class="btn dsa-quiz-option" data-value="capacity">The Map is what enforces the capacity limit</button>
+      <button class="btn dsa-quiz-option" data-value="notneeded">It isn't required — the linked list alone is already O(1)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="beforetail" data-explain="tail.prev is always the real node sitting closest to the TAIL sentinel — by construction, that's the least-recently-used entry, since every access moves a node to the front instead." >
+    <p class="q-text">4. When the cache is full and a new key is inserted, which node gets evicted?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="beforetail">The node just before the TAIL sentinel — the least-recently-used entry</button>
+      <button class="btn dsa-quiz-option" data-value="afterhead">The node just after the HEAD sentinel</button>
+      <button class="btn dsa-quiz-option" data-value="random">A randomly chosen node</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="recency" data-explain="LRU tracks recency of access, not just insertion — get() moves the accessed node to the front exactly like put() does, so a recently-read key isn't the next one evicted just because it wasn't recently written." >
+    <p class="q-text">5. Why does <code>get()</code> also count as "using" a key for LRU purposes?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="recency">LRU tracks recency of access, and get() moves the node to the front just like put() does</button>
+      <button class="btn dsa-quiz-option" data-value="doesnt">It doesn't — only put() affects eviction order</button>
+      <button class="btn dsa-quiz-option" data-value="capacityreset">get() resets the cache's capacity counter</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'lru-cache';
+  const OPS = [
+    { type: 'put', key: 1, value: 1 },
+    { type: 'put', key: 2, value: 2 },
+    { type: 'get', key: 1 },
+    { type: 'put', key: 3, value: 3 },
+    { type: 'get', key: 2 },
+    { type: 'put', key: 4, value: 4 },
+    { type: 'get', key: 1 },
+    { type: 'get', key: 3 },
+    { type: 'get', key: 4 },
+  ];
+  const CAPACITY = 2;
+
+  // ---- Solution 1: brute-force array (DSA.Bars, uniform — "key:value" labels) ----
+  function buildLRUArraySteps(capacity, ops) {
+    const steps = [];
+    let cache = []; // front = LRU, end = MRU
+
+    function snapshot(narration, states) {
+      const labels = cache.map(([k, v]) => `${k}:${v}`);
+      steps.push({ narration, data: labels, states: states || labels.map(() => 'default') });
+    }
+
+    snapshot(`Cache created with capacity ${capacity}. Empty.`);
+
+    ops.forEach((op) => {
+      if (op.type === 'put') {
+        const idx = cache.findIndex(([k]) => k === op.key);
+        if (idx !== -1) {
+          snapshot(`put(${op.key}, ${op.value}) — key ${op.key} found at position ${idx} during the scan.`, cache.map((_, i) => (i === idx ? 'compare' : 'default')));
+          cache.splice(idx, 1);
+        } else {
+          snapshot(`put(${op.key}, ${op.value}) — key ${op.key} not found, scanned all ${cache.length} entries.`, cache.map(() => 'compare'));
+        }
+        cache.push([op.key, op.value]);
+        if (cache.length > capacity) {
+          const evicted = cache.shift();
+          snapshot(`Over capacity — evict [${evicted[0]}:${evicted[1]}], the least-recently-used entry at the front.`, cache.map((_, i) => (i === cache.length - 1 ? 'sorted' : 'default')));
+        } else {
+          snapshot(`[${op.key}:${op.value}] pushed to the end — now the most-recently-used entry.`, cache.map((_, i) => (i === cache.length - 1 ? 'sorted' : 'default')));
+        }
+      } else {
+        const idx = cache.findIndex(([k]) => k === op.key);
+        if (idx === -1) {
+          snapshot(`get(${op.key}) — scanned all ${cache.length} entries, not found. Returns -1.`, cache.map(() => 'compare'));
+        } else {
+          const value = cache[idx][1];
+          snapshot(`get(${op.key}) — found at position ${idx} after scanning. Returns ${value}.`, cache.map((_, i) => (i === idx ? 'swap' : 'default')));
+          cache.splice(idx, 1);
+          cache.push([op.key, value]);
+          snapshot(`[${op.key}:${value}] moved to the end — now the most-recently-used entry.`, cache.map((_, i) => (i === cache.length - 1 ? 'sorted' : 'default')));
+        }
+      }
+    });
+
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData([]);
+  const steps1 = buildLRUArraySteps(CAPACITY, OPS);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1000,
+    onStep(step) {
+      if (!step) { bars1.setData([]); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal Map + doubly linked list (DSA.Graph, re-laid-out per step) ----
+  const LRU_SLOT_X = (i) => 90 + i * 100;
+  const LRU_ROW_Y = 100;
+
+  function lruChainEdges(nodes) {
+    const edges = [];
+    for (let i = 0; i < nodes.length - 1; i++) edges.push({ from: nodes[i].id, to: nodes[i + 1].id, directed: true });
+    return edges;
+  }
+
+  function buildLRUOptimalSteps(capacity, ops) {
+    const steps = [];
+    let chain = []; // chain[0] = most recently used ... chain[last] = least recently used
+    let counter = 0;
+    const byKey = new Map();
+
+    function relayout() {
+      chain.forEach((n, i) => { n.x = LRU_SLOT_X(i); n.y = LRU_ROW_Y; });
+    }
+
+    function pushStep(narration, states) {
+      relayout();
+      steps.push({ narration, nodes: chain.map((n) => Object.assign({}, n)), edges: lruChainEdges(chain), states: states || {} });
+    }
+
+    pushStep(`Cache created with capacity ${capacity}. Empty — HEAD and TAIL point at each other.`);
+
+    ops.forEach((op) => {
+      if (op.type === 'put') {
+        const existing = byKey.get(op.key);
+        if (existing) {
+          existing.label = `${op.key}:${op.value}`;
+          chain = chain.filter((n) => n !== existing);
+          chain.unshift(existing);
+          pushStep(`put(${op.key}, ${op.value}) — key ${op.key} exists (Map lookup, O(1)). Update its value and move it to the front.`, { [existing.id]: 'sorted' });
+        } else {
+          const node = { id: 'n' + counter++, key: op.key, label: `${op.key}:${op.value}` };
+          byKey.set(op.key, node);
+          chain.unshift(node);
+          pushStep(`put(${op.key}, ${op.value}) — new key. Insert a node at the front (most recently used).`, { [node.id]: 'active' });
+          if (chain.length > capacity) {
+            const evicted = chain.pop();
+            byKey.delete(evicted.key);
+            pushStep(`Over capacity — evict [${evicted.label}] from just before TAIL, the least-recently-used entry.`, {});
+          }
+        }
+      } else {
+        const node = byKey.get(op.key);
+        if (!node) {
+          pushStep(`get(${op.key}) — Map lookup finds nothing. Returns -1.`, {});
+        } else {
+          pushStep(`get(${op.key}) — Map lookup jumps straight to the node (O(1)). Returns ${node.label.split(':')[1]}.`, { [node.id]: 'pointer' });
+          chain = chain.filter((n) => n !== node);
+          chain.unshift(node);
+          pushStep(`Move [${node.label}] to the front — it's now the most-recently-used entry.`, { [node.id]: 'sorted' });
+        }
+      }
+    });
+
+    return steps;
+  }
+
+  function paintLRUGraph(graph, step) {
+    graph.nodes = step.nodes;
+    graph.edges = step.edges;
+    graph.render(step.states || {});
+  }
+
+  const graph2 = new DSA.Graph(document.getElementById('viz2Stage'), { width: 500, height: 180 });
+  const steps2 = buildLRUOptimalSteps(CAPACITY, OPS);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1000,
+    onStep(step) { paintLRUGraph(graph2, step || steps2[0]); },
+  });
+  paintLRUGraph(graph2, steps2[0]);
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
