@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Subsets — Problem Bank</title>
+<meta name="description" content="Subsets: generating the power set two ways — brute-force bitmask enumeration vs. optimal backtracking that records every recursion node, both animated." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/subsets.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Subsets — Problem Bank" />
+<meta property="og:description" content="Subsets: generating the power set two ways — brute-force bitmask enumeration vs. optimal backtracking that records every recursion node, both animated." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/subsets.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Subsets — Problem Bank" />
+<meta name="twitter:description" content="Subsets: generating the power set two ways — brute-force bitmask enumeration vs. optimal backtracking that records every recursion node, both animated." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Subsets", "item": "https://dsa.itszain.tech/problem-bank/subsets.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day09.html">Day 9: Recursion &amp; the Call Stack</a></strong> —
+      the optimal solution below is a recursive include/exclude backtrack; read that lesson first if the
+      call stack still feels unfamiliar.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BACKTRACKING &middot; MEDIUM</p>
+  <h1>Subsets <span class="leetcode-link">(<a href="https://leetcode.com/problems/subsets/" target="_blank" rel="noopener">LeetCode: Subsets</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given an array of unique integers <code>nums</code>, return all possible subsets (the power
+    set). The solution set must not contain duplicate subsets — return them in any order.</p>
+
+  <h2>Solution 1: Brute force — bitmask enumeration</h2>
+  <p>Every integer from 0 to 2<sup>n</sup> &minus; 1, read in binary, is a unique combination of
+    n bits — treat bit i as "include <code>nums[i]</code>" and enumerate every mask.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: count every integer from 0 to 2^n minus 1, read its binary representation, and treat each set bit as including the corresponding element in that subset.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: every integer 0..2^n-1 IS a subset, in binary</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">mask = 0 .. 2^n-1</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">every possible bit pattern</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">read each bit of mask</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">bit i set = include nums[i]</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">build the subset</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">no recursion needed</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#DCDFE4">Cost: O(n &times; 2^n) — same asymptotic class as the backtracking version below.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> just generated</span>
+    <span><i class="lg-sorted"></i> in the result list</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces nums=[1,2] (4
+    subsets) — a small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function subsetsBrute(nums) {
+  const n = nums.length, result = [];
+  for (let mask = 0; mask < (1 << n); mask++) {
+    const subset = [];
+    for (let i = 0; i < n; i++) if (mask & (1 << i)) subset.push(nums[i]);
+    result.push(subset);
+  }
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>mask</code> counts through every integer from 0 to <code>2^n - 1</code> — that's
+      every possible n-bit pattern.</li>
+    <li><code>mask &amp; (1 &lt;&lt; i)</code> tests whether bit <code>i</code> is set in the
+      current mask — if it is, <code>nums[i]</code> belongs in this subset.</li>
+    <li>No recursion at all — this is a purely iterative technique built entirely on bit
+      manipulation.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n &times; 2^n)</td><td>O(n) per subset built</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — backtracking, include/exclude at every node</h2>
+  <p>Recurse through the array, and at EVERY node of the recursion tree (not just the leaves)
+    record the current path as a valid subset — the empty prefix, every partial selection, and
+    every full selection are all valid subsets.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: record the current path as a subset at every recursion node, then for each remaining element choose to include it and recurse, or leave it out.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: record at every node, then include/exclude each element</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">record current path</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">every node is a valid subset</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">for each remaining element</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">start at the NEXT index only</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">include, recurse, exclude</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">then backtrack</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#DCDFE4">Cost: O(n &times; 2^n) — same class as bitmask, but generalizes to non-integer-index structures.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces nums=[1,2] (4
+    subsets) — a small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function subsetsOptimal(nums) {
+  const result = [];
+  function dfs(start, path) {
+    result.push(path.slice());
+    for (let i = start; i < nums.length; i++) {
+      path.push(nums[i]);
+      dfs(i + 1, path);
+      path.pop();
+    }
+  }
+  dfs(0, []);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>result.push(path.slice())</code> happens at the TOP of every call, before the loop
+      — this is what makes every node (not just leaves) a recorded subset.</li>
+    <li>The loop starts at <code>i = start</code>, never at <code>0</code> — this is what
+      guarantees each subset is only generated once, in one canonical order, instead of once per
+      permutation of its elements.</li>
+    <li><code>path.push</code>/<code>path.pop</code> around the recursive call is the standard
+      backtrack pattern: try including <code>nums[i]</code>, explore fully, then undo before
+      trying the next element.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n &times; 2^n)</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Technique</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (bitmask)</td><td>O(n &times; 2^n)</td><td>Iterative bit manipulation</td></tr>
+      <tr><td>Optimal (backtracking)</td><td>O(n &times; 2^n)</td><td>Recursive include/exclude</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Both solutions have the EXACT same asymptotic complexity — the power set's size alone
+    (2<sup>n</sup>) already forces that much work. The real difference is technique, not speed:
+    backtracking generalizes to problems bitmask can't handle cleanly (duplicate values,
+    non-integer structures), while bitmask is a neat trick specific to small, simple index sets.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why do both solutions have the exact same Big-O complexity?</p>
+      <ul class="pb-ia">
+        <li>Both must produce and return all 2<sup>n</sup> subsets, so the output size alone
+          already forces O(2^n) time regardless of technique.</li>
+        <li>No algorithm can beat the size of its own required output.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you modify the backtracking solution to only return subsets of
+        a specific size k?</p>
+      <ul class="pb-ia">
+        <li>Add a length check at the top of <code>dfs</code> — only push
+          <code>path.slice()</code> when <code>path.length === k</code>.</li>
+        <li>Optionally prune early too — if the remaining elements can't possibly reach length
+          k, stop exploring that branch, a real time-saving optimization, not just a filter.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What if the input array has duplicate values, like [1,2,2]?</p>
+      <ul class="pb-ia">
+        <li>Sort the array first.</li>
+        <li>In the loop, skip a duplicate value if it's not the FIRST occurrence at this
+          recursion depth (<code>if (i > start && nums[i] === nums[i-1]) continue</code>).</li>
+        <li>Otherwise the same subset gets generated more than once.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const arr = Array(3).fill([]);
+arr[0].push(1);
+console.log(JSON.stringify(arr));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[[1],[1],[1]]</code>, not <code>[[1],[],[]]</code>.</li>
+        <li><code>Array(3).fill([])</code> puts the exact SAME array reference into all three
+          positions — <code>.fill()</code> does not call a factory function per index.</li>
+        <li>Mutating <code>arr[0]</code> therefore mutates the one shared array every position
+          points to.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: to get independent arrays, use
+        <code>Array.from({ length: 3 }, () => [])</code> instead — that DOES call a fresh
+        factory per index.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="outputsize" data-explain="Both must produce all 2^n subsets — the output size alone already forces O(2^n) time, no matter which technique generates them." >
+    <p class="q-text">1. Why do the bitmask and backtracking solutions have the exact same Big-O complexity?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="outputsize">Both must produce all 2^n subsets — the output size alone already forces O(2^n) time</button>
+      <button class="btn dsa-quiz-option" data-value="backtrackfaster">Backtracking is always faster than bitmask enumeration</button>
+      <button class="btn dsa-quiz-option" data-value="sizetwo">Bitmask only works for arrays of size 2 or smaller</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="included" data-explain="Bit i set to 1 means nums[i] is included in the subset that mask represents — that's the whole mapping from integer to subset." >
+    <p class="q-text">2. In the bitmask approach, what does bit i being 1 in a mask mean?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="included">nums[i] is included in the subset that mask represents</button>
+      <button class="btn dsa-quiz-option" data-value="excluded">nums[i] is excluded from the subset</button>
+      <button class="btn dsa-quiz-option" data-value="lengthi">The subset has exactly i elements</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="everynode" data-explain="Every node in the recursion tree — not just the leaves — represents a valid subset, including the empty prefix and every partial selection, so it must be recorded on entry, not just at the end." >
+    <p class="q-text">3. In the backtracking approach, why is <code>path.slice()</code> pushed into <code>result</code> at the START of every call, not just at the end?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="everynode">Every node in the recursion tree — not just the leaves — represents a valid subset, including the empty prefix and every partial selection</button>
+      <button class="btn dsa-quiz-option" data-value="bug">It's a bug that happens to still work</button>
+      <button class="btn dsa-quiz-option" data-value="leafonly">Only leaf nodes actually get recorded</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="generalizes" data-explain="Bitmask relies on treating include/exclude as literal bits of a fixed-size integer, which only works cleanly for small index sets; backtracking's include/exclude recursion works for arbitrary structures, including ones with duplicates or non-integer keys." >
+    <p class="q-text">4. Why does the backtracking version generalize better to problems bitmask can't handle (like arrays with duplicates)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="generalizes">Bitmask relies on treating include/exclude as literal bits of a fixed-size integer, which only works cleanly for small index sets; backtracking's include/exclude recursion works for arbitrary structures</button>
+      <button class="btn dsa-quiz-option" data-value="alwaysgeneralizes">It doesn't — bitmask always generalizes just as well</button>
+      <button class="btn dsa-quiz-option" data-value="fasterlarge">Backtracking is faster on large inputs</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="noreorder" data-explain="Starting each call at i (via start) means every call only considers elements AFTER the ones already chosen, so a subset like {1,2} is only ever generated once, in one canonical order — never also as {2,1}." >
+    <p class="q-text">5. What causes the backtracking solution's for-loop to start at <code>i</code> (via the <code>start</code> parameter), not always at 0?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="noreorder">To avoid generating the same subset in more than one order (e.g. both {1,2} and {2,1}) — each call only considers elements AFTER the ones already chosen</button>
+      <button class="btn dsa-quiz-option" data-value="skipfirst">To skip the first element of the array entirely</button>
+      <button class="btn dsa-quiz-option" data-value="boundeddepth">It's required to keep the recursion depth bounded</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'subsets';
+
+  // ---- Solution 1: brute-force bitmask (DSA.Bars, uniform — "{a,b}" subset labels) ----
+  function buildSubsetsBruteSteps(nums) {
+    const n = nums.length;
+    const steps = [];
+    const built = [];
+    function snapshot(narration, highlightIdx) {
+      steps.push({ narration, data: built.map((s) => '{' + s.join(',') + '}'), states: built.map((_, i) => (i === highlightIdx ? 'active' : 'sorted')) });
+    }
+    snapshot(`Start: ${1 << n} masks to check (2^${n}), from 0 to ${(1 << n) - 1}.`, -1);
+    for (let mask = 0; mask < (1 << n); mask++) {
+      const subset = [];
+      for (let i = 0; i < n; i++) if (mask & (1 << i)) subset.push(nums[i]);
+      built.push(subset);
+      snapshot(`mask=${mask.toString(2).padStart(n, '0')} (binary) → subset {${subset.join(',')}}.`, built.length - 1);
+    }
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData([]);
+  const steps1 = buildSubsetsBruteSteps([1, 2]);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 700,
+    onStep(step) {
+      if (!step) { bars1.setData([]); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal backtracking (DSA.CallStack) ----
+  function buildSubsetsOptimalSteps(nums) {
+    const steps = [];
+    const callStack = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(start, path) {
+      callStack.push(`dfs(start=${start}, path=[${path.join(',')}])`);
+      pushStep(`Enter dfs — start=${start}, path=[${path.join(',')}]. Record this path immediately — every node in this recursion tree is a valid subset.`);
+      for (let i = start; i < nums.length; i++) {
+        path.push(nums[i]);
+        dfs(i + 1, path);
+        path.pop();
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs(0, []);
+    return steps;
+  }
+
+  const callStack2 = new DSA.CallStack(document.getElementById('viz2Stage'));
+  const steps2 = buildSubsetsOptimalSteps([1, 2]);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 700,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+  });
+  callStack2.render([]);
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
