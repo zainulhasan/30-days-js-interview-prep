@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>N-Queens — Problem Bank</title>
+<meta name="description" content="N-Queens: an unpruned brute-force backtracking search vs. an optimal column/diagonal-pruned search, both animated on a live chessboard, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/n-queens.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="N-Queens — Problem Bank" />
+<meta property="og:description" content="N-Queens: an unpruned brute-force backtracking search vs. an optimal column/diagonal-pruned search, both animated on a live chessboard, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/n-queens.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="N-Queens — Problem Bank" />
+<meta name="twitter:description" content="N-Queens: an unpruned brute-force backtracking search vs. an optimal column/diagonal-pruned search, both animated on a live chessboard, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "N-Queens", "item": "https://dsa.itszain.tech/problem-bank/n-queens.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day09.html">Day 9: Recursion &amp; the Call Stack</a></strong> —
+      both solutions below are recursive backtracking searches over board rows; read that lesson
+      first if recursive call stacks are still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BACKTRACKING &middot; HARD</p>
+  <h1>N-Queens <span class="leetcode-link">(<a href="https://leetcode.com/problems/n-queens/" target="_blank" rel="noopener">LeetCode: N-Queens</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>The n-queens puzzle is the problem of placing <code>n</code> queens on an <code>n &times; n</code>
+    chessboard so that no two queens attack each other — meaning no two share a row, a column, or a
+    diagonal. Given <code>n</code>, return all distinct solutions, each represented as a board where
+    <code>'Q'</code> marks a queen and <code>'.'</code> marks an empty space.</p>
+
+  <h2>Solution 1: Brute force — try every column in every row, validate only at the end</h2>
+  <p>Place a queen in some column of every row, trying all <code>n</code> columns per row with no
+    regard for conflicts, and only check whether the FULL board is valid once every row has a queen.
+    This animation deliberately uses a 3&times;3 board instead of 4&times;4 — n=3 has zero valid
+    solutions (same as n=2, a well-known fact), which keeps the fully unpruned search small enough
+    to watch (~66 steps) while still honestly demonstrating exhaustive brute-force search reaching
+    the mathematically correct answer, "no solution exists."</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: place any column in the current row regardless of conflicts, recurse to the next row, and check the full board for conflicts only once every row has a queen.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: place any column, validate the FULL board at the end</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">place any column</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">no conflict check</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">recurse to the next row</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">repeat for every row</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">check FULL board now</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">validate every pair</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n^n) placements explored before any conflict is ever caught.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> queen just placed</span>
+    <span><i class="lg-sorted"></i> valid final board</span>
+    <span><i class="lg-swap"></i> full board checked, invalid</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation uses a 3&times;3 board (n=3) —
+    no valid solution exists at this size, so watch it exhaustively try everything and correctly
+    conclude there's none. The optimal solution below uses n=4, where real solutions exist.</p>
+
+  <h3>The code</h3>
+  <pre><code>function solveNQueensBrute(n) {
+  const result = [];
+  function dfs(row, board) {
+    if (row === n) {
+      let ok = true;
+      for (let r = 0; r < n && ok; r++) for (let r2 = r + 1; r2 < n && ok; r2++)
+        if (board[r] === board[r2] || Math.abs(board[r] - board[r2]) === Math.abs(r - r2)) ok = false;
+      if (ok) result.push(board.map(c => ".".repeat(c) + "Q" + ".".repeat(n - c - 1)));
+      return;
+    }
+    for (let col = 0; col < n; col++) { board.push(col); dfs(row + 1, board); board.pop(); }
+  }
+  dfs(0, []);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>board</code> is built up one row at a time — <code>board[row]</code> is which column
+      that row's queen sits in.</li>
+    <li>Every column is tried in every row unconditionally — there's no check on whether a choice
+      conflicts with an already-placed queen.</li>
+    <li>Only once <code>row === n</code> (a full board exists) does the code check every PAIR of
+      placed queens for same-column or same-diagonal conflicts
+      (<code>Math.abs(board[r] - board[r2]) === Math.abs(r - r2)</code> catches diagonal attacks —
+      the column difference equals the row difference exactly when two positions sit on the same
+      diagonal).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n^n) placements explored</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — track used columns/diagonals, prune before placing</h2>
+  <p>Instead of waiting until the end, track which columns and which diagonals are already occupied
+    as you go — the moment a column choice would conflict with an existing queen, skip it
+    immediately, with zero extra recursion.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: check if a column choice conflicts with a tracked set of used columns or diagonals - if it does, skip immediately with no recursion; otherwise place the queen and recurse.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: track used columns/diagonals, prune before placing</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="220" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="130" y="82" fill="#E2E3E7">column/diagonal used?</text>
+      <text x="130" y="98" fill="#9198A6" font-size="10">3 Sets track this in O(1)</text>
+      <rect x="260" y="60" width="160" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="340" y="82" fill="#282C34">skip — no recursion</text>
+      <text x="340" y="98" fill="#282C34" font-size="10">if conflict found</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">otherwise: place + recurse</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">then backtrack after</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: conflicting branches never get explored at all.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> queen just placed</span>
+    <span><i class="lg-sorted"></i> valid final board</span>
+    <span><i class="lg-swap"></i> full board checked, invalid</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation uses a 4&times;4 board (n=4) —
+    the smallest board size with real solutions, and it finds both of them.</p>
+
+  <h3>The code</h3>
+  <pre><code>function solveNQueensOptimal(n) {
+  const result = [];
+  const cols = new Set(), diag1 = new Set(), diag2 = new Set();
+  const board = [];
+  function dfs(row) {
+    if (row === n) { result.push(board.map(c => ".".repeat(c) + "Q" + ".".repeat(n - c - 1))); return; }
+    for (let col = 0; col < n; col++) {
+      if (cols.has(col) || diag1.has(row - col) || diag2.has(row + col)) continue;
+      cols.add(col); diag1.add(row - col); diag2.add(row + col); board.push(col);
+      dfs(row + 1);
+      board.pop(); cols.delete(col); diag1.delete(row - col); diag2.delete(row + col);
+    }
+  }
+  dfs(0);
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>cols</code> tracks occupied columns directly. <code>diag1</code> tracks
+      <code>row - col</code>, which is CONSTANT along every "/"-direction diagonal — any two cells
+      on the same "/" diagonal share the same <code>row - col</code> value. <code>diag2</code>
+      tracks <code>row + col</code>, constant along every "\"-direction diagonal.</li>
+    <li><code>if (cols.has(col) || diag1.has(row - col) || diag2.has(row + col)) continue</code> is
+      the entire optimization — an O(1) check per column, skipping instantly instead of recursing
+      into a doomed branch.</li>
+    <li>After the recursive call returns, all three sets get the current column's entries DELETED —
+      this is the backtrack step, undoing the placement so the next column choice in this row sees
+      a clean state.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>Much smaller than O(n^n) — commonly cited near O(n!) in practice</td><td>O(n) for the board plus the 3 Sets</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Board size used</th><th>Placements explored</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (unpruned)</td><td>3&times;3 (0 solutions exist)</td><td>Up to O(n^n)</td></tr>
+      <tr><td>Optimal (pruned)</td><td>4&times;4 (2 solutions exist)</td><td>Far fewer — conflicting branches never recursed into</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This IS a genuine asymptotic improvement, not just a constant-factor speedup — pruning a
+    conflicting column cuts off its ENTIRE remaining subtree before it's ever explored, which
+    compounds across every row below it.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you count the number of solutions without generating and storing
+        every board?</p>
+      <ul class="pb-ia">
+        <li>Keep the exact same pruning logic.</li>
+        <li>Increment a plain counter at the base case instead of building and pushing a board
+          string.</li>
+        <li>This saves the O(n&sup2;) cost of rendering each solution when only the COUNT is
+          actually needed.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you adapt this to solve N-Rooks instead of N-Queens?</p>
+      <ul class="pb-ia">
+        <li>Rooks only attack along rows and columns, never diagonally.</li>
+        <li>So you'd only need the <code>cols</code> set — drop both diagonal sets entirely.</li>
+        <li>That also makes N-Rooks a strictly easier pruning problem than N-Queens.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the optimal solution's pruning check happen BEFORE placing a queen,
+        not after?</p>
+      <ul class="pb-ia">
+        <li>Checking before means an invalid column is skipped with zero extra work — no recursive
+          call, no stack frame, no wasted exploration of everything beneath that bad placement.</li>
+        <li>Checking only after (like the brute-force version does, at the very end) means the
+          entire wasted subtree gets fully explored first.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const s = new Set([NaN]);
+console.log(s.has(NaN), NaN === NaN);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>true</code>, then <code>false</code>.</li>
+        <li><code>Set</code> (and <code>Map</code>) use an algorithm called SameValueZero for
+          equality checks, which treats <code>NaN</code> as equal to itself — unlike strict
+          equality (<code>===</code>), which never considers <code>NaN</code> equal to ANYTHING,
+          including itself.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this matters directly here — the optimal solution above relies
+        heavily on <code>Set.has()</code> checks (<code>cols.has(col)</code>,
+        <code>diag1.has(row - col)</code>, etc.). Sets have their own specific equality rules,
+        separate from <code>===</code> — worth knowing precisely when reasoning about what a
+        Set-based conflict check will and won't catch.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="notrack" data-explain="It doesn't track column/diagonal usage incrementally — it only knows how to check a COMPLETE board, not a partial one, so invalid placements survive many extra levels of recursion before being caught." >
+    <p class="q-text">1. Why does the brute-force solution have to wait until a full board is placed before checking validity?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="notrack">It doesn't track column/diagonal usage incrementally — it only knows how to check a COMPLETE board</button>
+      <button class="btn dsa-quiz-option" data-value="everyplace">It checks validity after every single placement, just less efficiently</button>
+      <button class="btn dsa-quiz-option" data-value="wronganswer">Checking earlier would produce a different, wrong answer</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="diagonals" data-explain="The two families of diagonals a queen attacks: row minus col is constant along every &quot;/&quot; diagonal, and row plus col is constant along every &quot;\&quot; diagonal." >
+    <p class="q-text">2. What do the <code>diag1</code> and <code>diag2</code> sets represent in the optimal solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="diagonals">The two families of diagonals a queen attacks: row − col constant on "/", row + col constant on "\"</button>
+      <button class="btn dsa-quiz-option" data-value="colors">The two colors of squares on a chessboard</button>
+      <button class="btn dsa-quiz-option" data-value="freerowscols">The rows and columns that still have no queen placed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="diagonalmiss" data-explain="Two queens in different rows and different columns can still attack diagonally — column-only checking misses diagonal conflicts entirely." >
+    <p class="q-text">3. Why does checking <code>cols.has(col)</code> alone not fully prevent queens from attacking each other?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="diagonalmiss">Two queens in different rows/columns can still attack diagonally — column-only checking misses that</button>
+      <button class="btn dsa-quiz-option" data-value="extraonly">It does fully prevent conflicts — the diagonal sets are just an extra optimization, not required</button>
+      <button class="btn dsa-quiz-option" data-value="impossible">Column conflicts are actually impossible once row conflicts are ruled out</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="notbug" data-explain="No valid N-Queens arrangement exists for n=2 or n=3, a well-known mathematical fact; the animation faithfully demonstrates an exhaustive search correctly concluding 'no solution'." >
+    <p class="q-text">4. The 3&times;3 board's brute-force animation explores every placement and finds zero solutions — is that a bug?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="notbug">No — no valid arrangement exists for n=2 or n=3, a well-known mathematical fact</button>
+      <button class="btn dsa-quiz-option" data-value="offbyone">Yes — the code has an off-by-one error that misses the real solution</button>
+      <button class="btn dsa-quiz-option" data-value="alwaysone">Yes — 3&times;3 always has exactly one solution that this code fails to find</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="prunefewer" data-explain="Brute force explores up to O(n^n) placements before validating; optimal prunes conflicting columns/diagonals immediately, visiting far fewer nodes — commonly cited as close to O(n!) in practice." >
+    <p class="q-text">5. What's the complexity difference between the two solutions?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="prunefewer">Brute force is up to O(n^n); optimal prunes immediately and visits far fewer nodes — near O(n!) in practice</button>
+      <button class="btn dsa-quiz-option" data-value="bothsame">Both are exactly O(n!), with no meaningful practical difference</button>
+      <button class="btn dsa-quiz-option" data-value="bruteless">Brute force is actually faster since it does less work per node</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'n-queens';
+
+  // ---- Solution 1: brute force, unpruned, n=3 (DSA.Grid — board visualization) ----
+  function buildNQueensBruteGridSteps(n) {
+    const steps = [];
+    const board = [];
+    function snapshotValues() {
+      const values = [];
+      for (let r = 0; r < n; r++) { const row = []; for (let c = 0; c < n; c++) row.push(board[r] === c ? 'Q' : ''); values.push(row); }
+      return values;
+    }
+    function isValidFull() {
+      for (let r = 0; r < board.length; r++) for (let r2 = r + 1; r2 < board.length; r2++)
+        if (board[r] === board[r2] || Math.abs(board[r] - board[r2]) === Math.abs(r - r2)) return false;
+      return true;
+    }
+    function pushStep(narration, states) { steps.push({ narration, values: snapshotValues(), states: states || {} }); }
+    function dfs(row) {
+      if (row === n) {
+        const ok = isValidFull();
+        if (ok) { const states = {}; for (let r = 0; r < n; r++) states[r + ',' + board[r]] = 'sorted'; pushStep(`All ${n} rows placed — check the FULL board now: valid! Record it.`, states); }
+        else { const states = {}; for (let r = 0; r < n; r++) states[r + ',' + board[r]] = 'swap'; pushStep(`All ${n} rows placed — check the FULL board now: conflicts found, discard.`, states); }
+        return;
+      }
+      for (let col = 0; col < n; col++) {
+        board.push(col);
+        pushStep(`Row ${row}, column ${col} — no pruning yet, every column gets tried regardless of conflicts.`, { [row + ',' + col]: 'active' });
+        dfs(row + 1);
+        board.pop();
+      }
+    }
+    dfs(0);
+    return steps;
+  }
+
+  const grid1 = new DSA.Grid(document.getElementById('viz1Stage'));
+  grid1.setData(3, 3, ['0', '1', '2'], ['0', '1', '2']);
+  const steps1 = buildNQueensBruteGridSteps(3);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 500,
+    onStep(step) {
+      if (!step) { grid1.paint(Array.from({ length: 3 }, () => Array(3).fill(''))); return; }
+      grid1.paint(step.values, step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal, pruned, n=4 (DSA.Grid — board visualization) ----
+  function buildNQueensOptimalGridSteps(n) {
+    const steps = [];
+    const cols = new Set(), diag1 = new Set(), diag2 = new Set();
+    const board = [];
+    function snapshotValues() {
+      const values = [];
+      for (let r = 0; r < n; r++) { const row = []; for (let c = 0; c < n; c++) row.push(board[r] === c ? 'Q' : ''); values.push(row); }
+      return values;
+    }
+    function pushStep(narration, states) { steps.push({ narration, values: snapshotValues(), states: states || {} }); }
+    function dfs(row) {
+      if (row === n) {
+        const states = {};
+        for (let r = 0; r < n; r++) states[r + ',' + board[r]] = 'sorted';
+        pushStep(`All ${n} rows placed with no conflicts — record this board.`, states);
+        return;
+      }
+      for (let col = 0; col < n; col++) {
+        if (cols.has(col) || diag1.has(row - col) || diag2.has(row + col)) {
+          pushStep(`Row ${row}, column ${col} conflicts with an existing queen — skip, no recursion.`, { [row + ',' + col]: 'swap' });
+          continue;
+        }
+        cols.add(col); diag1.add(row - col); diag2.add(row + col); board.push(col);
+        pushStep(`Row ${row}, column ${col} is safe — place a queen.`, { [row + ',' + col]: 'active' });
+        dfs(row + 1);
+        board.pop(); cols.delete(col); diag1.delete(row - col); diag2.delete(row + col);
+        pushStep(`Backtrack — remove the queen from row ${row}, column ${col}.`, {});
+      }
+    }
+    dfs(0);
+    return steps;
+  }
+
+  const grid2 = new DSA.Grid(document.getElementById('viz2Stage'));
+  grid2.setData(4, 4, ['0', '1', '2', '3'], ['0', '1', '2', '3']);
+  const steps2 = buildNQueensOptimalGridSteps(4);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 500,
+    onStep(step) {
+      if (!step) { grid2.paint(Array.from({ length: 4 }, () => Array(4).fill(''))); return; }
+      grid2.paint(step.values, step.states);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
