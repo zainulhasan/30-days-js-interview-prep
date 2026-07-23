@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Letter Combinations of a Phone Number — Problem Bank</title>
+<meta name="description" content="Letter Combinations of a Phone Number: generate every letter combination for a digit string with two equivalent techniques — iterative expansion and recursive backtracking." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/letter-combinations-of-a-phone-number.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Letter Combinations of a Phone Number — Problem Bank" />
+<meta property="og:description" content="Letter Combinations of a Phone Number: generate every letter combination for a digit string with two equivalent techniques — iterative expansion and recursive backtracking." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/letter-combinations-of-a-phone-number.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Letter Combinations of a Phone Number — Problem Bank" />
+<meta name="twitter:description" content="Letter Combinations of a Phone Number: generate every letter combination for a digit string with two equivalent techniques — iterative expansion and recursive backtracking." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Letter Combinations of a Phone Number", "item": "https://dsa.itszain.tech/problem-bank/letter-combinations-of-a-phone-number.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day09.html">Day 9: Recursion &amp; the Call Stack</a></strong> —
+      Solution 2 below is a direct application of recursive backtracking; read that lesson first if
+      the call-stack mental model is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BACKTRACKING &middot; MEDIUM</p>
+  <h1>Letter Combinations of a Phone Number <span class="leetcode-link">(<a href="https://leetcode.com/problems/letter-combinations-of-a-phone-number/" target="_blank" rel="noopener">LeetCode: Letter Combinations of a Phone Number</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given a string <code>digits</code> containing digits 2-9, return all possible letter
+    combinations that the number could represent, based on the standard telephone keypad mapping
+    (2 = abc, 3 = def, 4 = ghi, 5 = jkl, 6 = mno, 7 = pqrs, 8 = tuv, 9 = wxyz). Return the answer in
+    any order.</p>
+
+  <h2>Solution 1: Iterative — expand the combos list one digit at a time</h2>
+  <p>Start with a list containing just the empty string. For each digit in turn, cross the current
+    list against that digit's letters, producing a new, longer list — no recursion needed at all.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: start with a list containing only the empty string, then for each digit combine every existing partial combination with every letter that digit maps to, producing a longer list.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Iterative: expand the combos list one digit at a time</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="160" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="100" y="82" fill="#E2E3E7">combos = [""]</text>
+      <text x="100" y="98" fill="#9198A6" font-size="10">start empty</text>
+      <rect x="200" y="60" width="220" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="310" y="82" fill="#E2E3E7">for each digit's letters</text>
+      <text x="310" y="98" fill="#9198A6" font-size="10">cross with every existing combo</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">combos grows</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">no recursion at all</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#DCDFE4">Cost: O(4^n) worst case — same as the backtracking version below.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> just built this pass</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces digits="23" — a small
+    case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>const PHONE = {
+  '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+  '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz',
+};
+
+function letterCombinationsIterative(digits) {
+  if (digits.length === 0) return [];
+  let combos = [''];
+  for (const d of digits) {
+    const letters = PHONE[d];
+    const next = [];
+    for (const combo of combos) for (const letter of letters) next.push(combo + letter);
+    combos = next;
+  }
+  return combos;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>combos</code> starts as <code>['']</code> — one empty combination, ready to be
+      extended.</li>
+    <li>For each digit, a fresh <code>next</code> array is built by combining every existing combo
+      with every letter that digit maps to — this is what makes <code>combos</code> grow by a
+      factor of 3 or 4 with each digit processed.</li>
+    <li><code>digits.length === 0</code> returns <code>[]</code> immediately — there's nothing to
+      expand, and the problem defines the empty-input answer as an empty list, not a list
+      containing one empty string.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(4^n) worst case</td><td>O(4^n) to store all combinations</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Backtracking — recurse one digit at a time</h2>
+  <p>This does exactly the same total work as the iterative version above — it's just structured as
+    recursion instead of a loop. At each recursive call, pick one letter for the current digit, and
+    recurse to the next digit. This is a different <em>technique</em>, not a faster one.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: pick a letter for the current digit, recurse to the next digit's index, and once every digit has a letter assigned record the complete combination.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Backtracking: recurse one digit at a time (same complexity, different technique)</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">pick a letter</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">for digits[index]</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">recurse to index+1</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">next digit</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">full length reached</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">record the combination</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#DCDFE4">Cost: O(4^n) worst case — same asymptotic class as the iterative version above.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces digits="23" — the same
+    small case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function letterCombinationsBacktrack(digits) {
+  if (digits.length === 0) return [];
+  const result = [];
+  function dfs(index, path) {
+    if (index === digits.length) { result.push(path); return; }
+    const letters = PHONE[digits[index]];
+    for (const letter of letters) dfs(index + 1, path + letter);
+  }
+  dfs(0, '');
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>index</code> tracks which digit of the input is currently being expanded — it also
+      doubles as the recursion's stopping condition once it reaches <code>digits.length</code>.</li>
+    <li><code>path + letter</code> builds the combination string incrementally as the recursion
+      goes deeper — strings are immutable in JavaScript, so this always creates a new string rather
+      than mutating one, unlike the array-based <code>path.push</code>/<code>path.pop</code>
+      pattern used elsewhere in this batch.</li>
+    <li>The base case (<code>index === digits.length</code>) means every digit has been assigned a
+      letter — <code>path</code> is now a complete combination.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(4^n) worst case</td><td>O(n) recursion depth (plus O(4^n) for the output)</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Technique</th></tr></thead>
+    <tbody>
+      <tr><td>Iterative (list expansion)</td><td>O(4^n)</td><td>Loop-based, builds a growing list</td></tr>
+      <tr><td>Backtracking (recursion)</td><td>O(4^n)</td><td>Recursion-based, builds one string at a time</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Unlike every other problem in this batch, there's no naive-vs-optimized story here — the
+    output size (up to 4^n combinations) sets an unavoidable lower bound on the work, so neither
+    technique can beat the other asymptotically. This page is here to show that the SAME problem
+    can be solved with genuinely different, equally valid approaches — knowing both means you're
+    not locked into recursion as the only tool for combinatorial generation.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does this problem not have a meaningful "brute force vs. optimal"
+        complexity gap, unlike most other backtracking problems in this batch?</p>
+      <ul class="pb-ia">
+        <li>The output itself is unavoidably exponential — there's no way to produce fewer results
+          than the problem actually has, so no algorithm can beat that lower bound.</li>
+        <li>Both solutions shown are genuinely different techniques (iterative expansion vs.
+          recursive backtracking) at the same complexity class, not a naive-vs-smart pair.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you modify the backtracking solution to return combinations
+        sorted by length first, then alphabetically?</p>
+      <ul class="pb-ia">
+        <li>Every combination produced here already has the same fixed length
+          (<code>digits.length</code>), so plain alphabetical order — which both solutions already
+          produce, since each digit's letters are listed alphabetically in the <code>PHONE</code>
+          mapping — already satisfies that request.</li>
+        <li>Length-based sorting only matters when combinations can have different lengths, which
+          isn't the case here.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What if a digit like '1' or '0' (which map to no letters on a real phone
+        keypad) appears in the input?</p>
+      <ul class="pb-ia">
+        <li>Neither solution shown handles it — <code>PHONE[digit]</code> would be
+          <code>undefined</code>, and iterating over <code>undefined</code>'s "letters" would throw
+          a runtime error.</li>
+        <li>Worth explicitly asking the interviewer whether the input is guaranteed to only contain
+          digits 2-9, which is what LeetCode's actual problem constraints state.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>console.log("10" > "9");</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>false</code>.</li>
+        <li>String comparison in JavaScript is lexicographic — character by character, left to
+          right — not numeric.</li>
+        <li><code>'1'</code> (char code 49) is less than <code>'9'</code> (char code 57), so
+          <code>"10"</code> is considered "less than" <code>"9"</code> as strings, even though
+          10 &gt; 9 as numbers.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is directly relevant here because <code>digits</code> in this
+        problem IS a string of digit characters — comparing or sorting digit strings without first
+        converting them to numbers can silently produce wrong results.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="specialcase" data-explain="Both solutions special-case this — the iterative version has no digits to expand the initial [&quot;&quot;] against, and the backtracking version explicitly returns early instead of ever calling dfs." >
+    <p class="q-text">1. Why does an empty <code>digits</code> string return an empty array, not an array containing an empty string?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="specialcase">Both solutions special-case this — the iterative version has no digits to expand the initial [""] against, and the backtracking version explicitly returns early instead of ever calling dfs</button>
+      <button class="btn dsa-quiz-option" data-value="bug">It's a bug in both solutions that happens to be harmless</button>
+      <button class="btn dsa-quiz-option" data-value="neverhappens">The problem's constraints guarantee digits is never empty, so this case never comes up</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="expand" data-explain="For every existing partial combination so far, the inner loop appends each possible letter for the current digit, expanding the combos list by a factor of however many letters that digit maps to." >
+    <p class="q-text">2. What does the iterative solution's inner double loop do at each digit?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="expand">For every existing partial combination so far, it appends each possible letter for the current digit, expanding the combos list by a factor of however many letters that digit maps to</button>
+      <button class="btn dsa-quiz-option" data-value="filter">It removes combinations that don't start with the correct letter</button>
+      <button class="btn dsa-quiz-option" data-value="sort">It sorts the combos list alphabetically after each digit</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sameoutput" data-explain="Both must ultimately construct every one of the possible combinations — the total output size sets the same lower bound either way, regardless of whether a loop or recursion is used to build it." >
+    <p class="q-text">3. Why do the iterative and backtracking solutions have the same time complexity despite looking very different?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sameoutput">Both must ultimately construct every one of the possible combinations — the total output size sets the same lower bound either way</button>
+      <button class="btn dsa-quiz-option" data-value="backtrackfaster">They don't — the backtracking version is asymptotically faster</button>
+      <button class="btn dsa-quiz-option" data-value="iterfaster">They don't — the iterative version is asymptotically faster</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="digitpos" data-explain="index tracks which digit of the input string is currently being expanded, and it also doubles as the recursion's stopping condition once it reaches digits.length." >
+    <p class="q-text">4. In the backtracking version, what does the <code>index</code> parameter track?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="digitpos">Which digit of the input string is currently being expanded — it also doubles as the recursion's stopping condition once it reaches digits.length</button>
+      <button class="btn dsa-quiz-option" data-value="count">How many total combinations have been found so far</button>
+      <button class="btn dsa-quiz-option" data-value="letterlen">The current length of the letters string for this digit</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="neither" data-explain="Neither needs changes — since each digit's letters are already listed alphabetically in the PHONE mapping, both solutions naturally produce combinations in alphabetical order already." >
+    <p class="q-text">5. Which solution would need real changes to also return combinations sorted alphabetically, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="neither">Neither — since each digit's letters are already listed alphabetically, both solutions naturally produce combinations in alphabetical order already</button>
+      <button class="btn dsa-quiz-option" data-value="iter">The iterative solution would need an explicit .sort() call added</button>
+      <button class="btn dsa-quiz-option" data-value="backtrack">The backtracking solution would need an explicit .sort() call added</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'letter-combinations-of-a-phone-number';
+
+  const PHONE = { '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl', '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz' };
+
+  function buildLetterCombosIterativeSteps(digits) {
+    const steps = [];
+    let combos = [''];
+    steps.push({ narration: 'Start: combos = [""] (empty string, before any digit is processed).', data: combos.slice(), states: combos.map(() => 'default') });
+    for (const d of digits) {
+      const letters = PHONE[d];
+      const next = [];
+      for (const combo of combos) for (const letter of letters) next.push(combo + letter);
+      combos = next;
+      steps.push({ narration: `Digit "${d}" → letters "${letters}". Combine with every existing combo: now ${combos.length} combos.`, data: combos.slice(), states: combos.map(() => 'active') });
+    }
+    return steps;
+  }
+
+  function buildLetterCombosBacktrackSteps(digits) {
+    const steps = [];
+    const callStack = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(index, path) {
+      callStack.push(`dfs(index=${index}, path="${path}")`);
+      pushStep(`Enter dfs — index=${index}, path="${path}".`);
+      if (index === digits.length) {
+        pushStep(`index reached the end — record "${path}" as a complete combination.`);
+      } else {
+        const letters = PHONE[digits[index]];
+        for (const letter of letters) { dfs(index + 1, path + letter); }
+      }
+      callStack.pop();
+      pushStep('Return from dfs — pop the call stack.');
+    }
+    dfs(0, '');
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData(['']);
+  const steps1 = buildLetterCombosIterativeSteps('23');
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData(['']); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  const callStack2 = new DSA.CallStack(document.getElementById('viz2Stage'));
+  const steps2 = buildLetterCombosBacktrackSteps('23');
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 500,
+    onStep(step) { callStack2.render(step ? step.frames : []); },
+  });
+  callStack2.render([]);
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
