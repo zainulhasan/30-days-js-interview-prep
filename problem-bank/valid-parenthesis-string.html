@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Valid Parenthesis String — Problem Bank</title>
+<meta name="description" content="Valid Parenthesis String: exponential 3-way backtracking over every '*' vs. an optimal O(n) greedy lo/hi range-tracking pass, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/valid-parenthesis-string.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Valid Parenthesis String — Problem Bank" />
+<meta property="og:description" content="Valid Parenthesis String: exponential 3-way backtracking over every '*' vs. an optimal O(n) greedy lo/hi range-tracking pass, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/valid-parenthesis-string.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Valid Parenthesis String — Problem Bank" />
+<meta name="twitter:description" content="Valid Parenthesis String: exponential 3-way backtracking over every '*' vs. an optimal O(n) greedy lo/hi range-tracking pass, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Valid Parenthesis String", "item": "https://dsa.itszain.tech/problem-bank/valid-parenthesis-string.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      the optimal solution below is a single greedy pass that tracks a RANGE of possibilities
+      instead of one exact count. It also connects to Day 17's Valid Parentheses (the same
+      running-balance idea, extended to handle a wildcard) and Day 9's Recursion &amp; the Call
+      Stack (the brute-force solution below is a 3-way backtracking search).</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Valid Parenthesis String <span class="leetcode-link">(<a href="https://leetcode.com/problems/valid-parenthesis-string/" target="_blank" rel="noopener">LeetCode: Valid Parenthesis String</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given a string <code>s</code> made only of <code>(</code>, <code>)</code>, and
+    <code>*</code>, decide whether it can be a valid parenthesization. The rules: every
+    <code>(</code> needs a matching <code>)</code> that comes after it, every <code>)</code> needs
+    a matching <code>(</code> that came before it, and each <code>*</code> is a wildcard —
+    it may stand in for <code>(</code>, for <code>)</code>, or for nothing at all (an empty
+    string). The question isn't "is this string valid" — it's "does SOME assignment of the
+    <code>*</code> characters make it valid."</p>
+
+  <h2>Solution 1: Brute force — try every interpretation of every <code>*</code></h2>
+  <p>The direct reading of the problem is: each <code>*</code> has 3 possible interpretations, so
+    try all of them. Recursively walk the string position by position; on a fixed <code>(</code>
+    or <code>)</code> just keep going, but on a <code>*</code> branch into all 3 choices and
+    recurse into each. If any branch reaches the end of the string with a balanced result, the
+    whole string is valid. With <code>k</code> stars, that's up to <code>3^k</code> strings to
+    check — genuinely exponential.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: on a fixed open or close paren, continue as-is; on a star, branch into three interpretations open, close, and empty, and recurse into all three, checking balance only once the end of the string is reached.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: branch into 3 interpretations at every '*'</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">fixed ( or )</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">just continue</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">'*' found</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">try (, ), and "" — all 3</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="535" y="82" fill="#E2E3E7">end reached</text>
+      <text x="535" y="98" fill="#9198A6" font-size="10">check balance now</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: up to 3^k branches for k stars — exponential.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> currently executing</span>
+    <span><i class="lg-neutral"></i> waiting on the stack</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    <code>s = "(**)"</code> — 4 characters, 2 stars, small enough to watch every branch, but
+    already shows real backtracking: the first interpretation tried fails, and the search has to
+    retreat and try another (a case verified above).</p>
+
+  <h3>The code</h3>
+  <pre><code>function isBalanced(str) {
+  let bal = 0;
+  for (const ch of str) { bal += ch === '(' ? 1 : -1; if (bal &lt; 0) return false; }
+  return bal === 0;
+}
+
+function checkValidStringBrute(s) {
+  function dfs(i, path) {
+    if (i === s.length) return isBalanced(path);
+    const ch = s[i];
+    if (ch === '(' || ch === ')') {
+      return dfs(i + 1, path + ch);
+    }
+    // ch === '*' — try all 3 interpretations
+    return dfs(i + 1, path + '(')
+        || dfs(i + 1, path + ')')
+        || dfs(i + 1, path);
+  }
+  return dfs(0, '');
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>i</code> walks the ORIGINAL string <code>s</code> one position at a time;
+      <code>path</code> holds the built-so-far result string, which can be shorter than
+      <code>i</code> once a <code>*</code> is treated as empty.</li>
+    <li>Fixed characters have exactly one interpretation, so they just append and recurse — no
+      branching, no waste.</li>
+    <li>A <code>*</code> branches into all 3 possibilities using <code>||</code>. Because
+      <code>||</code> short-circuits, the moment any branch returns <code>true</code> the
+      remaining branches are never even tried — but in the worst case (no early success), all
+      3 branches per star run, compounding to <code>3^k</code>.</li>
+    <li><code>isBalanced</code> is only checked once <code>i === s.length</code> — exactly the
+      same running-balance idea as Day 17's Valid Parentheses, just applied after every
+      <code>*</code> has already been committed to a specific interpretation.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(3^k &times; n), k = number of '*'</td><td>O(n) recursion depth</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — track a RANGE of possible open-paren counts</h2>
+  <p>Instead of deciding what each <code>*</code> "is" up front, track a range of how many
+    unmatched <code>(</code> could currently be open: <code>lo</code> (the fewest, if every
+    <code>*</code> so far that could help closes something or vanishes) and <code>hi</code> (the
+    most, if every <code>*</code> so far opens something). A <code>(</code> pushes both bounds up
+    by 1; a <code>)</code> pulls both down by 1; a <code>*</code> pulls <code>lo</code> down by 1
+    (it might close or vanish) but pushes <code>hi</code> up by 1 (it might open). Clamp
+    <code>lo</code> at 0 — it can never mean "negative open parens," it just means "this many or
+    fewer is achievable, including zero." If <code>hi</code> ever drops below 0, no interpretation
+    can save the string — bail out immediately. At the end, the string is valid exactly when
+    <code>lo === 0</code> is achievable, meaning zero is somewhere inside the reachable range.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: at every character update both lo (minimum possible open count) and hi (maximum possible open count), clamp lo at zero, fail early if hi ever goes negative, and check lo equals zero at the end.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: track [lo, hi] range of possible open-paren counts</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">update lo &amp; hi</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">per character, clamp lo &ge; 0</text>
+      <rect x="240" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="330" y="82" fill="#282C34">hi &lt; 0?</text>
+      <text x="330" y="98" fill="#282C34" font-size="10">fail early — unrecoverable</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="535" y="82" fill="#E2E3E7">end: lo === 0?</text>
+      <text x="535" y="98" fill="#9198A6" font-size="10">then valid</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="210" y1="83" x2="238" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: one linear pass, O(n) — no branching, no recursion.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current character</span>
+    <span><i class="lg-sorted"></i> already processed</span>
+    <span><i class="lg-swap"></i> fails here (hi &lt; 0)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces the same
+    <code>s = "(**)"</code> as above — watch <code>lo</code> and <code>hi</code> in the
+    narration; there's no branching this time, just one pass (a case verified above).</p>
+
+  <h3>The code</h3>
+  <pre><code>function checkValidStringOptimal(s) {
+  let lo = 0, hi = 0;
+  for (const ch of s) {
+    if (ch === '(') { lo++; hi++; }
+    else if (ch === ')') { lo--; hi--; }
+    else { lo--; hi++; } // '*' — could close/vanish (lo) or open (hi)
+    if (hi &lt; 0) return false;   // even the best case has too many ')'
+    if (lo &lt; 0) lo = 0;         // can't have fewer than zero open parens
+  }
+  return lo === 0;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>lo</code> is the MINIMUM possible count of unmatched <code>(</code> at this point —
+      it assumes every <code>*</code> so far was as unhelpful as possible (a <code>)</code> or
+      empty).</li>
+    <li><code>hi</code> is the MAXIMUM possible count — it assumes every <code>*</code> so far was
+      as helpful as possible (an open paren).</li>
+    <li><code>if (hi &lt; 0) return false</code> — if even the MOST optimistic interpretation has
+      gone negative, there's no possible fix left; every other interpretation is at least as bad,
+      so it's safe to bail out immediately.</li>
+    <li><code>if (lo &lt; 0) lo = 0</code> — clamping matters because <code>lo</code> going
+      negative doesn't mean "invalid," it means "the low end of the achievable range is actually
+      zero," since a <code>*</code> can always choose NOT to over-close.</li>
+    <li><code>lo === 0</code> at the end means zero unmatched opens is somewhere inside the
+      reachable <code>[lo, hi]</code> range — i.e., some assignment of every <code>*</code>
+      balances the string exactly.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (3-way backtracking per '*')</td><td>O(3^k &times; n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (greedy lo/hi range tracking)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic improvement, not a constant-factor speedup. Brute force is
+    exponential in the number of <code>*</code> characters — a string with 20 stars means up to
+    <code>3^20</code> (over 3.4 billion) branches to explore. The greedy range-tracking pass is a
+    single O(n) sweep regardless of how many stars appear, because it never actually commits to
+    an interpretation for any individual <code>*</code> — it just tracks what's still reachable.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is tracking a RANGE (<code>lo</code>/<code>hi</code>) enough, instead
+        of tracking every individual possible count?</p>
+      <ul class="pb-ia">
+        <li>The set of open-paren counts reachable after processing a prefix is always a
+          contiguous range of integers with the same parity pattern collapsing — every value
+          between <code>lo</code> and <code>hi</code> is achievable by choosing some mix of
+          interpretations for the stars seen so far.</li>
+        <li>So instead of tracking a whole set of possible counts, two numbers (the min and max)
+          fully describe everything that's reachable.</li>
+        <li>Each new character shifts and/or widens that range in a simple, uniform way — no set
+          data structure needed.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does <code>hi &lt; 0</code> justify failing immediately, without
+        checking any other branch?</p>
+      <ul class="pb-ia">
+        <li><code>hi</code> is already the MOST optimistic count achievable — every other
+          interpretation of the stars seen so far produces a count less than or equal to
+          <code>hi</code>.</li>
+        <li>If even the best case has gone negative (more <code>)</code> than could possibly be
+          matched), every worse case has too, so there's nothing left to explore.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would you extend this to also RETURN one valid assignment of the
+        stars, not just true/false?</p>
+      <ul class="pb-ia">
+        <li>The greedy range trick alone doesn't recover a witness assignment directly — it only
+          proves existence.</li>
+        <li>One approach: run the brute-force backtracking with memoization on <code>(i,
+          openCount)</code> pairs, returning the actual path the moment a valid one is found —
+          it stays polynomial because the state space is bounded by <code>n &times; n</code>
+          pairs instead of <code>3^k</code> branches.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>function attempt(label, fn) {
+  console.log('trying', label);
+  return fn();
+}
+const result = attempt('(', () => false)
+            || attempt(')', () => true)
+            || attempt('empty', () => true);
+console.log('result:', result);</code></pre>
+      <ul class="pb-ia">
+        <li>Logs: <code>trying (</code>, then <code>trying )</code>, then
+          <code>result: true</code> — <code>"trying empty"</code> is <strong>never
+          logged</strong>.</li>
+        <li><code>||</code> short-circuits: once <code>attempt(')', ...)</code> returns a truthy
+          value, JavaScript never evaluates the third operand at all.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly what happens inside
+        <code>checkValidStringBrute</code>'s <code>dfs(...) || dfs(...) || dfs(...)</code> line —
+        the moment one interpretation of a <code>*</code> succeeds, the remaining
+        interpretations are never explored. It's why the worst-case bound is <code>3^k</code>
+        rather than the actual runtime on every input — a lucky early success can make the brute
+        force finish almost instantly, while an unlucky (or invalid) input forces it through
+        every branch.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="threeway" data-explain="Each '*' has exactly 3 independent interpretations ('(', ')', empty), and the brute-force solution tries all of them via recursive branching, so k stars produce up to 3^k combinations to check." >
+    <p class="q-text">1. Why is the brute-force solution's worst case O(3^k) for k stars, not O(2^k)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="threeway">Each '*' branches into 3 interpretations — '(', ')', and empty — not 2</button>
+      <button class="btn dsa-quiz-option" data-value="twoway">Each '*' only ever branches into '(' or ')', never empty</button>
+      <button class="btn dsa-quiz-option" data-value="length">It depends on the total string length, not the number of stars</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="minmax" data-explain="lo tracks the minimum possible count of unmatched open parens (assuming every '*' so far was as unhelpful as possible), and hi tracks the maximum possible count (assuming every '*' so far opened) — together they bound every count that's actually reachable." >
+    <p class="q-text">2. What do <code>lo</code> and <code>hi</code> represent at any point in the optimal scan?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="minmax">The minimum and maximum possible counts of currently-unmatched open parens, given every way the stars seen so far could be interpreted</button>
+      <button class="btn dsa-quiz-option" data-value="indices">The index of the first and last '*' character in the string</button>
+      <button class="btn dsa-quiz-option" data-value="lengths">The shortest and longest valid string that could be built from s</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="clamp" data-explain="lo going negative doesn't mean the string is invalid — it means the true achievable minimum is zero, since a '*' can always choose not to over-close. Clamping keeps lo an honest lower bound instead of an impossible negative count." >
+    <p class="q-text">3. Why does the optimal solution clamp <code>lo</code> at 0 instead of letting it go negative?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="clamp">A negative lo would just mean "zero is still achievable" — since a '*' can always choose to not over-close, the real lower bound can't go below zero</button>
+      <button class="btn dsa-quiz-option" data-value="crash">Negative numbers would cause a runtime error in JavaScript</button>
+      <button class="btn dsa-quiz-option" data-value="unrelated">Clamping lo has no effect on the final answer either way</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="hibest" data-explain="hi is already the most optimistic (highest) count reachable given every interpretation of the stars so far. If even that best case has gone negative, every other interpretation is at least as bad, so no fix exists and it's safe to stop immediately." >
+    <p class="q-text">4. Why does <code>hi &lt; 0</code> mean the string can be rejected immediately, without exploring other interpretations?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="hibest">hi is already the best-case (highest) count achievable — if even that has gone negative, no interpretation of the stars seen so far can recover</button>
+      <button class="btn dsa-quiz-option" data-value="alwayswrong">hi going negative is actually a bug and should never happen on valid input</button>
+      <button class="btn dsa-quiz-option" data-value="lo">Only lo matters for early termination, hi is checked only at the very end</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="expvslinear" data-explain="Brute force is exponential in the number of stars (3^k), because it commits to and explores each interpretation separately. The greedy pass is O(n) because it tracks a range of possibilities instead of committing to any single interpretation — the range update per character is O(1) regardless of how many stars appear." >
+    <p class="q-text">5. What's the fundamental reason the optimal solution avoids the brute force's exponential blowup?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="expvslinear">It never commits to a specific interpretation for any '*' — it tracks a range of possibilities and updates that range in O(1) per character</button>
+      <button class="btn dsa-quiz-option" data-value="sameinput">It works on a different, smaller version of the input string</button>
+      <button class="btn dsa-quiz-option" data-value="caching">It caches every previous string it has ever checked</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'valid-parenthesis-string';
+
+  // ---- Solution 1: brute force (DSA.CallStack — 3-way recursive backtracking per '*') ----
+  function isBalanced(str) {
+    let bal = 0;
+    for (const ch of str) { bal += ch === '(' ? 1 : -1; if (bal < 0) return false; }
+    return bal === 0;
+  }
+
+  function buildBruteSteps(s) {
+    const steps = [];
+    const callStack = [];
+    function pushStep(narration) {
+      steps.push({ narration, frames: callStack.map((f, i) => ({ label: f, state: i === callStack.length - 1 ? 'active' : 'default' })) });
+    }
+    function dfs(i, path) {
+      callStack.push(`dfs(i=${i}, path="${path}")`);
+      pushStep(`Enter dfs — i=${i}, path so far = "${path}".`);
+      let result;
+      if (i === s.length) {
+        result = isBalanced(path);
+        pushStep(`End of string reached — path="${path}" is ${result ? 'balanced (valid!)' : 'unbalanced'}.`);
+      } else {
+        const ch = s[i];
+        if (ch === '(' || ch === ')') {
+          pushStep(`s[${i}]='${ch}' is fixed — append it and recurse, no branching.`);
+          result = dfs(i + 1, path + ch);
+        } else {
+          pushStep(`s[${i}]='*' — try interpretation 1 of 3: treat it as '('.`);
+          result = dfs(i + 1, path + '(');
+          if (!result) {
+            pushStep(`That failed — backtrack and try interpretation 2 of 3: treat '*' as ')'.`);
+            result = dfs(i + 1, path + ')');
+          }
+          if (!result) {
+            pushStep(`That failed too — try interpretation 3 of 3: treat '*' as empty (skip it).`);
+            result = dfs(i + 1, path);
+          }
+        }
+      }
+      callStack.pop();
+      pushStep(`Return ${result} — pop the call stack.`);
+      return result;
+    }
+    const finalResult = dfs(0, '');
+    pushStep(`Done — checkValidStringBrute("${s}") returns ${finalResult}.`);
+    return steps;
+  }
+
+  const callStack1 = new DSA.CallStack(document.getElementById('viz1Stage'));
+  const bruteSteps = buildBruteSteps('(**)');
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 700,
+    onStep(step) { callStack1.render(step ? step.frames : []); },
+  });
+  callStack1.render([]);
+
+  // ---- Solution 2: optimal (DSA.Bars, uniform — chars as labels, lo/hi tracked in narration) ----
+  function buildOptimalSteps(s) {
+    const steps = [];
+    const chars = s.split('');
+    const states = chars.map(() => 'default');
+    let lo = 0, hi = 0;
+    steps.push({ narration: `Start: lo=0, hi=0 — both track the range of possible unmatched '(' counts. Walk "${s}" left to right, one pass, no branching.`, data: chars.slice(), states: states.slice() });
+
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      states[i] = 'pointer';
+      if (ch === '(') { lo++; hi++; }
+      else if (ch === ')') { lo--; hi--; }
+      else { lo--; hi++; }
+
+      if (hi < 0) {
+        states[i] = 'swap';
+        steps.push({ narration: `'${ch}' at index ${i}: hi drops to ${hi} — even the most optimistic interpretation has gone negative. Fail immediately: INVALID.`, data: chars.slice(), states: states.slice() });
+        return steps;
+      }
+      let note = '';
+      if (lo < 0) { lo = 0; note = ' (clamped lo to 0 — a "*" can always avoid over-closing)'; }
+      states[i] = 'sorted';
+      steps.push({ narration: `'${ch}' at index ${i}: lo=${lo}, hi=${hi}${note}.`, data: chars.slice(), states: states.slice() });
+    }
+    const valid = lo === 0;
+    steps.push({ narration: `End of string — lo=${lo}. ${valid ? 'lo === 0, so zero unmatched opens is achievable: VALID.' : 'lo !== 0, so no assignment of the stars balances the string: INVALID.'}`, data: chars.slice(), states: states.slice() });
+    return steps;
+  }
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  const optimalData = '(**)'.split('');
+  bars2.setData(optimalData);
+  const optimalSteps = buildOptimalSteps('(**)');
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.setData(optimalData); return; }
+      bars2.paint(step.states, step.data);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('valid-parenthesis-string', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
