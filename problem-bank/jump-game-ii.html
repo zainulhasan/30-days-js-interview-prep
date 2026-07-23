@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jump Game II — Problem Bank</title>
+<meta name="description" content="Jump Game II: an O(n²) DP brute force that checks every earlier index vs. an optimal O(n) greedy one-pass scan tracking a reachable boundary, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/jump-game-ii.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Jump Game II — Problem Bank" />
+<meta property="og:description" content="Jump Game II: an O(n²) DP brute force that checks every earlier index vs. an optimal O(n) greedy one-pass scan tracking a reachable boundary, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/jump-game-ii.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Jump Game II — Problem Bank" />
+<meta name="twitter:description" content="Jump Game II: an O(n²) DP brute force that checks every earlier index vs. an optimal O(n) greedy one-pass scan tracking a reachable boundary, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Jump Game II", "item": "https://dsa.itszain.tech/problem-bank/jump-game-ii.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong> —
+      read that lesson first if the idea of a greedy choice that's provably safe (not just
+      "usually works") is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Jump Game II <span class="leetcode-link">(<a href="https://leetcode.com/problems/jump-game-ii/" target="_blank" rel="noopener">LeetCode: Jump Game II</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You start at index 0 of an array <code>nums</code>. From index <code>i</code>, you can jump
+    forward to any index up to (and including) <code>i + nums[i]</code> — <code>nums[i]</code> is
+    the <em>maximum</em> jump length from that position, not a fixed one. Return the minimum
+    number of jumps needed to reach the last index. The input is always guaranteed solvable —
+    the last index is always reachable.</p>
+
+  <h2>Solution 1: Brute force — DP over every earlier index</h2>
+  <p>Let <code>dp[i]</code> be the minimum jumps needed to reach index <code>i</code>. To fill in
+    <code>dp[i]</code>, look at every earlier index <code>j &lt; i</code>: if <code>j</code> can
+    reach <code>i</code> (i.e. <code>j + nums[j] &gt;= i</code>), then <code>dp[i]</code> could be
+    <code>dp[j] + 1</code>. Take the best such <code>j</code>. This is correct but checks every
+    <code>(i, j)</code> pair, even though most of those earlier indices were never going to be
+    part of an optimal path.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: for each index i, scan every earlier index j, check if j can reach i, and if so take the best dp value found - repeated for every i, giving quadratic total work.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: for each i, re-scan every earlier j</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">for each index i</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">1 .. n-1</text>
+      <rect x="215" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">check every j &lt; i</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">does j + nums[j] &gt;= i?</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">dp[i] = best dp[j]+1</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">over all valid j</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="190" y1="83" x2="213" y2="83"/>
+      <line x1="415" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n²) — every i re-examines every j, most of which were never useful.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> index i (being computed)</span>
+    <span><i class="lg-swap"></i> j that improves dp[i]</span>
+    <span><i class="lg-compare"></i> j checked, no improvement</span>
+    <span><i class="lg-sorted"></i> dp finalized</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[2,3,1,1,4,2] — a small case verified above. Bar height is the jump length
+    <code>nums[i]</code>.</p>
+
+  <h3>The code</h3>
+  <pre><code>function jumpBruteForce(nums) {
+  const n = nums.length;
+  const dp = new Array(n).fill(Infinity);
+  dp[0] = 0;
+  for (let i = 1; i < n; i++) {
+    for (let j = 0; j < i; j++) {
+      if (j + nums[j] >= i && dp[j] + 1 < dp[i]) {
+        dp[i] = dp[j] + 1;
+      }
+    }
+  }
+  return dp[n - 1];
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>dp[i]</code> starts at <code>Infinity</code> — "not yet reachable" — except
+      <code>dp[0] = 0</code>, the base case: standing at the start costs zero jumps.</li>
+    <li><code>j + nums[j] &gt;= i</code> asks "can a jump from <code>j</code> land on or past
+      <code>i</code>?" — this is checked fresh for every single <code>(i, j)</code> pair, with no
+      memory carried over from the previous <code>i</code>.</li>
+    <li><code>dp[j] + 1 &lt; dp[i]</code> only updates when this particular <code>j</code>
+      produces a strictly better answer than anything found so far for this <code>i</code>.</li>
+    <li>The double loop is the whole story: <code>n</code> outer iterations, each scanning up to
+      <code>n</code> earlier indices — O(n²) total.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n²)</td><td>O(n)</td><td>DP re-scanning every earlier index for every i</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — greedy one-pass, track the reachable boundary</h2>
+  <p>Instead of asking "what's the best <em>index</em> to jump from," track two boundaries as you
+    scan once, left to right: <code>currentEnd</code> — the farthest index reachable with the
+    jumps taken <em>so far</em> — and <code>farthest</code> — the farthest index reachable from
+    <em>any</em> index seen so far, even ones inside the current jump's range. Every index in
+    between gets scanned exactly once to update <code>farthest</code>. The moment <code>i</code>
+    reaches <code>currentEnd</code>, that jump's range is exhausted — take another jump and set
+    <code>currentEnd</code> to the best boundary found (<code>farthest</code>). No index is ever
+    revisited.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: scan index i once, update farthest to the best reach seen so far, and only when i reaches currentEnd take a jump and advance currentEnd to farthest - one pass, no re-scanning.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, track farthest reach and the current boundary</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">scan i once</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">farthest = max(farthest, i+nums[i])</text>
+      <rect x="220" y="60" width="190" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">i === currentEnd?</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">this jump's range is used up</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">jumps++, currentEnd = farthest</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">only when the boundary is hit</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every index is scanned exactly once, never re-visited.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> index i (scanning)</span>
+    <span><i class="lg-compare"></i> best reach found so far</span>
+    <span><i class="lg-pointer"></i> currentEnd (this jump's boundary)</span>
+    <span><i class="lg-sorted"></i> already covered by jumps taken</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[2,3,1,1,4,2] — the same case as above, same answer: 3 jumps.</p>
+
+  <h3>The code</h3>
+  <pre><code>function jumpOptimal(nums) {
+  const n = nums.length;
+  let jumps = 0;
+  let currentEnd = 0;
+  let farthest = 0;
+
+  for (let i = 0; i < n - 1; i++) {
+    farthest = Math.max(farthest, i + nums[i]);
+    if (i === currentEnd) {
+      jumps++;
+      currentEnd = farthest;
+    }
+  }
+  return jumps;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The loop stops at <code>n - 1</code>, not <code>n</code> — once <code>i</code> reaches the
+      last index, no further jump is ever needed, so there is nothing left to check.</li>
+    <li><code>farthest = Math.max(farthest, i + nums[i])</code> runs on <em>every</em> iteration,
+      whether or not a jump is taken this step — it's the running memory of "the best boundary
+      found in this window so far," and it would be wrong to only update it right before a jump.</li>
+    <li><code>i === currentEnd</code> is the trigger, not <code>i &gt;= currentEnd</code> or
+      <code>i &gt; currentEnd</code> — the loop passes through <code>currentEnd</code> exactly
+      once, so exact equality is both sufficient and clearer about intent.</li>
+    <li><code>currentEnd = farthest</code> commits to the best boundary discovered across the
+      whole window just finished — this is the greedy choice, made once per jump, never revisited.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Single pass tracking two boundary variables</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (DP, re-scan every j)</td><td>O(n²)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (greedy one-pass)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic improvement in both dimensions, not just a constant-factor
+    speedup — the greedy solution drops from quadratic to linear time by proving that the
+    quadratic DP's "check every earlier <code>j</code>" work can be replaced with two running
+    variables, and drops from O(n) space to O(1) since no <code>dp</code> array needs to be
+    stored at all.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it safe for the greedy solution to never reconsider an earlier
+        choice, once <code>currentEnd</code> has advanced?</p>
+      <ul class="pb-ia">
+        <li>Minimum jump count only depends on <em>which range of indices</em> is reachable after
+          each jump — not on which specific index within that range you "chose" to jump from.</li>
+        <li><code>farthest</code> already captures the best possible next boundary achievable from
+          <em>anywhere</em> in the current window, by the time <code>currentEnd</code> is reached.</li>
+        <li>Any alternative strategy that reaches a smaller boundary using the same jump count
+          can never beat this one — it only limits future options, never helps them.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why doesn't the greedy version track <em>which</em> index to jump to, only
+        the reachable boundary?</p>
+      <ul class="pb-ia">
+        <li>The problem only asks for the minimum <em>count</em> of jumps — not the actual path.</li>
+        <li>Jump count is fully determined by how many times the boundary has to advance to cover
+          the array, which needs only two running numbers (<code>currentEnd</code>,
+          <code>farthest</code>).</li>
+        <li>If the actual sequence of indices were required, you'd additionally record, for each
+          jump, which index produced the new <code>farthest</code> — a small addition, not a
+          different algorithm.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What guarantees <code>farthest</code> is always beyond <code>currentEnd</code>
+        whenever another jump is actually needed?</p>
+      <ul class="pb-ia">
+        <li>The problem guarantees the last index is always reachable — there's always some index
+          in the current window whose reach extends past <code>currentEnd</code> (until
+          <code>currentEnd</code> already covers the last index).</li>
+        <li>Without that guarantee, <code>farthest</code> could stall at <code>currentEnd</code>
+          forever — this greedy loop relies on solvability being promised, it doesn't verify it.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const nums = [1, 0, 2, 0, 3];
+let reachable = 0;
+for (let i = 0; i < nums.length; i++) {
+  if (nums[i]) reachable++;
+}
+console.log(reachable);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>3</code>, not <code>5</code>.</li>
+        <li><code>if (nums[i])</code> treats <code>0</code> as falsy and silently skips it — but
+          in this problem, a jump length of <code>0</code> is a real, meaningful value (it means
+          "stuck here," not "no value present").</li>
+        <li>The two indices holding <code>0</code> never increment <code>reachable</code>, even
+          though they're perfectly valid array entries.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the verified solutions above always compare
+        with <code>&gt;=</code>/<code>Math.max</code> against real numeric values, never a bare
+        truthiness check on <code>nums[i]</code> — a <code>0</code> jump length must be read as
+        the number zero, never treated like a missing or false value.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="exhausted" data-explain="currentEnd marks the farthest index reachable using the jumps taken so far. Every index up to currentEnd is already covered without needing another jump. Only once i actually reaches currentEnd has that jump's entire range been used up, making another jump necessary." >
+    <p class="q-text">1. Why does the greedy solution only increment <code>jumps</code> when <code>i === currentEnd</code>, not on every iteration?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="exhausted">currentEnd marks the last index covered by jumps taken so far — reaching it means that jump's whole range is used up and another jump is now required</button>
+      <button class="btn dsa-quiz-option" data-value="everyindex">Every index requires its own jump, so it increments every iteration</button>
+      <button class="btn dsa-quiz-option" data-value="random">It's an arbitrary implementation choice with no effect on correctness</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="everyiter" data-explain="farthest must accumulate the best reach found across the ENTIRE current window, not just the index right before a jump. If it only updated when a jump is taken, indices scanned in between (which might have the longest individual reach) would be silently ignored." >
+    <p class="q-text">2. Why must <code>farthest = Math.max(farthest, i + nums[i])</code> run on every loop iteration, not just on iterations where a jump is taken?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="everyiter">farthest has to capture the best reach across the WHOLE current window — any index in that window, not just the last one, might give the longest reach</button>
+      <button class="btn dsa-quiz-option" data-value="performance">It's purely a performance optimization with no effect on the answer</button>
+      <button class="btn dsa-quiz-option" data-value="jumpsonly">farthest only matters at the exact moment a jump is taken</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="summarize" data-explain="The brute-force DP has no way to know in advance which earlier j will turn out best for a given i, so it checks all of them. The greedy proof shows that all of that earlier information collapses into a single running number — the farthest reachable boundary — so nothing needs to be re-examined." >
+    <p class="q-text">3. Why does the brute-force DP need to check every earlier index <code>j</code> for each <code>i</code>, while the greedy solution never re-examines a past index?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="summarize">Greedy proves that all useful information from earlier indices can be summarized in one running "farthest reachable" value, eliminating the need to re-check them</button>
+      <button class="btn dsa-quiz-option" data-value="different">They solve different problems, so the comparison doesn't apply</button>
+      <button class="btn dsa-quiz-option" data-value="dpwrong">The DP version is simply wrong and doesn't need to check every j</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="neverworse" data-explain="This is the core greedy-stays-ahead argument: at the moment each jump is forced, choosing the index with the maximum farthest reach can never leave you worse off than any other valid choice for the same jump count — it only ever gives you equal or better options for the jumps still to come." >
+    <p class="q-text">4. What's the core argument for why always advancing to <code>farthest</code> (the maximum reach found) is optimal, not just "usually good"?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="neverworse">For the same number of jumps taken, landing on the farthest possible boundary can never leave you in a worse position than any other valid choice — only ever the same or better</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It happens to work on the LeetCode examples but has no general proof</button>
+      <button class="btn dsa-quiz-option" data-value="shortest">Because it minimizes the length of each individual jump</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="quadraticlinear" data-explain="Brute force is O(n²) because for every index i it re-scans every earlier index j. The greedy solution is O(n) because every index is visited exactly once, with two running variables replacing the need to look backward at all." >
+    <p class="q-text">5. What's the time complexity of each solution, and what causes the difference?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="quadraticlinear">Brute force O(n²) from re-scanning every earlier j for each i; optimal O(n) from a single pass with two running variables</button>
+      <button class="btn dsa-quiz-option" data-value="same">Both are O(n) — the greedy version is just a cleaner rewrite with the same complexity</button>
+      <button class="btn dsa-quiz-option" data-value="reversed">Brute force is O(n); optimal is O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'jump-game-ii';
+  const EXAMPLE = [2, 3, 1, 1, 4, 2];
+
+  // ---- Solution 1: brute force (DP over every earlier index) ----
+  function buildJumpBruteSteps(nums) {
+    const n = nums.length;
+    const dp = new Array(n).fill(Infinity);
+    dp[0] = 0;
+    const steps = [];
+    const finalized = new Set([0]);
+
+    function snapshot(narration, extra) {
+      const states = {};
+      finalized.forEach((idx) => { states[idx] = 'sorted'; });
+      Object.assign(states, extra);
+      steps.push({ narration, values: nums.slice(), states });
+    }
+
+    snapshot('Base case: dp[0] = 0 — already standing at index 0, zero jumps needed.', { 0: 'sorted' });
+
+    for (let i = 1; i < n; i++) {
+      for (let j = 0; j < i; j++) {
+        const reach = j + nums[j];
+        if (reach >= i) {
+          if (dp[j] + 1 < dp[i]) {
+            dp[i] = dp[j] + 1;
+            snapshot(`From index ${j} (jump length ${nums[j]}): ${j}+${nums[j]}=${reach} reaches index ${i}. dp[${i}] improves to ${dp[i]}.`, { [i]: 'active', [j]: 'swap' });
+          } else {
+            snapshot(`From index ${j}: reaches index ${i}, but dp[${i}]=${dp[i]} is already at least as good.`, { [i]: 'active', [j]: 'compare' });
+          }
+        } else {
+          snapshot(`From index ${j} (jump length ${nums[j]}): ${j}+${nums[j]}=${reach} falls short of index ${i}.`, { [i]: 'active', [j]: 'compare' });
+        }
+      }
+      finalized.add(i);
+      snapshot(`dp[${i}] finalized at ${dp[i]} jump${dp[i] === 1 ? '' : 's'}.`, { [i]: 'sorted' });
+    }
+    steps.push({ narration: `Done — every dp[i] checked every earlier index. dp[${n - 1}] = ${dp[n - 1]}. Minimum jumps: ${dp[n - 1]}.`, values: nums.slice(), states: Object.fromEntries([...finalized].map((i) => [i, 'sorted'])) });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (greedy one-pass, track reachable boundary) ----
+  function buildJumpOptimalSteps(nums) {
+    const n = nums.length;
+    let jumps = 0, currentEnd = 0, farthest = 0;
+    const steps = [];
+
+    function snapshot(narration, extra) {
+      const states = {};
+      for (let k = 0; k <= currentEnd && k < n; k++) states[k] = 'sorted';
+      Object.assign(states, extra);
+      steps.push({ narration, values: nums.slice(), states });
+    }
+
+    snapshot('Start: currentEnd=0 (farthest index reachable with jumps taken so far), farthest=0, jumps=0.', { 0: 'pointer' });
+
+    for (let i = 0; i < n - 1; i++) {
+      const reach = i + nums[i];
+      const improved = reach > farthest;
+      farthest = Math.max(farthest, reach);
+      snapshot(`At index ${i} (jump length ${nums[i]}): could reach index ${reach}.${improved ? ` New farthest = ${farthest}.` : ` farthest stays ${farthest} — no improvement.`}`, { [i]: 'active', [Math.min(farthest, n - 1)]: 'compare' });
+
+      if (i === currentEnd) {
+        jumps++;
+        currentEnd = farthest;
+        snapshot(`Index ${i} is currentEnd — this jump's range is used up. Take jump #${jumps}: currentEnd advances to ${currentEnd}.`, { [i]: 'active', [Math.min(currentEnd, n - 1)]: 'pointer' });
+      }
+    }
+    steps.push({ narration: `Done — scanned every index exactly once, no re-checking. Minimum jumps: ${jumps}.`, values: nums.slice(), states: Object.fromEntries(Array.from({ length: n }, (_, k) => [k, 'sorted'])) });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 5 });
+  bars1.setData(EXAMPLE);
+  const steps1 = buildJumpBruteSteps(EXAMPLE);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) { if (!step) { bars1.paint({}, EXAMPLE); return; } bars1.paint(step.states, step.values); },
+  });
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: 5 });
+  bars2.setData(EXAMPLE);
+  const steps2 = buildJumpOptimalSteps(EXAMPLE);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) { if (!step) { bars2.paint({}, EXAMPLE); return; } bars2.paint(step.states, step.values); },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('jump-game-ii', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
