@@ -695,6 +695,116 @@ data, sitemap.xml, robots.txt, GSC submission).
   of subsequent batches is a standing open decision per the design doc, to be confirmed before
   starting.
 
+## Done — Backtracking batch (Problem Bank's second batch, 6 problems)
+- **Shipped**: Combination Sum, Subsets, Permutations, Generate Parentheses, Letter Combinations of
+  a Phone Number, N-Queens (Hard — the batch's one Hard problem). All prereq'd on Day 9 (Recursion &
+  the Call Stack), matching `js/problemBank.js`'s per-problem `prereqDay`.
+- **New renderer variety** in the Problem Bank (previously only used `Graph`/`Bars`/a custom
+  interval painter): `DSA.CallStack` for 8 of the 12 solutions (the natural fit for recursive
+  backtracking — same renderer Day 9 itself uses), `DSA.Bars` for 2 genuinely-iterative solutions
+  (Subsets' bitmask enumeration, Letter Combinations' iterative list-expansion), `DSA.Grid` for
+  N-Queens' board (both solutions) — no `js/engine.js` changes needed, all three renderers' existing
+  public API covered every case.
+- **Complexity honesty, case by case** (no blanket "brute force vs optimal" framing where it isn't
+  true): Combination Sum and Permutations/Generate Parentheses/N-Queens get real optimized-vs-naive
+  complexity stories; Subsets and Letter Combinations explicitly say the two solutions share the
+  SAME asymptotic complexity (different technique, not a speed win) — this distinction is stated
+  directly in each page's complexity-comparison section and was specifically checked in every
+  review pass.
+- **N-Queens' brute-force animation deliberately uses a 3×3 board, not 4×4** — n=3 has zero valid
+  solutions (a well-known fact, same as n=2), which keeps the fully-unpruned ~66-step search
+  watchable (n=4 unpruned would be ~938 steps). The optimal solution separately uses n=4, where the
+  2 real solutions exist. This is explained explicitly on the page (intro paragraph, viz caption,
+  and a quiz question) so it doesn't read as a bug.
+- **Built via 6 parallel builder agents** (not sequential Subagent-Driven Development like the
+  pilot) — matches the design doc's own stated build plan for post-pilot batches, and each of the 6
+  new pages is an independent file with no shared-file conflicts. Followed by 6 parallel reviewer
+  agents, all against a shared checklist (algorithm re-verification, `STATE_CLASS`/legend
+  correctness, ID integrity, no AI attribution, template-structure match). All 12 algorithms and all
+  12 animation step-generators were `node -e` verified BEFORE being handed to builder agents — this
+  included pre-verifying 6 "trick question" JS-fundamentals snippets (Combination Sum: pushing a
+  live array reference instead of `.slice()`; Subsets: `Array.fill()` sharing one reference;
+  Permutations: default `.sort()` is lexicographic; Generate Parentheses: `var` vs `let` closure
+  capture; Letter Combinations: string comparison is lexicographic; N-Queens: `Set` uses
+  SameValueZero, so `Set.has(NaN)` is `true` even though `NaN === NaN` is `false`).
+- **2 real bugs caught by review, both fixed same-session** (N-Queens page): (1) the optimal
+  solution's legend reused the brute-force legend's "full board checked, invalid" wording for its
+  `swap` state, but the optimal animation's `swap` state actually represents single-cell
+  column/diagonal pruning BEFORE placement — a different event than what the legend claimed,
+  directly undermining the point that solution is teaching. (2) the diagonal-direction explanation
+  (`row - col` vs `row + col`, which corresponds to `/` vs `\`) was factually backwards in both the
+  line-by-line prose and a quiz's "correct" answer — verified geometrically (row increasing
+  downward, col increasing rightward: `row - col` constant traces `\`, `row + col` constant traces
+  `/`) and corrected in both places; the underlying `diag1`/`diag2` Set logic itself was always
+  correct, only the prose describing it was wrong.
+- **A known race from parallel-agent dispatch, caught and verified harmless**: when 6 parallel
+  agents each added a "related problems" section to a different page, the first agent to commit
+  (`git add -A`-style broad staging) accidentally swept up another agent's uncommitted page changes
+  plus my own uncommitted `js/problemBank.js` edit, all under its own commit message. No content
+  was lost, corrupted, or duplicated (verified via `git show --stat` on every resulting commit and
+  direct diffing) — only the commit *history* misattributes which file changed in which commit.
+  **Lesson for next parallel batch: commit my own pending changes before dispatching agents, and
+  instruct each agent to `git add <exact-file>`, never `-A`/`-am`, when they share one working
+  directory.**
+
+## Done — Interview Corner redesign + trick questions (Problem Bank only)
+- User feedback: the Interview Corner (copied from the 30-day lessons' `.interview-list` pattern)
+  ran question and answer together in one dense paragraph — hard to scan. New `.pb-interview-item`
+  card pattern (own bordered card per question, bold question as its own block, answer broken into
+  a bulleted `<ul>` instead of a paragraph) added to `css/style.css`, **scoped to the Problem Bank
+  only** — the 30-day lessons keep their existing `.interview-list` untouched, so this wasn't a
+  site-wide restyle.
+- Retrofitted onto all 9 existing Problem Bank pages (3 pilot + 6 Backtracking).
+- Added one verified "trick question" item per page — a real JS-fundamentals gotcha (not generic
+  trivia), each tied to that specific page's own code where a natural connection exists (e.g. LRU
+  Cache's trick is a detached-method losing `this` binding, directly relevant to a class-based
+  solution; Insert Interval's is `.slice()`'s shallow-copy gotcha, directly relevant to why the real
+  solution never mutates an interval in place).
+
+## Done — Homepage streak + 30-day progress strip
+- `js/progress.js`/`js/problemBankProgress.js` now store a completion **timestamp**
+  (`Date.now()`) instead of a bare `true` for each done day/problem — still truthy, so every
+  existing `isDone()`/`completedCount()` call site across all 39 pages is unaffected. Pre-existing
+  completions recorded before this change still hold literal `true` and are skipped by the new
+  `completionTimestamps()` (no real date to report) — a deliberate, honest degradation rather than
+  a data migration.
+- New `js/streak.js`: combines timestamps from both progress stores into one cross-course streak
+  (`{ current, longest }`). Streak logic verified via 7 standalone Node test cases before shipping
+  (empty state, today-only, yesterday-only-streak-still-alive, broken streak, consecutive runs,
+  longest-vs-current tracking, same-day dedup) — the "streak stays alive until a full day is missed,
+  not broken the instant today has no activity yet" rule matches Duolingo's established convention,
+  found during a round of UI/UX research into established learning platforms (see below).
+- Homepage gets a new compact 30-cell day-by-day progress strip next to the existing progress bar,
+  plus the streak label (shown only once it reaches 2+ days, to avoid a "1-day streak" feeling like
+  a non-achievement). `problem-bank/index.html` gets the same streak label.
+- **UI/UX research pass**: dispatched 4 parallel research agents (NeetCode/LeetCode,
+  Educative/Frontend Masters/Brilliant, Duolingo/gamification, AlgoExpert/Grokking) to study how
+  established coding-education and learning platforms handle progress/engagement UX. Synthesized
+  into quick-wins (streak, per-pattern progress badges — already existed, no work needed; day
+  strip; "similar problems" links) vs. bigger engine work (synchronized code↔diagram highlighting —
+  not started, flagged as the highest-payoff bigger undertaking if revisited).
+
+## Done — "Related problems" links (Problem Bank)
+- New `relatedProblems(slug, limit)` helper in `js/problemBank.js` — returns other problems sharing
+  the same pattern, ordered by array distance from the current slug (wraps around), so every
+  problem in a pattern sees a varied set of neighbors rather than always the fixed "next 3".
+- Only added to the 6 Backtracking pages for now — Trie/Intervals/Design each have just 1 problem
+  so far, so `relatedProblems` would correctly return `[]` for them; the section will start
+  appearing there automatically once future batches add siblings, no per-page changes needed later.
+- Reuses the existing `.day-row`/`.day-list` component (same one `problem-bank/index.html` and the
+  homepage roadmap use) — zero new CSS.
+
+## Considered and declined — framework/infra migration
+- User asked about migrating to Next.js (or similar) and separately about deploying to Kubernetes.
+  Recommended against both: the site's core value proposition (works fully offline, opens directly
+  via `file://`, zero build step, zero dependencies) would be lost with a framework migration, and
+  GitHub Pages is already free/zero-maintenance/zero-cost with a working custom domain and
+  Lighthouse 100 scores — Kubernetes would add real ongoing ops burden (container image, cluster,
+  ingress/TLS, manifests) for a site with no backend, no dynamic scaling needs, and no multi-service
+  architecture to orchestrate. Noted the actual underlying pain point (boilerplate duplication
+  across 39 pages) is real but solvable much more cheaply than either migration. Not acted on
+  further — purely a discussion, no plan requested.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
