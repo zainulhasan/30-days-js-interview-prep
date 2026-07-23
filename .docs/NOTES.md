@@ -643,6 +643,58 @@ data, sitemap.xml, robots.txt, GSC submission).
   everywhere" failure mode as the stale-favicon incident earlier in the project, just with diagram
   colors instead of favicons.
 
+## Done — Problem Bank pilot batch (new feature, separate from the 30-day course)
+- **What it is**: a second, independent problem set — `problem-bank/` (parallel to `lessons/`) —
+  for readers who've finished the 30-day course and want more reps on real interview questions.
+  Full design/candidate-research docs: `.docs/PROBLEM-BANK-DESIGN.md`,
+  `.docs/PROBLEM-BANK-CANDIDATES.md` (71 sourced candidates across 19 patterns), implementation
+  plan: `.docs/PROBLEM-BANK-PILOT-PLAN.md`.
+- **Pilot batch shipped**: 3 problems, 1 per pattern, proving the format end-to-end before the
+  larger Backtracking batch (6 problems) — **Implement Trie (Prefix Tree)** (Trie),
+  **Insert Interval** (Intervals), **LRU Cache** (Design). Each has 2 full solutions (brute force
+  → optimal), each solution with its own diagram, a real `DSA.StepPlayer` animation reusing the
+  existing engine (`Bars` for the Trie/LRU brute-force solutions, `Graph` for the Trie/LRU optimal
+  solutions, a local custom interval-span painter for both Insert Interval solutions — same
+  pattern `lessons/day27.html` already established for interval visualizations), code, and
+  complexity — plus a complexity-comparison table and a 5-question quiz per problem.
+- **New shared files**: `js/problemBank.js` (data: slug/title/pattern/difficulty/prereq day, mirrors
+  `curriculum.js`'s role) and `js/problemBankProgress.js` (localStorage tracker under its own
+  `problem-bank-progress` key — **deliberately isolated from `DSAProgress`'s `dsa-progress` key**,
+  so finishing the Problem Bank never inflates "You finished N/30 days" or vice versa; its
+  `totalCount()` is computed from `PROBLEM_BANK.length` at call time, not hardcoded, since the
+  final problem count is still an open decision that will keep growing across future batches).
+- **Built via Subagent-Driven Development**: 7 implementer/reviewer task pairs, executed directly
+  on `main` (no worktree — matches this project's existing convention, explicit user consent
+  given since this skill's default is to ask before working on main).
+- **2 real bugs caught by task review, both fixed same-session**:
+  1. The Trie's optimal-solution animation painted the `startsWith("app")` step's node green
+     (`sorted`, which the page's own legend defines as "end of a word") even though `isWord` was
+     still `false` at that point — contradicted both the legend and the step's own narration text
+     ("returns true regardless of isWord"). Fixed to use `swap` (red, "path exists but not a full
+     word"), matching the identical state already correctly used one step earlier for the
+     near-identical `search("app")` → false case. **Lesson: when an animation reuses the site's
+     shared state/color vocabulary (`sorted`/`swap`/`pointer`/etc.), the choice has to match what
+     that page's own legend claims it means, not just "green feels like success" — cross-check the
+     legend text against every `pushStep` state assignment.**
+  2. A one-character transcription typo in Insert Interval's brute-force explanation prose
+     (`start < last[1]` instead of `start <= last[1]`) directly contradicted the actual merge
+     condition in the code block shown right above it. Fixed.
+- **Also confirmed non-issues during review**: two SVG hex colors (`#21252B`, `#DCDFE4`) got
+  flagged as "off-palette" against the plan's own Global Constraints list — turned out both are
+  legitimate, pre-existing site tokens (`--bg-raised-2`, `--heading`) already used the same way
+  across most existing `lessons/*.html` diagrams. The plan's constraints list was just incomplete,
+  not a real violation — worth listing both explicitly if a future plan restates the palette.
+- **Browser-verified** (controller, live via Chrome DevTools MCP, not just the subagents' static
+  logic traces): every animation across all 3 pages steps through and lands exactly on its
+  node-verified final state; zero console errors on any of the 5 new/changed pages; no horizontal
+  page-level overflow at ~390-500px mobile width; quiz feedback correct on all 15 questions;
+  mark-complete toggles correctly and accumulates across all 3 problems; `problem-bank/index.html`
+  correctly reflects per-problem/per-pattern completion live; the homepage's new Problem Bank card
+  links correctly and the existing 30-day progress bar/roadmap render unaffected.
+- **Next**: Backtracking batch (6 problems) is the planned second batch — not started, order/scope
+  of subsequent batches is a standing open decision per the design doc, to be confirmed before
+  starting.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
