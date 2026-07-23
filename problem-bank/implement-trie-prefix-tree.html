@@ -243,6 +243,30 @@ class Trie {
   </table>
   </div>
 
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why not just use a Set for everything, given how simple it is?</strong> Because
+      <code>Set</code>'s <code>startsWith</code> requires scanning every stored word — nothing
+      about it knows which words share a prefix. A Trie makes prefix operations proportional to
+      the prefix length, not the number of words stored.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't claim
+      a Trie is "always better" — for small datasets, or when only exact <code>search</code>
+      matters and <code>startsWith</code> is never called, a flat <code>Set</code>'s simplicity
+      and lower per-node overhead can win in practice.</span></li>
+    <li><strong>How would you delete a word from a Trie?</strong> Walk down to the word's last
+      node and unset <code>isWord</code>, then walk back up removing any node that has no
+      children left AND isn't itself the end of another word.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if the
+      word being deleted is itself a prefix of another word?" Then you only unset
+      <code>isWord</code> — you can't delete any nodes, since the chain is still needed by the
+      longer word.</span></li>
+    <li><strong>What's the space tradeoff of a Trie vs. a Set for a large dictionary?</strong> A
+      Trie can use <em>more</em> memory than a flat Set when words don't share many prefixes
+      (each node carries overhead beyond just its character — a whole <code>Map</code> object),
+      but far <em>less</em> when there's heavy prefix sharing, like an autocomplete dictionary or
+      a phone contacts list. It's a data-dependent tradeoff, not a universal win either way.</li>
+  </ul>
+
   <h2>Quiz</h2>
 
   <div class="dsa-quiz" data-answer="scans" data-explain="The brute-force Set has no structure grouping words by shared prefixes — every search or startsWith call has to scan stored words one at a time, so more words directly means more comparisons per call.">

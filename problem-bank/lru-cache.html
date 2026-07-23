@@ -266,6 +266,29 @@ class LRUCache {
   </table>
   </div>
 
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>Why not just use a Map with a "last accessed" timestamp instead of a linked
+      list?</strong> You could track recency that way, but finding the least-recently-used entry
+      to evict would still require scanning every entry's timestamp — O(n), defeating the whole
+      point. The linked list is what makes <em>finding the LRU entry</em> O(1), not just looking
+      up a key by name.</li>
+    <li><strong>How would you extend this to LFU (Least Frequently Used) instead of LRU?</strong>
+      Track a use-count per key instead of (or alongside) recency, and evict the lowest count,
+      breaking ties by recency.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> don't
+      casually claim "just change what gets evicted" — LFU Cache is a genuinely harder, separate
+      LeetCode problem that needs a frequency-bucketed structure to stay O(1); it's not a small
+      tweak to this class.</span></li>
+    <li><strong>What should happen if capacity is 0?</strong> <code>get</code> should always
+      return -1, and <code>put</code> should never actually retain anything.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: trace it through
+      the code shown above — a <code>put</code> at capacity 0 inserts a node and then immediately
+      evicts it for being over capacity, which happens to produce the correct behavior. Worth
+      confirming out loud with the interviewer that capacity 0 is an input they actually want
+      handled, rather than silently assuming it.</span></li>
+  </ul>
+
   <h2>Quiz</h2>
 
   <div class="dsa-quiz" data-answer="scan" data-explain="Both get and put need to locate a key first, and a plain array has no faster way to do that than findIndex — an O(n) linear scan in the worst case." >

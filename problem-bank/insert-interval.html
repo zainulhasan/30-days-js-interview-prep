@@ -226,6 +226,31 @@ function insertBruteForce(intervals, newInterval) {
   </table>
   </div>
 
+  <h2>Interview corner</h2>
+  <ul class="interview-list">
+    <li><strong>What if newInterval doesn't overlap anything?</strong> It just gets inserted at
+      its correct sorted position — phase 1 copies everything before it, phase 2 runs zero
+      iterations (nothing overlaps), and phase 3 copies everything after.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">⚠ <strong>Trap:</strong> phase 2's
+      overlap check uses <code>&lt;=</code>, not <code>&lt;</code> — touching intervals like
+      <code>[1,2]</code> and <code>[2,3]</code> still count as overlapping and must merge into
+      <code>[1,3]</code>. Using strict <code>&lt;</code> there silently leaves two intervals that
+      should have merged sitting side by side in the result.</span></li>
+    <li><strong>How would you extend this to DELETE an interval instead of inserting one?</strong>
+      Walk the sorted array once: skip any interval fully contained by the one being deleted,
+      split any interval that only partially overlaps it into up to two pieces, and copy
+      everything untouched as-is.<br>
+      <span style="color:var(--text-dim);font-size:0.88rem;">↳ Common follow-up: "What if the
+      deleted interval spans multiple existing intervals?" More than one gets split or removed in
+      the same single pass — it's still one linear scan, just with an extra output branch.</span></li>
+    <li><strong>Could you use binary search instead of a linear scan here?</strong> Binary search
+      can find where the "before" phase ends (the first interval whose end reaches or passes
+      <code>newInterval.start</code>) in O(log n). But the overlap-absorbing and copy-remaining
+      phases still have to touch every interval they cover, so the overall worst case stays
+      O(n) — binary search only speeds up locating the start of the work, not the total amount of
+      work.</li>
+  </ul>
+
   <h2>Quiz</h2>
 
   <div class="dsa-quiz" data-answer="sorted" data-explain="The problem guarantees intervals arrives already sorted by start time and non-overlapping — that precondition is exactly what the 3-phase scan relies on to skip sorting entirely.">

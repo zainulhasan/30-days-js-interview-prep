@@ -80,9 +80,16 @@ button, `js/engine.js`/`js/problemBankProgress.js` includes — plus:
 4. **Complexity comparison table** — all of that problem's solutions side by side, so the
    brute-force-to-optimal improvement is visible at a glance (this is new relative to the 30-day
    template, which only ever showed one approach's complexity).
-5. **Quiz** — 5 questions, same `.dsa-quiz` pattern as every lesson, but focused on *why* the
+5. **Interview corner** — same `.interview-list` pattern and Q&A style as every 30-day lesson
+   (bold question, plain-English answer, optional dim "Common follow-up" or "Trap" callout). 2-3
+   items per problem: common interviewer follow-ups (how would you extend/modify this?), traps
+   (a wrong claim that sounds plausible), and "why not X simpler thing?" questions. This was
+   missing from the pilot batch's first pass — the pilot's 3 pages stopped at the complexity table,
+   which reads thinner than a 30-day lesson; added retroactively to the pilot and required for
+   every problem going forward. No new CSS — `.interview-list` already exists in `css/style.css`.
+6. **Quiz** — 5 questions, same `.dsa-quiz` pattern as every lesson, but focused on *why* the
    optimal solution beats the brute force (recognition/reasoning), not just recall.
-6. **Mark-complete button**, using `ProblemBankProgress` instead of `DSAProgress`.
+7. **Mark-complete button**, using `ProblemBankProgress` instead of `DSAProgress`.
 
 ## 4. Progress tracking
 
