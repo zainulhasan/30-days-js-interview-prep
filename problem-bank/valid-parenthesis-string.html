@@ -470,6 +470,7 @@ console.log('result:', result);</code></pre>
     for (let i = 0; i < chars.length; i++) {
       const ch = chars[i];
       states[i] = 'pointer';
+      steps.push({ narration: `Looking at '${ch}' at index ${i} — deciding whether it can be '(', ')', or empty.`, data: chars.slice(), states: states.slice() });
       if (ch === '(') { lo++; hi++; }
       else if (ch === ')') { lo--; hi--; }
       else { lo--; hi++; }
