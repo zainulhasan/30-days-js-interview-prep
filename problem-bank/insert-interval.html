@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Insert Interval — Problem Bank</title>
+<meta name="description" content="Insert Interval: a brute-force sort-and-merge solution vs. an optimal 3-phase linear scan, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/insert-interval.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Insert Interval — Problem Bank" />
+<meta property="og:description" content="Insert Interval: a brute-force sort-and-merge solution vs. an optimal 3-phase linear scan, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/insert-interval.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Insert Interval — Problem Bank" />
+<meta name="twitter:description" content="Insert Interval: a brute-force sort-and-merge solution vs. an optimal 3-phase linear scan, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Insert Interval", "item": "https://dsa.itszain.tech/problem-bank/insert-interval.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day29.html">Day 29: Mock Interview Day</a></strong>
+      (Merge Intervals) — read that problem first if the sort-then-merge idea is new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">INTERVALS &middot; MEDIUM</p>
+  <h1>Insert Interval <span class="leetcode-link">(<a href="https://leetcode.com/problems/insert-interval/" target="_blank" rel="noopener">LeetCode: Insert Interval</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given a list of non-overlapping intervals, already sorted by start time, plus one new
+    interval. Insert the new interval into the list, merging any overlapping intervals so the
+    result stays sorted and non-overlapping.</p>
+
+  <h2>Solution 1: Brute force — concat, sort, general merge</h2>
+  <p>If you forget (or don't trust) that the input is already sorted, the safe fallback is: append
+    the new interval to the list, sort everything by start time, then run the same general
+    Merge Intervals scan from Day 29. It's correct, but the sort is pure waste — the list was
+    already sorted before the new interval showed up.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: existing sorted intervals plus the new interval are concatenated, then sorted by start time, then run through a general merge-intervals scan to produce the final result.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: concat, sort, then general merge scan</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="130" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="85" y="88" fill="#E2E3E7">concat new</text>
+      <rect x="180" y="60" width="130" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="245" y="88" fill="#282C34">sort by start</text>
+      <rect x="340" y="60" width="130" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="405" y="88" fill="#282C34">merge scan</text>
+      <rect x="500" y="60" width="120" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="560" y="88" fill="#282C34">result</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="150" y1="83" x2="178" y2="83"/>
+      <line x1="310" y1="83" x2="338" y2="83"/>
+      <line x1="470" y1="83" x2="498" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n log n) — the sort is the bottleneck, and it's entirely avoidable.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> the new interval</span>
+    <span><i class="lg-sorted"></i> in the result</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <button class="btn" id="viz1Shuffle">🔀 Shuffle</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function mergeIntervals(intervals) {
+  if (intervals.length === 0) return [];
+  const sorted = intervals.slice().sort((a, b) => a[0] - b[0]);
+  const result = [sorted[0].slice()];
+  for (let i = 1; i < sorted.length; i++) {
+    const last = result[result.length - 1];
+    const [start, end] = sorted[i];
+    if (start <= last[1]) {
+      last[1] = Math.max(last[1], end);
+    } else {
+      result.push([start, end]);
+    }
+  }
+  return result;
+}
+
+function insertBruteForce(intervals, newInterval) {
+  return mergeIntervals(intervals.concat([newInterval]));
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>intervals.concat([newInterval])</code> — the new interval is just another entry now,
+      no different treatment from any existing one.</li>
+    <li><code>.sort((a, b) => a[0] - b[0])</code> re-sorts everything by start time. This is the
+      wasted work — the original <code>intervals</code> array was already in this order.</li>
+    <li>The merge loop is identical to Day 29's Merge Intervals — <code>start &lt; last[1]</code>
+      extends the running merged interval, otherwise a new one starts.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n)</td><td>O(n)</td><td>Sort + one linear merge pass</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — one linear pass, no sort</h2>
+  <p>Since <code>intervals</code> is guaranteed already sorted and non-overlapping, walk it once
+    in three phases: copy every interval that ends before the new one starts, absorb every
+    interval that overlaps the new one (growing it), then copy everything left over. No sort
+    needed anywhere.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal one-pass solution: phase 1 copies intervals ending before the new interval starts, phase 2 absorbs overlapping intervals into the new interval, phase 3 copies remaining intervals - no sort needed since the input is already sorted.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one linear pass, three phases, no sort</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">before: end &lt; new.start</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">copy as-is</text>
+      <rect x="220" y="60" width="180" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">overlap: start ≤ new.end</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">absorb into newInterval</text>
+      <rect x="420" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="510" y="82" fill="#E2E3E7">after: everything left</text>
+      <text x="510" y="98" fill="#9198A6" font-size="10">copy as-is</text>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every interval is looked at exactly once, no sort.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> newInterval, growing as it absorbs overlaps</span>
+    <span><i class="lg-sorted"></i> finalized in the result</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function insertOptimal(intervals, newInterval) {
+  const result = [];
+  let i = 0;
+  const n = intervals.length;
+  let [ns, ne] = newInterval;
+
+  // Phase 1: intervals ending strictly before the new interval starts — copy as-is.
+  while (i < n && intervals[i][1] < ns) {
+    result.push(intervals[i]);
+    i++;
+  }
+  // Phase 2: intervals overlapping the new interval — absorb them into [ns, ne].
+  while (i < n && intervals[i][0] <= ne) {
+    ns = Math.min(ns, intervals[i][0]);
+    ne = Math.max(ne, intervals[i][1]);
+    i++;
+  }
+  result.push([ns, ne]);
+  // Phase 3: everything after — copy as-is.
+  while (i < n) {
+    result.push(intervals[i]);
+    i++;
+  }
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>Phase 1's condition <code>intervals[i][1] &lt; ns</code> — strictly less than, so a
+      touching interval like <code>[1,2]</code> against a new interval starting at 2 correctly
+      falls through to phase 2 instead of being copied untouched.</li>
+    <li>Phase 2 grows <code>[ns, ne]</code> with <code>Math.min</code>/<code>Math.max</code> —
+      the merged interval always covers everything it has absorbed so far.</li>
+    <li>The merged <code>[ns, ne]</code> is pushed exactly once, right when phase 2 ends — there's
+      no ambiguity about when merging stops, because the while condition itself is the stopping
+      rule.</li>
+    <li>Every interval is visited by exactly one phase — that's what makes this O(n) instead of
+      O(n log n).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>3-phase linear scan, exploiting the sorted input</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (sort + general merge)</td><td>O(n log n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (3-phase linear scan)</td><td>O(n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="sorted" data-explain="The problem guarantees intervals arrives already sorted by start time and non-overlapping — that precondition is exactly what the 3-phase scan relies on to skip sorting entirely.">
+    <p class="q-text">1. Why can the optimal solution skip sorting entirely?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sorted">intervals is guaranteed already sorted by start time as an input precondition</button>
+      <button class="btn dsa-quiz-option" data-value="small">Sorting is only needed for inputs larger than 100 intervals</button>
+      <button class="btn dsa-quiz-option" data-value="unnecessary">Sorting never matters for correctness in any interval problem</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="endstart" data-explain="Phase 1 keeps copying untouched intervals as long as they end strictly before newInterval starts. The moment an interval's end reaches or passes newInterval's start, it overlaps and phase 2 begins." >
+    <p class="q-text">2. In the optimal 3-phase scan, what determines when the "before" phase ends and the "overlapping" phase begins?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="endstart">The current interval's end is no longer strictly less than newInterval's start</button>
+      <button class="btn dsa-quiz-option" data-value="index">After exactly half the intervals have been checked</button>
+      <button class="btn dsa-quiz-option" data-value="length">When the current interval is longer than newInterval</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="startend" data-explain="As soon as an interval's start is greater than the merged newInterval's current end, there's no more overlap left to absorb, so the merged interval is finalized and phase 3 begins." >
+    <p class="q-text">3. What determines when the "overlapping" merge phase ends and the "after" phase begins?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="startend">The current interval's start is greater than the merged newInterval's end</button>
+      <button class="btn dsa-quiz-option" data-value="always3">It always ends after exactly 3 intervals</button>
+      <button class="btn dsa-quiz-option" data-value="never">It never ends — every remaining interval gets absorbed</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="generalcase" data-explain="Merge Intervals' general algorithm doesn't assume anything about how the input arrived — it just sorts and merges whatever it's given, so appending the new interval and re-sorting still produces a correct result, just with an avoidable extra sort." >
+    <p class="q-text">4. Why does the brute-force sort+merge approach still work correctly even though it ignores the fact the input was already sorted?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="generalcase">Merge Intervals' general algorithm correctly handles any unsorted input, sorted or not</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It only happens to work on the examples shown here</button>
+      <button class="btn dsa-quiz-option" data-value="doesnt">It doesn't — it silently produces wrong answers</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortcost" data-explain="Brute force is O(n log n), dominated entirely by the sort step. Optimal is O(n), a single pass with no sort — because the 3-phase scan exploits the guarantee that the input arrives already sorted." >
+    <p class="q-text">5. What's the time complexity difference between the two solutions, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortcost">Brute force O(n log n) from the sort; optimal O(n) with no sort needed</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're the same — O(n) for both</button>
+      <button class="btn dsa-quiz-option" data-value="reversed">Brute force is O(n); optimal is O(n log n)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'insert-interval';
+
+  // ---- shared custom interval-span painter (mirrors lessons/day27.html's makeIntervalViz —
+  // Bars' vertical-height metaphor doesn't fit intervals, so this paints horizontal span bars
+  // on a shared number line instead, driven by the same DSA.StepPlayer engine). ----
+  const IV_COLORS = {
+    default: ['#3E4452', '#E2E3E7'],
+    active: ['#C678DD', '#282C34'],
+    sorted: ['#98C379', '#282C34'],
+    swap: ['#E06C75', '#282C34'],
+  };
+
+  function makeIntervalViz(container) {
+    container.style.position = 'relative';
+    container.style.width = '100%';
+    return {
+      paint(step) {
+        container.innerHTML = '';
+        if (!step) { container.style.height = '90px'; return; }
+        const { order, states, domainMax } = step;
+        const rowH = 34, rowGap = 12, topPad = 40;
+        container.style.height = (topPad + order.length * (rowH + rowGap) + 12) + 'px';
+
+        const scalePct = (v) => 5 + (v / domainMax) * 90;
+
+        const axis = document.createElement('div');
+        axis.style.cssText = `position:absolute; left:5%; width:90%; top:${topPad - 12}px; height:1px; background:#3E4452;`;
+        container.appendChild(axis);
+
+        for (let v = 0; v <= domainMax; v++) {
+          const tick = document.createElement('div');
+          tick.style.cssText = `position:absolute; left:${scalePct(v)}%; top:${topPad - 28}px; transform:translateX(-50%); font-family:var(--font-head); font-size:10px; color:#9198A6; white-space:nowrap;`;
+          tick.textContent = v;
+          container.appendChild(tick);
+        }
+
+        order.forEach((iv, i) => {
+          const [bg, fg] = IV_COLORS[states[i] || 'default'];
+          const left = scalePct(iv[0]);
+          const width = scalePct(iv[1]) - left;
+          const bar = document.createElement('div');
+          bar.style.cssText = `position:absolute; left:${left}%; width:${width}%; top:${topPad + i * (rowH + rowGap)}px; height:${rowH}px; background:${bg}; color:${fg}; border-radius:5px; display:flex; align-items:center; justify-content:center; font-family:var(--font-head); font-size:12px; font-weight:600; box-sizing:border-box;`;
+          bar.textContent = `[${iv[0]}, ${iv[1]}]`;
+          container.appendChild(bar);
+        });
+      },
+    };
+  }
+
+  // ---- Solution 1: brute force (concat, sort, general merge) ----
+  function buildInsertBruteSteps(intervals, newInterval) {
+    const steps = [];
+    const domainMax = Math.max.apply(null, intervals.map((iv) => iv[1]).concat([newInterval[1]])) + 1;
+
+    const withNew = intervals.map((iv) => iv.slice());
+    const newIdx = withNew.length;
+    withNew.push(newInterval.slice());
+    const states0 = withNew.map((_, i) => (i === newIdx ? 'active' : 'default'));
+    steps.push({ narration: `${intervals.length} existing intervals plus the new interval [${newInterval[0]}, ${newInterval[1]}] (purple), appended at the end, unsorted.`, order: withNew.slice(), states: states0, domainMax });
+
+    const tagged = withNew.map((iv, i) => ({ iv, isNew: i === newIdx }));
+    tagged.sort((a, b) => a.iv[0] - b.iv[0]);
+    const sorted = tagged.map((t) => t.iv);
+    const isNewFlags = tagged.map((t) => t.isNew);
+    const states1 = isNewFlags.map((f) => (f ? 'active' : 'default'));
+    steps.push({ narration: `Sort all ${sorted.length} intervals by start time — this is the step the optimal solution skips.`, order: sorted.slice(), states: states1.slice(), domainMax });
+
+    const result = [sorted[0].slice()];
+    let display = [sorted[0].slice()];
+    let displayStates = [isNewFlags[0] ? 'active' : 'sorted'];
+    steps.push({ narration: `Start the general merge scan — first interval [${sorted[0][0]}, ${sorted[0][1]}] opens the result.`, order: display.slice(), states: displayStates.slice(), domainMax });
+
+    for (let i = 1; i < sorted.length; i++) {
+      const [start, end] = sorted[i];
+      const last = result[result.length - 1];
+      if (start <= last[1]) {
+        last[1] = Math.max(last[1], end);
+        display = result.concat(sorted.slice(i + 1));
+        displayStates = result.map(() => 'sorted').concat(sorted.slice(i + 1).map(() => 'default'));
+        steps.push({ narration: `[${start}, ${end}] overlaps the last result interval — extend it to [${last[0]}, ${last[1]}].`, order: display.slice(), states: displayStates.slice(), domainMax });
+      } else {
+        result.push([start, end]);
+        display = result.concat(sorted.slice(i + 1));
+        displayStates = result.map(() => 'sorted').concat(sorted.slice(i + 1).map(() => 'default'));
+        steps.push({ narration: `[${start}, ${end}] doesn't overlap — starts a new interval in the result.`, order: display.slice(), states: displayStates.slice(), domainMax });
+      }
+    }
+    steps.push({ narration: `Done — result: ${result.map((iv) => `[${iv[0]}, ${iv[1]}]`).join(', ')}. Correct, but the sort cost O(n log n) that wasn't necessary.`, order: result.slice(), states: result.map(() => 'sorted'), domainMax });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (3-phase linear scan, no sort) ----
+  function buildInsertOptimalSteps(intervals, newInterval) {
+    const steps = [];
+    const domainMax = Math.max.apply(null, intervals.map((iv) => iv[1]).concat([newInterval[1]])) + 1;
+    const result = [];
+    let [ns, ne] = newInterval;
+    let i = 0;
+    const n = intervals.length;
+
+    function snapshot(narration, includeOverlay) {
+      const order = result.map((iv) => iv.slice());
+      const states = result.map(() => 'sorted');
+      if (includeOverlay) { order.push([ns, ne]); states.push('active'); }
+      intervals.slice(i).forEach((iv) => { order.push(iv.slice()); states.push('default'); });
+      steps.push({ narration, order, states, domainMax });
+    }
+
+    snapshot(`Start: newInterval is [${ns}, ${ne}] (purple). Walk the existing ${n} sorted intervals left to right — no sort needed.`, true);
+
+    while (i < n && intervals[i][1] < ns) {
+      const s = intervals[i][0], e = intervals[i][1];
+      result.push([s, e]);
+      i++;
+      snapshot(`[${s}, ${e}] ended before newInterval starts — copied to the result as-is.`, true);
+    }
+    while (i < n && intervals[i][0] <= ne) {
+      const s = intervals[i][0], e = intervals[i][1];
+      ns = Math.min(ns, s);
+      ne = Math.max(ne, e);
+      i++;
+      snapshot(`[${s}, ${e}] overlapped newInterval — absorbed it: newInterval grows to [${ns}, ${ne}].`, true);
+    }
+    result.push([ns, ne]);
+    snapshot(`No more overlaps — the merged newInterval [${ns}, ${ne}] is pushed into the result.`, false);
+    while (i < n) {
+      const s = intervals[i][0], e = intervals[i][1];
+      result.push([s, e]);
+      i++;
+      snapshot(`[${s}, ${e}] starts after newInterval ends — copied to the result as-is.`, false);
+    }
+    return steps;
+  }
+
+  function randomIntervalsAndNew() {
+    const n = 3 + Math.floor(Math.random() * 2);
+    const arr = [];
+    let cursor = 0;
+    for (let i = 0; i < n; i++) {
+      cursor += 1 + Math.floor(Math.random() * 2);
+      const len = 1 + Math.floor(Math.random() * 3);
+      arr.push([cursor, cursor + len]);
+      cursor += len;
+    }
+    const ni = Math.floor(Math.random() * n);
+    const newInterval = [Math.max(0, arr[ni][0] - 1), arr[ni][1] + 1];
+    return { intervals: arr, newInterval };
+  }
+
+  const intervalStage1 = document.getElementById('viz1Stage');
+  const intervalViz1 = makeIntervalViz(intervalStage1);
+  let bruteData = { intervals: [[1, 3], [6, 9]], newInterval: [2, 5] };
+  let bruteSteps = buildInsertBruteSteps(bruteData.intervals, bruteData.newInterval);
+  const bruteplayer = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    shuffleBtn: document.getElementById('viz1Shuffle'),
+    speed: 1100,
+    onStep(step) { intervalViz1.paint(step); },
+    onShuffle() {
+      bruteData = randomIntervalsAndNew();
+      bruteSteps = buildInsertBruteSteps(bruteData.intervals, bruteData.newInterval);
+      bruteplayer.setSteps(bruteSteps);
+    },
+  });
+
+  const intervalStage2 = document.getElementById('viz2Stage');
+  const intervalViz2 = makeIntervalViz(intervalStage2);
+  const optimalSteps = buildInsertOptimalSteps([[1, 3], [6, 9]], [2, 5]);
+  const optimalPlayer = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) { intervalViz2.paint(step); },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
