@@ -27,12 +27,67 @@ const PROBLEM_BANK = [
     prereqTitle: 'Linked Lists',
     leetcodeUrl: 'https://leetcode.com/problems/lru-cache/',
   },
+  {
+    slug: 'combination-sum',
+    title: 'Combination Sum',
+    pattern: 'Backtracking',
+    difficulty: 'Medium',
+    prereqDay: 9,
+    prereqTitle: 'Recursion & the Call Stack',
+    leetcodeUrl: 'https://leetcode.com/problems/combination-sum/',
+  },
+  {
+    slug: 'subsets',
+    title: 'Subsets',
+    pattern: 'Backtracking',
+    difficulty: 'Medium',
+    prereqDay: 9,
+    prereqTitle: 'Recursion & the Call Stack',
+    leetcodeUrl: 'https://leetcode.com/problems/subsets/',
+  },
+  {
+    slug: 'permutations',
+    title: 'Permutations',
+    pattern: 'Backtracking',
+    difficulty: 'Medium',
+    prereqDay: 9,
+    prereqTitle: 'Recursion & the Call Stack',
+    leetcodeUrl: 'https://leetcode.com/problems/permutations/',
+  },
+  {
+    slug: 'generate-parentheses',
+    title: 'Generate Parentheses',
+    pattern: 'Backtracking',
+    difficulty: 'Medium',
+    prereqDay: 9,
+    prereqTitle: 'Recursion & the Call Stack',
+    leetcodeUrl: 'https://leetcode.com/problems/generate-parentheses/',
+  },
+  {
+    slug: 'letter-combinations-of-a-phone-number',
+    title: 'Letter Combinations of a Phone Number',
+    pattern: 'Backtracking',
+    difficulty: 'Medium',
+    prereqDay: 9,
+    prereqTitle: 'Recursion & the Call Stack',
+    leetcodeUrl: 'https://leetcode.com/problems/letter-combinations-of-a-phone-number/',
+  },
+  {
+    slug: 'n-queens',
+    title: 'N-Queens',
+    pattern: 'Backtracking',
+    difficulty: 'Hard',
+    prereqDay: 9,
+    prereqTitle: 'Recursion & the Call Stack',
+    leetcodeUrl: 'https://leetcode.com/problems/n-queens/',
+  },
 ];
 
 const PROBLEM_BANK_PATTERNS = [
   { key: 'Trie', title: 'Trie' },
   { key: 'Intervals', title: 'Intervals' },
   { key: 'Design', title: 'Design' },
+  { key: 'Backtracking', title: 'Backtracking' },
 ];
 
 function problemBankInfo(slug) {
