@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Minimum Number of Arrows to Burst Balloons — Problem Bank</title>
+<meta name="description" content="Minimum Number of Arrows to Burst Balloons: a repeated-rescan brute force vs. an optimal sort-by-end greedy pass, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/minimum-number-of-arrows-to-burst-balloons.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Minimum Number of Arrows to Burst Balloons — Problem Bank" />
+<meta property="og:description" content="Minimum Number of Arrows to Burst Balloons: a repeated-rescan brute force vs. an optimal sort-by-end greedy pass, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/minimum-number-of-arrows-to-burst-balloons.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Minimum Number of Arrows to Burst Balloons — Problem Bank" />
+<meta name="twitter:description" content="Minimum Number of Arrows to Burst Balloons: a repeated-rescan brute force vs. an optimal sort-by-end greedy pass, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Minimum Number of Arrows to Burst Balloons", "item": "https://dsa.itszain.tech/problem-bank/minimum-number-of-arrows-to-burst-balloons.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day27.html">Day 27: Greedy Algorithms</a></strong>
+      — this problem uses the exact same "sort by end, walk with a running boundary" shape as
+      that lesson's Non-overlapping Intervals example. Read that lesson first if the sort-by-end
+      insight is new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">GREEDY &middot; MEDIUM</p>
+  <h1>Minimum Number of Arrows to Burst Balloons <span class="leetcode-link">(<a href="https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/" target="_blank" rel="noopener">LeetCode: Minimum Number of Arrows to Burst Balloons</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Balloons are taped to a wall, each one a horizontal span <code>[xStart, xEnd]</code> on the
+    x-axis. An arrow is shot straight up from some x-coordinate and bursts every balloon whose
+    span contains that x-coordinate — one arrow can burst many balloons at once, as long as their
+    spans all overlap at that single point. Given the list of balloon spans, return the minimum
+    number of arrows needed to burst every balloon.</p>
+
+  <h2>Solution 1: Brute force — repeatedly rediscover the best arrow, from scratch</h2>
+  <p>A greedy-looking approach still works here, but a naive implementation of it is wasteful.
+    Each round: scan every still-unburst balloon to find the one with the smallest
+    <code>xEnd</code> (that's the correct arrow position — shooting there is guaranteed not to
+    miss any balloon that could have been grouped in), shoot an arrow there, then scan the
+    <em>entire</em> remaining list again to remove everything that arrow bursts. Repeat until
+    nothing is left. This is correct — it makes the same greedy choice the optimal solution
+    does — but it rediscovers that choice with a full linear scan every single round instead of
+    sorting once up front, so two full passes over the (shrinking) list happen per arrow.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: scan all unburst balloons to find the smallest end, shoot an arrow there, rescan everything to remove burst balloons, then repeat the whole cycle from scratch for the next arrow.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: rediscover the arrow, then rescan everything, every round</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">scan for smallest end</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">full pass, every round</text>
+      <rect x="220" y="60" width="150" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="295" y="88" fill="#282C34">shoot arrow there</text>
+      <rect x="390" y="60" width="230" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="505" y="82" fill="#282C34">rescan ALL to remove burst</text>
+      <text x="505" y="98" fill="#282C34" font-size="10">another full pass, every round</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="370" y1="83" x2="388" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: two full scans per arrow, repeated for every arrow — O(n²) total.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> current arrow's target balloon (smallest end)</span>
+    <span><i class="lg-sorted"></i> burst this round</span>
+    <span><i class="lg-neutral"></i> still unburst</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    points=[[10,16],[2,8],[1,6],[7,12]] — a canonical case verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function findMinArrowShotsBrute(points) {
+  if (points.length === 0) return 0;
+  const remaining = points.map((p) => p.slice());
+  let arrows = 0;
+
+  while (remaining.length > 0) {
+    // Full re-scan #1: find the unburst balloon with the smallest end.
+    let minIdx = 0;
+    for (let i = 1; i < remaining.length; i++) {
+      if (remaining[i][1] < remaining[minIdx][1]) minIdx = i;
+    }
+    const arrowX = remaining[minIdx][1];
+    arrows++;
+
+    // Full re-scan #2: remove every balloon this arrow bursts.
+    for (let i = remaining.length - 1; i >= 0; i--) {
+      if (remaining[i][0] <= arrowX && arrowX <= remaining[i][1]) {
+        remaining.splice(i, 1);
+      }
+    }
+  }
+  return arrows;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The inner <code>for</code> loop that finds <code>minIdx</code> is doing, by hand and every
+      single round, exactly the work a single up-front sort would do once.</li>
+    <li><code>arrowX</code> is always the smallest <code>xEnd</code> among what's left — that
+      choice is provably safe: no balloon that could have shared this arrow is ever left
+      unburst by picking the earliest-ending one.</li>
+    <li>The second loop walks backward and <code>splice</code>s out every balloon the arrow
+      bursts, scanning the full remaining list again — this is the second wasted full pass.</li>
+    <li>Both scans happen once per arrow, and there can be up to <code>n</code> arrows — that's
+      the O(n²).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup2;)</td><td>O(n)</td><td>Repeated full rescans, one pair per arrow</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — sort by end once, one linear pass</h2>
+  <p>Do the expensive part exactly once: sort every balloon by <code>xEnd</code> ascending.
+    Now walk the sorted list left to right, tracking the current arrow's boundary (<code>end</code>,
+    starting from the first balloon's end). If the next balloon's <code>xStart</code> is beyond
+    that boundary, it can't share this arrow — shoot a new one and reset the boundary to this
+    balloon's <code>xEnd</code>. Otherwise, it's already burst by the current arrow, no new arrow
+    needed. Same greedy choice as the brute force, made once per balloon instead of rediscovered
+    every round.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal solution: sort all balloons by end coordinate once up front, then walk the sorted list once, checking if the next balloon's start is beyond the current arrow's boundary - if so shoot a new arrow and reset the boundary, otherwise it is already burst.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: sort by end once, then one linear pass</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="105" y="82" fill="#282C34">sort by xEnd</text>
+      <text x="105" y="98" fill="#282C34" font-size="10">once, up front</text>
+      <rect x="210" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="310" y="82" fill="#E2E3E7">xStart &gt; current end?</text>
+      <text x="310" y="98" fill="#9198A6" font-size="10">check once per balloon</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">new arrow / reset end</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">else: already burst</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n) — one sort, then every balloon is visited exactly once.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> current arrow's boundary</span>
+    <span><i class="lg-sorted"></i> burst by the current arrow</span>
+    <span><i class="lg-neutral"></i> not yet reached</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    points=[[10,16],[2,8],[1,6],[7,12]] — the same canonical case, sorted by end first.</p>
+
+  <h3>The code</h3>
+  <pre><code>function findMinArrowShotsOptimal(points) {
+  if (points.length === 0) return 0;
+  const sorted = points.slice().sort((a, b) => a[1] - b[1]);
+
+  let arrows = 1;
+  let end = sorted[0][1];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const [start, xEnd] = sorted[i];
+    if (start > end) {
+      // This balloon starts after the current arrow's reach — needs a new arrow.
+      arrows++;
+      end = xEnd;
+    }
+    // Otherwise start &lt;= end: already burst by the current arrow, nothing to do.
+  }
+  return arrows;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>.sort((a, b) => a[1] - b[1])</code> — sort by <strong>end</strong> coordinate, not
+      start. This is the whole insight: after sorting by end, the earliest-ending balloon is
+      always the best one to anchor the first arrow at.</li>
+    <li><code>end = sorted[0][1]</code> seeds the boundary with the first (smallest-end) balloon
+      — the first arrow always gets placed there.</li>
+    <li><code>start > end</code> is the ONLY condition that forces a new arrow — as long as a
+      balloon's start still reaches back into the current arrow's position, it's already burst.</li>
+    <li>When a new arrow is needed, <code>end</code> resets to <em>this</em> balloon's
+      <code>xEnd</code> — the new arrow is placed as late as possible (at this balloon's own end),
+      maximizing the chance it also bursts whatever comes right after.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n)</td><td>O(n)</td><td>One sort by end, then a single linear pass</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (repeated rescans)</td><td>O(n&sup2;)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (sort by end + linear pass)</td><td>O(n log n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a real, meaningful gap, not a rounding difference — both make the exact same greedy
+    choice at every step (always anchor the arrow at the smallest remaining end), but the brute
+    force pays for that choice with a fresh O(n) scan every round instead of paying for it once
+    with a single O(n log n) sort. For 1,000 balloons that's roughly a million operations for the
+    brute force versus roughly ten thousand for the optimal solution.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why sort by <code>xEnd</code> and not <code>xStart</code>?</p>
+      <ul class="pb-ia">
+        <li>The arrow that bursts the earliest-ending balloon has to be placed no later than that
+          balloon's own end — there's no flexibility to push it further right.</li>
+        <li>Placing that arrow exactly at the earliest end is the position most likely to also
+          catch other overlapping balloons, since it's as far right as this balloon allows.</li>
+        <li>Sorting by <code>xStart</code> instead can pick a "wide" balloon early (like
+          <code>[1, 100]</code>) and anchor the first arrow too far right, missing the chance to
+          burst several short balloons that don't reach that far.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How does this relate to Non-overlapping Intervals (Day 27) and Insert
+        Interval, already on this site?</p>
+      <ul class="pb-ia">
+        <li>All three are the same underlying pattern: sort by end coordinate, then walk once
+          with a running boundary.</li>
+        <li>Non-overlapping Intervals asks "how many intervals must be removed to make the rest
+          non-overlapping" — same sort-by-end greedy, different question being asked of the same
+          walk.</li>
+        <li>Insert Interval doesn't need the sort at all (its input already arrives sorted), but
+          its 3-phase scan is structurally the same "walk once, track a boundary" shape.</li>
+        <li>Recognizing "sort by end, track a boundary" as one reusable pattern — not three
+          separate tricks — is what makes all three fast to solve in an interview.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is <code>start &gt; end</code> (strict) the correct condition for
+        needing a new arrow, not <code>start &gt;= end</code>?</p>
+      <ul class="pb-ia">
+        <li><code>start === end</code> means the two balloons touch at exactly one point — that
+          single x-coordinate still bursts both.</li>
+        <li>Using <code>&gt;=</code> would treat touching balloons as needing separate arrows,
+          overcounting the true minimum.</li>
+        <li>This mirrors the "touching intervals still merge" trap from Insert Interval — same
+          off-by-one boundary condition, same fix.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const ends = [10, 9, 2];
+console.log(ends.sort());</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[10, 2, 9]</code>, not <code>[2, 9, 10]</code>.</li>
+        <li><code>.sort()</code> with no comparator converts every element to a string and
+          compares them lexicographically — <code>"10"</code> sorts before <code>"2"</code>
+          because <code>"1"</code> comes before <code>"2"</code> character by character.</li>
+        <li>The array is left numerically scrambled, not sorted by value at all.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the optimal solution above always passes an
+        explicit numeric comparator — <code>.sort((a, b) =&gt; a[1] - b[1])</code> — instead of
+        calling <code>.sort()</code> bare. Balloon end coordinates like <code>10</code> and
+        <code>2</code> would silently end up in the wrong order otherwise, and the whole greedy
+        walk depends on that order being correct.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="endanchor" data-explain="The arrow burst the earliest-ending balloon can never be placed later than that balloon's own end. Placing it exactly there is the rightmost — and therefore most balloon-catching — position that's still guaranteed valid, which is why sorting by end (not start) is the key insight." >
+    <p class="q-text">1. Why does the optimal solution sort balloons by <code>xEnd</code> instead of <code>xStart</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="endanchor">The arrow for the earliest-ending balloon can't go past its end — placing it exactly there catches the most possible overlapping balloons</button>
+      <button class="btn dsa-quiz-option" data-value="alwayssame">Sorting by start or end always produces the identical order, so it doesn't matter</button>
+      <button class="btn dsa-quiz-option" data-value="fewerarrows">Sorting by end coordinate always literally uses fewer array elements than sorting by start</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="widefirst" data-explain="Sorting by start can put a wide balloon like [1, 100] first. Anchoring the first arrow near its start leaves it far from several short, non-overlapping balloons later in the range that a smarter arrow placement (anchored at the smallest end) would have burst together." >
+    <p class="q-text">2. What can go wrong if you sort by <code>xStart</code> instead of <code>xEnd</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="widefirst">A wide balloon can sort first and anchor the first arrow too early, missing chances to burst several short balloons together</button>
+      <button class="btn dsa-quiz-option" data-value="crash">The code throws a runtime error on any input with more than 2 balloons</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — start order and end order always agree for balloon inputs</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="samechoice" data-explain="Both solutions make the identical greedy choice at every step: anchor the arrow at the unburst balloon with the smallest end. The brute force rediscovers that choice with a full O(n) scan every round; the optimal solution computes it once via a single O(n log n) sort." >
+    <p class="q-text">3. What's actually different between the brute force and the optimal solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="samechoice">They make the exact same greedy choice each round — the brute force just rediscovers it with a fresh scan instead of sorting once</button>
+      <button class="btn dsa-quiz-option" data-value="differentanswers">They can return different arrow counts on the same input</button>
+      <button class="btn dsa-quiz-option" data-value="unrelated">They use completely unrelated strategies with nothing in common</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="touch" data-explain="start === end means the balloons touch at exactly one x-coordinate, and a single arrow shot there bursts both. Using strict > (not >=) as the new-arrow condition correctly treats touching balloons as burstable by the same arrow." >
+    <p class="q-text">4. In the optimal solution, why is <code>start &gt; end</code> (strict, not <code>&gt;=</code>) the condition for needing a new arrow?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="touch">When start === end, the balloons touch at one point and the same arrow bursts both — treating that as "needs a new arrow" would overcount</button>
+      <button class="btn dsa-quiz-option" data-value="performance">Strict comparison runs faster in JavaScript than &gt;=</button>
+      <button class="btn dsa-quiz-option" data-value="noreason">There's no real difference — either comparison produces the same arrow count on every input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nsquaredvsnlogn" data-explain="The brute force pays for its greedy choice with two full scans per arrow, up to n arrows — O(n²). The optimal solution pays for the same choice once via a single O(n log n) sort, then a single O(n) pass — dominated by the sort." >
+    <p class="q-text">5. What's the time complexity difference between the two solutions, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nsquaredvsnlogn">Brute force is O(n²) from repeated full rescans; optimal is O(n log n), dominated by a single sort</button>
+      <button class="btn dsa-quiz-option" data-value="same">They're the same — O(n log n) for both</button>
+      <button class="btn dsa-quiz-option" data-value="reversed">Brute force is O(n log n); optimal is O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Greedy problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'minimum-number-of-arrows-to-burst-balloons';
+
+  // ---- shared custom interval-span painter (copied verbatim from insert-interval.html's
+  // makeIntervalViz — Bars' vertical-height metaphor doesn't fit intervals, so this paints
+  // horizontal span bars on a shared number line instead, driven by the same DSA.StepPlayer
+  // engine). This is a page-scoped helper duplicated by convention, not a shared engine.js export. ----
+  const IV_COLORS = {
+    default: ['#3E4452', '#E2E3E7'],
+    active: ['#C678DD', '#282C34'],
+    sorted: ['#98C379', '#282C34'],
+    swap: ['#E06C75', '#282C34'],
+  };
+
+  function makeIntervalViz(container) {
+    container.style.position = 'relative';
+    container.style.width = '100%';
+    return {
+      paint(step) {
+        container.innerHTML = '';
+        if (!step) { container.style.height = '90px'; return; }
+        const { order, states, domainMax } = step;
+        const rowH = 34, rowGap = 12, topPad = 40;
+        container.style.height = (topPad + order.length * (rowH + rowGap) + 12) + 'px';
+
+        const scalePct = (v) => 5 + (v / domainMax) * 90;
+
+        const axis = document.createElement('div');
+        axis.style.cssText = `position:absolute; left:5%; width:90%; top:${topPad - 12}px; height:1px; background:#3E4452;`;
+        container.appendChild(axis);
+
+        for (let v = 0; v <= domainMax; v++) {
+          const tick = document.createElement('div');
+          tick.style.cssText = `position:absolute; left:${scalePct(v)}%; top:${topPad - 28}px; transform:translateX(-50%); font-family:var(--font-head); font-size:10px; color:#9198A6; white-space:nowrap;`;
+          tick.textContent = v;
+          container.appendChild(tick);
+        }
+
+        order.forEach((iv, i) => {
+          const [bg, fg] = IV_COLORS[states[i] || 'default'];
+          const left = scalePct(iv[0]);
+          const width = scalePct(iv[1]) - left;
+          const bar = document.createElement('div');
+          bar.style.cssText = `position:absolute; left:${left}%; width:${width}%; top:${topPad + i * (rowH + rowGap)}px; height:${rowH}px; background:${bg}; color:${fg}; border-radius:5px; display:flex; align-items:center; justify-content:center; font-family:var(--font-head); font-size:12px; font-weight:600; box-sizing:border-box;`;
+          bar.textContent = `[${iv[0]}, ${iv[1]}]`;
+          container.appendChild(bar);
+        });
+      },
+    };
+  }
+
+  // ---- Solution 1: brute force (repeatedly rediscover the min-end balloon, rescan to burst) ----
+  function buildArrowsBruteSteps(points) {
+    const steps = [];
+    const domainMax = Math.max.apply(null, points.map((p) => p[1])) + 1;
+    const remaining = points.map((p) => p.slice());
+    let arrows = 0;
+
+    function snapshot(narration, states) {
+      steps.push({ narration, order: remaining.map((p) => p.slice()), states: states.slice(), domainMax });
+    }
+
+    snapshot(`${remaining.length} unburst balloons. Each round: scan all of them for the smallest end, shoot there, then rescan everything to remove what's burst.`, remaining.map(() => 'default'));
+
+    while (remaining.length > 0) {
+      let minIdx = 0;
+      for (let i = 1; i < remaining.length; i++) {
+        if (remaining[i][1] < remaining[minIdx][1]) minIdx = i;
+      }
+      const arrowX = remaining[minIdx][1];
+      arrows++;
+      const preStates = remaining.map((_, i) => (i === minIdx ? 'active' : 'default'));
+      snapshot(`Full scan for smallest end found [${remaining[minIdx][0]}, ${remaining[minIdx][1]}] — arrow ${arrows} shoots at x=${arrowX}.`, preStates);
+
+      const burstStates = remaining.map((p) => (p[0] <= arrowX && arrowX <= p[1] ? 'sorted' : 'default'));
+      snapshot(`Full rescan: every balloon marked green is burst by the arrow at x=${arrowX}.`, burstStates);
+
+      for (let i = remaining.length - 1; i >= 0; i--) {
+        if (remaining[i][0] <= arrowX && arrowX <= remaining[i][1]) {
+          remaining.splice(i, 1);
+        }
+      }
+      if (remaining.length > 0) {
+        snapshot(`${remaining.length} balloon${remaining.length === 1 ? '' : 's'} still unburst — next round starts a brand new full scan from scratch.`, remaining.map(() => 'default'));
+      }
+    }
+    steps.push({ narration: `Done — ${arrows} arrows needed. Correct, but every arrow cost two full O(n) scans.`, order: [], states: [], domainMax });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (sort by end once, single linear pass with a running boundary) ----
+  function buildArrowsOptimalSteps(points) {
+    const steps = [];
+    const domainMax = Math.max.apply(null, points.map((p) => p[1])) + 1;
+    const sorted = points.slice().sort((a, b) => a[1] - b[1]).map((p) => p.slice());
+    const n = sorted.length;
+
+    function snapshot(narration, boundaryEnd, burstUpTo, arrowIdx) {
+      const states = sorted.map((p, i) => {
+        if (i > burstUpTo) return 'default';
+        if (i === arrowIdx) return 'active';
+        return 'sorted';
+      });
+      steps.push({ narration, order: sorted.map((p) => p.slice()), states, domainMax });
+    }
+
+    snapshot(`Sorted once by xEnd ascending: ${sorted.map((p) => `[${p[0]}, ${p[1]}]`).join(', ')}. No more sorting needed from here.`, null, -1, -1);
+
+    let arrows = 1;
+    let end = sorted[0][1];
+    let lastArrowIdx = 0;
+    snapshot(`Arrow 1 anchors at the first balloon's end, x=${end} (purple boundary).`, end, 0, 0);
+
+    for (let i = 1; i < n; i++) {
+      const [start, xEnd] = sorted[i];
+      if (start > end) {
+        arrows++;
+        end = xEnd;
+        lastArrowIdx = i;
+        snapshot(`[${start}, ${xEnd}] starts past x=${sorted[i - 1][1]} — arrow ${arrows} needed, boundary resets to x=${end}.`, end, i, i);
+      } else {
+        snapshot(`[${start}, ${xEnd}] starts at or before x=${end} — already burst by the current arrow, no new arrow needed.`, end, i, lastArrowIdx);
+      }
+    }
+    steps.push({ narration: `Done — ${arrows} arrow${arrows === 1 ? '' : 's'} needed, found in a single O(n log n) pass (dominated by the sort).`, order: sorted.map((p) => p.slice()), states: sorted.map(() => 'sorted'), domainMax });
+    return steps;
+  }
+
+  const CANONICAL_POINTS = [[10, 16], [2, 8], [1, 6], [7, 12]];
+
+  const arrowsStage1 = document.getElementById('viz1Stage');
+  const arrowsViz1 = makeIntervalViz(arrowsStage1);
+  const bruteSteps = buildArrowsBruteSteps(CANONICAL_POINTS);
+  const brutePlayer = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) { arrowsViz1.paint(step); },
+  });
+
+  const arrowsStage2 = document.getElementById('viz2Stage');
+  const arrowsViz2 = makeIntervalViz(arrowsStage2);
+  const optimalSteps = buildArrowsOptimalSteps(CANONICAL_POINTS);
+  const optimalPlayer = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) { arrowsViz2.paint(step); },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('minimum-number-of-arrows-to-burst-balloons', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
