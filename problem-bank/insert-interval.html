@@ -121,7 +121,7 @@ function insertBruteForce(intervals, newInterval) {
       no different treatment from any existing one.</li>
     <li><code>.sort((a, b) => a[0] - b[0])</code> re-sorts everything by start time. This is the
       wasted work — the original <code>intervals</code> array was already in this order.</li>
-    <li>The merge loop is identical to Day 29's Merge Intervals — <code>start &lt; last[1]</code>
+    <li>The merge loop is identical to Day 29's Merge Intervals — <code>start &lt;= last[1]</code>
       extends the running merged interval, otherwise a new one starts.</li>
   </ul>
 
