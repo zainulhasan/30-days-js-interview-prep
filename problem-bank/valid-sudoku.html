@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Valid Sudoku — Problem Bank</title>
+<meta name="description" content="Valid Sudoku: a brute-force pairwise comparison across every filled cell vs. an optimal single pass with row/column/box hash trackers, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/valid-sudoku.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Valid Sudoku — Problem Bank" />
+<meta property="og:description" content="Valid Sudoku: a brute-force pairwise comparison across every filled cell vs. an optimal single pass with row/column/box hash trackers, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/valid-sudoku.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Valid Sudoku — Problem Bank" />
+<meta name="twitter:description" content="Valid Sudoku: a brute-force pairwise comparison across every filled cell vs. an optimal single pass with row/column/box hash trackers, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Valid Sudoku", "item": "https://dsa.itszain.tech/problem-bank/valid-sudoku.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day06.html">Day 6: Hash Maps &amp; Sets</a></strong> —
+      the optimal solution below leans entirely on hash-set membership checks; read that lesson
+      first if "is this value already in the set?" isn't yet second nature.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">ARRAYS &amp; HASHING &middot; MEDIUM</p>
+  <h1>Valid Sudoku <span class="leetcode-link">(<a href="https://leetcode.com/problems/valid-sudoku/" target="_blank" rel="noopener">LeetCode: Valid Sudoku</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given a 9×9 Sudoku board that's only partially filled in — each cell holds either a
+    digit <code>'1'</code>-<code>'9'</code> or a <code>'.'</code> standing in for "not filled in
+    yet." Your job is <strong>not</strong> to solve the puzzle — there's no reasoning about which
+    digits could legally go where. It's only to check whether the digits already placed break any
+    of Sudoku's three rules: no repeated digit within any single row, no repeated digit within any
+    single column, and no repeated digit within any of the nine non-overlapping 3×3 boxes. An
+    empty cell imposes no constraint on anything — only actual placed digits can conflict with
+    each other. Return <code>true</code> if the board as it stands right now is consistent with
+    all three rules, <code>false</code> the moment any one of them is broken.</p>
+
+  <h2>Solution 1: Brute force — compare every filled cell against every other</h2>
+  <p>Read the rules literally: collect every filled cell, then for every pair of them, ask "do
+    these two share a row, a column, or a box, <em>and</em> do they hold the same digit?" If any
+    pair answers yes to both, the board is invalid. This is honest and correct — it directly
+    checks the definition of a conflict — but it's wasteful: it doesn't stop at the natural
+    per-row/per-column/per-box boundaries the problem actually has, it re-derives which box each
+    cell belongs to from scratch for every single pair, and it spends a full comparison on pairs
+    that don't even share a unit, only to discover that fact after the fact.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: collect every filled cell, then for every pair of them check whether they share a row, column, or box and hold the same digit — if so, the board is invalid.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: pairwise comparison across every filled cell</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">collect filled cells</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">up to n&sup2; of them</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="320" y="82" fill="#E2E3E7">compare every pair (i, j)</text>
+      <text x="320" y="98" fill="#9198A6" font-size="10">re-derive row/col/box each time</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">same unit AND digit?</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">yes → invalid, stop</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-vs1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-vs1)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup4;) in the general case — up to n&sup2; filled cells, every pair of them compared.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">A 9&times;9 board with 6 digits placed —
+    the same board used again in Solution 2 below, so you can directly compare how many steps
+    each approach needs to catch the identical conflict (two 7s in row 2).</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> cell i in the current pair</span>
+    <span><i class="lg-compare"></i> cell j in the current pair</span>
+    <span><i class="lg-swap"></i> conflict found — breaks validity</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function boxIndex(r, c) {
+  return Math.floor(r / 3) * 3 + Math.floor(c / 3);
+}
+
+function sameUnit(r1, c1, r2, c2) {
+  if (r1 === r2) return true;
+  if (c1 === c2) return true;
+  return boxIndex(r1, c1) === boxIndex(r2, c2);
+}
+
+function isValidSudokuBrute(board) {
+  const cells = [];
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (board[r][c] !== '.') cells.push([r, c, board[r][c]]);
+    }
+  }
+
+  for (let i = 0; i < cells.length; i++) {
+    for (let j = i + 1; j < cells.length; j++) {
+      const [r1, c1, v1] = cells[i];
+      const [r2, c2, v2] = cells[j];
+      if (v1 === v2 && sameUnit(r1, c1, r2, c2)) return false;
+    }
+  }
+  return true;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>cells</code> collects only the filled positions — up to 81 of them, but usually far
+      fewer — each remembered as <code>[row, col, digit]</code>.</li>
+    <li><code>boxIndex</code> rounds a cell's row and column down to its box's top-left corner:
+      <code>Math.floor(r / 3)</code> gives which of the 3 "box rows" (0, 1, or 2) the cell is in,
+      <code>* 3</code> converts that to a box-row offset, and <code>Math.floor(c / 3)</code> adds
+      which of the 3 "box columns" it's in — together, a number 0-8 identifying one of the nine
+      3&times;3 boxes.</li>
+    <li><code>sameUnit</code> checks all three ways two cells can be forced to share a Sudoku
+      rule: same row, same column, or same box (checked last, since it's the most expensive of
+      the three).</li>
+    <li>The nested loop (<code>j = i + 1</code>, not <code>j = 0</code>) checks each pair exactly
+      once — comparing <code>i</code> to <code>j</code> is the same check as <code>j</code> to
+      <code>i</code>, so trying both directions would be redundant.</li>
+    <li><code>v1 === v2 &amp;&amp; sameUnit(...)</code> — <strong>both</strong> conditions must
+      hold for a real conflict. Matching digits alone are fine anywhere on the board; sharing a
+      unit alone is fine as long as the digits differ.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup4;) general case</td><td>O(n&sup2;)</td><td>Pairwise comparison across every filled cell</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — one pass, three hash trackers</h2>
+  <p>The insight: a "conflict" is really just "have I already placed this digit in this row / this
+    column / this box?" — a membership question, and hash sets answer membership questions in
+    O(1). Walk the board once, and for every filled cell, check three small sets: has this digit
+    already been seen in this row? This column? This box (found via the same
+    <code>boxIndex</code> formula as above)? If any of the three say yes, the board is invalid —
+    stop immediately. Otherwise, record the digit in all three trackers and move on. No pair of
+    cells is ever explicitly compared against each other — the trackers do that work implicitly,
+    one cell at a time.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: walk every cell once, and for each filled cell check whether its digit is already in that row, column, or box's hash set — if so the board is invalid, otherwise add the digit to all three sets and continue.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: single pass, row/column/box hash trackers</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">walk r=0..8, c=0..8</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">skip '.' cells</text>
+      <rect x="230" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="330" y="82" fill="#282C34">digit already in row/col/box set?</text>
+      <text x="330" y="98" fill="#282C34" font-size="10">yes → invalid, stop</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">no → add to all 3 sets</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">continue to next cell</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-vs2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-vs2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="430" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n&sup2;) — every cell visited once, O(1) tracker lookups per cell.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same board, same conflict — watch how few
+    single-cell checks it takes to find it, compared to Solution 1's pairwise comparisons above.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> cell currently being checked</span>
+    <span><i class="lg-compare"></i> earlier cell that already holds this digit</span>
+    <span><i class="lg-sorted"></i> confirmed clean — no conflict yet</span>
+    <span><i class="lg-swap"></i> conflict found — breaks validity</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function isValidSudoku(board) {
+  const rows = Array.from({ length: 9 }, () => new Set());
+  const cols = Array.from({ length: 9 }, () => new Set());
+  const boxes = Array.from({ length: 9 }, () => new Set());
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const val = board[r][c];
+      if (val === '.') continue;
+
+      const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+      if (rows[r].has(val) || cols[c].has(val) || boxes[b].has(val)) {
+        return false;
+      }
+
+      rows[r].add(val);
+      cols[c].add(val);
+      boxes[b].add(val);
+    }
+  }
+  return true;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>rows</code>, <code>cols</code>, and <code>boxes</code> are 9 independent
+      <code>Set</code>s each — 27 trackers total, one per row, one per column, one per box.
+      Independent because knowing a digit repeats in a row tells you nothing about whether it
+      repeats in a column or box; the three groupings of cells only overlap at individual cells.</li>
+    <li><code>if (val === '.') continue</code> — empty cells are skipped entirely, exactly as the
+      problem specifies: they impose no constraint.</li>
+    <li><code>b</code> reuses the same box-index formula as the brute-force solution.</li>
+    <li><code>rows[r].has(val) || cols[c].has(val) || boxes[b].has(val)</code> — the instant any
+      one of the three trackers already contains this digit, the board is provably invalid;
+      <code>||</code> short-circuits, so at most one <code>Set.has</code> lookup (O(1)) beyond the
+      first true is ever wasted.</li>
+    <li>Only after surviving all three checks does the digit get added to all three trackers — a
+      digit is never recorded as "seen" until it's confirmed not to conflict with anything seen
+      so far.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup2;)</td><td>O(n&sup2;)</td><td>Single pass, row/column/box hash trackers, early exit on first conflict</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (pairwise comparison)</td><td>O(n&sup4;) general case</td><td>O(n&sup2;)</td></tr>
+      <tr><td>Optimal (row/column/box hash trackers)</td><td>O(n&sup2;)</td><td>O(n&sup2;)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Because <code>n</code> is fixed at 9, both solutions are technically O(1) — bounded work on a
+    bounded board, the most honest version of that caveat anywhere on this site. But framed the
+    way this site's other pages reason about the general n&times;n case, the gap is real, not
+    invented: brute force collects up to n&sup2; filled cells and compares every pair of them, so
+    its work scales like O((n&sup2;)&sup2;) = O(n&sup4;) as the board size grows. The optimal pass
+    touches each of the n&sup2; cells exactly once with O(1) tracker lookups, so its work scales
+    like O(n&sup2;) — a genuine two-power gap in that general framing. On the <em>actual</em>
+    fixed 9&times;9 board, though, both collapse to small constants — at most
+    81&times;80&divide;2 = 3,240 pairwise comparisons for brute force versus at most 81
+    single-cell checks for optimal. The demo above shows exactly that in miniature: 13 pairwise
+    comparisons versus 5 single-cell checks to catch the identical conflict. That's "much more
+    comparison work for the same fixed board size," not an asymptotic blowup that keeps growing —
+    because on this problem, the input never gets bigger than 9&times;9.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">The problem says "validate," not "solve" — why doesn't either solution ever
+        need to try placing a digit into an empty cell?</p>
+      <ul class="pb-ia">
+        <li>Validating only asks whether the digits <em>already on the board</em> violate a rule
+          — empty cells contribute zero information either way, so both solutions simply skip
+          <code>'.'</code> and move on.</li>
+        <li>Actually <em>solving</em> a Sudoku (LeetCode's separate, much harder "Sudoku Solver"
+          problem) requires trying hypothetical digits in every empty cell and backtracking when a
+          choice doesn't pan out — a search over an exponential space of possibilities.</li>
+        <li>Because Valid Sudoku makes no choices and searches nothing, both solutions here run in
+          bounded time on a fixed board — there's no tree of guesses to explore, only facts to
+          check.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">A cell's row and column together already pin down exactly where it is — so
+        why isn't checking its box redundant with the row and column checks?</p>
+      <ul class="pb-ia">
+        <li>Knowing a cell's row and column tells you where <em>that one cell</em> is — it doesn't
+          tell you which <em>other</em> cells it's forbidden from repeating a digit with.</li>
+        <li>Row membership groups one set of 9 cells; column membership groups a different set of
+          9 cells; box membership groups yet a third set of 9 cells. The three groupings overlap
+          only at individual cells — none is derivable from the other two.</li>
+        <li>Concretely: <code>(0,0)</code> and <code>(2,2)</code> share neither a row nor a column,
+          but they <em>do</em> share box 0 — a rule only the box check catches (this exact pair
+          shows up as Pair 3 in Solution 1's demo above).</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Both solutions only ever read from the board and never write to it — why
+        does that matter for how they scale?</p>
+      <ul class="pb-ia">
+        <li>The question is a yes/no check on the board's <em>current</em> state — every filled
+          cell is a fixed fact, not a guess that might later need to be undone.</li>
+        <li>Because there's nothing to mutate or backtrack, the extra space either solution needs
+          scales only with the board's own size (a filled-cell list, or 27 small hash sets) — never
+          with a search tree.</li>
+        <li>That's the same line that separates this problem from "Sudoku Solver": the moment you
+          need to <em>place</em> a digit and possibly take it back, you need backtracking state on
+          top of everything here.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "How would you adapt this to also solve the board?"
+        You'd keep these same three trackers (they're exactly what a backtracking solver needs to
+        check "is this digit safe to place here?" in O(1)) and add a recursive search over empty
+        cells that adds a digit, recurses, and removes it again on failure.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const seen = {};
+seen[5] = true;
+console.log(seen['5']);
+
+const seenSet = new Set();
+seenSet.add(5);
+console.log(seenSet.has('5'));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>true</code>, then <code>false</code> — same digit, opposite results,
+          depending only on which data structure is holding it.</li>
+        <li>Plain object keys are always coerced to strings, so <code>seen[5]</code> and
+          <code>seen['5']</code> write and read the exact same property — the number 5 and the
+          string <code>'5'</code> are indistinguishable as object keys.</li>
+        <li><code>Set</code> uses SameValueZero equality instead, which <em>does</em> distinguish
+          types — <code>5</code> and <code>'5'</code> are two different members of a
+          <code>Set</code>, so <code>seenSet.has('5')</code> is <code>false</code> even though
+          <code>seenSet.has(5)</code> is <code>true</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this problem's board holds digits as <em>strings</em>
+        (<code>'5'</code>, not <code>5</code>) — LeetCode's own input format. Solution 2 above
+        works correctly only because it consistently stores and looks up that same string value
+        in every <code>Set</code>. Silently normalizing a value to a <code>Number</code> in just
+        one spot (say, while generating a test board) would make a real duplicate invisible to a
+        <code>Set</code>-based tracker — while a plain-object-based tracker would happen to paper
+        over the exact same mistake, coercing both back to the same key. Consistency of type, not
+        which structure you pick, is what actually matters here.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="threeindependent" data-explain="Row, column, and box membership are three independent groupings of cells. A digit repeating in one grouping says nothing about whether it repeats in either of the other two — the only way to catch all three rules is to track all three separately." >
+    <p class="q-text">1. Why does the optimal solution need THREE separate groups of trackers (row, column, and box), instead of one shared 'seen digits' tracker?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="threeindependent">Row, column, and box are three independent groupings of cells — a conflict in one tells you nothing about the other two</button>
+      <button class="btn dsa-quiz-option" data-value="onegood">One shared tracker would work identically — splitting into three is purely a readability choice</button>
+      <button class="btn dsa-quiz-option" data-value="boxdupe">Box tracking is redundant, since a cell's row and column already determine its box</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="bothneeded" data-explain="Two cells holding the same digit is only a genuine Sudoku violation if they ALSO share a row, column, or box. The same digit is free to repeat anywhere else on the board — that's exactly why Solution 1's pair check requires both v1 === v2 AND sameUnit(...) to be true." >
+    <p class="q-text">2. In Solution 1's pairwise check, why does a conflict require BOTH matching digits AND a shared unit — not just matching digits?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bothneeded">A repeated digit is only a violation within the same row, column, or box — anywhere else, repeats are perfectly legal</button>
+      <button class="btn dsa-quiz-option" data-value="digitonly">Matching digits are always invalid, no matter where the two cells are on the board</button>
+      <button class="btn dsa-quiz-option" data-value="unitonly">Sharing a unit is enough on its own — the actual digit values don't matter</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="boxidx" data-explain="Math.floor(r / 3) picks which of the 3 'box rows' (0, 1, 2) the cell falls in, multiplying by 3 turns that into a box-row offset, and Math.floor(c / 3) adds which of the 3 'box columns' it's in — together giving a single 0-8 index for one of the nine 3x3 boxes." >
+    <p class="q-text">3. What does <code>Math.floor(r / 3) * 3 + Math.floor(c / 3)</code> compute for a cell at <code>(r, c)</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="boxidx">The 0-8 index of the 3×3 box that cell belongs to</button>
+      <button class="btn dsa-quiz-option" data-value="rowidx">A re-derivation of the cell's own row index, unrelated to boxes</button>
+      <button class="btn dsa-quiz-option" data-value="randomhash">An arbitrary hash used only to randomize iteration order</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="generalframing" data-explain="Because n is fixed at 9, both solutions are technically O(1). But reasoned about as the general n×n case, brute force's work scales like O((n²)²) = O(n⁴) while optimal's scales like O(n²) — a real two-power gap in that framing, even though on the actual fixed board both collapse to small constants." >
+    <p class="q-text">4. The board is a fixed 9×9 grid — so why is it still meaningful to say brute force is 'O(n⁴)' and optimal is 'O(n²)'?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="generalframing">Reasoned about as the general n×n case, brute force's pairwise work genuinely scales like n⁴ while optimal's single pass scales like n² — even though both are O(1) on this specific fixed board</button>
+      <button class="btn dsa-quiz-option" data-value="fakegap">It's a fabricated distinction — both are exactly O(1) and there's no honest way to compare them</button>
+      <button class="btn dsa-quiz-option" data-value="realtime">It reflects actual measured runtime differences of many seconds on a real 9×9 board</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onefails" data-explain="A single confirmed repeated digit within a shared unit is enough, on its own, to make the whole board invalid. No later cell can undo that fact, so there's nothing further worth checking — both solutions return false the instant they find one." >
+    <p class="q-text">5. Why can both solutions return <code>false</code> the INSTANT they find one conflict, without finishing the rest of the scan?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onefails">One confirmed conflict is enough to make the whole board invalid, permanently — nothing checked afterward could change that</button>
+      <button class="btn dsa-quiz-option" data-value="mustfinish">They can't actually stop early — the working code always inspects all 81 cells regardless</button>
+      <button class="btn dsa-quiz-option" data-value="luckyorder">Stopping early only happens to work for THIS demo board, not in general</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Arrays &amp; Hashing problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'valid-sudoku';
+
+  // Shared 9x9 demo board for both animations — 6 filled digits with a deliberate row
+  // conflict (two 7s in row 2), plus two decoy cells that share the digit 7 without
+  // sharing any unit. Verified via `node -e` before this page was written: brute force
+  // needs 13 pairwise comparisons (of 15 possible) to catch the conflict; optimal needs
+  // only 5 single-cell checks.
+  const DEMO_BOARD = (() => {
+    const b = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => '.'));
+    b[0][0] = '5';
+    b[0][4] = '3';
+    b[1][4] = '7';
+    b[2][2] = '7';
+    b[2][8] = '7';
+    b[4][0] = '9';
+    return b;
+  })();
+  const DISPLAY_BOARD = DEMO_BOARD.map((row) => row.map((v) => (v === '.' ? '' : v)));
+
+  function boxIndex(r, c) { return Math.floor(r / 3) * 3 + Math.floor(c / 3); }
+  function sameUnitDesc(r1, c1, r2, c2) {
+    if (r1 === r2) return { same: true, label: `row ${r1}` };
+    if (c1 === c2) return { same: true, label: `column ${c1}` };
+    if (boxIndex(r1, c1) === boxIndex(r2, c2)) return { same: true, label: `3×3 box #${boxIndex(r1, c1)}` };
+    return { same: false, label: null };
+  }
+
+  // ---- Solution 1: brute force — pairwise comparison across every filled cell ----
+  function buildBruteSteps(board) {
+    const cells = [];
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (board[r][c] !== '.') cells.push([r, c, board[r][c]]);
+      }
+    }
+    const n = cells.length;
+    const totalPairs = (n * (n - 1)) / 2;
+    const steps = [];
+    const cellState = {};
+
+    function snapshot(narration, states) {
+      steps.push({ narration, states: Object.assign({}, cellState, states || {}) });
+    }
+
+    snapshot(`${n} digits are already placed on this board. Brute force collects every filled cell, then checks EVERY pair of them for "same unit AND same digit" — ${totalPairs} possible pairs in the worst case.`);
+
+    let pairNum = 0;
+    let found = false;
+    for (let i = 0; i < n && !found; i++) {
+      for (let j = i + 1; j < n && !found; j++) {
+        pairNum++;
+        const [r1, c1, v1] = cells[i];
+        const [r2, c2, v2] = cells[j];
+        const unit = sameUnitDesc(r1, c1, r2, c2);
+        const conflict = v1 === v2 && unit.same;
+        const key1 = r1 + ',' + c1, key2 = r2 + ',' + c2;
+
+        if (conflict) {
+          cellState[key1] = 'swap';
+          cellState[key2] = 'swap';
+          snapshot(`Pair ${pairNum}/${totalPairs}: (${r1},${c1})=${v1} and (${r2},${c2})=${v2} share ${unit.label} AND hold the same digit — CONFLICT. Board is invalid, return false immediately.`, { [key1]: 'swap', [key2]: 'swap' });
+          found = true;
+          break;
+        }
+
+        const localStates = { [key1]: 'pointer', [key2]: 'compare' };
+        let msg;
+        if (unit.same && v1 !== v2) {
+          msg = `Pair ${pairNum}/${totalPairs}: (${r1},${c1})=${v1} and (${r2},${c2})=${v2} share ${unit.label}, but the digits differ — no conflict.`;
+        } else if (!unit.same && v1 === v2) {
+          msg = `Pair ${pairNum}/${totalPairs}: (${r1},${c1})=${v1} and (${r2},${c2})=${v2} hold the SAME digit, but share no row, column, or box — not a conflict. A repeated digit only matters within the same unit.`;
+        } else {
+          msg = `Pair ${pairNum}/${totalPairs}: (${r1},${c1})=${v1} and (${r2},${c2})=${v2} share no unit and hold different digits — nothing to check, but brute force spends a comparison on it anyway.`;
+        }
+        snapshot(msg, localStates);
+      }
+    }
+
+    if (found) {
+      const remaining = totalPairs - pairNum;
+      snapshot(`Row 2 now holds two 7s — an invalid Sudoku board. Brute force needed ${pairNum} pairwise comparisons (out of ${totalPairs} possible) to catch it — the remaining ${remaining} pairs are never checked.`, {});
+    }
+
+    return steps;
+  }
+
+  // ---- Solution 2: optimal — single pass, row/column/box hash trackers ----
+  function buildOptimalSteps(board) {
+    const steps = [];
+    const rows = Array.from({ length: 9 }, () => new Set());
+    const cols = Array.from({ length: 9 }, () => new Set());
+    const boxes = Array.from({ length: 9 }, () => new Set());
+    const rowOwner = Array.from({ length: 9 }, () => ({}));
+    const colOwner = Array.from({ length: 9 }, () => ({}));
+    const boxOwner = Array.from({ length: 9 }, () => ({}));
+    const cellState = {};
+    let checked = 0;
+
+    function snapshot(narration, states) {
+      steps.push({ narration, states: Object.assign({}, cellState, states || {}) });
+    }
+
+    snapshot(`Same ${DEMO_BOARD.flat().filter((v) => v !== '.').length} digits, same board. One pass, left to right, top to bottom, skipping '.' cells. 27 small sets track which digits have been seen so far per row, column, and box.`);
+
+    let found = false;
+    for (let r = 0; r < 9 && !found; r++) {
+      for (let c = 0; c < 9 && !found; c++) {
+        const val = board[r][c];
+        if (val === '.') continue;
+        checked++;
+        const b = boxIndex(r, c);
+        const key = r + ',' + c;
+
+        let culprit = null;
+        let unitLabel = null;
+        if (rows[r].has(val)) { culprit = rowOwner[r][val]; unitLabel = `row ${r}`; }
+        else if (cols[c].has(val)) { culprit = colOwner[c][val]; unitLabel = `column ${c}`; }
+        else if (boxes[b].has(val)) { culprit = boxOwner[b][val]; unitLabel = `box ${b}`; }
+
+        if (culprit) {
+          found = true;
+          const culpritKey = culprit[0] + ',' + culprit[1];
+          snapshot(`(${r},${c})=${val} — ${unitLabel}'s tracker already has a ${val}, placed earlier at (${culprit[0]},${culprit[1]}). Conflict — return false immediately.`, { [key]: 'pointer', [culpritKey]: 'compare' });
+          cellState[key] = 'swap';
+          cellState[culpritKey] = 'swap';
+          snapshot(`Row 2 has two 7s — (${culprit[0]},${culprit[1]}) and (${r},${c}). Optimal caught the identical conflict in ${checked} single-cell checks, versus 13 pairwise comparisons for brute force.`, {});
+          break;
+        }
+
+        snapshot(`(${r},${c})=${val} — not yet seen in row ${r}, column ${c}, or box ${b}. Add it to all three trackers.`, { [key]: 'pointer' });
+        rows[r].add(val);
+        cols[c].add(val);
+        boxes[b].add(val);
+        rowOwner[r][val] = [r, c];
+        colOwner[c][val] = [r, c];
+        boxOwner[b][val] = [r, c];
+        cellState[key] = 'sorted';
+      }
+    }
+
+    return steps;
+  }
+
+  const rowLabels = Array.from({ length: 9 }, (_, i) => String(i));
+  const colLabels = Array.from({ length: 9 }, (_, i) => String(i));
+
+  const grid1 = new DSA.Grid(document.getElementById('viz1Stage'));
+  grid1.setData(9, 9, rowLabels, colLabels);
+  const bruteSteps = buildBruteSteps(DEMO_BOARD);
+  const bruteplayer = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { grid1.paint(DISPLAY_BOARD, {}); return; }
+      grid1.paint(DISPLAY_BOARD, step.states);
+    },
+  });
+
+  const grid2 = new DSA.Grid(document.getElementById('viz2Stage'));
+  grid2.setData(9, 9, rowLabels, colLabels);
+  const optimalSteps = buildOptimalSteps(DEMO_BOARD);
+  const optimalPlayer = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { grid2.paint(DISPLAY_BOARD, {}); return; }
+      grid2.paint(DISPLAY_BOARD, step.states);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('valid-sudoku', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
