@@ -1002,6 +1002,44 @@ data, sitemap.xml, robots.txt, GSC submission).
   Ones III (`zeroCount > undefined` and `zeroCount <= undefined` are both `false` — a real
   `k`-omitted-argument trap relevant to the shrink-condition check).
 
+## Done — Linked List batch (3 problems, Problem Bank)
+
+- Merge Two Sorted Lists, Copy List with Random Pointer, Remove Nth Node From End of List — all
+  prereq Day 15 ("Linked Lists"). `js/problemBank.js` grew to 42 total problems across 11
+  patterns. **First Problem Bank pattern to use `DSA.Graph` for every page instead of
+  `DSA.Bars`** — the pattern itself is inherently node/pointer-shaped, so all 3 pages render
+  linked-list nodes as a `DSA.Graph` (following the precedent set by Find the Duplicate Number's
+  optimal solution in the Two Pointers batch, the first time this site used Graph for an
+  implicit-linked-list structure).
+- Copy List with Random Pointer needed a genuinely new visual convention: two distinct edge
+  types (`next` and `random`) on the same graph. The builder added a page-local dashed-vs-solid
+  edge-styling helper (no `js/engine.js` changes) — self-caught and fixed a legibility issue
+  where dashed random-edges were invisible under overlapping same-color solid next-edges before
+  shipping.
+- **Fourth consecutive batch to go fully clean on review** — 3-for-3, zero findings. Notably
+  rigorous verification this round: Remove Nth Node's fix was independently stress-tested by its
+  reviewer with 100,000 randomized cross-checks (not just the required minimum); Merge Two
+  Sorted Lists' "splice, don't allocate" space-improvement claim was verified by actual node
+  IDENTITY (`===`) checks, not just output correctness; Copy List with Random Pointer's
+  interleaving solution was verified to leave the ORIGINAL list's `next`-chain fully intact and
+  re-traversable after running (the classic way this specific algorithm silently corrupts state
+  if the separation phase is even slightly wrong).
+- Two builders self-caught real bugs before committing: Remove Nth Node From End (an off-by-one
+  in the fast-pointer gap size), Merge Two Sorted Lists (3 near-overflow diagram text lines,
+  caught by the bug-class-#4 check added last batch).
+- One build-brief ambiguity handled well: Copy List with Random Pointer's task description gave
+  a self-random example (`[[1,1]]`) that was out-of-range for a 1-node list (only index 0
+  exists) — the builder reasonably reinterpreted it as `[[1,0]]` to match the stated
+  "self-random" intent, flagged the reinterpretation explicitly in its report, and its reviewer
+  confirmed the reinterpretation was reasonable rather than silently accepting it.
+- Trick questions this batch: Merge Two Sorted Lists (mutating a spliced node's `.next` affects
+  every reference to that same shared object, since splicing reuses nodes rather than copying
+  them), Copy List with Random Pointer (a plain object used as a hash-map key coerces the key to
+  a string, causing distinct node-object keys to collide — directly relevant since solution 1
+  uses a real `Map`, not a plain object, specifically to avoid this), Remove Nth Node From End
+  (`undefined === null` is `false` but `undefined == null` is `true`, relevant to a
+  malformed/prematurely-terminated list's `.next` chain).
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
