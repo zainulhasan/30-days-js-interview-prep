@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Evaluate Reverse Polish Notation — Problem Bank</title>
+<meta name="description" content="Evaluate Reverse Polish Notation: a brute-force repeated rescan-and-splice reduction vs. an optimal single-pass explicit stack, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/evaluate-reverse-polish-notation.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Evaluate Reverse Polish Notation — Problem Bank" />
+<meta property="og:description" content="Evaluate Reverse Polish Notation: a brute-force repeated rescan-and-splice reduction vs. an optimal single-pass explicit stack, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/evaluate-reverse-polish-notation.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Evaluate Reverse Polish Notation — Problem Bank" />
+<meta name="twitter:description" content="Evaluate Reverse Polish Notation: a brute-force repeated rescan-and-splice reduction vs. an optimal single-pass explicit stack, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Evaluate Reverse Polish Notation", "item": "https://dsa.itszain.tech/problem-bank/evaluate-reverse-polish-notation.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day17.html">Day 17: Stacks</a></strong> — the
+      optimal solution below is a textbook stack use case; read that lesson first if push/pop
+      LIFO mechanics are still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">STACK &middot; MEDIUM</p>
+  <h1>Evaluate Reverse Polish Notation <span class="leetcode-link">(<a href="https://leetcode.com/problems/evaluate-reverse-polish-notation/" target="_blank" rel="noopener">LeetCode: Evaluate Reverse Polish Notation</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array of string tokens representing an arithmetic expression written in
+    <strong>Reverse Polish (postfix) Notation</strong> — every operator comes <em>after</em> its
+    two operands instead of between them, so no parentheses are ever needed. Valid tokens are
+    integers (as strings, possibly negative) or one of the four operators <code>+</code>,
+    <code>-</code>, <code>*</code>, <code>/</code>. Division always truncates toward zero, not
+    toward negative infinity. Evaluate the expression and return the resulting integer. For
+    example <code>["2","1","+","3","*"]</code> means <code>(2 + 1) * 3 = 9</code>, and
+    <code>["4","13","5","/","+"]</code> means <code>4 + (13 / 5) = 4 + 2 = 6</code> (13/5
+    truncates to 2, not 2.6).</p>
+
+  <h2>Solution 1: Brute force — repeated rescan and splice, no explicit stack</h2>
+  <p>You don't strictly need a stack to evaluate RPN — you can treat the token array itself as
+    the workspace. Repeatedly scan from the very start of the array looking for the first
+    operator token. Once found, it's guaranteed (by the definition of valid RPN) that the two
+    tokens immediately before it are its operands. Apply the operator to them, then
+    <code>splice</code> that 3-token window down to a single result token, and start scanning
+    again from index 0. Keep going until only one token is left — that's the answer. It's honest
+    and correct, but every single operator application pays for a full re-scan of whatever's left,
+    plus the cost of <code>splice</code> shifting every token after it.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: scan from index 0 for the first operator token, apply it to the two tokens immediately before it, splice that three-token window down to one result token, then restart the scan from index 0, repeated until one token remains.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: scan from 0, apply, splice, restart from 0</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">scan for 1st operator</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">O(n), every application</text>
+      <rect x="230" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">apply to prior 2 tokens</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">a op b, splice(idx-2, 3, result)</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">restart scan at 0</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">until 1 token remains</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-rpn" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-rpn)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="410" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup2;) worst case — every operator triggers a fresh O(n) rescan</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">from index 0, and splice() also shifts every remaining token down.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> operator just found by the scan</span>
+    <span><i class="lg-compare"></i> its two operands</span>
+    <span><i class="lg-swap"></i> window about to collapse</span>
+    <span><i class="lg-active"></i> freshly spliced-in result</span>
+    <span><i class="lg-sorted"></i> final answer</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    tokens=["10","6","9","3","+","-11","*","/","*","17","+","5","+"] (expected: 22), verified
+    above before any HTML was written.</p>
+
+  <h3>The code</h3>
+  <pre><code>function evalRPNBruteForce(tokens) {
+  const OPERATORS = new Set(['+', '-', '*', '/']);
+  const working = tokens.slice();
+
+  while (working.length > 1) {
+    let opIdx = -1;
+    for (let i = 0; i < working.length; i++) {
+      if (OPERATORS.has(working[i])) { opIdx = i; break; }
+    }
+
+    const a = Number(working[opIdx - 2]);
+    const b = Number(working[opIdx - 1]);
+    const op = working[opIdx];
+    let result;
+    if (op === '+') result = a + b;
+    else if (op === '-') result = a - b;
+    else if (op === '*') result = a * b;
+    else result = Math.trunc(a / b);
+
+    working.splice(opIdx - 2, 3, String(result));
+  }
+  return Number(working[0]);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>OPERATORS.has(working[i])</code> tests for an <em>exact</em> match against
+      <code>+</code>/<code>-</code>/<code>*</code>/<code>/</code> — a negative-number token like
+      <code>"-11"</code> never matches, since it's a two-character string, not the single
+      character <code>"-"</code>.</li>
+    <li>The inner <code>for</code> loop re-scans <code>working</code> from index 0 every single
+      time this outer <code>while</code> body runs — that repeated full rescan, not a different
+      algorithmic idea, is what makes this O(n&sup2;) instead of O(n).</li>
+    <li>Because the tokens form valid RPN, <code>working[opIdx - 2]</code> and
+      <code>working[opIdx - 1]</code> are guaranteed to be exactly this operator's two operands —
+      no searching or validation needed to find them.</li>
+    <li><code>Math.trunc(a / b)</code>, not <code>Math.floor(a / b)</code>, is required for the
+      division case — truncation drops the fractional part toward zero, while <code>floor</code>
+      rounds toward negative infinity and gives the wrong answer whenever the true quotient is
+      negative.</li>
+    <li><code>working.splice(opIdx - 2, 3, String(result))</code> removes the 3-token window and
+      replaces it with one token in a single call — but every token after that window still has
+      to shift down by two positions, an O(n) cost on top of the rescan.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup2;)</td><td>O(n)</td><td>Repeated full rescan + splice per operator, no explicit stack</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — explicit stack, single pass</h2>
+  <p>Walk the tokens exactly once, left to right, using an explicit stack. Every number token gets
+    parsed and pushed. Every operator token pops the top two values — <strong>b first, then
+    a</strong>, since the stack is LIFO and <code>b</code> was pushed more recently — applies the
+    operator as <code>a op b</code> (never <code>b op a</code>; getting the operand order backward
+    silently breaks non-commutative operators like <code>-</code> and <code>/</code>), and pushes
+    the result back on. After the last token, exactly one value remains on the stack: the answer.
+    No rescanning, no shifting — every push and pop is O(1).</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: walk the tokens once left to right, pushing numbers onto a stack, and on an operator popping b then a, applying a op b, and pushing the result back, finishing with one value left on the stack.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, explicit stack, O(1) push/pop</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">number → push</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">O(1), once per token</text>
+      <rect x="230" y="60" width="180" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">operator → pop b, then a</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">order matters: a op b</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">push result back</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">one pass, never rescanned</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-rpn)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="410" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — each token is pushed and popped at most once,</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">O(n) space for the stack itself.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current token</span>
+    <span><i class="lg-compare"></i> the two operands about to combine</span>
+    <span><i class="lg-active"></i> just pushed (number or computed result)</span>
+    <span><i class="lg-sorted"></i> final answer</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="width:100%;">
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:0 0 0.4rem;">TOKENS (fixed list)</p>
+        <div id="viz2TokenBars" style="height:80px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.3rem 0 0.4rem;">STACK (grows/shrinks)</p>
+        <div id="viz2StackBars" style="height:80px;"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same
+    tokens=["10","6","9","3","+","-11","*","/","*","17","+","5","+"] as Solution 1, so you can
+    compare step counts directly — the stack view shows values left-to-right, bottom of stack
+    first.</p>
+
+  <h3>The code</h3>
+  <pre><code>function evalRPNOptimal(tokens) {
+  const OPERATORS = new Set(['+', '-', '*', '/']);
+  const stack = [];
+
+  for (const token of tokens) {
+    if (OPERATORS.has(token)) {
+      const b = stack.pop();
+      const a = stack.pop();
+      let result;
+      if (token === '+') result = a + b;
+      else if (token === '-') result = a - b;
+      else if (token === '*') result = a * b;
+      else result = Math.trunc(a / b);
+      stack.push(result);
+    } else {
+      stack.push(Number(token));
+    }
+  }
+  return stack[0];
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>OPERATORS.has(token)</code> is the same exact-match test as the brute-force version
+      — <code>"-11"</code> falls through to the <code>else</code> branch and gets parsed as a
+      number, never mistaken for the <code>"-"</code> operator.</li>
+    <li><code>const b = stack.pop(); const a = stack.pop();</code> — order matters. <code>b</code>
+      is popped first because it was pushed second (LIFO), and the operator is then applied as
+      <code>a op b</code>, matching the original left-to-right operand order in the expression.</li>
+    <li>Same <code>Math.trunc(a / b)</code> truncating-toward-zero division as Solution 1 — this
+      isn't a place the two solutions differ, only <em>how</em> they find their operands differs.</li>
+    <li><code>stack.push(Number(token))</code> parses every non-operator token as a number exactly
+      once — no re-parsing, no re-scanning of earlier tokens.</li>
+    <li>After the loop, <code>stack[0]</code> is the sole remaining value for any valid RPN input —
+      returning it doesn't need to check the stack's length, because valid input guarantees
+      exactly one value is left.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Single linear pass with an explicit stack, O(1) push/pop</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (rescan + splice)</td><td>O(n&sup2;)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (explicit stack)</td><td>O(n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a real, clean asymptotic improvement, not just a different constant factor. Both
+    solutions apply operators in the exact same order and get the exact same operands for each
+    one — the difference is purely how those operands are located. The brute-force version pays
+    an O(n) rescan-plus-shift for every single operator application, while the stack version finds
+    both operands in O(1) via <code>pop()</code>, because the stack's own LIFO order already keeps
+    "the two most recent unconsumed values" sitting right on top, with zero searching required.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why must the optimal solution pop <code>b</code> before <code>a</code>,
+        and then apply the operator as <code>a op b</code> — not <code>b op a</code>?</p>
+      <ul class="pb-ia">
+        <li>The stack is LIFO: whichever operand was pushed <em>later</em> in the expression comes
+          off the stack <em>first</em>. In postfix, the operand written second in the source is
+          always <code>b</code>, so it's on top and pops first.</li>
+        <li>Getting the assignment backward (<code>const a = stack.pop(); const b = stack.pop();</code>)
+          would silently swap which value is <code>a</code> and which is <code>b</code>.</li>
+        <li>For <code>+</code> and <code>*</code> that swap wouldn't even be visible — the wrong
+          code would happen to produce right answers on those tokens. For <code>-</code> and
+          <code>/</code>, which aren't commutative, it produces a confidently wrong answer with no
+          error thrown (e.g. <code>a - b</code> vs <code>b - a</code> differ by sign whenever
+          they're unequal).</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Both solutions apply operators in the exact same order to the exact same
+        operands. What actually makes the brute-force version O(n&sup2;) instead of O(n)?</p>
+      <ul class="pb-ia">
+        <li>The brute-force version re-scans the entire remaining token array from index 0 to find
+          the next operator, every single time — not a smarter search, a fresh linear pass.</li>
+        <li><code>splice()</code> also shifts every token after the removed window down by two
+          positions, another O(n) cost layered on top of the scan.</li>
+        <li>The stack version never re-scans anything: each token is visited exactly once, and
+          finding "the two most recent operands" is an O(1) <code>pop()</code> because the stack's
+          own structure already keeps them on top — that's the entire source of the asymptotic
+          gap, not a different evaluation strategy.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it always safe to assume, without checking, that the two tokens
+        immediately before an operator (brute force) or the top two stack values (optimal) are
+        exactly that operator's operands?</p>
+      <ul class="pb-ia">
+        <li>This relies on the input being <em>valid</em> RPN, which both solutions are entitled
+          to assume (per the problem's constraints) — it's not something either one re-verifies.</li>
+        <li>In valid postfix notation, at any point during a left-to-right scan, everything seen so
+          far reduces to a stack of complete, already-evaluated sub-expression results — there's
+          no way for an operator to appear before both of its operands have been fully resolved.</li>
+        <li>That invariant is exactly why "top two of the stack" (or "two tokens immediately
+          before" in the array version) always correctly identifies the operands — no searching,
+          matching, or bracket-tracking is ever needed, unlike evaluating infix expressions.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>console.log(parseInt('3*'));
+console.log(Number('3*'));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>3</code>, then <code>NaN</code> — two very different results for the
+          same malformed-looking string.</li>
+        <li><code>parseInt</code> reads digits from the left and silently stops at the first
+          character that isn't part of a valid number, discarding the rest — it would happily
+          treat a corrupted token like <code>"3*"</code> as the number <code>3</code>, no error,
+          no warning.</li>
+        <li><code>Number(...)</code> requires the <em>entire</em> string to be a valid numeric
+          literal — anything left over makes the whole conversion fail to <code>NaN</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why both solutions above use
+        <code>Number(token)</code> to parse operands, never <code>parseInt(token)</code>. Since
+        every token is checked against <code>OPERATORS</code> first, only genuine number tokens
+        ever reach the parse step — but <code>Number()</code> is still the safer default, because
+        a stray malformed token becomes a loud <code>NaN</code> that propagates and breaks the
+        final result, instead of <code>parseInt</code> silently truncating it into a plausible-
+        looking but wrong number.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="liforder" data-explain="The stack is LIFO — whichever operand was pushed later in the expression sits on top and comes off first. In postfix, that's always b (the second operand written in the source), so popping b before a and applying a op b reproduces the original left-to-right operand order." >
+    <p class="q-text">1. In the optimal solution, why is <code>b</code> popped before <code>a</code>, with the operator then applied as <code>a op b</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="liforder">The stack is LIFO — the operand pushed later (b) comes off first, and applying a op b preserves the original operand order</button>
+      <button class="btn dsa-quiz-option" data-value="alphabetical">Variables are conventionally popped in alphabetical order in every stack-based algorithm</button>
+      <button class="btn dsa-quiz-option" data-value="doesntmatter">It doesn't actually matter which order they're popped in, since all four operators give the same result either way</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="rescan" data-explain="Both solutions apply operators to the exact same operands in the exact same order. The brute-force version re-scans the entire remaining array from index 0 to find each operator, and splice() shifts everything after it — both O(n) costs paid again and again. The stack version never rescans; each token is visited exactly once." >
+    <p class="q-text">2. Both solutions evaluate operators in the same order on the same operands. What actually makes the brute-force version O(n&sup2;) instead of O(n)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="rescan">It re-scans the entire remaining array from index 0 for every operator, and splice() shifts everything after the removed window — both repeated O(n) costs</button>
+      <button class="btn dsa-quiz-option" data-value="wrongalgo">It uses a fundamentally different, mathematically incorrect evaluation rule</button>
+      <button class="btn dsa-quiz-option" data-value="recursion">It relies on unbounded recursion, which the stack version avoids entirely</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="trunc" data-explain="Math.trunc drops the fractional part and rounds toward zero, which is exactly what the problem requires. Math.floor rounds toward negative infinity instead — for a negative true quotient like -7/2 = -3.5, floor gives -4 (wrong) while trunc correctly gives -3." >
+    <p class="q-text">3. Why does the division case use <code>Math.trunc(a / b)</code> instead of <code>Math.floor(a / b)</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="trunc">Math.trunc rounds toward zero as required; Math.floor rounds toward negative infinity and gives a different, wrong answer for negative quotients</button>
+      <button class="btn dsa-quiz-option" data-value="speed">Math.trunc is measurably faster than Math.floor, which matters at scale</button>
+      <button class="btn dsa-quiz-option" data-value="samething">They always return the same value for any input, so it's purely a style choice</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="invariant" data-explain="Valid RPN guarantees that at every point in a left-to-right scan, everything seen so far reduces to a stack of complete sub-expression results. An operator can never appear before both of its operands are fully resolved, so 'top two of the stack' (or 'two tokens immediately before' in the array version) is always correct — no searching or bracket-matching needed." >
+    <p class="q-text">4. Why can both solutions safely assume the operands for any operator are exactly the two values sitting right before it, with no verification needed?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="invariant">Valid RPN guarantees every operator's operands are already fully resolved and sitting immediately before it — an invariant of the notation itself, not something either solution checks</button>
+      <button class="btn dsa-quiz-option" data-value="luck">It happens to work for the specific test cases shown, but isn't actually guaranteed in general</button>
+      <button class="btn dsa-quiz-option" data-value="parens">Because the input array secretly still contains parentheses that get stripped out first</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="parseinttrunc" data-explain="parseInt('3*') reads digits left to right and silently stops at the first non-digit character, returning 3 with no error. Number('3*') requires the entire string to be a valid numeric literal, so any leftover garbage makes the whole conversion fail to NaN instead — which is why both solutions deliberately use Number(token), not parseInt(token)." >
+    <p class="q-text">5. What does <code>parseInt('3*')</code> return, and why do both solutions use <code>Number(token)</code> instead?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="parseinttrunc">It returns 3 — parseInt silently stops at the first non-digit character. Number('3*') returns NaN instead, which is why the code uses Number(token) to parse operands</button>
+      <button class="btn dsa-quiz-option" data-value="throws">It throws a TypeError immediately, which parseInt does for any string containing a non-digit character</button>
+      <button class="btn dsa-quiz-option" data-value="samevalue">parseInt('3*') and Number('3*') both return NaN, so either function would work equally well here</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Stack problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'evaluate-reverse-polish-notation';
+  const OPERATORS = new Set(['+', '-', '*', '/']);
+  const DEMO_TOKENS = ['10', '6', '9', '3', '+', '-11', '*', '/', '*', '17', '+', '5', '+'];
+
+  function applyOp(op, a, b) {
+    if (op === '+') return a + b;
+    if (op === '-') return a - b;
+    if (op === '*') return a * b;
+    return Math.trunc(a / b);
+  }
+
+  // ---- Solution 1: brute force (single DSA.Bars, uniform — tokens shrink via splice) ----
+  function buildBruteSteps(tokens) {
+    const steps = [];
+    const working = tokens.slice();
+    steps.push({
+      narration: `Start with ${working.length} tokens. Scan from index 0 for the first operator.`,
+      data: working.slice(),
+      states: working.map(() => 'default'),
+    });
+
+    while (working.length > 1) {
+      let opIdx = -1;
+      for (let i = 0; i < working.length; i++) {
+        if (OPERATORS.has(working[i])) { opIdx = i; break; }
+      }
+
+      steps.push({
+        narration: `Scanning from index 0, the first operator found is '${working[opIdx]}' at index ${opIdx}. Its operands are the two tokens right before it.`,
+        data: working.slice(),
+        states: working.map((_, i) => {
+          if (i === opIdx) return 'pointer';
+          if (i === opIdx - 1 || i === opIdx - 2) return 'compare';
+          return 'default';
+        }),
+      });
+
+      const a = Number(working[opIdx - 2]);
+      const b = Number(working[opIdx - 1]);
+      const op = working[opIdx];
+      const result = applyOp(op, a, b);
+
+      steps.push({
+        narration: `Apply ${a} ${op} ${b} = ${result}. This 3-token window is about to collapse into one.`,
+        data: working.slice(),
+        states: working.map((_, i) => (i >= opIdx - 2 && i <= opIdx ? 'swap' : 'default')),
+      });
+
+      working.splice(opIdx - 2, 3, String(result));
+
+      steps.push({
+        narration: `Replaced with ${result} — ${working.length} token(s) remain. Full re-scan restarts from index 0.`,
+        data: working.slice(),
+        states: working.map((_, i) => (i === opIdx - 2 ? 'active' : 'default')),
+      });
+    }
+
+    steps.push({
+      narration: `One token remains: ${working[0]} — that's the final answer.`,
+      data: working.slice(),
+      states: ['sorted'],
+    });
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData([]);
+  const bruteSteps = buildBruteSteps(DEMO_TOKENS);
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData([]); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (two DSA.Bars — fixed token list + growing/shrinking stack) ----
+  function buildOptimalSteps(tokens) {
+    const steps = [];
+    const stack = [];
+
+    steps.push({
+      narration: 'Scan tokens left to right. Numbers get pushed; operators pop the top two values, combine them, and push the result back.',
+      tokenStates: tokens.map(() => 'default'),
+      stackData: [],
+      stackStates: [],
+    });
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const tokenStates = tokens.map((_, ti) => (ti === i ? 'pointer' : 'default'));
+
+      if (OPERATORS.has(token)) {
+        const b = stack[stack.length - 1];
+        const a = stack[stack.length - 2];
+        steps.push({
+          narration: `Token '${token}' is an operator — pop the top two values: b=${b} (top, popped first), a=${a} (popped second).`,
+          tokenStates,
+          stackData: stack.slice(),
+          stackStates: stack.map((_, si) => (si >= stack.length - 2 ? 'compare' : 'default')),
+        });
+
+        stack.pop();
+        stack.pop();
+        const result = applyOp(token, a, b);
+        stack.push(result);
+
+        steps.push({
+          narration: `Compute ${a} ${token} ${b} = ${result}, push it back onto the stack.`,
+          tokenStates,
+          stackData: stack.slice(),
+          stackStates: stack.map((_, si) => (si === stack.length - 1 ? 'active' : 'default')),
+        });
+      } else {
+        stack.push(Number(token));
+        steps.push({
+          narration: `Token '${token}' is a number — push it onto the stack.`,
+          tokenStates,
+          stackData: stack.slice(),
+          stackStates: stack.map((_, si) => (si === stack.length - 1 ? 'active' : 'default')),
+        });
+      }
+    }
+
+    steps.push({
+      narration: `One value remains on the stack: ${stack[0]} — that's the final answer.`,
+      tokenStates: tokens.map(() => 'default'),
+      stackData: stack.slice(),
+      stackStates: ['sorted'],
+    });
+    return steps;
+  }
+
+  const tokenBars2 = new DSA.Bars(document.getElementById('viz2TokenBars'), { uniform: true });
+  const stackBars2 = new DSA.Bars(document.getElementById('viz2StackBars'), { uniform: true });
+  tokenBars2.setData(DEMO_TOKENS);
+  stackBars2.setData([]);
+  const optimalSteps = buildOptimalSteps(DEMO_TOKENS);
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { tokenBars2.setData(DEMO_TOKENS); stackBars2.setData([]); return; }
+      tokenBars2.setData(DEMO_TOKENS);
+      tokenBars2.paint(step.tokenStates);
+      stackBars2.setData(step.stackData);
+      stackBars2.paint(step.stackStates);
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('evaluate-reverse-polish-notation', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
