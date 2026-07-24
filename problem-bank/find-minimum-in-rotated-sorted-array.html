@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Find Minimum in Rotated Sorted Array — Problem Bank</title>
+<meta name="description" content="Find Minimum in Rotated Sorted Array: an O(n) linear scan that ignores the rotation entirely vs. an O(log n) binary search on the rotation point, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/find-minimum-in-rotated-sorted-array.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Find Minimum in Rotated Sorted Array — Problem Bank" />
+<meta property="og:description" content="Find Minimum in Rotated Sorted Array: an O(n) linear scan that ignores the rotation entirely vs. an O(log n) binary search on the rotation point, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/find-minimum-in-rotated-sorted-array.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Find Minimum in Rotated Sorted Array — Problem Bank" />
+<meta name="twitter:description" content="Find Minimum in Rotated Sorted Array: an O(n) linear scan that ignores the rotation entirely vs. an O(log n) binary search on the rotation point, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Find Minimum in Rotated Sorted Array", "item": "https://dsa.itszain.tech/problem-bank/find-minimum-in-rotated-sorted-array.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day13.html">Day 13: Binary Search Variations</a></strong> —
+      the optimal solution below is a direct application of "binary search where the array isn't
+      strictly sorted, but still has enough structure to eliminate half the search space every
+      step" — read that lesson first if binary searching on something other than a plain sorted
+      array still feels unfamiliar.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BINARY SEARCH &middot; MEDIUM</p>
+  <h1>Find Minimum in Rotated Sorted Array <span class="leetcode-link">(<a href="https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/" target="_blank" rel="noopener">LeetCode: Find Minimum in Rotated Sorted Array</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array of <strong>unique</strong> integers that started out sorted in ascending
+    order, then got "rotated" — cut at some pivot point and the front chunk moved to the back.
+    <code>[0,1,2,4,5,6,7]</code> rotated 4 times becomes <code>[4,5,6,7,0,1,2]</code>: the first 4
+    elements got moved to the end. A rotation count of <code>0</code> is a valid input too — the
+    array might already be in its original sorted order, never rotated at all. Given the rotated
+    array, find the minimum element. Example: <code>[3,4,5,1,2]</code> → <code>1</code>.
+    <code>[4,5,6,7,0,1,2]</code> → <code>0</code>. <code>[11,13,15,17]</code> → <code>11</code>
+    (rotated 0 times — already sorted). The optimal solution must run in O(log n) time.</p>
+
+  <h2>Solution 1: Brute force — linear scan for the minimum</h2>
+  <p>The most direct reading of the problem completely ignores that the array used to be sorted:
+    just walk every element once and keep whichever value is smallest so far, exactly like finding
+    the minimum of any unsorted array. This is correct and simple, but it's honestly not
+    "brute force" in the sense of doing extra wasted work — it's brute force in the sense of
+    <em>not exploiting the one piece of structure the problem hands you for free</em>. The rotated
+    array isn't random: it's two sorted runs glued together, and a linear scan never asks "where's
+    the seam?" — it just checks every value, one at a time, blind to that structure.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: scan every index left to right, comparing each value against the minimum seen so far and updating it when a smaller value is found, checking every element exactly once regardless of the rotation.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: scan every element once, track the running minimum</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">i = 0..n-1</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">visit every index once</text>
+      <rect x="230" y="60" width="210" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="335" y="82" fill="#282C34">nums[i] &lt; min?</text>
+      <text x="335" y="98" fill="#282C34" font-size="10">update running minimum</text>
+      <rect x="470" y="60" width="150" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="545" y="82" fill="#282C34">after full scan</text>
+      <text x="545" y="98" fill="#282C34" font-size="10">→ return min</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="440" y1="83" x2="468" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) — no matter where the rotation seam is, every single</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">element still gets visited once. The rotation structure is never used.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Tracing nums = [4, 5, 6, 7, 0, 1, 2] — the
+    same rotated array verified against the code below.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> index i being scanned</span>
+    <span><i class="lg-sorted"></i> index holding the minimum seen so far</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function findMinBrute(nums) {
+  let min = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    if (nums[i] < min) {
+      min = nums[i];
+    }
+  }
+  return min;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>min</code> starts at <code>nums[0]</code> — correctly handles a single-element array
+      on its own, with no special-casing needed.</li>
+    <li>The loop starts at <code>i = 1</code> since index 0 is already accounted for by the initial
+      value of <code>min</code>.</li>
+    <li><code>if (nums[i] < min) min = nums[i]</code> is the entire algorithm — it's the same
+      "track the smallest value seen so far" pattern you'd use on any unsorted array. Nothing here
+      reads or reacts to the fact that <code>nums</code> is two sorted runs stitched together.</li>
+    <li>Every index is visited exactly once, regardless of where the rotation seam actually is —
+      that's what keeps this at a flat O(n), but also what stops it from ever doing better than
+      O(n).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Linear scan, tracking the running minimum</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — binary search on the rotation point</h2>
+  <p>The rotated array is always exactly two sorted runs: a "high" run at the front and a "low" run
+    at the back, glued at the rotation seam — and the minimum is always the very first element of
+    that low run (or, if the rotation count was 0, it's simply <code>nums[0]</code> and there's no
+    seam at all). Maintain <code>lo</code>/<code>hi</code> pointers spanning the whole array. At
+    each step, compute <code>mid = Math.floor((lo + hi) / 2)</code> and compare
+    <code>nums[mid]</code> against <code>nums[hi]</code> — <strong>always against <code>hi</code>,
+    never against <code>lo</code></strong>, because comparing against <code>hi</code> is what
+    reliably tells you which half contains the seam:</p>
+  <ul>
+    <li>If <code>nums[mid] > nums[hi]</code>, then <code>mid</code> is sitting in the "high" run and
+      the seam (and therefore the minimum) must be strictly to the right of it — narrow to
+      <code>lo = mid + 1</code>.</li>
+    <li>Otherwise, <code>nums[mid] <= nums[hi]</code> means <code>mid</code> is already in the "low"
+      run — it could even <em>be</em> the minimum itself, so it must stay in the search space:
+      narrow to <code>hi = mid</code>, never <code>mid - 1</code>. Dropping <code>mid</code> from
+      the window here is the classic off-by-one trap in this exact problem — see the Interview
+      Corner below for a concrete case where it silently returns the wrong answer.</li>
+  </ul>
+  <p>The loop continues until <code>lo === hi</code>; that single remaining index is the minimum.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: compute mid, compare nums of mid against nums of hi, if greater move lo to mid plus one, otherwise move hi to mid (never mid minus one), and repeat until lo equals hi, which is the index of the minimum.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: binary search for the rotation seam, always comparing mid against hi</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">lo, hi span array</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">mid = (lo+hi)/2</text>
+      <rect x="210" y="60" width="230" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="325" y="82" fill="#282C34">nums[mid] &gt; nums[hi]?</text>
+      <text x="325" y="98" fill="#282C34" font-size="10">yes: lo=mid+1 &nbsp; no: hi=mid</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="540" y="82" fill="#282C34">lo === hi</text>
+      <text x="540" y="98" fill="#282C34" font-size="10">→ nums[lo] is the min</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="440" y1="83" x2="458" y2="83"/>
+    </g>
+    <path d="M325,106 C280,140 220,140 195,108" stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)"/>
+    <text x="230" y="152" font-size="10" fill="#9198A6" text-anchor="middle">loops, halving the window, until lo === hi</text>
+    <text x="20" y="176" font-size="12" fill="#98C379">Cost: O(log n) — the window is cut roughly in half every single step.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same array as Solution 1,
+    nums = [4, 5, 6, 7, 0, 1, 2] — watch the search window shrink toward the rotation seam.</p>
+  <div class="legend">
+    <span><i class="lg-active"></i> current search window [lo..hi]</span>
+    <span><i class="lg-pointer"></i> mid</span>
+    <span><i class="lg-compare"></i> hi (what mid is compared against)</span>
+    <span><i class="lg-sorted"></i> final answer, once lo === hi</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function findMinOptimal(nums) {
+  let lo = 0;
+  let hi = nums.length - 1;
+
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (nums[mid] > nums[hi]) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+
+  return nums[lo];
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>lo = 0</code>, <code>hi = nums.length - 1</code> — the window starts as the whole
+      array, since the seam could be anywhere (including "nowhere," if rotation count is 0).</li>
+    <li><code>while (lo < hi)</code> — the loop keeps narrowing until exactly one index remains.
+      It deliberately stops at <code>lo === hi</code> rather than <code>lo <= hi</code>, because the
+      answer is a single index, not a range to keep searching inside.</li>
+    <li><code>nums[mid] > nums[hi]</code> is the entire decision: if <code>mid</code>'s value is
+      bigger than <code>hi</code>'s, <code>mid</code> is still in the untouched "high" run, and
+      the seam has to be somewhere after it — so <code>lo = mid + 1</code> safely discards
+      <code>mid</code>, because it's provably not the minimum (something smaller than it exists
+      further right).</li>
+    <li>The <code>else</code> branch (<code>nums[mid] <= nums[hi]</code>) means <code>mid</code> is
+      already in the "low" run — and specifically, it might be the smallest value in that run, so
+      it can never be safely thrown away. Setting <code>hi = mid</code> (not <code>mid - 1</code>)
+      keeps it in the window for the next iteration.</li>
+    <li>When the loop exits, <code>lo === hi</code> and that index is the minimum — return
+      <code>nums[lo]</code>.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(log n)</td><td>O(1)</td><td>Binary search on the rotation point, comparing mid against hi</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (linear scan)</td><td>O(n)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (binary search on the seam)</td><td>O(log n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic time improvement, not a constant-factor tweak — the linear scan
+    inspects every element no matter what, while the binary search discards roughly half of the
+    remaining search space on every single comparison, by using the one guarantee the rotation
+    gives you: whichever half of the current window is "out of order" relative to itself is the
+    half that contains the seam. Space stays O(1) on both sides.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the binary search always compare <code>nums[mid]</code> against
+        <code>nums[hi]</code>, and never against <code>nums[lo]</code>?</p>
+      <ul class="pb-ia">
+        <li>Comparing against <code>hi</code> gives an unambiguous answer every time: if
+          <code>nums[mid] > nums[hi]</code>, <code>mid</code> is definitely still in the
+          unrotated "high" run, because a value can only be bigger than something later in the
+          array if the array wrapped around somewhere between them.</li>
+        <li>Comparing against <code>lo</code> instead doesn't reliably tell you that — when the
+          array hasn't rotated at all (or the window no longer straddles the seam),
+          <code>nums[mid] >= nums[lo]</code> is just normal ascending order and carries no
+          information about where the minimum is.</li>
+        <li><code>hi</code> is the one endpoint that's guaranteed to be on the "low" side of any
+          seam that exists inside the current window, which is exactly the property the
+          comparison needs.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What actually breaks if you write <code>hi = mid - 1</code> instead of
+        <code>hi = mid</code> in the "not greater" branch?</p>
+      <ul class="pb-ia">
+        <li>Take <code>nums = [3, 0, 1, 2]</code> (rotated version of <code>[0,1,2,3]</code>).
+          The correct minimum is <code>0</code> at index 1.</li>
+        <li>Step through it: <code>lo=0, hi=3, mid=1</code>. <code>nums[1]=0</code>,
+          <code>nums[3]=2</code>. Since <code>0</code> is not greater than <code>2</code>, the
+          "not greater" branch runs — and <code>mid = 1</code> is exactly the index holding the
+          true minimum.</li>
+        <li>With the buggy <code>hi = mid - 1</code>, the window becomes <code>lo=0, hi=0</code> —
+          index 1 (the actual answer) is thrown away, and the loop immediately returns
+          <code>nums[0] = 3</code>, which is wrong. With the correct <code>hi = mid</code>, the
+          window becomes <code>lo=0, hi=1</code>, keeping index 1 in play, and the next
+          comparison correctly narrows down to it.</li>
+        <li>The rule to remember: <code>mid</code> can only be safely discarded on the branch
+          that proves it isn't the answer (<code>nums[mid] > nums[hi]</code>). On the other
+          branch, <code>mid</code> hasn't been ruled out — it might BE the answer — so it must
+          stay in the window.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if there were duplicate values allowed?" This
+        problem guarantees unique integers specifically so that <code>nums[mid] > nums[hi]</code>
+        (strict inequality) is always decisive. With duplicates, <code>nums[mid] === nums[hi]</code>
+        becomes possible and genuinely ambiguous — you can no longer tell which side the seam is
+        on without shrinking the window by one at a time (<code>hi--</code>) in that specific case,
+        which degrades the worst case to O(n).</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is <code>while (lo < hi)</code> the right loop condition here, instead
+        of the more familiar <code>while (lo <= hi)</code> from a standard "find a target value"
+        binary search?</p>
+      <ul class="pb-ia">
+        <li>A standard binary search is hunting for a specific value and needs to check the case
+          where the window has collapsed to one element before declaring failure — that's what
+          <code>lo <= hi</code> (with a separate check inside) is for.</li>
+        <li>This problem isn't searching for a value — it's narrowing a window down to a single
+          <em>index</em> that is guaranteed to exist (the array always has a minimum). Once
+          <code>lo === hi</code>, that index already IS the answer; there's nothing left to
+          decide, so the loop should stop rather than run one more comparison against itself.</li>
+        <li>Using <code>lo <= hi</code> here would let <code>mid</code> equal <code>hi</code> on
+          the final iteration, comparing <code>nums[hi]</code> against itself — harmless, but
+          wasted work, and a sign of not having thought through what the loop invariant actually
+          guarantees.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const lo = 2 ** 31 - 2;       // 2147483646
+const hi = 2 ** 31 - 1;       // 2147483647 (near Java/C++'s 32-bit int limit)
+console.log(Math.floor((lo + hi) / 2));
+
+function int32Add(a, b) { return (a + b) | 0; } // forces 32-bit signed wraparound
+console.log(int32Add(lo, hi));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: the first line logs <code>2147483646</code> — the correct midpoint. The
+          second logs <code>-3</code> — visibly wrong.</li>
+        <li>In Java or C++, <code>lo</code> and <code>hi</code> here would be right at the edge of
+          a 32-bit signed <code>int</code>'s range (max <code>2147483647</code>). Computing
+          <code>lo + hi</code> the naive way genuinely overflows in those languages, wrapping
+          around to a negative number — the classic reason binary search implementations there
+          use <code>lo + (hi - lo) / 2</code> instead of <code>(lo + hi) / 2</code>.</li>
+        <li>JS doesn't have that failure mode for numbers in this range: all JS numbers are
+          IEEE-754 doubles, which represent integers exactly up to
+          <code>Number.MAX_SAFE_INTEGER</code> (<code>9007199254740991</code>, about
+          <code>2^53</code>) — nowhere near reached by adding two 32-bit-range values. The second
+          <code>console.log</code> only goes wrong because <code>| 0</code> deliberately forces
+          32-bit signed truncation (JS's bitwise operators always do this) — that's simulating the
+          other languages' bug on purpose, not something plain <code>+</code> and <code>/</code>
+          would ever do on their own.</li>
+        <li>Practically: a JS array's <code>length</code> is capped at <code>2^32 - 1</code>
+          (<code>4294967295</code>) anyway, which is still comfortably under
+          <code>Number.MAX_SAFE_INTEGER</code> — so <code>Math.floor((lo + hi) / 2)</code> is
+          simply never at risk of overflow for any real array index in JS, and the
+          <code>lo + (hi - lo) / 2</code> defensive rewrite (needed in Java/C++) is not a thing
+          you need to reach for here.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: it's tempting to port the "avoid overflow" idiom from Java/C++
+        binary search code into JS out of habit — it's not wrong, exactly, just solving a problem
+        JS numbers don't actually have at realistic array sizes.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="hiseam" data-explain="Comparing mid against hi is decisive: if nums[mid] > nums[hi], mid must still be in the unrotated high run, because a value can only exceed a later one if the array wrapped around somewhere between them. Comparing against lo doesn't give that guarantee — once the window no longer straddles the seam, nums[mid] versus nums[lo] just reflects normal ascending order and reveals nothing about where the minimum is." >
+    <p class="q-text">1. Why does the binary search compare <code>nums[mid]</code> against <code>nums[hi]</code> rather than <code>nums[lo]</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="hiseam">nums[mid] &gt; nums[hi] reliably means mid is still in the unrotated high run, since a value can only exceed a later one across a wraparound — comparing against lo doesn't give that guarantee</button>
+      <button class="btn dsa-quiz-option" data-value="faster">Comparing against hi is simply faster to compute than comparing against lo</button>
+      <button class="btn dsa-quiz-option" data-value="nodiff">It makes no real difference — comparing against either lo or hi gives the same guarantee</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="keepmid" data-explain="When nums[mid] <= nums[hi], mid is already in the low run and could itself be the minimum, so it can't be safely discarded. Setting hi = mid keeps it in the window for the next comparison; hi = mid - 1 would throw it away and can return a wrong answer." >
+    <p class="q-text">2. In the branch where <code>nums[mid] &lt;= nums[hi]</code>, why is <code>hi = mid</code> correct instead of <code>hi = mid - 1</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="keepmid">mid could itself be the minimum in this branch, so discarding it with hi = mid - 1 can throw away the correct answer</button>
+      <button class="btn dsa-quiz-option" data-value="perf">hi = mid - 1 is correct too — it's purely a style preference with no effect on the result</button>
+      <button class="btn dsa-quiz-option" data-value="onlyodd">hi = mid - 1 only fails on arrays with an odd length</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="single" data-explain="This search narrows toward a single index that is guaranteed to exist (the array always has a minimum) rather than hunting for a value that might not be present. Once lo === hi, that index already is the answer, so the loop should stop instead of running one more redundant comparison." >
+    <p class="q-text">3. Why does this binary search use <code>while (lo &lt; hi)</code> instead of the more familiar <code>while (lo &lt;= hi)</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="single">The search narrows to a single guaranteed-to-exist index rather than hunting for a possibly-absent value — once lo === hi, that index is already the answer</button>
+      <button class="btn dsa-quiz-option" data-value="bugfree">lo &lt;= hi would cause an infinite loop in every case</button>
+      <button class="btn dsa-quiz-option" data-value="stylistic">Both conditions behave identically here — it's a stylistic choice</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="timewin" data-explain="The linear scan is O(n) — it inspects every element regardless of the rotation. The binary search is O(log n) — it discards roughly half the remaining window on every comparison by exploiting the rotation structure. That is a genuine asymptotic time improvement, not a constant-factor tweak." >
+    <p class="q-text">4. What is the actual complexity difference between the brute force and the optimal solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="timewin">A real asymptotic win: O(n) linear scan versus O(log n) binary search, both O(1) space</button>
+      <button class="btn dsa-quiz-option" data-value="sametime">Both are O(n) — the binary search only looks faster on small examples</button>
+      <button class="btn dsa-quiz-option" data-value="spaceonly">They're the same time complexity; the optimal solution only improves space usage</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="zerorotation" data-explain="A rotation count of 0 is explicitly a valid input — the array can already be in its original sorted order. Both solutions handle it correctly with no special-casing: the linear scan just finds nums[0] as the minimum, and the binary search's first comparison (nums[mid] <= nums[hi] throughout, since there is no seam) steadily narrows hi down to index 0." >
+    <p class="q-text">5. What happens when the array has been "rotated" 0 times, e.g. <code>[11,13,15,17]</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="zerorotation">It's a valid, explicitly allowed input — both solutions handle it correctly with no special-casing, correctly returning nums[0] as the minimum</button>
+      <button class="btn dsa-quiz-option" data-value="invalid">It's an invalid input — a "rotated" array must always be rotated at least once</button>
+      <button class="btn dsa-quiz-option" data-value="crashes">The binary search throws an error because there's no rotation seam to find</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Binary Search problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'find-minimum-in-rotated-sorted-array';
+
+  // Shared example for both animations — verified against findMinBrute and findMinOptimal
+  // via `node -e` before this page was written (also stress-tested across every rotation
+  // of [1..7]).
+  const DEMO_NUMS = [4, 5, 6, 7, 0, 1, 2];
+
+  // ---- Solution 1: brute force — linear scan for the minimum ----
+  function buildBruteSteps(nums) {
+    const n = nums.length;
+    const steps = [];
+    let minVal = nums[0];
+    let minIdx = 0;
+
+    steps.push({
+      narration: `Start: nums = [${nums.join(', ')}]. Scan every element left to right, tracking the smallest value seen so far. This never looks at the rotation structure at all.`,
+      values: nums.slice(),
+      states: { 0: 'sorted' },
+    });
+
+    for (let i = 1; i < n; i++) {
+      if (nums[i] < minVal) {
+        minVal = nums[i];
+        minIdx = i;
+        steps.push({
+          narration: `i=${i}: nums[${i}] = ${nums[i]} is less than the current minimum. New minimum: ${minVal} at index ${i}.`,
+          values: nums.slice(),
+          states: { [i]: 'sorted' },
+        });
+      } else {
+        steps.push({
+          narration: `i=${i}: nums[${i}] = ${nums[i]} is not less than the current minimum ${minVal} (at index ${minIdx}). Minimum stays ${minVal}.`,
+          values: nums.slice(),
+          states: { [minIdx]: 'sorted', [i]: 'pointer' },
+        });
+      }
+    }
+
+    steps.push({
+      narration: `Done — scanned all ${n} elements. Minimum: ${minVal} at index ${minIdx}.`,
+      values: nums.slice(),
+      states: { [minIdx]: 'sorted' },
+    });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal — binary search on the rotation point ----
+  function buildOptimalSteps(nums) {
+    const n = nums.length;
+    const steps = [];
+    let lo = 0;
+    let hi = n - 1;
+
+    function windowStates(extra) {
+      const states = {};
+      for (let k = lo; k <= hi; k++) states[k] = 'active';
+      Object.assign(states, extra);
+      return states;
+    }
+
+    steps.push({
+      narration: `Start: nums = [${nums.join(', ')}]. Search window is the whole array: lo=${lo}, hi=${hi}.`,
+      values: nums.slice(),
+      states: windowStates({}),
+    });
+
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const cmpStates = windowStates({ [mid]: 'pointer', [hi]: 'compare' });
+      if (nums[mid] > nums[hi]) {
+        steps.push({
+          narration: `lo=${lo}, hi=${hi}, mid=${mid}: nums[mid]=${nums[mid]} > nums[hi]=${nums[hi]} — the seam (and the minimum) must be strictly right of mid. Set lo = mid + 1 = ${mid + 1}.`,
+          values: nums.slice(),
+          states: cmpStates,
+        });
+        lo = mid + 1;
+      } else {
+        steps.push({
+          narration: `lo=${lo}, hi=${hi}, mid=${mid}: nums[mid]=${nums[mid]} <= nums[hi]=${nums[hi]} — mid could BE the minimum, so it must stay in play. Set hi = mid = ${mid} (not mid - 1).`,
+          values: nums.slice(),
+          states: cmpStates,
+        });
+        hi = mid;
+      }
+      steps.push({
+        narration: `Window narrows to lo=${lo}, hi=${hi}.`,
+        values: nums.slice(),
+        states: windowStates({}),
+      });
+    }
+
+    steps.push({
+      narration: `lo === hi === ${lo} — the search window is a single element. Minimum: ${nums[lo]} at index ${lo}.`,
+      values: nums.slice(),
+      states: { [lo]: 'sorted' },
+    });
+    return steps;
+  }
+
+  const DATA_MIN = Math.min.apply(null, DEMO_NUMS);
+  const DATA_MAX = Math.max.apply(null, DEMO_NUMS);
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: DATA_MIN, max: DATA_MAX });
+  bars1.setData(DEMO_NUMS);
+  const steps1 = buildBruteSteps(DEMO_NUMS);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 800,
+    onStep(step) {
+      if (!step) { bars1.paint({}, DEMO_NUMS); return; }
+      bars1.paint(step.states, step.values);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: DATA_MIN, max: DATA_MAX });
+  bars2.setData(DEMO_NUMS);
+  const steps2 = buildOptimalSteps(DEMO_NUMS);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1000,
+    onStep(step) {
+      if (!step) { bars2.paint({}, DEMO_NUMS); return; }
+      bars2.paint(step.states, step.values);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('find-minimum-in-rotated-sorted-array', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
