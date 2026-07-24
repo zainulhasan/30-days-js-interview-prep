@@ -189,6 +189,51 @@ const PROBLEM_BANK = [
     prereqTitle: 'Greedy Algorithms',
     leetcodeUrl: 'https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/',
   },
+  {
+    slug: 'valid-sudoku',
+    title: 'Valid Sudoku',
+    pattern: 'Arrays & Hashing',
+    difficulty: 'Medium',
+    prereqDay: 6,
+    prereqTitle: 'Hash Maps & Sets',
+    leetcodeUrl: 'https://leetcode.com/problems/valid-sudoku/',
+  },
+  {
+    slug: 'first-missing-positive',
+    title: 'First Missing Positive',
+    pattern: 'Arrays & Hashing',
+    difficulty: 'Hard',
+    prereqDay: 6,
+    prereqTitle: 'Hash Maps & Sets',
+    leetcodeUrl: 'https://leetcode.com/problems/first-missing-positive/',
+  },
+  {
+    slug: 'majority-element',
+    title: 'Majority Element',
+    pattern: 'Arrays & Hashing',
+    difficulty: 'Easy',
+    prereqDay: 6,
+    prereqTitle: 'Hash Maps & Sets',
+    leetcodeUrl: 'https://leetcode.com/problems/majority-element/',
+  },
+  {
+    slug: 'maximum-subarray',
+    title: 'Maximum Subarray',
+    pattern: 'Arrays & Hashing',
+    difficulty: 'Medium',
+    prereqDay: 6,
+    prereqTitle: 'Hash Maps & Sets',
+    leetcodeUrl: 'https://leetcode.com/problems/maximum-subarray/',
+  },
+  {
+    slug: 'longest-consecutive-sequence',
+    title: 'Longest Consecutive Sequence',
+    pattern: 'Arrays & Hashing',
+    difficulty: 'Medium',
+    prereqDay: 6,
+    prereqTitle: 'Hash Maps & Sets',
+    leetcodeUrl: 'https://leetcode.com/problems/longest-consecutive-sequence/',
+  },
 ];
 
 const PROBLEM_BANK_PATTERNS = [
@@ -197,6 +242,7 @@ const PROBLEM_BANK_PATTERNS = [
   { key: 'Design', title: 'Design' },
   { key: 'Backtracking', title: 'Backtracking' },
   { key: 'Greedy', title: 'Greedy' },
+  { key: 'Arrays & Hashing', title: 'Arrays & Hashing' },
 ];
 
 function problemBankInfo(slug) {
