@@ -857,6 +857,31 @@ data, sitemap.xml, robots.txt, GSC submission).
 - Remaining 6 of 12 pages (Jump Game II, Partition Labels, Minimum Arrows, Can Place Flowers, Gas
   Station, Two City Scheduling) reviewed clean — Minor/cosmetic notes only, no fixes needed.
 
+## Done — Arrays & Hashing batch (5 problems, Problem Bank)
+- Valid Sudoku, First Missing Positive, Majority Element, Maximum Subarray (Kadane's), Longest
+  Consecutive Sequence — `js/problemBank.js` grew to 26 total problems across 6 patterns. First
+  batch to introduce a new pattern group since the pilot (Trie/Intervals/Design) — `Arrays &
+  Hashing` mapped to Day 6 ("Hash Maps & Sets") as its prereq.
+- Same fully-delegated parallel dispatch model as the Greedy batch: each of the 5 builder agents
+  got only the LeetCode problem statement and the expected brute-force/optimal shape, no
+  pre-verified code — each designed, implemented, and `node -e`-verified both solutions itself
+  before writing HTML.
+- Renderer mix: `DSA.Bars` for 4 of 5; `DSA.Grid` for Valid Sudoku (second-ever non-numeric Grid
+  use on the site, after Merge Triplets — a live 9x9 board with row/col/box hash trackers).
+- Data-file commit (`js/problemBank.js`) landed first, before dispatching builders — zero
+  git-race recurrence, all 5 commits verified single-file via `git show --stat`.
+- **Review pass: first batch to go 5-for-5 clean** — zero findings across all 5 pages (algorithm
+  correctness, legend/state cross-reference, complexity honesty, ID integrity, Interview Corner
+  format, palette, AI-attribution, related-problems wiring all independently re-verified by
+  dedicated reviewer agents via direct `node -e` re-execution, not just reading the implementer's
+  claims). No fix agents needed, no fix wave required.
+- Trick questions this batch: Valid Sudoku (plain-object numeric-key coercion vs `Set`'s
+  SameValueZero — digit `5` vs `'5'`), First Missing Positive (naive-swap data loss during an
+  in-place index-as-hash placement), Majority Element (`Map` vs plain-object key semantics),
+  Maximum Subarray (`Math.max(...[])` on an empty array → `-Infinity`), Longest Consecutive
+  Sequence (`Set` canonicalizing `-0` to `+0` on insertion) — each independently `node -e`
+  verified by its own reviewer, not just the builder.
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
