@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Minimum Window Substring — Problem Bank</title>
+<meta name="description" content="Minimum Window Substring: an O(n³) brute force that checks every substring vs. an O(n+m) variable-size sliding window with two pointers, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/minimum-window-substring.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Minimum Window Substring — Problem Bank" />
+<meta property="og:description" content="Minimum Window Substring: an O(n³) brute force that checks every substring vs. an O(n+m) variable-size sliding window with two pointers, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/minimum-window-substring.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Minimum Window Substring — Problem Bank" />
+<meta name="twitter:description" content="Minimum Window Substring: an O(n³) brute force that checks every substring vs. an O(n+m) variable-size sliding window with two pointers, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Minimum Window Substring", "item": "https://dsa.itszain.tech/problem-bank/minimum-window-substring.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day05.html">Day 5: Sliding Window Pattern</a></strong> —
+      the optimal solution below is a variable-size sliding window with two pointers; read that
+      lesson first if expanding/shrinking a window instead of using fixed bounds is still a new
+      idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">SLIDING WINDOW &middot; HARD</p>
+  <h1>Minimum Window Substring <span class="leetcode-link">(<a href="https://leetcode.com/problems/minimum-window-substring/" target="_blank" rel="noopener">LeetCode: Minimum Window Substring</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given two strings <code>s</code> and <code>t</code>, find the <strong>smallest contiguous
+    substring</strong> of <code>s</code> that contains every character of <code>t</code> —
+    including matching <em>duplicate counts</em>. If <code>t</code> asks for two <code>'a'</code>s,
+    the window has to actually contain two <code>'a'</code>s, not just one. If no such window
+    exists, return <code>""</code>. For example, <code>s="ADOBECODEBANC"</code>,
+    <code>t="ABC"</code> → the shortest window covering all of A, B, and C is
+    <code>"BANC"</code> (length 4) — shorter candidates like <code>"ADOBEC"</code> are valid too,
+    just not minimal. <code>s="a"</code>, <code>t="aa"</code> → <code>""</code>, because
+    <code>s</code> only has one <code>'a'</code> total, and no substring of it can ever contain
+    two.</p>
+
+  <h2>Solution 1: Brute force — check every substring, verify each with a frequency map</h2>
+  <p>The most literal reading of the problem: try every possible substring of <code>s</code>
+    (every start/end pair, <code>O(n²)</code> of them), and for each one, build a frequency map of
+    its characters and compare it against <code>t</code>'s frequency map to decide whether it's
+    valid. Track the shortest valid one seen. Building and comparing a frequency map for a
+    substring is itself <code>O(n)</code> work, so the total cost stacks to
+    <code>O(n²) × O(n) = O(n³)</code> — checking every substring, and for each one, re-reading
+    every character in it from scratch.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: for every start index i and end index j, take the substring s from i to j, build a frequency map of it, compare that map against the frequency map of t, and if it matches, check whether this substring is shorter than the best one found so far.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: every substring, fresh frequency check each time</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">try every i, j pair</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">O(n²) substrings</text>
+      <rect x="220" y="60" width="210" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="325" y="82" fill="#282C34">build + compare freq map</text>
+      <text x="325" y="98" fill="#282C34" font-size="10">O(n) work, every substring</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="540" y="82" fill="#E2E3E7">keep shortest valid</text>
+      <text x="540" y="98" fill="#9198A6" font-size="10">track the best so far</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-mws1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-mws1)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="430" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n²) substrings × O(n) frequency check each = O(n³) —</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">every candidate window is re-read character by character from scratch.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> substring [i..j] currently being checked</span>
+    <span><i class="lg-swap"></i> new shortest valid window found</span>
+    <span><i class="lg-sorted"></i> final shortest window overall</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    s="ADOBECODEBANC", t="ABC" — LeetCode's own canonical example (expected: "BANC"), verified
+    above before any HTML was written. Every substring of length ≥ 3 gets checked; watch how many
+    are tried before "BANC" is confirmed as the shortest.</p>
+
+  <h3>The code</h3>
+  <pre><code>function minWindowBrute(s, t) {
+  if (t.length === 0 || s.length === 0 || t.length > s.length) return '';
+  const need = {};
+  for (const ch of t) need[ch] = (need[ch] || 0) + 1;
+
+  let best = '';
+  for (let i = 0; i < s.length; i++) {
+    for (let j = i; j < s.length; j++) {
+      const sub = s.slice(i, j + 1);
+      if (sub.length < t.length) continue;
+
+      const have = {};
+      for (const ch of sub) have[ch] = (have[ch] || 0) + 1;
+
+      let ok = true;
+      for (const ch in need) {
+        if ((have[ch] || 0) < need[ch]) { ok = false; break; }
+      }
+      if (ok && (best === '' || sub.length < best.length)) {
+        best = sub;
+      }
+    }
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>t.length > s.length</code> is a fast-fail: <code>t</code> can never fit inside a
+      shorter <code>s</code>, so there's no point trying any substring at all.</li>
+    <li>The nested <code>i</code>/<code>j</code> loops generate every contiguous substring of
+      <code>s</code> — <code>O(n²)</code> of them in total.</li>
+    <li><code>if (sub.length < t.length) continue;</code> skips substrings that are provably too
+      short to contain <code>t</code>'s characters, but this is a minor pruning, not a change in
+      asymptotic complexity — the <code>O(n²)</code> substring count still dominates.</li>
+    <li>Building <code>have</code> by iterating every character of <code>sub</code>, then checking
+      every key of <code>need</code> against it, is <code>O(n)</code> work — and it happens fresh,
+      from nothing, for every single one of the <code>O(n²)</code> substrings.</li>
+    <li><code>best === '' || sub.length < best.length</code> only replaces the current best with a
+      strictly shorter valid window — ties keep the earlier (leftmost-found) one, which matches
+      the problem's "the" smallest window being any one of possibly several equal-length answers.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n³)</td><td>O(n)</td><td>O(n²) substrings, each verified with a fresh O(n) frequency-map comparison</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — variable-size sliding window with two pointers</h2>
+  <p>Build a frequency map <code>need</code> of <code>t</code>. Expand a <code>right</code>
+    pointer across <code>s</code> one character at a time, tracking a running frequency map of the
+    current window. The key bookkeeping trick: instead of re-comparing the entire window map
+    against <code>need</code> on every step, track a single counter, <code>have</code> — how many
+    of <code>need</code>'s <em>distinct</em> characters are currently satisfied at exactly the
+    required count. A character becomes "satisfied" the moment the window's count for it first
+    reaches (not exceeds — exactly reaches) <code>need</code>'s count for it; <code>have</code>
+    increments only at that exact crossing, never again while the count keeps climbing past it.
+    Once <code>have === required</code> (every distinct character in <code>t</code> is covered),
+    the window is fully valid — greedily shrink it from the <code>left</code> for as long as it
+    <em>stays</em> valid, recording the best (shortest) window at each valid contraction, then
+    resume expanding <code>right</code>.</p>
+
+  <p>The reason this is <code>O(n + m)</code> and not something quadratic: <code>right</code>
+    only ever moves forward, one step per outer-loop iteration, so it makes at most
+    <code>n</code> total moves across the entire run. <code>left</code> only ever moves forward
+    too — even though its shrink loop looks nested, <code>left</code> can never advance past
+    <code>right</code>, and it never resets backward. So across the <em>whole</em> algorithm,
+    <code>left</code> also makes at most <code>n</code> total moves, not <code>n</code> moves
+    <em>per</em> position of <code>right</code>. Two pointers that each independently move
+    forward at most <code>n</code> times, total, add up to <code>O(n)</code> work overall — not
+    <code>O(n²)</code> — plus <code>O(m)</code> to build <code>need</code> from <code>t</code> up
+    front.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: build a frequency map of t called need, expand right across s updating a running window map and a have counter of satisfied distinct characters, and whenever have equals required, shrink from left while the window stays valid, recording the shortest window seen.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: expand right, shrink left while valid, track shortest</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="160" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="100" y="82" fill="#E2E3E7">need = freq(t)</text>
+      <text x="100" y="98" fill="#9198A6" font-size="10">O(m), once</text>
+      <rect x="200" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="290" y="82" fill="#282C34">expand right, update have</text>
+      <text x="290" y="98" fill="#282C34" font-size="10">right moves forward only</text>
+      <rect x="400" y="60" width="220" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="510" y="82" fill="#282C34">shrink left while valid</text>
+      <text x="510" y="98" fill="#282C34" font-size="10">record shortest, left moves forward only</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-mws2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-mws2)">
+      <line x1="180" y1="83" x2="198" y2="83"/>
+      <line x1="380" y1="83" x2="398" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n + m) — right and left each move forward at most n times</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">total across the whole run, never resetting; need built once in O(m).</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> right pointer expanding, checking a new character</span>
+    <span><i class="lg-active"></i> current window [left..right]</span>
+    <span><i class="lg-compare"></i> character being checked against need</span>
+    <span><i class="lg-swap"></i> left shrinks past this character</span>
+    <span><i class="lg-sorted"></i> final shortest window overall</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same s="ADOBECODEBANC", t="ABC" as
+    Solution 1, so you can directly compare step counts: watch <code>right</code> and
+    <code>left</code> each sweep across <code>s</code> once, versus the brute force's dozens of
+    independent substring checks above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function minWindowOptimal(s, t) {
+  if (t.length === 0 || s.length === 0 || t.length > s.length) return '';
+
+  const need = new Map();
+  for (const ch of t) need.set(ch, (need.get(ch) || 0) + 1);
+  const required = need.size;
+
+  const window = new Map();
+  let have = 0;
+  let left = 0;
+  let bestLen = Infinity;
+  let bestLeft = 0;
+
+  for (let right = 0; right < s.length; right++) {
+    const ch = s[right];
+    if (need.has(ch)) {
+      window.set(ch, (window.get(ch) || 0) + 1);
+      if (window.get(ch) === need.get(ch)) have++;
+    }
+
+    while (have === required) {
+      if (right - left + 1 < bestLen) {
+        bestLen = right - left + 1;
+        bestLeft = left;
+      }
+      const lch = s[left];
+      if (need.has(lch)) {
+        if (window.get(lch) === need.get(lch)) have--;
+        window.set(lch, window.get(lch) - 1);
+      }
+      left++;
+    }
+  }
+
+  return bestLen === Infinity ? '' : s.slice(bestLeft, bestLeft + bestLen);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>need</code> maps each character of <code>t</code> to how many copies it requires;
+      <code>required = need.size</code> is the count of <em>distinct</em> characters, not the
+      total character count of <code>t</code> — that distinction is exactly what
+      <code>have</code> tracks against.</li>
+    <li><code>if (window.get(ch) === need.get(ch)) have++;</code> is the bookkeeping detail the
+      whole algorithm hinges on: this fires exactly once per character, at the instant its window
+      count first reaches its required count — not every time the count changes, and not when the
+      count later overshoots past what's needed.</li>
+    <li><code>while (have === required)</code> — not an <code>if</code> — is what lets the window
+      shrink as far as it can from a single expansion of <code>right</code>: it keeps contracting,
+      recording a new best each time, until removing one more character would break validity.</li>
+    <li><code>if (window.get(lch) === need.get(lch)) have--;</code> mirrors the increment logic in
+      reverse: <code>have</code> only decrements at the instant a needed character's count drops
+      <em>below</em> what's required, checked <em>before</em> the count is actually decremented on
+      the next line.</li>
+    <li><code>bestLen === Infinity</code> at the end distinguishes "no valid window was ever found"
+      from "the valid window happened to have length 0" (which can't happen here, but the sentinel
+      makes the empty-result case explicit rather than accidental).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n + m)</td><td>O(n + m)</td><td>Variable-size sliding window; right and left each move forward at most n times total, need/window maps bounded by distinct characters</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (every substring, fresh frequency check)</td><td>O(n³)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (two-pointer sliding window)</td><td>O(n + m)</td><td>O(n + m)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine, dramatic asymptotic improvement — cubic down to linear — not a
+    same-complexity relabeling. The brute force pays <code>O(n)</code> to re-verify every one of
+    <code>O(n²)</code> candidate substrings from scratch; the sliding window instead carries its
+    validity state (<code>have</code>) forward incrementally as the window moves, so each
+    character is only ever added to or removed from the running count a constant number of times
+    across the entire scan.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">The shrink step is a <code>while</code> loop nested inside a <code>for</code>
+        loop — that looks like <code>O(n²)</code> at a glance. Why is the real bound
+        <code>O(n)</code>?</p>
+      <ul class="pb-ia">
+        <li>The nesting is misleading because <code>left</code> is never reset — its position
+          carries over from one iteration of the outer loop to the next, it only ever increases.</li>
+        <li>Since <code>left</code> can never exceed <code>right</code>, and both only move
+          forward, the <em>total</em> number of times <code>left</code> advances across the
+          <strong>entire</strong> run — summed over every iteration of the outer loop — is bounded
+          by <code>n</code>, not by <code>n</code> per outer-loop iteration.</li>
+        <li>This is the classic "amortized" argument for two-pointer/sliding-window algorithms:
+          count total pointer movement across the whole algorithm, not per-iteration work in
+          isolation — two pointers each independently bounded by <code>n</code> total moves add up
+          to <code>O(n)</code>, never <code>O(n²)</code>.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why track a single <code>have</code> counter instead of just comparing the
+        entire <code>window</code> map against <code>need</code> on every step?</p>
+      <ul class="pb-ia">
+        <li>Comparing two full maps (checking every key of <code>need</code> against
+          <code>window</code>) is itself an <code>O(m)</code> operation — doing that on every one
+          of the <code>n</code> expansions (and again on every shrink) would reintroduce a
+          multiplicative factor, undoing the whole point of the optimization.</li>
+        <li><code>have</code> is an <code>O(1)</code>-to-check integer that gets nudged up or down
+          incrementally, exactly when a single character's status flips between "satisfied" and
+          "not satisfied" — it never requires re-scanning the rest of the map to stay correct.</li>
+        <li>This is a general pattern worth recognizing beyond this problem: whenever "is the
+          current state fully valid?" would otherwise require an <code>O(m)</code> full-structure
+          comparison, look for a single incrementally-maintained counter that captures the same
+          information in <code>O(1)</code> per update.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does <code>have</code> increment specifically when a character's window
+        count <em>equals</em> its needed count — not when the window count is merely
+        <code>&gt; 0</code>, and not every time the count changes?</p>
+      <ul class="pb-ia">
+        <li>Using <code>&gt; 0</code> would be wrong for duplicate-count requirements: if
+          <code>t</code> needs two <code>'a'</code>s, seeing a single <code>'a'</code> doesn't
+          satisfy that requirement yet — the window isn't valid for <code>'a'</code> until it has
+          two.</li>
+        <li>Incrementing on the exact-equality crossing, rather than on every count change, is what
+          keeps <code>have</code> bounded by <code>required</code> (the number of distinct
+          characters) instead of drifting arbitrarily high as a character's count keeps climbing
+          past what's needed — a common source of subtle off-by-N bugs in this exact pattern.</li>
+        <li>The decrement side mirrors this precisely: <code>have</code> only drops when a
+          character's count falls <em>below</em> its needed count during a shrink, checked before
+          the decrement — so incrementing and decrementing are exact inverses of each other, never
+          drifting out of sync with the true validity of the window.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What breaks if you swap the order — decrement the
+        window count, then check the condition, instead of checking first?" The comparison would
+        read the count <em>after</em> it already dropped below <code>need</code>, so the count
+        could sail two values past the threshold in a single step without <code>have</code> ever
+        registering the crossing — that's exactly why the check happens before the mutation on
+        both the expand and shrink sides.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const counts = {};
+counts['z'] = 1;
+counts['3'] = 1;
+counts['a'] = 1;
+counts['1'] = 1;
+console.log(Object.keys(counts));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>['1', '3', 'z', 'a']</code> — NOT insertion order
+          <code>['z', '3', 'a', '1']</code>.</li>
+        <li>Plain objects treat non-negative integer-like string keys (<code>'1'</code>,
+          <code>'3'</code>) as special "array index" keys, and always enumerate <em>those</em>
+          first, in ascending numeric order — regardless of when they were assigned. Only after
+          that do the remaining string keys (<code>'z'</code>, <code>'a'</code>) appear, in true
+          insertion order.</li>
+        <li>A real <code>Map</code> — like <code>need</code> and <code>window</code> in the
+          solution above — has no such carve-out: it always preserves insertion order for
+          <em>every</em> key type, digit-like or not.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: LeetCode's stated constraints for this problem only allow English
+        letters in <code>s</code> and <code>t</code>, so this exact reordering can't bite the
+        solution above as written. But the moment this pattern gets reused on a string containing
+        digit characters — a very plausible generalization — a plain-object frequency map would
+        silently reorder itself the instant a digit key is inserted, which is precisely why
+        reaching for <code>Map</code> here, rather than <code>{}</code>, is the safer default
+        habit, not just a stylistic choice.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="amortized" data-explain="left never resets and can never exceed right, so the total number of times it advances across the ENTIRE run (summed over every outer-loop iteration) is bounded by n, not n per outer-loop iteration. Two pointers that each independently move forward at most n times total add up to O(n), not O(n²).">
+    <p class="q-text">1. The shrink loop is nested inside the expand loop, which looks like O(n²) at first glance. What's the real time bound, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="amortized">O(n) — left never resets and moves forward at most n times total across the whole run, not per outer-loop iteration</button>
+      <button class="btn dsa-quiz-option" data-value="quadratic">O(n²) — the nested loop structure means it really is quadratic, just with a small constant</button>
+      <button class="btn dsa-quiz-option" data-value="logn">O(n log n) — the shrink loop behaves like a binary search on the window size</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="haveflip" data-explain="have is nudged up or down in O(1) exactly when a single character's status flips between satisfied and not satisfied — it never requires re-scanning the rest of the map. Comparing the full window map against need on every step would be O(m) per check, reintroducing a multiplicative factor.">
+    <p class="q-text">2. Why does the optimal solution maintain a `have` counter instead of comparing the entire `window` map against `need` on every step?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="haveflip">A full map comparison is O(m) per check; `have` is an O(1) integer nudged only when a character's satisfied/not-satisfied status actually flips</button>
+      <button class="btn dsa-quiz-option" data-value="mapslow">Because Map objects don't support any form of equality comparison at all</button>
+      <button class="btn dsa-quiz-option" data-value="stylistic">It's a purely stylistic preference with no effect on performance</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="exactmatch" data-explain="Duplicate-count requirements mean a single occurrence doesn't satisfy a character that needs two — > 0 would be wrong. Incrementing exactly when the window count equals the needed count keeps have bounded by the number of distinct characters, instead of drifting as a count climbs past what's needed.">
+    <p class="q-text">3. Why does `have` increment when a character's window count exactly EQUALS its needed count — not when the count is merely greater than 0?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="exactmatch">Because a single occurrence doesn't satisfy a character that needs multiple copies — the exact-equality crossing is what correctly handles duplicate counts in t</button>
+      <button class="btn dsa-quiz-option" data-value="fasterexec">Exact equality checks execute faster in JavaScript than greater-than checks</button>
+      <button class="btn dsa-quiz-option" data-value="noreason">There's no real reason — greater-than-0 would work identically for every possible input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="cubic" data-explain="The brute force checks O(n²) substrings, and validates each one with a fresh O(n) frequency-map build-and-compare — O(n²) × O(n) = O(n³) total. It's a real, dramatic asymptotic gap versus the optimal solution's O(n + m), not a same-complexity relabeling.">
+    <p class="q-text">4. What is the brute-force solution's real time complexity, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cubic">O(n³) — O(n²) candidate substrings, each verified with a fresh O(n) frequency-map comparison</button>
+      <button class="btn dsa-quiz-option" data-value="quadratic2">O(n²) — generating every substring is the only real cost; the frequency check is effectively free</button>
+      <button class="btn dsa-quiz-option" data-value="samecomplexity">The same O(n + m) as the optimal solution — it's just a different technique, not a slower one</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="beforemutate" data-explain="Both the increment (on expand) and decrement (on shrink) check the count against need BEFORE mutating it. Checking after the mutation would let a count sail past the threshold in a single step without have ever registering the crossing, silently breaking the have/required bookkeeping.">
+    <p class="q-text">5. On both the expand and shrink sides, the code checks a character's count against `need`/`window` BEFORE updating that count. What would break if the check happened after the update instead?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="beforemutate">The count could cross the threshold without `have` ever registering it, since the equality check would already be looking at the post-update value</button>
+      <button class="btn dsa-quiz-option" data-value="nothing">Nothing — the order of the check and the update has no effect on correctness</button>
+      <button class="btn dsa-quiz-option" data-value="perfonly">It would only be a minor performance regression, not a correctness bug</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Sliding Window problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'minimum-window-substring';
+  const DEMO_S = 'ADOBECODEBANC';
+  const DEMO_T = 'ABC';
+
+  // ---- Solution 1: brute force (DSA.Bars, uniform — chars are opaque labels) ----
+  function buildBruteSteps(s, t) {
+    const steps = [];
+    const need = {};
+    for (const ch of t) need[ch] = (need[ch] || 0) + 1;
+    const n = s.length;
+    const chars = s.split('');
+    let bestStart = -1, bestEnd = -1, bestLen = Infinity;
+
+    steps.push({
+      narration: `s = "${s}" (${n} chars), t = "${t}". Check every substring s[i..j] with length ≥ ${t.length}, verifying char counts each time — O(n³) total.`,
+      data: chars.slice(),
+      states: chars.map(() => 'default'),
+    });
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i; j < n; j++) {
+        const len = j - i + 1;
+        if (len < t.length) continue;
+        const sub = s.slice(i, j + 1);
+        const have = {};
+        for (const ch of sub) have[ch] = (have[ch] || 0) + 1;
+        let ok = true;
+        for (const ch in need) {
+          if ((have[ch] || 0) < need[ch]) { ok = false; break; }
+        }
+        const states = chars.map((_, k) => (k >= i && k <= j ? 'active' : 'default'));
+        steps.push({
+          narration: `Check s[${i}..${j}] = "${sub}" (length ${len}) against need — ${ok ? 'has every required char count.' : 'missing a required char.'}`,
+          data: chars.slice(),
+          states,
+        });
+        if (ok && len < bestLen) {
+          bestLen = len; bestStart = i; bestEnd = j;
+          const swapStates = chars.map((_, k) => (k >= i && k <= j ? 'swap' : 'default'));
+          steps.push({
+            narration: `New shortest valid window: "${sub}" (length ${len}).`,
+            data: chars.slice(),
+            states: swapStates,
+          });
+        }
+      }
+    }
+
+    const finalStates = chars.map((_, k) => (bestStart !== -1 && k >= bestStart && k <= bestEnd ? 'sorted' : 'default'));
+    steps.push({
+      narration: bestStart === -1
+        ? 'No substring of s contains every required character — result: "".'
+        : `Smallest valid window found after checking every substring: "${s.slice(bestStart, bestEnd + 1)}" (length ${bestLen}).`,
+      data: chars.slice(),
+      states: finalStates,
+    });
+
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData([]);
+  const bruteSteps = buildBruteSteps(DEMO_S, DEMO_T);
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 350,
+    onStep(step) {
+      if (!step) { bars1.setData([]); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (DSA.Bars, uniform, two-pointer sliding window) ----
+  function buildOptimalSteps(s, t) {
+    const steps = [];
+    const need = new Map();
+    for (const ch of t) need.set(ch, (need.get(ch) || 0) + 1);
+    const required = need.size;
+    const chars = s.split('');
+    const n = s.length;
+
+    const window = new Map();
+    let have = 0;
+    let left = 0;
+    let bestLen = Infinity, bestLeft = 0;
+
+    function stateFor(right, mode) {
+      // 'pointer' marks right just expanding in (before the need-check), 'compare' marks right
+      // while its char is checked against need, 'swap' marks left just before it's dropped,
+      // 'active' marks the settled window body.
+      return chars.map((_, k) => {
+        if (mode === 'pointer' && k === right) return 'pointer';
+        if (mode === 'compare' && k === right) return 'compare';
+        if (mode === 'swap' && k === left) return 'swap';
+        if (k >= left && k <= right - (mode === 'pointer' || mode === 'compare' ? 1 : 0)) return 'active';
+        return 'default';
+      });
+    }
+
+    steps.push({
+      narration: `need = {${Array.from(need.entries()).map(([k, v]) => `${k}:${v}`).join(', ')}} from t="${t}" (${required} distinct chars required). Expand right across s="${s}".`,
+      data: chars.slice(),
+      states: chars.map(() => 'default'),
+    });
+
+    for (let right = 0; right < n; right++) {
+      const ch = chars[right];
+      const inNeed = need.has(ch);
+      steps.push({
+        narration: `right pointer expands to index ${right} ('${ch}').`,
+        data: chars.slice(),
+        states: stateFor(right, 'pointer'),
+      });
+      steps.push({
+        narration: `Check '${ch}' against need map — ${inNeed ? 'it is in need, count it.' : 'not in need, ignore.'}`,
+        data: chars.slice(),
+        states: stateFor(right, 'compare'),
+      });
+      if (inNeed) {
+        window.set(ch, (window.get(ch) || 0) + 1);
+        if (window.get(ch) === need.get(ch)) {
+          have++;
+          steps.push({
+            narration: `'${ch}' count now matches need — have=${have}/${required} satisfied.`,
+            data: chars.slice(),
+            states: stateFor(right, 'active'),
+          });
+        }
+      }
+
+      while (have === required) {
+        if (right - left + 1 < bestLen) {
+          bestLen = right - left + 1;
+          bestLeft = left;
+          steps.push({
+            narration: `Window [${left}..${right}] = "${s.slice(left, right + 1)}" is fully valid — new best, length ${bestLen}.`,
+            data: chars.slice(),
+            states: stateFor(right, 'active'),
+          });
+        }
+        const lch = chars[left];
+        steps.push({
+          narration: `Shrink: drop left char '${lch}' at index ${left} and advance left.`,
+          data: chars.slice(),
+          states: stateFor(right, 'swap'),
+        });
+        if (need.has(lch)) {
+          if (window.get(lch) === need.get(lch)) have--;
+          window.set(lch, window.get(lch) - 1);
+        }
+        left++;
+      }
+    }
+
+    const finalStates = chars.map((_, k) => (bestLen !== Infinity && k >= bestLeft && k <= bestLeft + bestLen - 1 ? 'sorted' : 'default'));
+    steps.push({
+      narration: bestLen === Infinity
+        ? 'right pointer never satisfied every required count — result: "".'
+        : `Best window found: "${s.slice(bestLeft, bestLeft + bestLen)}" (length ${bestLen}). Both pointers together moved O(n) total.`,
+      data: chars.slice(),
+      states: finalStates,
+    });
+
+    return steps;
+  }
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData([]);
+  const optimalSteps = buildOptimalSteps(DEMO_S, DEMO_T);
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 500,
+    onStep(step) {
+      if (!step) { bars2.setData([]); return; }
+      bars2.setData(step.data);
+      bars2.paint(step.states);
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('minimum-window-substring', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
