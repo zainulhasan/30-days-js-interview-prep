@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Copy List with Random Pointer — Problem Bank</title>
+<meta name="description" content="Copy List with Random Pointer: a hash-map two-pass copy vs. the optimal O(1)-space interleaving trick, both animated — the honest story is space, not time." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/copy-list-with-random-pointer.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Copy List with Random Pointer — Problem Bank" />
+<meta property="og:description" content="Copy List with Random Pointer: a hash-map two-pass copy vs. the optimal O(1)-space interleaving trick, both animated — the honest story is space, not time." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/copy-list-with-random-pointer.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Copy List with Random Pointer — Problem Bank" />
+<meta name="twitter:description" content="Copy List with Random Pointer: a hash-map two-pass copy vs. the optimal O(1)-space interleaving trick, both animated — the honest story is space, not time." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Copy List with Random Pointer", "item": "https://dsa.itszain.tech/problem-bank/copy-list-with-random-pointer.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day15.html">Day 15: Linked Lists</a></strong> —
+      this problem adds a second pointer type (<code>random</code>) on top of the standard
+      <code>next</code> pointer; read that lesson first if walking and rewiring a linked list's
+      pointers is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">LINKED LIST &middot; MEDIUM</p>
+  <h1>Copy List with Random Pointer <span class="leetcode-link">(<a href="https://leetcode.com/problems/copy-list-with-random-pointer/" target="_blank" rel="noopener">LeetCode: Copy List with Random Pointer</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given the head of a linked list where every node has <strong>two</strong> pointers
+    instead of one: the usual <code>next</code>, which walks straight through the list (or is
+    <code>null</code> at the end), and a second pointer called <code>random</code>, which can
+    point to <em>any</em> node anywhere in the list — including the node itself, or
+    <code>null</code>. Your job is to build a complete, independent <strong>deep copy</strong> of
+    the whole list: every new node must have its own <code>next</code> and <code>random</code>
+    pointing to the corresponding new nodes, never back to any node from the original list.</p>
+  <p>For example, a list represented as <code>[val, randomIndex]</code> pairs —
+    <code>[[7,null],[13,0],[11,1]]</code> — describes three nodes: node 0 has value 7 and a null
+    random pointer; node 1 has value 13 and its random points at node 0; node 2 has value 11 and
+    its random points at node 1. The copy must reproduce that <em>exact same shape</em> — same
+    values in the same order, same random-target relationships — using entirely new node objects.
+    Getting the values right but pointing any <code>next</code> or <code>random</code> pointer
+    back at an original node (instead of its copy) is an incorrect solution, even if it "looks"
+    right when printed.</p>
+
+  <h2>Solution 1: Hash map, two passes</h2>
+  <p>The natural first idea: since <code>random</code> can point anywhere, you need some way to
+    translate "an original node" into "its corresponding copy node" — and a <code>Map</code> keyed
+    by the original node objects themselves is exactly that translation table. <strong>Pass
+    1</strong> walks the original list once, creating a copy of every node (with
+    <code>next</code>/<code>random</code> left unset) and recording <code>original → copy</code>
+    in the map. <strong>Pass 2</strong> walks the original list again, and for every node, looks
+    up the map to wire its copy's <code>next</code> and <code>random</code> to the <em>copies</em>
+    of whatever the original pointed to.</p>
+  <p>Two passes are required, not one — a node's <code>random</code> can point <em>forward</em> to
+    a node that hasn't been copied yet. If wiring happened during the same pass as creation, that
+    lookup could miss (the copy simply wouldn't exist in the map yet). Splitting into "create
+    everything first, then wire everything" sidesteps that ordering problem entirely.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: pass 1 creates a copy node for every original node and records original to copy in a Map, pass 2 walks the list again and wires each copy's next and random using the Map, then returns the copy of the head.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Hash map: create every copy first, then wire pointers via the map</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="185" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="112" y="82" fill="#E2E3E7">Pass 1: create copies</text>
+      <text x="112" y="98" fill="#9198A6" font-size="10">copyMap.set(original, copy)</text>
+      <rect x="225" y="60" width="205" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="327" y="82" fill="#282C34">Pass 2: wire via map</text>
+      <text x="327" y="98" fill="#282C34" font-size="10">copy.next/.random = copyMap.get(...)</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="535" y="82" fill="#E2E3E7">return copy of head</text>
+      <text x="535" y="98" fill="#9198A6" font-size="10">fully independent list</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-crp1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-crp1)">
+      <line x1="205" y1="83" x2="223" y2="83"/>
+      <line x1="430" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) time (two linear passes) — but O(n) EXTRA SPACE for the Map,</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">which holds one entry per original node regardless of the list's shape.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>Top row is the original list (given, never modified). Bottom row is the copy being built.
+    Solid lines are <code>next</code> pointers, dashed lines are <code>random</code> pointers.
+    Example traced: <code>[[7,null],[13,0],[11,1]]</code> — node 1 (13)'s random points back at
+    node 0 (7); node 2 (11)'s random points back at node 1 (13).</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> node currently being processed</span>
+    <span><i class="lg-active"></i> copy node just created</span>
+    <span><i class="lg-compare"></i> random-pointer lookup in progress</span>
+    <span><i class="lg-sorted"></i> copy node fully wired</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function copyRandomListHashMap(head) {
+  if (!head) return null;
+  const copyMap = new Map();
+
+  // Pass 1: create a copy of every original node. next/random are left
+  // unset for now — some randoms point forward to nodes not copied yet.
+  let cur = head;
+  while (cur) {
+    copyMap.set(cur, { val: cur.val, next: null, random: null });
+    cur = cur.next;
+  }
+
+  // Pass 2: wire next/random using the map to translate original -> copy.
+  cur = head;
+  while (cur) {
+    const copy = copyMap.get(cur);
+    copy.next = cur.next ? copyMap.get(cur.next) : null;
+    copy.random = cur.random ? copyMap.get(cur.random) : null;
+    cur = cur.next;
+  }
+
+  return copyMap.get(head);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>copyMap</code> is a real <code>Map</code>, keyed by the original node
+      <em>objects</em> themselves (not their values) — that reference-identity keying is exactly
+      what lets pass 2 translate "this original node" into "its copy" reliably, even when several
+      nodes share the same <code>val</code>.</li>
+    <li>Pass 1 only ever reads <code>cur.next</code> to advance — it never touches
+      <code>random</code>, so the order nodes get copied in is guaranteed to be the same order as
+      the original list, and every original node is guaranteed to have an entry in the map before
+      pass 2 starts.</li>
+    <li><code>copy.next = cur.next ? copyMap.get(cur.next) : null;</code> — translates the
+      original's next pointer into the copy's next pointer via one map lookup. Same pattern for
+      <code>random</code> on the next line.</li>
+    <li><code>return copyMap.get(head);</code> — the map already has every original-to-copy
+      mapping, so the copy of the head is just one more lookup away.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Hash map translating original nodes to copy nodes, two linear passes</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — interleaving, O(1) extra space</h2>
+  <p>The hash map's whole job is answering one question over and over: "given this original node,
+    where's its copy?" The interleaving trick answers that question <em>without a map at all</em>,
+    by exploiting a structural guarantee it builds itself: splice every copy node in
+    <strong>immediately after</strong> its original, so the list becomes
+    <code>A → A' → B → B' → C → C' → ...</code>. Once that's true, the copy of any node is always
+    just one <code>.next</code> hop away from the original — <code>copyOf(X) === X.next</code>,
+    always, by construction. No lookup structure needed; the list's own shape <em>is</em> the
+    lookup table.</p>
+
+  <p><strong>Pass 1 — interleave.</strong> Walk the original list once. For each node, create its
+    copy and insert it right after: the original's <code>next</code> is reassigned to point at the
+    new copy, and the copy's <code>next</code> takes over whatever the original used to point
+    to.</p>
+  <p><strong>Pass 2 — wire random.</strong> Walk the (now interleaved) list again, stepping by the
+    original nodes only. For each original node <code>A</code>, its copy's random pointer is
+    <code>A.next.random = A.random ? A.random.next : null</code> — take one more hop off
+    <code>A.random</code> to land on <em>its</em> copy. This is only correct because pass 1
+    guarantees "one hop past any node is that node's copy" for every node in the list, including
+    whatever <code>A.random</code> points to.</p>
+  <p><strong>Pass 3 — separate.</strong> Walk the interleaved list one final time and split it back
+    into two independent lists: each original's <code>next</code> is restored to skip over its
+    copy (pointing at the next <em>original</em>), and each copy's <code>next</code> is set to skip
+    over the next original (pointing at the next <em>copy</em>). No array, no map — the whole
+    algorithm uses a constant number of pointer variables no matter how long the list is.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: pass 1 interleaves a copy after every original node, pass 2 wires each copy's random pointer using original.random.next, pass 3 separates the interleaved list back into two independent lists.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: splice copies in, wire random via one extra hop, then split apart</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">Pass 1: interleave</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">A &#8594; A' &#8594; B &#8594; B' &#8594; ...</text>
+      <rect x="215" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">Pass 2: wire random</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">A.next.random = A.random.next</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">Pass 3: separate</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">split back into two lists</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-crp2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-crp2)">
+      <line x1="200" y1="83" x2="213" y2="83"/>
+      <line x1="415" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — three linear passes, same as the hash map. But O(1)</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">EXTRA SPACE: no map, just a constant number of pointer variables.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>Same example as above, <code>[[7,null],[13,0],[11,1]]</code>. Watch the list become one
+    interleaved row during passes 1–2, then split back into the familiar two-row shape in pass 3
+    — the copies never left the list, they were living right next to their originals the whole
+    time.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> node currently being processed</span>
+    <span><i class="lg-active"></i> copy node just spliced in</span>
+    <span><i class="lg-compare"></i> random-pointer lookup in progress</span>
+    <span><i class="lg-sorted"></i> copy node fully wired &amp; separated</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function copyRandomListInterleave(head) {
+  if (!head) return null;
+
+  // Pass 1: interleave a copy of every node right after the original.
+  let cur = head;
+  while (cur) {
+    const copy = { val: cur.val, next: cur.next, random: null };
+    cur.next = copy;
+    cur = copy.next;
+  }
+
+  // Pass 2: wire each copy's random pointer. The copy of any node X is
+  // always X.next (thanks to pass 1) — so the copy of original.random
+  // is exactly original.random.next.
+  cur = head;
+  while (cur) {
+    const copy = cur.next;
+    copy.random = cur.random ? cur.random.next : null;
+    cur = copy.next;
+  }
+
+  // Pass 3: separate the interleaved list back into two independent lists.
+  cur = head;
+  const newHead = head.next;
+  while (cur) {
+    const copy = cur.next;
+    cur.next = copy.next;
+    copy.next = copy.next ? copy.next.next : null;
+    cur = cur.next;
+  }
+
+  return newHead;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>Pass 1's <code>const copy = { val: cur.val, next: cur.next, random: null };
+      cur.next = copy;</code> is the entire splice: the copy's next takes over what the original
+      used to point to, then the original's next is reassigned to the copy. <code>cur =
+      copy.next</code> advances past the copy to the next original.</li>
+    <li>Pass 2's <code>copy.random = cur.random ? cur.random.next : null;</code> is the key trick
+      in one line — <code>cur.random</code> is some original node (or null), and one more
+      <code>.next</code> off of it lands on that node's copy, because pass 1 guarantees every
+      original is immediately followed by its own copy.</li>
+    <li>Pass 3's <code>cur.next = copy.next;</code> restores the original list — it now points to
+      the next <em>original</em>, skipping the copy sitting between them. <code>copy.next =
+      copy.next ? copy.next.next : null;</code> does the mirror image for the copy list, skipping
+      the next original to reach the next copy.</li>
+    <li><code>const newHead = head.next;</code> is captured <strong>before</strong> pass 3's loop
+      runs — it's the copy of the head, which is exactly what pass 1 spliced in right after
+      <code>head</code>, and it stays correct throughout pass 3 since that line never touches
+      <code>head.next</code> again until the loop reassigns it on its very first iteration.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Interleaving trick — three linear passes, no auxiliary map</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Hash map (two passes)</td><td>O(n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (interleaving)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Both solutions are O(n) time — the
+    interleaving trick runs three linear passes instead of two, so it is not asymptotically (or
+    even practically) faster, and it would be dishonest to claim it is. The real, honest
+    improvement is space: the Map that grows to hold one entry per node is replaced entirely by
+    the list's own structure, dropping extra space from O(n) down to O(1).</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does interleaving a copy right after every original guarantee that
+        "the copy of node X is always X.next"? What would break if pass 1 inserted copies in a
+        different order, or in a separate pass from creation?</p>
+      <ul class="pb-ia">
+        <li>It's guaranteed because pass 1 processes nodes in list order and, for each one,
+          immediately does two things back to back: create the copy, then splice it in as that
+          exact node's <code>next</code>. There's no gap in which a node exists without its copy
+          sitting directly after it.</li>
+        <li>If copies were created in one pass and spliced in during a later, separate pass, pass
+          2's random-wiring trick (<code>original.random.next</code>) couldn't be trusted — some
+          nodes would have copies that exist but aren't in position yet, so "one hop past X" would
+          not reliably mean "X's copy" at the moment pass 2 needs it to.</li>
+        <li>This is also exactly why pass 1 reassigns <code>cur.next</code> to the copy
+          <em>before</em> advancing — the moment a node is processed, its copy is already
+          "live" in the list structure, which is what pass 2 depends on for every single node,
+          not just some of them.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Solution 1 does two separate passes — could you merge pass 1 and pass 2
+        into a single loop that creates each node's copy <em>and</em> wires its random pointer at
+        the same time?</p>
+      <ul class="pb-ia">
+        <li>No — a node's <code>random</code> can point <em>forward</em> to a node that hasn't
+          been reached yet in the single pass. In the traced example, if node 0 processes first
+          and its random happened to point at node 2, <code>copyMap.get(node2)</code> would come
+          back <code>undefined</code>, because node 2's copy doesn't exist yet.</li>
+        <li>Splitting into "create every copy first" (pass 1) then "wire every pointer" (pass 2)
+          sidesteps the ordering problem completely — by the time pass 2 runs a single lookup,
+          every original node, no matter where it sits in the list, already has an entry in the
+          map.</li>
+        <li>The interleaving solution has a similar-looking constraint and handles it the same
+          way: pass 2 (wiring random) only starts after pass 1 (creating and splicing every copy)
+          has fully finished, for exactly the same forward-pointer reason.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What is the actual, honest complexity improvement of the interleaving
+        solution over the hash-map solution — and what would be dishonest to claim?</p>
+      <ul class="pb-ia">
+        <li>Both solutions are O(n) TIME. The interleaving solution runs three linear passes
+          instead of two, so it isn't asymptotically faster — claiming a time win would be
+          incorrect.</li>
+        <li>The real difference is SPACE: the hash map is O(n) because it holds one entry per
+          node, while the interleaving solution is O(1) — a constant number of pointer variables,
+          regardless of how long the list is.</li>
+        <li>The honest framing is "same time complexity, different technique, real space win" —
+          not "brute force vs. optimal" in the Big-O sense. The hash map is a completely
+          legitimate, commonly-used solution; the interleaving trick just trades a small amount of
+          extra bookkeeping complexity for dropping the auxiliary memory entirely.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Which would you actually use in production code?"
+        The hash-map version, almost always — it's easier to read, easier to get right under
+        interview pressure, and O(n) space for a linked list copy is rarely the bottleneck. The
+        interleaving trick is the kind of thing worth knowing exists (and demonstrating you can
+        derive), not necessarily the default choice.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — Solution 1 keys a <code>Map</code> by the original node
+        <em>objects</em> themselves, not by an index or a value. Would a plain JavaScript object
+        (<code>{}</code>) work as a drop-in replacement for that <code>Map</code>?</p>
+      <pre><code>const a = { val: 7 };
+const b = { val: 13 };
+const obj = {};
+obj[a] = 'copy-of-a';
+obj[b] = 'copy-of-b';
+console.log(Object.keys(obj).length); // ?
+console.log(obj[a]);                  // ?</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>1</code>, then <code>'copy-of-b'</code> — not two separate entries.</li>
+        <li>Plain object property keys are always coerced to strings. Every plain object
+          stringifies to the exact same value, <code>"[object Object]"</code> — so
+          <code>obj[a]</code> and <code>obj[b]</code> are actually the <em>same key</em>, and
+          setting <code>obj[b]</code> silently overwrites whatever <code>obj[a]</code> held.</li>
+        <li><code>Map</code> keys use the object's real reference identity, not a stringified
+          form — so <code>copyMap.set(a, ...)</code> and <code>copyMap.set(b, ...)</code> are
+          always distinct entries, no matter how similar (or identical) the objects' own
+          properties look.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: for this exact problem, a plain object wouldn't just be slower —
+        it would be silently <strong>wrong</strong>. Every original node would collide onto the
+        same <code>"[object Object]"</code> key, so <code>copyMap.get(cur)</code> in pass 2 would
+        return whichever copy was created <em>last</em>, for every single node — wiring every
+        copy's <code>next</code>/<code>random</code> to the same wrong node instead of its actual
+        counterpart. This only surfaces with node-object keys; a plain object is perfectly fine
+        for keys that are already meant to be strings or numbers.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="forwardrandom" data-explain="A node's random pointer can point forward to a node that hasn't been copied yet in a single combined pass — copyMap.get() on that not-yet-created node would return undefined. Two passes guarantee every original has a copy in the map before any wiring is attempted.">
+    <p class="q-text">1. Why does Solution 1 need two separate passes instead of creating and wiring each copy in one loop?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="forwardrandom">A random pointer can point forward to a node that hasn't been copied yet — one combined pass could look up a copy that doesn't exist</button>
+      <button class="btn dsa-quiz-option" data-value="sorted7">The list must be sorted before it can be safely copied</button>
+      <button class="btn dsa-quiz-option" data-value="perf7">Two passes are only faster for very long lists — it's a performance optimization, not a correctness requirement</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="spaceonly" data-explain="Both solutions are O(n) time — the interleaving solution actually runs three passes instead of two, so it isn't asymptotically faster. The real, honest improvement is space: O(n) for the Map down to O(1) for a constant number of pointer variables.">
+    <p class="q-text">2. What is the real, honest complexity improvement of the interleaving solution over the hash-map solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="spaceonly">Space only — both are O(n) time, but extra space drops from O(n) to O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="time7">Time only — interleaving is asymptotically faster since it avoids map lookups</button>
+      <button class="btn dsa-quiz-option" data-value="both7">Both time and space improve, since three simple passes beat two map-based ones</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onehop" data-explain="Pass 1 splices every copy in immediately after its original — creation and insertion happen together, node by node, so the moment a node is processed, its copy is already living right at X.next. That's what makes the one-extra-hop trick in pass 2 reliable." >
+    <p class="q-text">3. In the optimal solution, why is the copy of any node X always exactly X.next after pass 1?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onehop">Because pass 1 splices each copy in immediately after its original, one node at a time</button>
+      <button class="btn dsa-quiz-option" data-value="sameval7">Because the copy always has the same value as the original, so any lookup by value works</button>
+      <button class="btn dsa-quiz-option" data-value="mapstill">It isn't guaranteed — pass 2 still needs a hash map to find each copy</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="separates" data-explain="Pass 3 walks the interleaved list once more and splits it back into two fully independent lists: each original's next is restored to point at the next original (skipping its copy), and each copy's next is set to point at the next copy (skipping the next original)." >
+    <p class="q-text">4. What does pass 3 (the final pass) of the optimal solution actually do?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="separates">Separates the interleaved list back into two independent lists by restoring each list's own next pointers</button>
+      <button class="btn dsa-quiz-option" data-value="wiresrandom7">Wires each copy's random pointer for the first time</button>
+      <button class="btn dsa-quiz-option" data-value="deletes7">Deletes the original list, since it's no longer needed once the copy exists</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="plainobjcollide" data-explain="Plain object keys are always coerced to strings, and every plain object stringifies to the same '[object Object]' — so keying by node object with a plain {} would make every node collide onto one key, silently wiring every copy to the same wrong node.">
+    <p class="q-text">5. Why can't a plain JavaScript object ({}) safely replace the Map in Solution 1, when the keys are node objects?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="plainobjcollide">Plain object keys are coerced to strings, and every object stringifies to the same "[object Object]" — all node keys would collide</button>
+      <button class="btn dsa-quiz-option" data-value="slower7">It would work identically, just slightly slower for very large lists</button>
+      <button class="btn dsa-quiz-option" data-value="throws7">Plain objects throw a runtime error when used with a non-string key</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Linked List problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'copy-list-with-random-pointer';
+
+  // Shared demo data for both animations: [val, randomIndex|null].
+  // node 0 (7) -> random null; node 1 (13) -> random node 0; node 2 (11) -> random node 1.
+  const PAIRS = [[7, null], [13, 0], [11, 1]];
+  const N = PAIRS.length;
+  const oid = (i) => 'o' + i;
+  const cid = (i) => 'c' + i;
+  const nextIdxOf = (i) => (i + 1 < N ? i + 1 : null);
+  const randomIdxOf = (i) => PAIRS[i][1];
+
+  // After render(), dash + nudge any edge tagged kind:'random' so next-pointer edges
+  // (solid, on the node-to-node line) are visually distinct from random-pointer edges
+  // (dashed, offset a few px off that line) without touching js/engine.js — the Graph
+  // renderer rebuilds <line> elements in this.edges order on every render(), so zipping
+  // the current edges array against the rendered <line> NodeList by index is safe as
+  // long as this runs right after every render(). The offset matters because every
+  // random edge in this diagram runs exactly on top of a next edge between the same two
+  // nodes (just reversed) — same color, same path — so dasharray alone is invisible
+  // once the solid line underneath fills in every gap. Nudging perpendicular to the
+  // (always-horizontal, in this layout) line separates them into two readable strands.
+  function dashRandomEdges(graph) {
+    const lines = graph.svg.querySelectorAll('line');
+    lines.forEach((line, i) => {
+      const e = graph.edges[i];
+      if (e && e.kind === 'random') {
+        line.setAttribute('stroke-dasharray', '9 6');
+        const y1 = parseFloat(line.getAttribute('y1'));
+        const dy = y1 < 135 ? -10 : 10;
+        line.setAttribute('transform', `translate(0, ${dy})`);
+      }
+    });
+  }
+
+  // ---- Solution 1: hash map, two passes (two-row layout: original top, copy bottom) ----
+  const S1_NODES = [];
+  for (let i = 0; i < N; i++) {
+    const x = 100 + i * 180;
+    S1_NODES.push({ id: oid(i), x, y: 70, label: String(PAIRS[i][0]) });
+    S1_NODES.push({ id: cid(i), x, y: 200, label: PAIRS[i][0] + "'" });
+  }
+
+  function buildEdges(nodeRowOrig, nodeRowCopy) {
+    const edges = [];
+    for (let i = 0; i < N - 1; i++) edges.push({ from: oid(i), to: oid(i + 1), directed: true, kind: 'next' });
+    for (let i = 0; i < N; i++) {
+      const ri = randomIdxOf(i);
+      if (ri !== null) edges.push({ from: oid(i), to: oid(ri), directed: true, kind: 'random' });
+    }
+    for (let i = 0; i < N; i++) {
+      const ni = nextIdxOf(i);
+      const ri = randomIdxOf(i);
+      if (ni !== null) edges.push({ from: cid(i), to: cid(ni), directed: true, kind: 'next' });
+      if (ri !== null) edges.push({ from: cid(i), to: cid(ri), directed: true, kind: 'random' });
+    }
+    return edges;
+  }
+  const S1_EDGES = buildEdges();
+  const S1_ALWAYS_SHOWN = (N - 1) + PAIRS.filter((p) => p[1] !== null).length; // orig next + orig random
+
+  function buildHashMapSteps() {
+    const steps = [];
+    let reveal = S1_ALWAYS_SHOWN;
+
+    steps.push({
+      narration: `The original list is given, random pointers included: node[0]=7 (random: null), node[1]=13 (random: node[0]), node[2]=11 (random: node[1]). Pass 1 will create one copy node per original node.`,
+      states: {},
+      edges: S1_EDGES.slice(0, reveal),
+    });
+
+    for (let i = 0; i < N; i++) {
+      steps.push({
+        narration: `Pass 1: create copy of node[${i}] (val ${PAIRS[i][0]}) — next/random left unset for now. copyMap.set(node[${i}], copy).`,
+        states: { [oid(i)]: 'pointer', [cid(i)]: 'active' },
+        edges: S1_EDGES.slice(0, reveal),
+      });
+    }
+
+    for (let i = 0; i < N; i++) {
+      const ri = randomIdxOf(i);
+      if (ri !== null) {
+        steps.push({
+          narration: `Pass 2, node[${i}]: its random points to node[${ri}] (val ${PAIRS[ri][0]}) in the original list — look up copyMap.get(original.random) to find that node's copy.`,
+          states: { [oid(i)]: 'pointer', [cid(i)]: 'pointer', [oid(ri)]: 'compare' },
+          edges: S1_EDGES.slice(0, reveal),
+        });
+      }
+      const ni = nextIdxOf(i);
+      if (ni !== null) reveal += 1;
+      if (ri !== null) reveal += 1;
+      steps.push({
+        narration: `Pass 2, wire copy[${i}]: next -> ${ni !== null ? 'copy[' + ni + ']' : 'null'}, random -> ${ri !== null ? 'copy[' + ri + ']' : 'null'}.`,
+        states: { [oid(i)]: 'pointer', [cid(i)]: 'pointer' },
+        edges: S1_EDGES.slice(0, reveal),
+      });
+    }
+
+    const finalStates = {};
+    for (let i = 0; i < N; i++) finalStates[cid(i)] = 'sorted';
+    steps.push({
+      narration: `Deep copy complete — ${N} new node objects, each with next/random correctly pointing to other COPY nodes, never the originals.`,
+      states: finalStates,
+      edges: S1_EDGES.slice(0, reveal),
+    });
+
+    return steps;
+  }
+
+  const graph1 = new DSA.Graph(document.getElementById('viz1Stage'), { width: 640, height: 260 });
+  graph1.setGraph(S1_NODES, S1_EDGES.slice(0, S1_ALWAYS_SHOWN));
+  dashRandomEdges(graph1);
+  const hashMapSteps = buildHashMapSteps();
+  new DSA.StepPlayer({
+    steps: hashMapSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1300,
+    onStep(step) {
+      graph1.edges = step ? step.edges : S1_EDGES.slice(0, S1_ALWAYS_SHOWN);
+      graph1.render(step ? step.states : {});
+      dashRandomEdges(graph1);
+    },
+  });
+
+  // ---- Solution 2: optimal interleaving (single interleaved row -> splits into two rows) ----
+  const INTERLEAVE_X = [70, 165, 260, 355, 450, 545]; // slot per node: o0,c0,o1,c1,o2,c2
+  const INTERLEAVE_Y = 110;
+
+  function origInterleaveNode(i) { return { id: oid(i), x: INTERLEAVE_X[2 * i], y: INTERLEAVE_Y, label: String(PAIRS[i][0]) }; }
+  function copyInterleaveNode(i) { return { id: cid(i), x: INTERLEAVE_X[2 * i + 1], y: INTERLEAVE_Y, label: PAIRS[i][0] + "'" }; }
+
+  const S2_ORIG_EDGES = (() => {
+    const edges = [];
+    for (let i = 0; i < N - 1; i++) edges.push({ from: oid(i), to: oid(i + 1), directed: true, kind: 'next' });
+    for (let i = 0; i < N; i++) {
+      const ri = randomIdxOf(i);
+      if (ri !== null) edges.push({ from: oid(i), to: oid(ri), directed: true, kind: 'random' });
+    }
+    return edges;
+  })();
+
+  function buildInterleaveSteps() {
+    const steps = [];
+
+    // Phase 0: original list only.
+    steps.push({
+      narration: `The original list is given, unmodified: node[0]=7 (random: null), node[1]=13 (random: node[0]), node[2]=11 (random: node[1]). Pass 1 will splice a copy in right after every node.`,
+      states: {},
+      nodes: [0, 1, 2].map(origInterleaveNode),
+      edges: S2_ORIG_EDGES,
+    });
+
+    // Phase 1: interleave, one node at a time.
+    for (let i = 0; i < N; i++) {
+      const nodes = [];
+      const edges = [];
+      for (let j = 0; j <= i; j++) {
+        nodes.push(origInterleaveNode(j));
+        nodes.push(copyInterleaveNode(j));
+      }
+      for (let j = i + 1; j < N; j++) nodes.push(origInterleaveNode(j));
+
+      // next-chain reflects the physical splice: originals already processed connect to
+      // their own copy, then that copy connects onward to whichever node is next.
+      for (let j = 0; j <= i; j++) {
+        edges.push({ from: oid(j), to: cid(j), directed: true, kind: 'next' });
+        const after = j + 1 < N ? oid(j + 1) : null;
+        if (after) edges.push({ from: cid(j), to: after, directed: true, kind: 'next' });
+      }
+      for (let j = i + 1; j < N - 1; j++) edges.push({ from: oid(j), to: oid(j + 1), directed: true, kind: 'next' });
+      for (let j = 0; j < N; j++) {
+        const rj = randomIdxOf(j);
+        if (rj !== null) edges.push({ from: oid(j), to: oid(rj), directed: true, kind: 'random' });
+      }
+
+      steps.push({
+        narration: i === N - 1
+          ? `Pass 1 complete: create copy of node[${i}] (val ${PAIRS[i][0]}) and splice it in — it's the last node, so its next is null. The list is now fully interleaved: 7 → 7' → 13 → 13' → 11 → 11'.`
+          : `Pass 1: create copy of node[${i}] (val ${PAIRS[i][0]}) and splice it in right after the original — original.next now points to the copy, and the copy's next continues to whatever the original pointed to before.`,
+        states: { [oid(i)]: 'pointer', [cid(i)]: 'active' },
+        nodes,
+        edges,
+      });
+    }
+
+    const fullInterleavedNodes = [];
+    for (let i = 0; i < N; i++) { fullInterleavedNodes.push(origInterleaveNode(i)); fullInterleavedNodes.push(copyInterleaveNode(i)); }
+    const fullNextEdges = [];
+    for (let i = 0; i < N; i++) {
+      fullNextEdges.push({ from: oid(i), to: cid(i), directed: true, kind: 'next' });
+      if (i + 1 < N) fullNextEdges.push({ from: cid(i), to: oid(i + 1), directed: true, kind: 'next' });
+    }
+    const origRandomEdges = S2_ORIG_EDGES.filter((e) => e.kind === 'random');
+
+    // Phase 2 intro.
+    steps.push({
+      narration: `Phase 2: for each original node, wire its copy's random pointer using the key trick — the copy of ANY node is always that node's own .next, thanks to pass 1's interleaving.`,
+      states: {},
+      nodes: fullInterleavedNodes,
+      edges: fullNextEdges.concat(origRandomEdges),
+    });
+
+    // Phase 2: wire random, per node.
+    let copyRandomEdges = [];
+    for (let i = 0; i < N; i++) {
+      const ri = randomIdxOf(i);
+      if (ri === null) {
+        steps.push({
+          narration: `Pass 2, node[${i}]: its random is null, so copy[${i}]'s random is also null — nothing to wire.`,
+          states: { [oid(i)]: 'pointer', [cid(i)]: 'pointer' },
+          nodes: fullInterleavedNodes,
+          edges: fullNextEdges.concat(origRandomEdges, copyRandomEdges),
+        });
+        continue;
+      }
+      steps.push({
+        narration: `Pass 2, node[${i}]: its random points to node[${ri}] (val ${PAIRS[ri][0]}). The key trick: copy[${ri}] is always node[${ri}].next — so copy[${i}]'s random will be node[${ri}].next.`,
+        states: { [oid(i)]: 'pointer', [cid(i)]: 'pointer', [oid(ri)]: 'compare' },
+        nodes: fullInterleavedNodes,
+        edges: fullNextEdges.concat(origRandomEdges, copyRandomEdges),
+      });
+      copyRandomEdges = copyRandomEdges.concat([{ from: cid(i), to: cid(ri), directed: true, kind: 'random' }]);
+      steps.push({
+        narration: `Wire copy[${i}].random = node[${ri}].next = copy[${ri}].`,
+        states: { [cid(i)]: 'pointer', [cid(ri)]: 'compare' },
+        nodes: fullInterleavedNodes,
+        edges: fullNextEdges.concat(origRandomEdges, copyRandomEdges),
+      });
+    }
+
+    // Phase 3 intro (still interleaved).
+    steps.push({
+      narration: `Phase 3: walk the interleaved list one final time and separate it back into two independent lists — restore each original's next to skip its copy, and set each copy's next to skip the next original.`,
+      states: {},
+      nodes: fullInterleavedNodes,
+      edges: fullNextEdges.concat(origRandomEdges, copyRandomEdges),
+    });
+
+    // Phase 3 final: fully separated two-row layout, matching Solution 1's positions.
+    const finalNodes = S1_NODES;
+    const finalEdges = S1_EDGES;
+    const finalStates = {};
+    for (let i = 0; i < N; i++) finalStates[cid(i)] = 'sorted';
+    steps.push({
+      narration: `Pass 3 complete — the list is fully separated again: the original list is untouched (7→13→11, its random pointers unchanged), and the copy list (7'→13'→11') is a completely independent structure with its own next/random pointers. No map, no array — just a constant number of pointer variables were ever used.`,
+      states: finalStates,
+      nodes: finalNodes,
+      edges: finalEdges,
+    });
+
+    return steps;
+  }
+
+  const graph2 = new DSA.Graph(document.getElementById('viz2Stage'), { width: 640, height: 260 });
+  graph2.setGraph([0, 1, 2].map(origInterleaveNode), S2_ORIG_EDGES);
+  dashRandomEdges(graph2);
+  const interleaveSteps = buildInterleaveSteps();
+  new DSA.StepPlayer({
+    steps: interleaveSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1300,
+    onStep(step) {
+      graph2.nodes = step ? step.nodes : [0, 1, 2].map(origInterleaveNode);
+      graph2.edges = step ? step.edges : S2_ORIG_EDGES;
+      graph2.render(step ? step.states : {});
+      dashRandomEdges(graph2);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('copy-list-with-random-pointer', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
