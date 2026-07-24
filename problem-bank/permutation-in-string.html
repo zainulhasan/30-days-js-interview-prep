@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Permutation in String — Problem Bank</title>
+<meta name="description" content="Permutation in String: a factorial-time brute force (generate every permutation of s1, test each against s2) vs. the optimal O(n) fixed-size sliding window with frequency-count matching, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/permutation-in-string.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Permutation in String — Problem Bank" />
+<meta property="og:description" content="Permutation in String: a factorial-time brute force (generate every permutation of s1, test each against s2) vs. the optimal O(n) fixed-size sliding window with frequency-count matching, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/permutation-in-string.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Permutation in String — Problem Bank" />
+<meta name="twitter:description" content="Permutation in String: a factorial-time brute force (generate every permutation of s1, test each against s2) vs. the optimal O(n) fixed-size sliding window with frequency-count matching, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Permutation in String", "item": "https://dsa.itszain.tech/problem-bank/permutation-in-string.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day05.html">Day 5: Sliding Window Pattern</a></strong> —
+      the optimal solution below is a fixed-size sliding window: unlike the grow/shrink windows in
+      that lesson, this window's size never changes, it just slides one position at a time — read
+      that lesson first if the two-pointer window mechanics are still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">SLIDING WINDOW &middot; MEDIUM</p>
+  <h1>Permutation in String <span class="leetcode-link">(<a href="https://leetcode.com/problems/permutation-in-string/" target="_blank" rel="noopener">LeetCode: Permutation in String</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given two strings, <code>s1</code> and <code>s2</code>. Decide whether <code>s2</code>
+    contains a contiguous block of characters that is SOME rearrangement of <code>s1</code> —
+    exactly the same multiset of characters as <code>s1</code>, in any order, but packed together
+    with no gaps and no skipped characters. In other words: does any window of <code>s2</code>,
+    exactly <code>s1.length</code> characters long, use precisely the same letters (and letter
+    counts) as <code>s1</code>? For example <code>s1="ab"</code>, <code>s2="eidbaooo"</code>
+    returns <code>true</code> — the substring <code>"ba"</code> is a rearrangement of
+    <code>"ab"</code> and sits right there at index 3. But <code>s1="ab"</code>,
+    <code>s2="eidboaoo"</code> returns <code>false</code> — <code>"a"</code> and <code>"b"</code>
+    both appear in <code>s2</code>, but never adjacent to each other as a two-character block, so no
+    contiguous substring ever matches. Order inside the matching window doesn't matter at all — only
+    which characters (and how many of each) are in it.</p>
+
+  <h2>Solution 1: Brute force — generate every permutation of s1, test each against s2</h2>
+  <p>The most literal reading of the problem: actually build the set of every distinct rearrangement
+    of <code>s1</code> (de-duplicated — if <code>s1</code> has repeated characters, swapping two
+    identical letters doesn't produce a genuinely different string), then check each one with
+    <code>s2.includes(candidate)</code>. The first candidate that's found is the answer. This is a
+    completely real, correct algorithm — but the number of distinct permutations of a
+    <code>k</code>-character string is <code>k!</code> in the worst case, and each
+    <code>.includes()</code> check itself costs up to <code>O(k)</code> against an
+    <code>O(n)</code>-long haystack. <code>7!</code> is already 5,040 candidate strings;
+    <code>10!</code> is 3.6 million. <strong>This demo is deliberately capped at
+    <code>s1.length = 3</code></strong> — anything much bigger stops being animatable at all, which
+    is exactly the point: this approach is a correct answer to a toy-sized version of the problem,
+    not a practical one.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: generate every distinct permutation of s1, then for each candidate check whether s2 includes it as a substring, returning true on the first hit or false once every permutation has been tried.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: generate every permutation of s1, test each against s2</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="115" y="82" fill="#E2E3E7">generate all perms of s1</text>
+      <text x="115" y="98" fill="#9198A6" font-size="10">dedupe repeats, k! of them</text>
+      <rect x="240" y="60" width="190" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="335" y="82" fill="#282C34">s2.includes(candidate)?</text>
+      <text x="335" y="98" fill="#282C34" font-size="10">O(k) per check</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="540" y="82" fill="#E2E3E7">true on first hit</text>
+      <text x="540" y="98" fill="#9198A6" font-size="10">else false after all k!</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-pis1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-pis1)">
+      <line x1="210" y1="83" x2="238" y2="83"/>
+      <line x1="430" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(k! &middot; k &middot; n) time — k! permutations of s1 (length k), each an</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">O(k&middot;n) substring check against s2 (length n). O(k!&middot;k) space to hold them.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> current candidate permutation being tested</span>
+    <span><i class="lg-compare"></i> matched span found inside s2, about to confirm</span>
+    <span><i class="lg-sorted"></i> confirmed match — return true</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="width:100%;">
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:0 0 0.4rem;">CANDIDATE PERMUTATION OF s1</p>
+        <div id="viz1TopBars" style="height:80px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.3rem 0 0.4rem;">s2 (target string)</p>
+        <div id="viz1BottomBars" style="height:80px;"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    <code>s1="abc"</code>, <code>s2="eidcabooo"</code> — 6 total permutations of <code>"abc"</code>.
+    The first 4 tried (<code>"abc"</code>, <code>"acb"</code>, <code>"bac"</code>,
+    <code>"bca"</code>) all miss; the 5th, <code>"cab"</code>, is found at index 3.</p>
+
+  <h3>The code</h3>
+  <pre><code>function checkInclusionBruteForce(s1, s2) {
+  const perms = permutationsOf(s1); // every DISTINCT rearrangement of s1
+  for (const p of perms) {
+    if (s2.includes(p)) return true;
+  }
+  return false;
+}
+
+function permutationsOf(s) {
+  const results = new Set(); // Set dedupes identical strings from repeated chars
+  function backtrack(path, remaining) {
+    if (remaining.length === 0) {
+      results.add(path.join(''));
+      return;
+    }
+    const seenAtThisLevel = new Set();
+    for (let i = 0; i < remaining.length; i++) {
+      const c = remaining[i];
+      if (seenAtThisLevel.has(c)) continue; // skip a repeated char at this depth
+      seenAtThisLevel.add(c);
+      path.push(c);
+      backtrack(path, remaining.slice(0, i).concat(remaining.slice(i + 1)));
+      path.pop();
+    }
+  }
+  backtrack([], s.split(''));
+  return Array.from(results);
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>permutationsOf(s1)</code> does the actual generation work — a standard
+      backtracking permutation builder, collected into a <code>Set</code> so identical strings
+      produced from swapping equal characters (e.g. two <code>a</code>s in <code>"aab"</code>)
+      collapse into one entry instead of counting as separate permutations.</li>
+    <li><code>seenAtThisLevel</code> is the dedupe trick itself: at each recursive depth, if the
+      same character value has already been tried as the next pick, skip it — this prunes
+      duplicate branches during generation rather than generating them all and filtering
+      afterward, but the asymptotic cost is still driven by <code>k!</code> in the worst case
+      (all-distinct characters).</li>
+    <li><code>checkInclusionBruteForce</code> itself is trivial once the permutation list exists:
+      loop through every candidate and call <code>s2.includes(p)</code>, returning the instant one
+      is found.</li>
+    <li><code>s2.includes(p)</code> is not free — a naive substring search costs
+      <code>O(k&middot;n)</code> in the worst case (V8's real implementation is more optimized in
+      practice, but the honest worst-case bound is what the complexity table below reports).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(k! &middot; k &middot; n)</td><td>O(k! &middot; k)</td><td>Generate every distinct permutation of s1, test each with .includes()</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — fixed-size sliding window with frequency-count matching</h2>
+  <p>The brute force's real waste is regenerating and re-testing whole strings from scratch. A
+    permutation match doesn't care about ORDER at all — only about which characters, and how many
+    of each, sit inside some window of <code>s2</code> exactly <code>s1.length</code> characters
+    wide. That reframes the problem entirely: build a frequency map (<code>need</code>) of
+    <code>s1</code>'s characters, then slide a window of exactly that fixed width across
+    <code>s2</code>, maintaining a running frequency map of whatever is currently inside the
+    window. The window is a permutation of <code>s1</code> the moment its frequency map matches
+    <code>need</code> exactly.</p>
+
+  <p>Checking "does the whole window's frequency map match <code>need</code>" from scratch on every
+    slide would cost <code>O(k)</code> per slide — back to <code>O(n&middot;k)</code> overall. The
+    optimization is a running <code>matches</code> counter: it tracks how many DISTINCT characters
+    currently have their count in the window exactly equal to their required count in
+    <code>need</code>. A window is a full match exactly when <code>matches === need.size</code>
+    (every required character's count is satisfied — not more, not less). Sliding the window by one
+    position only ever changes TWO characters' counts: the new character entering on the right, and
+    the old character leaving on the left. So each slide only needs to re-check those two
+    characters' match status — an <code>O(1)</code> update, not a full window rescan.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: build a need frequency map from s1, slide a fixed-size window of that width across s2 adding the new right character and dropping the old left character each step, and check whether the matches counter equals the number of distinct characters in need — if so, a permutation was found.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: fixed window, incremental frequency-count matching</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="105" y="82" fill="#282C34">build need-map</text>
+      <text x="105" y="98" fill="#282C34" font-size="10">from s1, O(k)</text>
+      <rect x="210" y="60" width="220" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">slide window: add right,</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">drop left — only 2 counts change</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">matches===need.size?</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">yes → permutation found</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-pis2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-pis2)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="430" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — one pass, each slide O(1) amortized (only 2 counts change).</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">O(1) extra space — the frequency maps are bounded by the alphabet, not by n.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> window's right edge as it slides</span>
+    <span><i class="lg-active"></i> rest of the current fixed-size window</span>
+    <span><i class="lg-compare"></i> character just dropped — its count is being re-checked against need</span>
+    <span><i class="lg-sorted"></i> final matched window — permutation found</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage" style="height:130px;"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    <code>s1="ab"</code>, <code>s2="eidbaooo"</code> — the window fills with
+    <code>"ei"</code>, then slides through <code>"id"</code> and <code>"db"</code> before landing
+    on <code>"ba"</code> at index 3, where <code>matches</code> finally reaches
+    <code>need.size</code>. (For contrast: <code>s2="eidboaoo"</code> — same characters, different
+    arrangement — never produces a matching window at all; the window slides all the way to the end
+    and the function correctly returns <code>false</code>.)</p>
+
+  <h3>The code</h3>
+  <pre><code>function checkInclusionOptimal(s1, s2) {
+  const k = s1.length;
+  if (k > s2.length) return false;
+
+  const need = new Map();
+  for (const c of s1) need.set(c, (need.get(c) || 0) + 1);
+
+  const window = new Map();
+  let matches = 0;
+
+  function bump(c, delta) {
+    const before = window.get(c) || 0;
+    const after = before + delta;
+    if (after === 0) window.delete(c); else window.set(c, after);
+    const wasMatch = need.has(c) && before === need.get(c);
+    const isMatch = need.has(c) && after === need.get(c);
+    if (wasMatch && !isMatch) matches--;
+    if (!wasMatch && isMatch) matches++;
+  }
+
+  for (let i = 0; i < k; i++) bump(s2[i], 1); // fill the first window
+  if (matches === need.size) return true;
+
+  for (let right = k; right < s2.length; right++) {
+    bump(s2[right], 1);          // char entering on the right
+    bump(s2[right - k], -1);     // char leaving on the left
+    if (matches === need.size) return true;
+  }
+
+  return false;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>need</code> is a frequency map of <code>s1</code> — how many of each character the
+      window has to contain to be a permutation.</li>
+    <li><code>bump(c, delta)</code> is the entire O(1) trick: it adjusts one character's count by
+      <code>+1</code> or <code>-1</code>, and compares that ONE character's count before and after
+      against <code>need</code>. If the count just transitioned INTO exact equality with
+      <code>need</code>, <code>matches</code> goes up; if it just transitioned OUT of equality,
+      <code>matches</code> goes down. Every other character's count and match status is completely
+      untouched.</li>
+    <li>The first loop fills the initial window (<code>s2[0..k-1]</code>) one character at a time,
+      using the same <code>bump</code> helper — no separate code path for "building" vs "sliding".</li>
+    <li>The sliding loop is exactly two <code>bump</code> calls per iteration: add
+      <code>s2[right]</code> (the new right edge), remove <code>s2[right - k]</code> (whatever just
+      fell off the left edge of the fixed-width window). That's the entire slide — nothing else in
+      <code>window</code> or <code>matches</code> is recomputed.</li>
+    <li><code>matches === need.size</code> is the win condition — <code>need.size</code> is the
+      number of DISTINCT characters in <code>s1</code> (a <code>Map</code>'s key count), not
+      <code>s1.length</code>. Every distinct required character having its exact count satisfied is
+      precisely what "the window is a permutation of s1" means.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Fixed-size sliding window, incremental frequency-count matching (matches counter)</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (generate + test permutations)</td><td>O(k! &middot; k &middot; n)</td><td>O(k! &middot; k)</td></tr>
+      <tr><td>Optimal (fixed sliding window)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This is a genuinely dramatic gap, and it's
+    honest to call it one: factorial time in <code>k = s1.length</code> versus linear time in
+    <code>n = s2.length</code>, with the space dropping from "grows faster than exponentially" down
+    to a constant bounded by the alphabet (at most 26 distinct lowercase letters, or however many
+    distinct characters actually appear). Unlike some brute-force/optimal pairs on this site where
+    the honest story is "same time, better space" or vice versa, here BOTH time and space genuinely
+    improve, and by an enormous margin.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does this problem use a FIXED-size sliding window instead of the
+        grow/shrink variable-size window used in problems like Minimum Window Substring?</p>
+      <ul class="pb-ia">
+        <li>Because the target length is already known and fixed: a permutation of <code>s1</code>
+          must be EXACTLY <code>s1.length</code> characters long, no more, no less. There's nothing
+          to discover about the window's size — it's given up front.</li>
+        <li>That means only one moving boundary is needed conceptually (the right edge), since
+          <code>left</code> is always derived as <code>right - k + 1</code> — not two
+          independently-moving pointers that each have their own reason to advance.</li>
+        <li>Contrast with Minimum Window Substring, where the window's size is exactly what's being
+          searched for — it has to grow until a condition is satisfied, then shrink to find the
+          minimum, because the target length isn't known ahead of time.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">The optimal solution is described as O(1) amortized per slide, not O(k). Why
+        — what specifically keeps each slide from re-scanning the whole window?</p>
+      <ul class="pb-ia">
+        <li>Sliding the window by one position changes the window's contents by exactly two
+          characters: the one entering on the right, and the one leaving on the left. Every other
+          character already in the window is completely unaffected.</li>
+        <li>The <code>matches</code> counter is maintained incrementally — each <code>bump()</code>
+          call only re-checks the ONE character it just changed against <code>need</code>, an O(1)
+          comparison, not a full re-derivation of the whole map's match status.</li>
+        <li>The trap this avoids: if you instead rebuilt a fresh frequency map from scratch and
+          compared it entirely against <code>need</code> on every slide, that's O(k) work per slide
+          — O(n&middot;k) overall, not O(n). The incremental <code>matches</code> counter is the
+          entire reason this solution is linear.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What does <code>matches === need.size</code> actually mean, and why compare
+        against <code>need.size</code> instead of <code>s1.length</code>?</p>
+      <ul class="pb-ia">
+        <li><code>need.size</code> is the number of DISTINCT characters in <code>s1</code> (a
+          <code>Map</code>'s key count) — not the total character count. <code>matches</code> only
+          increments when one specific character's window count becomes EXACTLY equal to its
+          required count in <code>need</code>.</li>
+        <li>Comparing against <code>s1.length</code> would be wrong whenever <code>s1</code> has
+          repeated characters. For <code>s1="aab"</code>, <code>need = {a: 2, b: 1}</code>, so
+          <code>need.size</code> is 2 — the window is a full match once BOTH distinct characters hit
+          their required count, regardless of the fact that <code>s1.length</code> is 3.</li>
+        <li>A window can have the right TOTAL character count (<code>s1.length</code>) while still
+          being the wrong multiset — e.g. window <code>"aaa"</code> against
+          <code>need={a:2,b:1}</code> has 3 characters total but zero <code>b</code>s, so it's not a
+          match. <code>need.size</code> plus per-character exact-count matching is what actually
+          captures "same multiset," not a raw length check.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if s1 or s2 contain uppercase letters, or
+        Unicode characters outside the basic multilingual plane (e.g. emoji, which are represented
+        as surrogate pairs in JS strings)?" The <code>Map</code>-based approach here is
+        case-sensitive and treats each UTF-16 code unit as one "character" via
+        <code>for (const c of s1)</code> — that iterates by Unicode CODE POINT (correctly handling
+        surrogate pairs as one unit each), which is actually already safer than indexing
+        <code>s1[i]</code> directly, which would split a surrogate pair into two broken halves.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — this page's frequency counters (<code>need</code> and
+        <code>window</code>) are deliberately built as <code>Map</code>s, not plain objects
+        (<code>{}</code>). Beyond <code>.has()</code>/<code>.size</code> being nicer to use, is
+        there a real correctness reason to prefer <code>Map</code> for arbitrary string keys?</p>
+      <pre><code>const obj = {};
+['2', '1', 'a', '0'].forEach(k => obj[k] = true);
+console.log(Object.keys(obj)); // ?
+
+const m = new Map();
+['2', '1', 'a', '0'].forEach(k => m.set(k, true));
+console.log(Array.from(m.keys())); // ?</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>Object.keys(obj)</code> logs <code>['0', '1', '2', 'a']</code> — NOT
+          insertion order. <code>Array.from(m.keys())</code> logs <code>['2', '1', 'a', '0']</code>
+          — exactly insertion order, every time.</li>
+        <li>Plain JS objects silently reorder their own keys: any key that looks like a valid array
+          index (an integer-like string, e.g. <code>'0'</code>, <code>'1'</code>, <code>'2'</code>)
+          gets sorted numerically and enumerated FIRST, ahead of every other string key, which keeps
+          strict insertion order. <code>Map</code> makes no such distinction — every key, of any
+          type, always stays in insertion order.</li>
+        <li>This specific problem's <code>need</code>/<code>window</code> keys are always lowercase
+          letters, so the reordering never actually fires here — but the algorithm's correctness
+          never depended on iteration order in the first place (only <code>.get</code>/<code>.set</code>/<code>.size</code>
+          are used). The real risk is reusing this exact frequency-map pattern on a problem whose
+          "characters" are digit strings (e.g. counting digits in a numeral string) — a plain object
+          would silently reorder those keys, and code that assumed insertion order (a debug log, a
+          UI rendering the map's entries in the order counted) would quietly show the wrong order,
+          with no error or exception anywhere.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="samemultiset" data-explain="A matching window must contain the exact same multiset of characters as s1 — same characters, same counts per character — packed into a contiguous block. The order inside that block doesn't matter at all.">
+    <p class="q-text">1. For a window of s2 to count as "a permutation of s1," what actually has to be true about it?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="samemultiset">It must contain the exact same characters as s1, with the same counts, in any order</button>
+      <button class="btn dsa-quiz-option" data-value="sortedmatch">It must be sorted in the same order as a sorted version of s1</button>
+      <button class="btn dsa-quiz-option" data-value="samestart">It must start with the same character as s1</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="factorial" data-explain="Generating every distinct permutation of a k-character string costs O(k!) in the worst case (all distinct characters) — de-duplicating repeats trims some of that work, but the remaining branches are still driven by k! in the worst case, which is why the brute force is capped at a tiny s1 in the demo.">
+    <p class="q-text">2. Why is generating every permutation of s1 (even after de-duplicating repeated characters) still described as factorial-time in the worst case?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="factorial">Because when all of s1's characters are distinct, there are exactly k! orderings to generate</button>
+      <button class="btn dsa-quiz-option" data-value="linear7">Because de-duplication always collapses the count down to O(k)</button>
+      <button class="btn dsa-quiz-option" data-value="quad7">Because sorting the permutations afterward dominates the cost</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="distinctmatched" data-explain="matches counts how many DISTINCT characters currently have their window count exactly equal to their required count in need — not the total character count, and not a count of individual matched letters." >
+    <p class="q-text">3. What does the running `matches` counter in the optimal solution actually track?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="distinctmatched">The number of distinct characters whose window count exactly equals their required count in need</button>
+      <button class="btn dsa-quiz-option" data-value="totalchars7">The total number of characters currently inside the window</button>
+      <button class="btn dsa-quiz-option" data-value="slides7">How many times the window has slid so far</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="twochars" data-explain="Sliding the window by one position only changes two characters' counts: the one newly entering on the right, and the one leaving on the left. Every other character in the window's frequency map is untouched, which is exactly why each slide is O(1) amortized instead of O(k)." >
+    <p class="q-text">4. Why is each window slide O(1) amortized instead of O(k) (the window's width)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="twochars">Only two characters' counts ever change per slide — the one entering and the one leaving — so nothing else needs to be re-checked</button>
+      <button class="btn dsa-quiz-option" data-value="cached7">Because JavaScript caches the result of the previous slide automatically</button>
+      <button class="btn dsa-quiz-option" data-value="skips7">Because the window skips ahead by k positions instead of sliding by 1</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onen" data-explain="The optimal solution is O(n) time (n = s2.length) — one pass with O(1) amortized work per slide — and O(1) extra space, since the frequency maps are bounded by the size of the alphabet, not by the length of either input string.">
+    <p class="q-text">5. What is the time and space complexity of the optimal fixed-size sliding window solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onen">O(n) time, O(1) space — one pass over s2, with frequency maps bounded by the alphabet</button>
+      <button class="btn dsa-quiz-option" data-value="onk7">O(n&middot;k) time, O(k) space — each slide rescans the whole window</button>
+      <button class="btn dsa-quiz-option" data-value="factorial7">O(k!) time, same as the brute force, just with less memory</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Sliding Window problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'permutation-in-string';
+
+  // ---- shared: generate every distinct permutation of a string, via backtracking ----
+  function permutationsOf(s) {
+    const results = new Set();
+    function backtrack(path, remaining) {
+      if (remaining.length === 0) {
+        results.add(path.join(''));
+        return;
+      }
+      const seenAtThisLevel = new Set();
+      for (let i = 0; i < remaining.length; i++) {
+        const c = remaining[i];
+        if (seenAtThisLevel.has(c)) continue;
+        seenAtThisLevel.add(c);
+        path.push(c);
+        backtrack(path, remaining.slice(0, i).concat(remaining.slice(i + 1)));
+        path.pop();
+      }
+    }
+    backtrack([], s.split(''));
+    return Array.from(results);
+  }
+
+  // ---- Solution 1: brute force (generate + test permutations) ----
+  function buildBruteSteps(s1, s2) {
+    const perms = permutationsOf(s1);
+    const steps = [];
+
+    steps.push({
+      narration: `s1="${s1}" has ${perms.length} distinct permutations (duplicates already collapsed). Generate each one and test it against s2="${s2}" with .includes().`,
+      top: s1.split(''),
+      topStates: {},
+      bottomStates: {},
+    });
+
+    for (let idx = 0; idx < perms.length; idx++) {
+      const p = perms[idx];
+      const matchIndex = s2.indexOf(p);
+      const topStates = {};
+      p.split('').forEach((_, i) => { topStates[i] = 'active'; });
+
+      if (matchIndex === -1) {
+        steps.push({
+          narration: `Permutation ${idx + 1}/${perms.length}: "${p}" — s2.includes("${p}") is false. Discard, try the next permutation.`,
+          top: p.split(''),
+          topStates,
+          bottomStates: {},
+        });
+      } else {
+        const compareStates = {};
+        for (let i = 0; i < p.length; i++) compareStates[matchIndex + i] = 'compare';
+        steps.push({
+          narration: `Permutation ${idx + 1}/${perms.length}: "${p}" — found inside s2 starting at index ${matchIndex}!`,
+          top: p.split(''),
+          topStates,
+          bottomStates: compareStates,
+        });
+        const finalStates = {};
+        for (let i = 0; i < p.length; i++) finalStates[matchIndex + i] = 'sorted';
+        steps.push({
+          narration: `"${p}" is a permutation of s1 and a substring of s2 — return true. (Checked ${idx + 1} of ${perms.length} permutations before finding this one; in the worst case all k! must be tried.)`,
+          top: p.split(''),
+          topStates,
+          bottomStates: finalStates,
+        });
+        return steps;
+      }
+    }
+
+    steps.push({
+      narration: `All ${perms.length} permutations of s1 were tried and none appear in s2 — return false.`,
+      top: s1.split(''),
+      topStates: {},
+      bottomStates: {},
+    });
+    return steps;
+  }
+
+  const BRUTE_S1 = 'abc';
+  const BRUTE_S2 = 'eidcabooo';
+
+  const bruteTopBars = new DSA.Bars(document.getElementById('viz1TopBars'), { uniform: true });
+  bruteTopBars.setData(BRUTE_S1.split(''));
+  const bruteBottomBars = new DSA.Bars(document.getElementById('viz1BottomBars'), { uniform: true });
+  bruteBottomBars.setData(BRUTE_S2.split(''));
+
+  const bruteSteps = buildBruteSteps(BRUTE_S1, BRUTE_S2);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1200,
+    onStep(step) {
+      if (!step) {
+        bruteTopBars.paint({}, BRUTE_S1.split(''));
+        bruteBottomBars.paint({});
+        return;
+      }
+      bruteTopBars.paint(step.topStates, step.top);
+      bruteBottomBars.paint(step.bottomStates);
+    },
+  });
+
+  // ---- Solution 2: optimal (fixed-size sliding window, frequency-count matching) ----
+  function buildOptimalSteps(s1, s2) {
+    const k = s1.length;
+    const steps = [];
+
+    if (k > s2.length) {
+      steps.push({ narration: `s1="${s1}" is longer than s2="${s2}" — no window of size ${k} can even fit. Return false immediately.`, states: {} });
+      return steps;
+    }
+
+    const need = new Map();
+    for (const c of s1) need.set(c, (need.get(c) || 0) + 1);
+    const needStr = Array.from(need.entries()).map(([c, n]) => `${c}:${n}`).join(', ');
+
+    const window = new Map();
+    let matches = 0;
+
+    function bump(c, delta) {
+      const before = window.get(c) || 0;
+      const after = before + delta;
+      if (after === 0) window.delete(c); else window.set(c, after);
+      const wasMatch = need.has(c) && before === need.get(c);
+      const isMatch = need.has(c) && after === need.get(c);
+      if (wasMatch && !isMatch) matches--;
+      if (!wasMatch && isMatch) matches++;
+    }
+
+    steps.push({
+      narration: `Build the need-map from s1="${s1}": {${needStr}}. Slide a fixed window of size ${k} across s2="${s2}".`,
+      states: {},
+    });
+
+    for (let i = 0; i < k; i++) {
+      const c = s2[i];
+      bump(c, 1);
+      const st = {};
+      for (let j = 0; j <= i; j++) st[j] = j === i ? 'pointer' : 'active';
+      steps.push({
+        narration: `Fill window: add s2[${i}]='${c}'. matches=${matches}/${need.size}.`,
+        states: st,
+      });
+    }
+
+    if (matches === need.size) {
+      const st = {};
+      for (let j = 0; j < k; j++) st[j] = 'sorted';
+      steps.push({
+        narration: `matches === need.size (${matches}/${need.size}) already! Window s2[0..${k - 1}]="${s2.slice(0, k)}" is a permutation of s1. Return true.`,
+        states: st,
+      });
+      return steps;
+    }
+
+    for (let right = k; right < s2.length; right++) {
+      const addC = s2[right];
+      bump(addC, 1);
+      const removeIdx = right - k;
+      const removeC = s2[removeIdx];
+      bump(removeC, -1);
+
+      const left = right - k + 1;
+      const windowStr = s2.slice(left, right + 1);
+      const found = matches === need.size;
+
+      if (found) {
+        const fSt = {};
+        for (let j = left; j <= right; j++) fSt[j] = 'sorted';
+        steps.push({
+          narration: `Slide right to ${right}: add '${addC}', drop '${removeC}' (index ${removeIdx}). Window="${windowStr}" — matches===need.size (${matches}/${need.size})! Permutation found. Return true.`,
+          states: fSt,
+        });
+        return steps;
+      }
+
+      const st = {};
+      st[removeIdx] = 'compare';
+      for (let j = left; j < right; j++) st[j] = 'active';
+      st[right] = 'pointer';
+      steps.push({
+        narration: `Slide right to ${right}: add '${addC}', drop '${removeC}' (index ${removeIdx}). Window="${windowStr}" — matches=${matches}/${need.size}, not yet.`,
+        states: st,
+      });
+    }
+
+    steps.push({
+      narration: `Window has slid across all of s2 — matches never reached need.size (${need.size}). No permutation of s1 ever appeared in s2. Return false.`,
+      states: {},
+    });
+    return steps;
+  }
+
+  const OPT_S1 = 'ab';
+  const OPT_S2 = 'eidbaooo';
+
+  const optimalBars = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  optimalBars.setData(OPT_S2.split(''));
+  const optimalSteps = buildOptimalSteps(OPT_S1, OPT_S2);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1200,
+    onStep(step) {
+      optimalBars.paint(step ? step.states : {});
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('permutation-in-string', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
