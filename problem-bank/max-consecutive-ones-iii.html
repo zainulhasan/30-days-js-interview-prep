@@ -157,7 +157,7 @@
     The window's bounds never reset: <code>left</code> only ever moves forward, so this explores
     every valid window without ever re-examining the same element from scratch.</p>
 
-  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: expand right and update zero count in O(1), check whether zero count exceeds k, shrink left while it does, and track the longest valid window seen.">
+  <svg class="diagram" viewBox="0 0 640 202" role="img" aria-label="Flow diagram of the optimal solution: expand right and update zero count in O(1), check whether zero count exceeds k, shrink left while it does, and track the longest valid window seen.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: expand right, shrink left, one running zero count</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="10" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
@@ -184,7 +184,8 @@
       <line x1="530" y1="83" x2="558" y2="83"/>
     </g>
     <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — right advances at most n times, and left advances at most n times</text>
-    <text x="20" y="156" font-size="12" fill="#98C379">total across the WHOLE run, never resetting, so the two pointers together do O(n) work.</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">total across the WHOLE run, never resetting, so the two pointers</text>
+    <text x="20" y="172" font-size="12" fill="#98C379">together do O(n) work.</text>
   </svg>
 
   <h3>Interactive visualization</h3>
