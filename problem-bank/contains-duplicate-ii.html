@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contains Duplicate II — Problem Bank</title>
+<meta name="description" content="Contains Duplicate II: a distance-bounded brute force vs. an optimal sliding-window hash set, both animated, with honest O(n·k) vs O(n) complexity." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/contains-duplicate-ii.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Contains Duplicate II — Problem Bank" />
+<meta property="og:description" content="Contains Duplicate II: a distance-bounded brute force vs. an optimal sliding-window hash set, both animated, with honest O(n·k) vs O(n) complexity." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/contains-duplicate-ii.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Contains Duplicate II — Problem Bank" />
+<meta name="twitter:description" content="Contains Duplicate II: a distance-bounded brute force vs. an optimal sliding-window hash set, both animated, with honest O(n·k) vs O(n) complexity." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Contains Duplicate II", "item": "https://dsa.itszain.tech/problem-bank/contains-duplicate-ii.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day05.html">Day 5: Sliding Window Pattern</a></strong> —
+      the optimal solution below maintains a window of the last <code>k</code> elements as it slides
+      across the array; read that lesson first if the "grow/shrink a window as you scan" mental model
+      is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">SLIDING WINDOW &middot; EASY</p>
+  <h1>Contains Duplicate II <span class="leetcode-link">(<a href="https://leetcode.com/problems/contains-duplicate-ii/" target="_blank" rel="noopener">LeetCode: Contains Duplicate II</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an integer array <code>nums</code> and an integer <code>k</code>. Return
+    <code>true</code> if there exist two <strong>distinct</strong> indices <code>i</code> and
+    <code>j</code> such that <code>nums[i] === nums[j]</code> <strong>and</strong>
+    <code>Math.abs(i - j) &lt;= k</code>. In plain words: it's not enough for a value to repeat
+    somewhere in the array — the two matching indices also have to be close enough together, within
+    <code>k</code> positions of each other. For example, <code>nums=[1,2,3,1]</code>,
+    <code>k=3</code> is <code>true</code> (indices 0 and 3, distance exactly 3, which is
+    <code>&lt;= 3</code>). But <code>nums=[1,2,3,1,2,3]</code>, <code>k=2</code> is
+    <code>false</code> — the repeated <code>1</code> is at indices 0 and 3, a distance of 3, which
+    is too far apart for <code>k=2</code>, and no other pair is close enough either.</p>
+
+  <h2>Solution 1: Brute force — bounded pair scan</h2>
+  <p>The most direct reading of the problem: for every index <code>i</code>, look at every other
+    index <code>j</code> that's within distance <code>k</code> and see if the values match. It would
+    be wasteful to compare <code>i</code> against every single other index in the array — the
+    problem only cares about pairs within distance <code>k</code>, so the inner loop can be bounded
+    to <code>j &lt;= i + k</code> instead of scanning all the way to the end. That bound makes this
+    a genuine, if modest, improvement over a fully naive all-pairs scan — it's still fundamentally
+    checking pairs one at a time with no memory of what's been seen, which is what makes it "brute
+    force," but the exact cost is <strong>O(n·k)</strong>, not O(n²).</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: for each index i, compare against every index j from i+1 up to i+k, bounded so the inner loop never scans past a distance of k, and return true the moment two compared values match.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: compare i against a bounded window of the next k indices</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">for i = 0..n-1</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">outer scan, one pass</text>
+      <rect x="210" y="60" width="210" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">for j = i+1..i+k</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">bounded, not all n-1 pairs</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">nums[i] === nums[j]?</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">match &#8594; return true</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-cd1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-cd1)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&middot;k) time — the inner loop is bounded to at most k comparisons</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">per i, not full O(n&#178;). O(1) extra space — no auxiliary structure at all.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current index i</span>
+    <span><i class="lg-compare"></i> index j being compared against i</span>
+    <span><i class="lg-sorted"></i> matching pair confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage" style="height:130px;"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[1,0,1,1], k=1 — the bounded inner loop finds the match at indices 2 and 3, distance 1,
+    which is exactly <code>&lt;= k</code>.</p>
+
+  <h3>The code</h3>
+  <pre><code>function containsNearbyDuplicateBruteForce(nums, k) {
+  const n = nums.length;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j <= i + k && j < n; j++) {
+      if (nums[i] === nums[j]) return true;
+    }
+  }
+  return false;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The outer loop visits every index <code>i</code> exactly once — a plain left-to-right
+      scan.</li>
+    <li>The inner loop's condition is <code>j &lt;= i + k &amp;&amp; j &lt; n</code> — two bounds
+      at once. <code>j &lt;= i + k</code> stops the loop from ever comparing indices more than
+      <code>k</code> apart (the problem doesn't care about farther pairs), and
+      <code>j &lt; n</code> just guards against walking off the end of the array near the
+      end of the scan.</li>
+    <li><code>if (nums[i] === nums[j]) return true;</code> — the instant a matching pair inside the
+      distance bound is found, the function returns immediately. No need to keep scanning once one
+      qualifying pair exists.</li>
+    <li>If the nested loops finish without ever hitting that <code>return true</code>, no pair
+      satisfies both conditions simultaneously, so the function falls through to
+      <code>return false</code>.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&middot;k)</td><td>O(1)</td><td>Bounded pair scan — inner loop capped at k comparisons per i, no auxiliary structure</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — sliding window with a hash set</h2>
+  <p>Instead of re-checking a window of indices from scratch at every <code>i</code>, maintain a
+    <code>Set</code> that always holds exactly the last <code>k</code> values seen — a literal
+    sliding window, implemented as a hash set instead of an index range. For each index
+    <code>i</code>, the order of operations matters and has to happen in exactly this sequence:
+    <strong>first</strong> check whether <code>nums[i]</code> is already in the set (if so, a
+    duplicate within distance <code>k</code> exists — return <code>true</code> immediately);
+    <strong>then</strong> add <code>nums[i]</code> to the set; <strong>then</strong>, only if the
+    set has grown past size <code>k</code>, remove the value that just fell more than <code>k</code>
+    positions behind (<code>nums[i - k]</code>) to keep the window's size bounded. Checking before
+    adding is what keeps a value from ever matching against itself, and trimming only after adding
+    is what keeps the window's size correct at every step.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: check whether the current value is already in the window set, and if not add it, then trim the value that fell more than k positions behind if the window grew past size k.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: a Set as a sliding window of the last k values</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">window.has(nums[i])?</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">check first, before adding</text>
+      <rect x="230" y="60" width="190" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="325" y="82" fill="#282C34">window.add(nums[i])</text>
+      <text x="325" y="98" fill="#282C34" font-size="10">only if not already present</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">size &gt; k? drop nums[i-k]</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">keeps window size bounded</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-cd2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-cd2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — one pass, each value checked/added/removed at most</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">once. O(min(n,k)) EXTRA SPACE — the Set never holds more than k values.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> value just added to the window</span>
+    <span><i class="lg-active"></i> the rest of the current window (last k values)</span>
+    <span><i class="lg-compare"></i> index being checked against the window right now</span>
+    <span><i class="lg-sorted"></i> matching pair confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage" style="height:130px;"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[1,2,3,1,2,3], k=2 — deliberately a <strong>false</strong> case: the repeated
+    <code>1</code> (indices 0 and 3) is dropped from the window long before index 3 is reached, and
+    the same happens for every other value, so no pair is ever caught within distance k=2.</p>
+
+  <h3>The code</h3>
+  <pre><code>function containsNearbyDuplicateOptimal(nums, k) {
+  const window = new Set();
+  for (let i = 0; i < nums.length; i++) {
+    if (window.has(nums[i])) return true;
+    window.add(nums[i]);
+    if (window.size > k) {
+      window.delete(nums[i - k]);
+    }
+  }
+  return false;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>window</code> is a <code>Set</code> that, at the top of every loop iteration, holds
+      exactly the values at indices <code>[max(0, i-k), i-1]</code> — the last up-to-<code>k</code>
+      values seen so far, and nothing older.</li>
+    <li><code>if (window.has(nums[i])) return true;</code> — this check happens
+      <strong>before</strong> <code>nums[i]</code> is added to the set. That order is essential:
+      if the current value is already in the window, it means some earlier index within the last
+      <code>k</code> positions had the same value, which is exactly the condition the problem asks
+      for. Checking after adding would make every value match against itself.</li>
+    <li><code>window.add(nums[i])</code> only runs for values that weren't already in the window —
+      by this point, <code>nums[i]</code> is guaranteed new to the current window.</li>
+    <li><code>if (window.size &gt; k) window.delete(nums[i - k]);</code> — this only fires once the
+      window has grown one element past its allowed size. The value being removed,
+      <code>nums[i - k]</code>, is always exactly the one that just became more than <code>k</code>
+      positions behind the current index — removing it (rather than any arbitrary element) is what
+      keeps the set an accurate sliding window instead of an ever-growing "seen so far" set.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(min(n, k))</td><td>Sliding-window hash set — check, add, then trim, each value touched a constant number of times</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (bounded pair scan)</td><td>O(n&middot;k)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (sliding window set)</td><td>O(n)</td><td>O(min(n, k))</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This is a genuine, honest time improvement
+    when <code>k</code> is large — up to O(n) when <code>k</code> approaches the array's length, the
+    bounded brute force degrades toward O(n&sup2;), while the sliding window stays flat at O(n). But
+    be precise about the other direction too: when <code>k</code> is small or effectively constant,
+    O(n&middot;k) and O(n) are close in practice — the brute force is only ever doing a small,
+    bounded amount of extra work per index either way. The optimal solution's real, unconditional
+    win is trading that per-index scan for O(1) amortized set operations, at the cost of
+    O(min(n, k)) extra space instead of the brute force's O(1).</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the optimal solution check <code>window.has(nums[i])</code>
+        <strong>before</strong> calling <code>window.add(nums[i])</code>, instead of adding first
+        and then checking?</p>
+      <ul class="pb-ia">
+        <li>The window is supposed to represent values seen at <em>earlier</em> indices, strictly
+          before <code>i</code>. If the current value were added first, then the very next line's
+          check would always find it — every element would trivially "match itself," and the
+          function would return <code>true</code> on the very first iteration, every time.</li>
+        <li>Checking first is what correctly captures the problem's requirement of two
+          <em>distinct</em> indices — the check can only ever succeed against a value that was
+          placed into the set during some previous, different iteration.</li>
+        <li>This ordering — check, then add, then (conditionally) trim — has to happen in exactly
+          that sequence every iteration; reordering any two of those three steps breaks correctness
+          in a different way for each swap.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is the value removed during trimming always <code>nums[i - k]</code>
+        specifically, and not simply "the oldest value in the set" or the minimum value?</p>
+      <ul class="pb-ia">
+        <li>The window is meant to represent an exact range of <em>indices</em> —
+          <code>[i-k, i-1]</code> right before processing index <code>i</code> — not an
+          unordered bag of "recently seen" values. <code>nums[i - k]</code> is the one specific
+          index that just crossed from "within distance k" to "more than k positions behind."</li>
+        <li>"Oldest value in the set" isn't well-defined for a plain <code>Set</code> in the first
+          place — a <code>Set</code> preserves insertion order for iteration, but nothing about its
+          API exposes "the earliest inserted value" in O(1); computing that separately would
+          require extra bookkeeping (like a companion queue of indices), which the index arithmetic
+          <code>nums[i - k]</code> avoids entirely.</li>
+        <li>Removing anything other than exactly <code>nums[i - k]</code> — e.g. removing an
+          arbitrary or a "minimum" value — could either evict a value that's still within the valid
+          distance-k range (causing a real duplicate to be missed) or fail to evict a value that's
+          now too far away (causing a false positive on a pair that's actually too far apart).</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if two different indices in the current window
+        share the same value?" That can't happen here — the moment a repeat would be added, the
+        <code>has()</code> check on the line above already caught it and returned <code>true</code>,
+        so by the time <code>window.add</code> runs, the set is guaranteed to still contain only
+        distinct values.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">The brute force bounds its inner loop to <code>j &lt;= i + k</code> instead
+        of scanning to the end of the array. Is that enough to call it "optimal," or is the sliding
+        window still a genuine improvement?</p>
+      <ul class="pb-ia">
+        <li>The bound is a real, honest improvement over a fully naive all-pairs O(n&sup2;) scan —
+          it's O(n&middot;k), not O(n&sup2;) — because it skips comparing indices that could never
+          satisfy the distance constraint anyway.</li>
+        <li>But it's still doing repeated, redundant work: at every single index <code>i</code>, it
+          re-examines up to <code>k</code> neighboring values from scratch, even though most of
+          that work was already effectively done one iteration ago. The sliding window's Set carries
+          that information forward instead of re-deriving it.</li>
+        <li>The honest comparison is O(n&middot;k) vs. O(n) — a real asymptotic win when
+          <code>k</code> is large, and a modest, practical-but-not-asymptotic difference when
+          <code>k</code> is small. Calling the bounded brute force "already optimal" would only be
+          fair if the problem's <code>k</code> were guaranteed small and constant — which it
+          isn't.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — this problem is defined over ordinary integers, so
+        <code>NaN</code> never actually appears in a real <code>nums</code> input. But suppose it
+        did. Would the brute force and the optimal solution above still agree with each other on an
+        array containing two <code>NaN</code> values within distance <code>k</code>?</p>
+      <pre><code>console.log(NaN === NaN);            // ?
+console.log(new Set([NaN]).has(NaN)); // ?</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>false</code>, then <code>true</code> — the two solutions would actually
+          <strong>disagree</strong> on hypothetical <code>NaN</code> input.</li>
+        <li>The brute force compares with <code>nums[i] === nums[j]</code>, strict equality, and
+          <code>NaN === NaN</code> is famously <code>false</code> — so two <code>NaN</code>s, no
+          matter how close together, would never register as a match. It would return
+          <code>false</code>.</li>
+        <li>The optimal solution's <code>window.has(nums[i])</code> uses a <code>Set</code>'s
+          membership check, which relies on SameValueZero comparison instead of strict equality —
+          and SameValueZero treats <code>NaN</code> as equal to itself. It would correctly return
+          <code>true</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this divergence is purely academic for THIS problem — LeetCode's
+        constraints guarantee <code>nums[i]</code> is a real integer, so <code>NaN</code> can never
+        occur here, and both solutions are fully correct as written for every valid input. But it's
+        a genuine, verified illustration of why <code>===</code> and <code>Set</code>/<code>Map</code>
+        membership are NOT interchangeable comparison rules in general — swapping a hand-rolled
+        <code>===</code> check for a <code>Set</code>-based one (or vice versa) is not always a
+        behavior-preserving refactor once <code>NaN</code> is a possible value in the data.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="bothbound" data-explain="Math.abs(i - j) <= k requires the two matching indices to be close together, not just equal in value anywhere in the array — a repeated value that's too far apart doesn't count.">
+    <p class="q-text">1. What does Contains Duplicate II actually require, beyond just nums[i] === nums[j]?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bothbound">The two matching indices must also be within distance k of each other — Math.abs(i - j) &lt;= k</button>
+      <button class="btn dsa-quiz-option" data-value="sorted7">The array must already be sorted before checking for duplicates</button>
+      <button class="btn dsa-quiz-option" data-value="uniquek">k must itself be one of the values present in the array</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nk" data-explain="The inner loop is bounded to j <= i + k, so it does at most k comparisons per index i, giving O(n·k) time — a real improvement over a fully naive O(n²) all-pairs scan, but not the same as calling it O(n²).">
+    <p class="q-text">2. What is the honest time complexity of the brute-force solution that bounds its inner loop to j &lt;= i + k?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nk">O(n&middot;k) — bounded to at most k comparisons per index, not a full n&sup2; scan</button>
+      <button class="btn dsa-quiz-option" data-value="nsquared7">O(n&sup2;) — it's still comparing every pair of indices in the array</button>
+      <button class="btn dsa-quiz-option" data-value="logn7">O(n log n) — the bound effectively behaves like a sort</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="checkfirst" data-explain="Checking window.has(nums[i]) before adding is what correctly enforces 'two distinct indices' — if the current value were added first, the check on the next line would always find it and match against itself immediately.">
+    <p class="q-text">3. In the optimal solution, why must window.has(nums[i]) be checked BEFORE window.add(nums[i]), not after?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="checkfirst">Checking after adding would make every value match against itself on the very first look</button>
+      <button class="btn dsa-quiz-option" data-value="perf7">It's purely a performance choice with no effect on correctness either way</button>
+      <button class="btn dsa-quiz-option" data-value="setrule7">A Set throws an error if you call has() on a value it doesn't contain yet</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="exactidx" data-explain="nums[i - k] is the one specific index that just crossed from 'within distance k' to 'more than k positions behind' at this exact iteration — removing anything else could either evict a still-valid value or fail to evict a now-too-far value.">
+    <p class="q-text">4. Why does the optimal solution remove exactly nums[i - k] when trimming the window, rather than any other element?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="exactidx">It's the specific index that just became more than k positions behind i — removing any other value could break the window's correctness</button>
+      <button class="btn dsa-quiz-option" data-value="random7">Any element can be removed — a Set's contents are unordered, so it doesn't matter which one</button>
+      <button class="btn dsa-quiz-option" data-value="smallest7">It removes whichever value is numerically smallest, to keep the Set easy to scan</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="strictfalse" data-explain="NaN === NaN is false under strict equality, so the brute force's nums[i] === nums[j] check can never match two NaN values — while a Set's has() uses SameValueZero, which does treat NaN as equal to itself.">
+    <p class="q-text">5. On a hypothetical array containing two NaN values close together, which check would fail to detect them as a match?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="strictfalse">nums[i] === nums[j] in the brute force — strict equality treats NaN === NaN as false</button>
+      <button class="btn dsa-quiz-option" data-value="sethas7">window.has(nums[i]) in the optimal solution — Sets can never store NaN</button>
+      <button class="btn dsa-quiz-option" data-value="both7">Both checks would fail to detect it identically</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Sliding Window problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'contains-duplicate-ii';
+
+  // ---- Solution 1: brute force (bounded pair scan) ----
+  function buildBruteSteps(nums, k) {
+    const steps = [];
+    const n = nums.length;
+    steps.push({
+      narration: `For each i, compare against every j from i+1 up to i+k — a bounded window of indices, not every pair in the array.`,
+      states: {},
+    });
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j <= i + k && j < n; j++) {
+        steps.push({
+          narration: `Compare nums[${i}]=${nums[i]} and nums[${j}]=${nums[j]} (distance ${j - i} <= k=${k}).`,
+          states: { [i]: 'pointer', [j]: 'compare' },
+        });
+        if (nums[i] === nums[j]) {
+          steps.push({
+            narration: `Match! nums[${i}] = nums[${j}] = ${nums[i]}, and |${i}-${j}| = ${j - i} <= k=${k}. Return true.`,
+            states: { [i]: 'sorted', [j]: 'sorted' },
+          });
+          return steps;
+        }
+      }
+    }
+    steps.push({
+      narration: `Checked every pair within distance k=${k} — no match found. Result: false.`,
+      states: {},
+    });
+    return steps;
+  }
+
+  const BRUTE_NUMS = [1, 0, 1, 1];
+  const BRUTE_K = 1;
+  const BRUTE_MAX = Math.max.apply(null, BRUTE_NUMS) + 1;
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: 0, max: BRUTE_MAX });
+  bars1.setData(BRUTE_NUMS);
+  const bruteSteps = buildBruteSteps(BRUTE_NUMS, BRUTE_K);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) {
+      if (!step) { bars1.paint({}); return; }
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (sliding window hash set) ----
+  function buildOptimalSteps(nums, k) {
+    const steps = [];
+    const n = nums.length;
+    steps.push({
+      narration: `Maintain a Set holding at most the last k=${k} values seen. For each index: check first, then add, then trim if the window grew past size k.`,
+      states: {},
+    });
+
+    const window = new Set();
+    for (let i = 0; i < n; i++) {
+      const v = nums[i];
+
+      // Window membership right now = indices [max(0, i-k), i-1] — everything
+      // added and not yet trimmed by earlier iterations.
+      const checkStates = {};
+      for (let j = Math.max(0, i - k); j < i; j++) checkStates[j] = 'active';
+      checkStates[i] = 'compare';
+      steps.push({
+        narration: `Check index ${i} (value ${v}) against the window {${Array.from(window).join(', ')}}.`,
+        states: checkStates,
+      });
+
+      if (window.has(v)) {
+        let matchIdx = -1;
+        for (let j = i - 1; j >= Math.max(0, i - k); j--) {
+          if (nums[j] === v) { matchIdx = j; break; }
+        }
+        steps.push({
+          narration: `nums[${i}]=${v} is already in the window (matched at index ${matchIdx}) — |${matchIdx}-${i}| = ${i - matchIdx} <= k=${k}. Return true.`,
+          states: { [i]: 'sorted', [matchIdx]: 'sorted' },
+        });
+        return steps;
+      }
+
+      window.add(v);
+      let narr = `Not in the window — add nums[${i}]=${v}. Window is now {${Array.from(window).join(', ')}}.`;
+      let dropped = null;
+      if (window.size > k) {
+        dropped = nums[i - k];
+        window.delete(dropped);
+        narr += ` Size exceeded k=${k}, so drop nums[${i - k}]=${dropped} — it's now more than k positions back.`;
+      }
+
+      const addStates = {};
+      for (let j = Math.max(0, i - k + 1); j <= i; j++) {
+        addStates[j] = (j === i) ? 'pointer' : 'active';
+      }
+      steps.push({ narration: narr, states: addStates });
+    }
+
+    steps.push({
+      narration: `Scanned all ${n} elements — no pair matched within distance k=${k}. Result: false.`,
+      states: {},
+    });
+    return steps;
+  }
+
+  const OPT_NUMS = [1, 2, 3, 1, 2, 3];
+  const OPT_K = 2;
+  const OPT_MAX = Math.max.apply(null, OPT_NUMS) + 1;
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: 0, max: OPT_MAX });
+  bars2.setData(OPT_NUMS);
+  const optimalSteps = buildOptimalSteps(OPT_NUMS, OPT_K);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) {
+      if (!step) { bars2.paint({}); return; }
+      bars2.paint(step.states);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('contains-duplicate-ii', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
