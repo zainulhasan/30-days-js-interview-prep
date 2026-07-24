@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Majority Element — Problem Bank</title>
+<meta name="description" content="Majority Element: a hash-map frequency count vs. the optimal Boyer-Moore Voting Algorithm, both animated — the honest story here is space, not time." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/majority-element.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Majority Element — Problem Bank" />
+<meta property="og:description" content="Majority Element: a hash-map frequency count vs. the optimal Boyer-Moore Voting Algorithm, both animated — the honest story here is space, not time." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/majority-element.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Majority Element — Problem Bank" />
+<meta name="twitter:description" content="Majority Element: a hash-map frequency count vs. the optimal Boyer-Moore Voting Algorithm, both animated — the honest story here is space, not time." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Majority Element", "item": "https://dsa.itszain.tech/problem-bank/majority-element.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day06.html">Day 6: Hash Maps &amp; Sets</a></strong> —
+      the brute-force solution below is a direct frequency-counting pass with a <code>Map</code>;
+      read that lesson first if counting occurrences with a hash map is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">ARRAYS &amp; HASHING &middot; EASY</p>
+  <h1>Majority Element <span class="leetcode-link">(<a href="https://leetcode.com/problems/majority-element/" target="_blank" rel="noopener">LeetCode: Majority Element</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given an array <code>nums</code> of size <code>n</code>, find the <strong>majority
+    element</strong> — the one value that appears <em>more than</em> <code>⌊n/2⌋</code> times.
+    The problem guarantees a majority element always exists, so you never have to handle the
+    "no winner" case. For example, <code>[3,2,3]</code> has <code>n=3</code>, so a value needs
+    to appear more than <code>1</code> time — <code>3</code> appears twice and wins. Likewise
+    <code>[2,2,1,1,1,2,2]</code> has <code>n=7</code>, needs more than <code>3</code>
+    occurrences, and <code>2</code> appears <code>4</code> times.</p>
+
+  <h2>Solution 1: Brute force — hash-map frequency counting</h2>
+  <p>The direct approach: walk the array once and build a frequency map — for every value seen,
+    increment its count by one. Once every value's count is known, scan the map's entries for
+    the one whose count clears the <code>⌊n/2⌋</code> bar. This is completely correct and needs
+    no cleverness, but it pays for a second data structure the size of the input.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: scan the array once building a frequency map keyed by value, then scan the map's entries for the one whose count exceeds floor n over 2.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: count everything, then check the counts</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">scan nums once</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">no assumptions yet</text>
+      <rect x="210" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">build frequency Map</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">value → count, grows with input</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="525" y="82" fill="#E2E3E7">find count &gt; n/2</text>
+      <text x="525" y="98" fill="#9198A6" font-size="10">scan the map's entries</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-me" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-me)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) time (one pass to count, one to check) — but O(n) EXTRA SPACE for the map, since it can grow to hold every distinct value.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> element currently being counted</span>
+    <span><i class="lg-compare"></i> earlier occurrence of this same value (already in the count)</span>
+    <span><i class="lg-sorted"></i> majority element, confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage" style="height:130px;"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[2,1,2,3,2,4,2] — the majority element (2) is neither first-only nor contiguous; it's
+    also the last element, verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function majorityElementBruteForce(nums) {
+  const freq = new Map();
+  for (const v of nums) {
+    freq.set(v, (freq.get(v) || 0) + 1);
+  }
+
+  const n = nums.length;
+  for (const [value, count] of freq) {
+    if (count > Math.floor(n / 2)) return value;
+  }
+  return null; // unreachable — the problem guarantees a majority element exists
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>freq</code> is a <code>Map</code>, not a plain object — every distinct value in
+      <code>nums</code> becomes its own key, and <code>Map</code> compares keys by identity/value
+      without the string-coercion quirks a plain object has (more on that in Interview Corner
+      below).</li>
+    <li>The first loop is a single O(n) pass: for every element, look up its current count
+      (defaulting to <code>0</code> the first time it's seen) and increment it by one.</li>
+    <li>The second loop scans the finished map's entries — at most <code>n</code> distinct keys
+      — and returns the first value whose count strictly exceeds <code>⌊n/2⌋</code>.</li>
+    <li>The final <code>return null</code> is unreachable for any input that satisfies the
+      problem's guarantee; it only exists so the function has a defined fallback.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Hash-map frequency count, then scan the map</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — Boyer-Moore Voting Algorithm</h2>
+  <p>Track just two variables: a <code>candidate</code> and a <code>count</code>. Walk the array
+    once. Whenever <code>count</code> is <code>0</code>, the current element becomes the new
+    candidate. Then, if the current element equals the candidate, increment <code>count</code>;
+    otherwise decrement it. After one pass, <code>candidate</code> holds the majority element —
+    no map, no extra array, just two numbers.</p>
+
+  <p><strong>Why this actually works:</strong> think of every element that matches the current
+    candidate as a <code>+1</code> vote and every element that doesn't as a <code>−1</code> vote
+    against it. A mismatch and a match cancel each other out one-for-one in <code>count</code>.
+    Because the true majority element appears MORE than <code>n/2</code> times, it outnumbers
+    every other value combined — even in the worst case where every single non-majority element
+    gets paired up against it to cancel a vote, there aren't enough non-majority elements to
+    cancel all of the majority's votes. So the majority element can never be fully "voted off" —
+    it always survives as the final candidate, possibly after a few false candidates get
+    knocked out to <code>0</code> along the way.</p>
+
+  <p><strong>This correctness genuinely depends on the guarantee.</strong> If no true majority
+    element exists, Boyer-Moore Voting still runs and still produces SOME candidate — but that
+    candidate is not necessarily an actual majority element, and the algorithm gives no signal
+    that anything went wrong. For example, tracing this exact algorithm on
+    <code>[1, 2, 3, 4]</code> (no value appears more than twice, let alone more than
+    <code>n/2 = 2</code> times) ends with <code>candidate = 3</code> — a value that occurs
+    exactly once. Without the problem's guarantee, a real solution would need a second
+    verification pass (count the final candidate's actual occurrences and check it against
+    <code>n/2</code>) before trusting the result. LeetCode's guarantee is exactly what licenses
+    skipping that verification pass here.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: walk the array once tracking a candidate and a count - if count is zero adopt the current element as the new candidate, then increment count on a match or decrement on a mismatch.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, two variables, votes cancel out</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">count === 0 ?</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">adopt new candidate</text>
+      <rect x="220" y="60" width="210" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="325" y="82" fill="#282C34">match → count++</text>
+      <text x="325" y="98" fill="#282C34" font-size="10">mismatch → count--</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">next element</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">just 2 variables carried</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-me)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="430" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — same as brute force. But O(1) space: no map, just candidate and count.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-swap"></i> count hit 0 — candidate just changed here</span>
+    <span><i class="lg-pointer"></i> element examined, doesn't match candidate</span>
+    <span><i class="lg-active"></i> element matches the current candidate's value</span>
+    <span><i class="lg-sorted"></i> final answer, confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage" style="height:130px;"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[2,7,2,1,7,7,7,3,7] — the candidate flips from 2 to 7 partway through, which is exactly
+    the behavior worth watching closely, verified above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function majorityElementOptimal(nums) {
+  let candidate = null;
+  let count = 0;
+
+  for (const v of nums) {
+    if (count === 0) {
+      candidate = v;
+    }
+    count += (v === candidate) ? 1 : -1;
+  }
+
+  return candidate; // guaranteed correct ONLY because a true majority is guaranteed to exist
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>candidate</code> and <code>count</code> are the algorithm's entire state — no
+      array, no map, O(1) extra space regardless of input size.</li>
+    <li><code>if (count === 0) candidate = v;</code> — whenever the running tally has fully
+      cancelled out, throw away whatever candidate was losing and give the current element a
+      fresh start.</li>
+    <li><code>count += (v === candidate) ? 1 : -1;</code> — this runs on EVERY element,
+      including the one that was just adopted as the new candidate (which always increments,
+      since it trivially matches itself).</li>
+    <li>After the loop, <code>candidate</code> is returned directly — there's no final
+      verification step here, which is exactly the shortcut the problem's guarantee licenses.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Boyer-Moore Voting — single pass, two variables</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (hash-map frequency count)</td><td>O(n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (Boyer-Moore Voting)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Both solutions are O(n) time — there is no
+    asymptotic speedup here, and it would be dishonest to claim one. The real, honest
+    improvement Boyer-Moore offers is space: it drops the O(n) frequency map down to O(1),
+    two plain variables that don't grow with the input.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the Boyer-Moore Voting Algorithm actually converge on the true
+        majority element, instead of just being a heuristic that happens to work?</p>
+      <ul class="pb-ia">
+        <li>Model it as a cancellation game: every element that doesn't match the current
+          candidate cancels exactly one "vote" from it (<code>count--</code>); every match adds
+          one (<code>count++</code>).</li>
+        <li>A true majority element appears more than <code>n/2</code> times — strictly more
+          than every other value in the array COMBINED.</li>
+        <li>Even in the worst case, where every single non-majority element gets used to cancel
+          a majority vote, there simply aren't enough non-majority elements to cancel all of
+          them. At least one majority vote always survives, which is exactly why it's the value
+          left standing as <code>candidate</code> at the end.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What is the actual, honest complexity improvement of Boyer-Moore over the
+        hash-map brute force — and what would be dishonest to claim?</p>
+      <ul class="pb-ia">
+        <li>Both solutions are O(n) TIME — one pass over the array either way. Claiming
+          Boyer-Moore is "faster" in the Big-O sense would be incorrect.</li>
+        <li>The real difference is SPACE: the hash map is O(n) because it can grow to hold one
+          entry per distinct value, while Boyer-Moore is O(1) — just <code>candidate</code> and
+          <code>count</code>, regardless of how large <code>nums</code> is.</li>
+        <li>In an interview, stating this precisely (space improvement, not time) signals more
+          rigor than a vague "it's more optimal."</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What happens if you run this exact algorithm on an array that does NOT
+        have a true majority element — and how would you make the solution robust to that
+        case?</p>
+      <ul class="pb-ia">
+        <li>The algorithm doesn't detect the absence of a majority — it still runs to completion
+          and returns SOME candidate value, with no error and no signal that the result is
+          meaningless.</li>
+        <li>For example, on <code>[1, 2, 3, 4]</code> — where nothing appears more than
+          <code>⌊4/2⌋ = 2</code> times — this exact algorithm ends with <code>candidate = 3</code>,
+          which occurs only once and is not a majority element at all.</li>
+        <li>To make it robust without the guarantee: add a second O(n) pass after the loop that
+          actually counts <code>candidate</code>'s occurrences and checks it against
+          <code>n/2</code> before trusting it. Still O(n) time and O(1) extra space overall.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Does this problem's guarantee actually matter, or
+        is it just flavor text?" It matters a lot — it's the entire reason the single-pass
+        version without verification is allowed to be correct here.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const counts = {};
+counts[1] = 'from number key';
+counts['1'] = 'from string key';
+console.log(Object.keys(counts).length);
+console.log(counts[1] === counts['1']);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>1</code>, then <code>true</code> — not <code>2</code> and
+          <code>false</code>.</li>
+        <li>Plain object keys are always coerced to strings. <code>counts[1]</code> and
+          <code>counts['1']</code> are the exact same key — the second assignment silently
+          overwrites the first.</li>
+        <li>A <code>Map</code> has no such coercion: <code>map.set(1, ...)</code> and
+          <code>map.set('1', ...)</code> are two genuinely distinct entries, and
+          <code>map.size</code> would correctly report <code>2</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why the brute-force solution above uses a
+        <code>Map</code> for <code>freq</code> instead of a plain <code>{}</code>. This
+        particular problem only ever sees numeric values, so the collision wouldn't actually
+        bite here — but the same frequency-counting pattern shows up constantly for problems
+        mixing numbers and strings (or object keys), where a plain object would silently merge
+        two distinct values into one count.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="cancel" data-explain="A true majority element appears more than n/2 times — more than every other value combined. Even if every non-majority element is used to cancel one of its votes, there aren't enough of them to cancel all the majority's votes, so at least one survives.">
+    <p class="q-text">1. Why does Boyer-Moore Voting correctly find the majority element when the input is guaranteed to have one?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cancel">Because the majority's more-than-n/2 occurrences can never be fully cancelled out by every other value combined</button>
+      <button class="btn dsa-quiz-option" data-value="sorted3">Because the algorithm secretly sorts the array first</button>
+      <button class="btn dsa-quiz-option" data-value="luck3">It only works by coincidence on small arrays</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="space" data-explain="Both solutions are O(n) time — one pass over the array either way. The real, honest improvement Boyer-Moore offers is space: O(n) for the frequency map down to O(1) for two variables.">
+    <p class="q-text">2. What is the real, honest complexity improvement of the optimal solution over the brute-force hash-map solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="space">Space only — both are O(n) time, but space drops from O(n) to O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="time">Time only — the optimal solution is asymptotically faster than O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="both3">Both time and space improve by a full order of magnitude</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="wrongcandidate" data-explain="Boyer-Moore Voting doesn't detect a missing majority — it still runs to completion and returns some candidate, but that value may not actually appear more than n/2 times. On [1,2,3,4] it ends with candidate = 3, which occurs only once.">
+    <p class="q-text">3. What happens if you run the unmodified Boyer-Moore algorithm on an array with NO true majority element, such as [1, 2, 3, 4]?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="wrongcandidate">It still returns some candidate value, but that value is not guaranteed to actually be a majority element</button>
+      <button class="btn dsa-quiz-option" data-value="throws">It throws a runtime error since count would go negative</button>
+      <button class="btn dsa-quiz-option" data-value="null3">It always correctly returns null in that case</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="counthitzero" data-explain="Whenever count reaches 0, the current candidate has been fully 'cancelled out' by mismatches — the algorithm gives up on it and adopts whatever element comes next as a fresh candidate.">
+    <p class="q-text">4. In the Boyer-Moore trace, what causes the candidate variable to change value partway through the array?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="counthitzero">The running count reaches 0 — the current candidate has been fully cancelled out, so a new one is adopted</button>
+      <button class="btn dsa-quiz-option" data-value="everyten">It changes automatically every 10 elements regardless of the count</button>
+      <button class="btn dsa-quiz-option" data-value="sorted4">Only after the array is internally re-sorted</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="mapcoercion" data-explain="Plain object keys are always coerced to strings, so counts[1] and counts['1'] collide into the same key. A Map compares keys without that coercion, so numeric and string values are always counted as genuinely distinct entries.">
+    <p class="q-text">5. Why does the brute-force solution use a Map instead of a plain JavaScript object to store frequency counts?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="mapcoercion">Plain object keys get coerced to strings, which can silently collide two distinct values into one count — Map avoids that</button>
+      <button class="btn dsa-quiz-option" data-value="faster5">Map is always significantly faster to read from than a plain object</button>
+      <button class="btn dsa-quiz-option" data-value="required5">Plain objects can't store numeric values at all</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Arrays &amp; Hashing problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'majority-element';
+
+  // ---- Solution 1: brute force (hash-map frequency counting) ----
+  function buildBruteSteps(nums) {
+    const steps = [];
+    const freq = new Map();
+    const n = nums.length;
+    const threshold = Math.floor(n / 2);
+
+    steps.push({
+      narration: `n = ${n}, so a value needs to appear more than ⌊${n}/2⌋ = ${threshold} times. Scan once, building a frequency Map as we go.`,
+      states: {},
+    });
+
+    for (let i = 0; i < nums.length; i++) {
+      const v = nums[i];
+      const priorIndices = [];
+      for (let j = 0; j < i; j++) if (nums[j] === v) priorIndices.push(j);
+      freq.set(v, (freq.get(v) || 0) + 1);
+
+      const states = {};
+      priorIndices.forEach((j) => { states[j] = 'compare'; });
+      states[i] = 'pointer';
+      steps.push({
+        narration: `nums[${i}] = ${v} — increment its count in the map: count(${v}) = ${freq.get(v)}.`,
+        states,
+      });
+    }
+
+    let majorityValue = null;
+    for (const [value, count] of freq) {
+      if (count > threshold) { majorityValue = value; break; }
+    }
+    const summary = Array.from(freq.entries()).map(([k, c]) => `${k}→${c}`).join(', ');
+    const finalStates = {};
+    nums.forEach((v, idx) => { if (v === majorityValue) finalStates[idx] = 'sorted'; });
+    steps.push({
+      narration: `Map complete: [${summary}]. Value ${majorityValue} has count ${freq.get(majorityValue)} > ${threshold} — that's the majority element.`,
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  const BRUTE_NUMS = [2, 1, 2, 3, 2, 4, 2];
+  const BRUTE_MAX = Math.max.apply(null, BRUTE_NUMS) + 1;
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: 0, max: BRUTE_MAX });
+  bars1.setData(BRUTE_NUMS);
+  const bruteSteps = buildBruteSteps(BRUTE_NUMS);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1000,
+    onStep(step) {
+      if (!step) { bars1.paint({}); return; }
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (Boyer-Moore Voting Algorithm) ----
+  function buildOptimalSteps(nums) {
+    const steps = [];
+    let candidate = null;
+    let count = 0;
+
+    function activeForCandidate(cand) {
+      const st = {};
+      if (cand !== null) nums.forEach((v, idx) => { if (v === cand) st[idx] = 'active'; });
+      return st;
+    }
+
+    steps.push({
+      narration: `Boyer-Moore Voting: track one candidate and a running count. Start with no candidate, count 0.`,
+      states: {},
+    });
+
+    for (let i = 0; i < nums.length; i++) {
+      const v = nums[i];
+      if (count === 0) {
+        candidate = v;
+        const st = activeForCandidate(candidate);
+        st[i] = 'swap';
+        steps.push({
+          narration: `Count is 0 — nums[${i}] = ${v} becomes the new candidate.`,
+          states: st,
+        });
+      }
+      if (v === candidate) {
+        count++;
+        steps.push({
+          narration: `nums[${i}] = ${v} matches candidate ${candidate} — count rises to ${count}.`,
+          states: activeForCandidate(candidate),
+        });
+      } else {
+        count--;
+        const st = activeForCandidate(candidate);
+        st[i] = 'pointer';
+        steps.push({
+          narration: `nums[${i}] = ${v} does not match candidate ${candidate} — count drops to ${count}.`,
+          states: st,
+        });
+      }
+    }
+
+    const finalStates = {};
+    nums.forEach((v, idx) => { if (v === candidate) finalStates[idx] = 'sorted'; });
+    steps.push({
+      narration: `Scan complete — candidate ${candidate} survives with count ${count}. Because the input is guaranteed to contain a true majority element, this candidate IS the answer.`,
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  const OPT_NUMS = [2, 7, 2, 1, 7, 7, 7, 3, 7];
+  const OPT_MAX = Math.max.apply(null, OPT_NUMS) + 1;
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: 0, max: OPT_MAX });
+  bars2.setData(OPT_NUMS);
+  const optimalSteps = buildOptimalSteps(OPT_NUMS);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1000,
+    onStep(step) {
+      if (!step) { bars2.paint({}); return; }
+      bars2.paint(step.states);
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('majority-element', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
