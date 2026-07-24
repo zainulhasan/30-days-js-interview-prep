@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trapping Rain Water — Problem Bank</title>
+<meta name="description" content="Trapping Rain Water: an O(n²) brute force that rescans the left and right maxima from scratch for every index vs. the O(n) two-pointer optimal that resolves each index exactly once, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/trapping-rain-water.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Trapping Rain Water — Problem Bank" />
+<meta property="og:description" content="Trapping Rain Water: an O(n²) brute force that rescans the left and right maxima from scratch for every index vs. the O(n) two-pointer optimal that resolves each index exactly once, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/trapping-rain-water.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Trapping Rain Water — Problem Bank" />
+<meta name="twitter:description" content="Trapping Rain Water: an O(n²) brute force that rescans the left and right maxima from scratch for every index vs. the O(n) two-pointer optimal that resolves each index exactly once, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Trapping Rain Water", "item": "https://dsa.itszain.tech/problem-bank/trapping-rain-water.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day04.html">Day 4: Two-Pointer Pattern</a></strong> —
+      the optimal solution below is a direct application of "walk two pointers toward each other,
+      always advancing whichever side is provably safe to resolve" — read that lesson first if the
+      idea of narrowing a window from both ends at once still feels unfamiliar.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">TWO POINTERS &middot; HARD</p>
+  <h1>Trapping Rain Water <span class="leetcode-link">(<a href="https://leetcode.com/problems/trapping-rain-water/" target="_blank" rel="noopener">LeetCode: Trapping Rain Water</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array of non-negative integers representing an elevation map: each index is a
+    bar of width 1, and its value is the bar's height. After it rains, water pools in the low spots
+    between taller bars — picture the whole array as a bumpy skyline, then flood it until no more
+    water can be added without spilling off one of the two open ends. Compute the total volume of
+    water trapped, in unit squares (one bar-width &times; one unit of height). A bar only holds
+    water above it if there's a bar at least as tall somewhere to its <strong>left</strong>
+    <em>and</em> somewhere to its <strong>right</strong> — a bar with nothing but shorter bars on
+    one side (the tallest bar in the whole array, or either end bar) holds nothing, because water
+    would just run off that open side. Example: <code>height = [0,1,0,2,1,0,1,3,2,1,2,1]</code>
+    &rarr; <code>6</code> units trapped. <code>height = [4,2,0,3,2,5]</code> &rarr; <code>9</code>
+    units trapped.</p>
+
+  <h2>Solution 1: Brute force — rescan left and right from scratch for every index</h2>
+  <p>The most literal reading of the problem: for every single bar, ask "what's the tallest bar to
+    my left, and what's the tallest bar to my right?" and answer that by actually looking — scanning
+    outward from the current index in both directions, every time, throwing away whatever the
+    previous index's scan already found. The water above index <code>i</code> is
+    <code>min(maxLeft, maxRight) - height[i]</code>, clamped to <code>0</code> when that comes out
+    negative (a bar taller than at least one of its walls holds nothing). This is correct — it
+    directly implements the problem's own definition — but it's wasteful: index 5's left-scan and
+    index 6's left-scan overlap almost entirely, and neither one remembers what the other found.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: for every index, scan left from that index down to zero and scan right from that index to the end, tracking the tallest bar seen in each direction from scratch, then take the minimum of the two maxima minus this bar's own height as the water trapped above it.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: for every index, scan outward left and right from scratch</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">i = 0..n-1</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">check water above each i</text>
+      <rect x="210" y="60" width="250" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="335" y="82" fill="#282C34">scan left AND right from i</text>
+      <text x="335" y="98" fill="#282C34" font-size="10">maxLeft, maxRight found fresh</text>
+      <rect x="480" y="60" width="140" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="550" y="82" fill="#282C34" font-size="11">min(maxL,maxR)</text>
+      <text x="550" y="98" fill="#282C34" font-size="10">&minus; height[i]</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-trw1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-trw1)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="460" y1="83" x2="478" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) work per index (two full outward scans) &times; O(n) indices</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">&rArr; O(n&sup2;) total &mdash; no scan result is ever reused for the next index.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Tracing height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1,
+    2, 1] — the canonical example, verified against the code below (total: 6).</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> index i currently being examined</span>
+    <span><i class="lg-compare"></i> bars included in the left/right max scan for i</span>
+    <span><i class="lg-swap"></i> the moment water is added above index i</span>
+    <span><i class="lg-sorted"></i> index fully resolved</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function trapBrute(height) {
+  const n = height.length;
+  let total = 0;
+
+  for (let i = 0; i < n; i++) {
+    let maxLeft = 0;
+    for (let l = i; l >= 0; l--) {
+      maxLeft = Math.max(maxLeft, height[l]);
+    }
+
+    let maxRight = 0;
+    for (let r = i; r < n; r++) {
+      maxRight = Math.max(maxRight, height[r]);
+    }
+
+    const water = Math.min(maxLeft, maxRight) - height[i];
+    if (water > 0) {
+      total += water;
+    }
+  }
+
+  return total;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The outer loop visits every index <code>i</code> exactly once — that part alone is O(n).</li>
+    <li>The first inner loop walks from <code>i</code> down to <code>0</code>, tracking the tallest
+      bar seen — this is <code>maxLeft</code>, starting fresh at <code>0</code> for every <code>i</code>,
+      with no memory of any previous index's scan.</li>
+    <li>The second inner loop walks from <code>i</code> up to <code>n - 1</code> the same way for
+      <code>maxRight</code>. Both inner loops include <code>height[i]</code> itself, which is
+      harmless — a bar can never be taller than itself, so including it never changes the max.</li>
+    <li><code>Math.min(maxLeft, maxRight) - height[i]</code> is the water level above <code>i</code>:
+      water can only rise as high as the <em>shorter</em> of the two walls, since anything higher
+      would spill over that shorter side.</li>
+    <li>The <code>if (water > 0)</code> guard clamps negative results to nothing added — a bar
+      taller than at least one of its walls (including the tallest bar in the whole array, which is
+      taller than everything) holds zero water above it.</li>
+    <li>Each of the two inner loops is O(n) in the worst case, run inside an O(n) outer loop — that's
+      the O(n&sup2;) this solution's name implies.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup2;)</td><td>O(1)</td><td>Fresh left/right scan from every index</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — two pointers, resolve whichever side has the smaller max</h2>
+  <p>Maintain <code>left</code>/<code>right</code> pointers starting at the two ends of the array,
+    and <code>leftMax</code>/<code>rightMax</code> tracking the tallest bar seen so far from each
+    side. At each step, fold the current pointer's own height into its max
+    (<code>leftMax = Math.max(leftMax, height[left])</code>, symmetrically for the right), then
+    compare the two running maxima — <strong>always <code>leftMax</code> against
+    <code>rightMax</code>, never <code>height[left]</code> against <code>height[right]</code></strong>.
+    Whichever side has the <em>smaller max</em> gets resolved and its pointer moves inward:</p>
+  <ul>
+    <li>If <code>leftMax &lt;= rightMax</code>, index <code>left</code> is safe to resolve. Its true
+      left wall is exactly <code>leftMax</code> (every bar from <code>0</code> to <code>left</code>
+      has already been folded in), and its true right wall is <em>at least</em> <code>rightMax</code>
+      — because <code>rightMax</code> is only the max of the portion the right pointer has already
+      visited, a subset of everything actually to the right of <code>left</code>, so the real right
+      wall can only be taller. Since <code>leftMax &lt;= rightMax &lt;= (true right wall)</code>, the
+      smaller wall is provably <code>leftMax</code> — water above <code>left</code> is exactly
+      <code>leftMax - height[left]</code>, no matter what the unvisited middle of the array looks like.</li>
+    <li>Symmetrically, if <code>rightMax &lt; leftMax</code>, index <code>right</code> is safe to
+      resolve the same way, using <code>rightMax - height[right]</code>.</li>
+  </ul>
+  <p>Each index gets folded into a max and resolved exactly once, by whichever pointer reaches it
+    first — the loop runs until <code>left === right</code>, at which point every index has been
+    accounted for.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: fold the current left and right heights into leftMax and rightMax, compare leftMax against rightMax, if leftMax is less than or equal resolve left by adding leftMax minus height of left and moving left inward, otherwise resolve right by adding rightMax minus height of right and moving right inward, repeat until left equals right.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: move whichever pointer holds the smaller max, one pass</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="115" y="82" fill="#E2E3E7">left=0, right=n-1</text>
+      <text x="115" y="98" fill="#9198A6" font-size="10">leftMax=0, rightMax=0</text>
+      <rect x="230" y="60" width="220" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="340" y="82" fill="#282C34">leftMax &lt;= rightMax?</text>
+      <text x="340" y="98" fill="#282C34" font-size="10">yes: resolve left &nbsp; no: resolve right</text>
+      <rect x="470" y="60" width="150" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="545" y="82" fill="#282C34">left === right</text>
+      <text x="545" y="98" fill="#282C34" font-size="10">&rarr; total is the answer</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-trw2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-trw2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="450" y1="83" x2="468" y2="83"/>
+    </g>
+    <path d="M340,106 C300,140 245,140 220,108" stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-trw2)"/>
+    <text x="245" y="152" font-size="10" fill="#9198A6" text-anchor="middle">loops, moving one pointer inward, until left === right</text>
+    <text x="20" y="176" font-size="12" fill="#98C379">Cost: O(n) &mdash; every index is folded into a max and resolved exactly once.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same array as Solution 1,
+    height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1] — watch the pointers close in from both ends.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> left pointer</span>
+    <span><i class="lg-active"></i> right pointer</span>
+    <span><i class="lg-swap"></i> the moment water is added above the resolved index</span>
+    <span><i class="lg-sorted"></i> index fully resolved, outside the shrinking window</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function trapOptimal(height) {
+  let left = 0;
+  let right = height.length - 1;
+  let leftMax = 0;
+  let rightMax = 0;
+  let total = 0;
+
+  while (left < right) {
+    leftMax = Math.max(leftMax, height[left]);
+    rightMax = Math.max(rightMax, height[right]);
+
+    if (leftMax <= rightMax) {
+      total += leftMax - height[left];
+      left++;
+    } else {
+      total += rightMax - height[right];
+      right--;
+    }
+  }
+
+  return total;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>left = 0</code>, <code>right = height.length - 1</code> — the pointers start at the
+      two open ends, since either end could turn out to be the array's tallest bar.</li>
+    <li><code>leftMax</code>/<code>rightMax</code> start at <code>0</code> — bar heights are never
+      negative in this problem, so <code>0</code> is a safe floor that never accidentally beats a
+      real height (see the Interview Corner trick question below for why this specific choice of
+      seed value matters more than it looks).</li>
+    <li><code>while (left &lt; right)</code> — the moment the pointers meet, every index has already
+      been resolved by whichever side reached it; there's nothing left to compare.</li>
+    <li>Folding <code>height[left]</code> into <code>leftMax</code> (and <code>height[right]</code>
+      into <code>rightMax</code>) happens <strong>before</strong> the comparison, every iteration —
+      this is the detail that makes the "compare the maxes" rule actually correct. Deciding based on
+      stale maxima that haven't yet accounted for the current pointer's own height is a real bug;
+      see the Interview Corner below for a concrete case where it silently returns the wrong answer.</li>
+    <li><code>leftMax &lt;= rightMax</code> is the entire routing decision: the side with the
+      provably-smaller wall gets resolved and its water added, then that pointer moves one step
+      inward. The <code>&lt;=</code> (not strict <code>&lt;</code>) means ties resolve left — it
+      doesn't matter which side wins a tie, since <code>leftMax === rightMax</code> gives the same
+      water contribution either way.</li>
+    <li>When the loop exits, <code>total</code> already holds the full answer — there's no separate
+      finishing step, because the pointers meeting means the last remaining index was already folded
+      into both maxima on a previous iteration.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Two pointers, always resolving the side with the smaller max</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (rescan from every index)</td><td>O(n&sup2;)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (two pointers)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The real story here is purely about <strong>time</strong>, not space. Both solutions use only a
+    constant handful of scalar variables — the brute force never allocates an array proportional to
+    <code>n</code>, and neither does the two-pointer version, so both are honestly O(1) auxiliary
+    space. The win going from brute force to optimal is a genuine asymptotic time improvement:
+    O(n&sup2;) because every index triggers two fresh full-array scans, down to O(n) because the
+    two-pointer version folds each bar into a running max and resolves it exactly once, never
+    revisiting work it already did. (A middle-ground solution — precomputing <code>leftMax[]</code>
+    and <code>rightMax[]</code> arrays in one forward and one backward pass — would also reach O(n)
+    time, but at the cost of O(n) space for those two arrays; the two-pointer approach gets the same
+    O(n) time <em>and</em> keeps the O(1) space the brute force already had, which is what actually
+    makes it strictly better rather than just "different.")</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it always safe to resolve the side with the <em>smaller max</em>,
+        rather than the side with the smaller current height?</p>
+      <ul class="pb-ia">
+        <li>Say <code>leftMax &lt;= rightMax</code> at some step. The true wall on the left of
+          <code>left</code> is exactly <code>leftMax</code> — every bar from index <code>0</code>
+          to <code>left</code> has already been folded into it, so there's nothing left unseen on
+          that side.</li>
+        <li>The true wall on the right of <code>left</code> might be taller than the tracked
+          <code>rightMax</code>, because <code>rightMax</code> only reflects the portion the right
+          pointer has visited so far — the unvisited middle of the array could still hide a taller
+          bar. But it can never be <em>shorter</em> than <code>rightMax</code>, since
+          <code>rightMax</code> is itself a real bar that's part of that same right-hand region.</li>
+        <li>So the true right wall is <em>at least</em> <code>rightMax</code>, which is
+          <em>at least</em> <code>leftMax</code> in this branch — meaning the true right wall is
+          guaranteed &gt;= the true left wall. The shorter of the two walls is therefore provably
+          <code>leftMax</code>, regardless of what's hiding in the unscanned middle, so
+          <code>leftMax - height[left]</code> is exactly correct without ever looking further.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What actually breaks if you decide which side to resolve using the maxima
+        <em>before</em> folding in the current pointer's own height, instead of after?</p>
+      <ul class="pb-ia">
+        <li>Take <code>height = [1, 3, 2, 6]</code>. The correct answer is <code>1</code> (index 2
+          holds one unit, bounded by the wall of 3 on its left and 6 on its right).</li>
+        <li>The buggy version compares <code>leftMax</code>/<code>rightMax</code> <em>first</em>,
+          then only updates whichever side it already decided to move — so on the very first
+          comparison, both are still <code>0</code>, and a tie (<code>0 &lt;= 0</code>) always
+          routes left without that decision ever having accounted for <code>height[0] = 1</code> or
+          <code>height[3] = 6</code> at all.</li>
+        <li>Tracing it through: the buggy version ends up returning <code>0</code> for this array —
+          silently wrong, with no error or crash. The correct version, which folds
+          <code>height[left]</code>/<code>height[right]</code> into the maxima <em>before</em>
+          comparing, correctly returns <code>1</code>.</li>
+        <li>The rule to remember: the comparison that decides direction has to reflect the current
+          pointer's own bar, not last iteration's leftover state — otherwise you're routing based on
+          information that's already out of date.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Could you catch this bug with a single test case?"
+        Yes — any array where the very first comparison is a tie (both maxima at their starting
+        value of <code>0</code>) exposes it immediately, which is exactly why <code>[1, 3, 2, 6]</code>
+        works as a minimal counterexample: it's tiny, and the bug shows up on iteration one.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">The algorithm processes all <code>n</code> bars — why is it still described
+        as O(1) space instead of O(n)?</p>
+      <ul class="pb-ia">
+        <li>Big-O space complexity conventionally measures <em>extra</em> (auxiliary) memory the
+          algorithm allocates beyond the input it was already given — not the size of the input
+          itself, which the caller already paid for before the function was ever called.</li>
+        <li>This solution only ever holds five scalar variables — <code>left</code>,
+          <code>right</code>, <code>leftMax</code>, <code>rightMax</code>, <code>total</code> — no
+          matter how large <code>height</code> is. Doubling the input size doesn't add a sixth
+          variable.</li>
+        <li>Contrast that with an approach that precomputes <code>leftMax[]</code>/
+          <code>rightMax[]</code> arrays: those genuinely grow with <code>n</code>, so that version
+          is honestly O(n) space, even though it also reaches O(n) time. The two-pointer version is
+          the one that keeps both dimensions minimal at once.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>console.log(Math.max());
+console.log(Math.max(...[]));
+console.log(Math.min(...[]));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: all three log <code>-Infinity</code>, <code>-Infinity</code>, and
+          <code>Infinity</code> respectively — not <code>0</code>, and not an error.</li>
+        <li><code>Math.max</code> with zero arguments (including spreading an empty array into it)
+          returns <code>-Infinity</code> — the mathematical identity element for "maximum," since
+          any real number is &gt;= <code>-Infinity</code>. <code>Math.min()</code> mirrors it with
+          <code>+Infinity</code>.</li>
+        <li>This page's <code>leftMax</code>/<code>rightMax</code>/<code>maxLeft</code>/
+          <code>maxRight</code> all deliberately start at the literal <code>0</code>, not at
+          <code>Math.max()</code>'s built-in "empty" value — a safe choice here because bar heights
+          in this problem are guaranteed non-negative, so <code>0</code> is a true floor no real
+          height can go below.</li>
+        <li>The trap: it's tempting to rewrite a running-max loop as a one-liner like
+          <code>Math.max(...height.slice(0, i + 1))</code>. That's fine for every actual index in
+          this problem (the slice always has at least the bar at <code>i</code> itself, so it's
+          never empty) — but the moment that same "just spread it into Math.max" habit gets reused
+          somewhere the collection genuinely can be empty, it silently produces
+          <code>-Infinity</code> instead of throwing or returning a sane default, and that
+          <code>-Infinity</code> can propagate through arithmetic for a long time before anything
+          visibly breaks.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="smallermax" data-explain="The side with the smaller running max is safe to resolve because its own wall (the max) is exact, while the other side's true wall is only guaranteed to be at least as tall as its own tracked max — comparing heights directly wouldn't give that guarantee." >
+    <p class="q-text">1. The two-pointer solution decides which side to resolve by comparing <code>leftMax</code> against <code>rightMax</code>. Why not compare <code>height[left]</code> against <code>height[right]</code> instead?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="smallermax">The running max is what the correctness proof actually depends on — the smaller max side has a wall that's provably exact, which the smaller-height comparison doesn't guarantee</button>
+      <button class="btn dsa-quiz-option" data-value="faster">Comparing heights would be faster, but comparing maxima gives the same result either way</button>
+      <button class="btn dsa-quiz-option" data-value="nodiff">Both comparisons are mathematically identical in every case</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="timewin" data-explain="Both solutions use only a constant handful of scalar variables, so both are honestly O(1) space — there is no space improvement here. The real win is purely time: O(n²) rescanning from every index down to O(n), where each bar is folded into a max and resolved exactly once." >
+    <p class="q-text">2. What is the honest complexity story between the brute force and the two-pointer optimal?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="timewin">A genuine time win only — O(n²) down to O(n) — while space stays O(1) on both sides</button>
+      <button class="btn dsa-quiz-option" data-value="spacewin">Both time AND space improve — O(n²)&rarr;O(n) time and O(n)&rarr;O(1) space</button>
+      <button class="btn dsa-quiz-option" data-value="sametime">They're the same time complexity; the optimal solution just uses fewer variables</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="everyone" data-explain="Every bar always has an unambiguous left-max and right-max (even if one of them is the bar itself, at either array end). Brute force's fresh outward scans compute this from scratch for every index no matter where it sits; the two-pointer version resolves every index exactly once by whichever pointer reaches it." >
+    <p class="q-text">3. In the brute force solution, which indices need their <code>maxLeft</code>/<code>maxRight</code> computed by scanning outward?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="everyone">Every index — the outer loop reruns both inner scans from scratch for each one, with no result ever reused between indices</button>
+      <button class="btn dsa-quiz-option" data-value="onlymiddle">Only the interior indices — the two end bars are skipped entirely since they can never hold water</button>
+      <button class="btn dsa-quiz-option" data-value="onlypeaks">Only indices that are local peaks — flat or rising bars don't need a scan</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="zero" data-explain="A strictly decreasing array like [5,4,3,2,1] traps nothing: every bar's tallest wall is on its left (itself, for the first bar), and there's never a taller bar anywhere to the right to hold water in. Both solutions correctly return 0 with no special-casing." >
+    <p class="q-text">4. What does <code>trapOptimal([5, 4, 3, 2, 1])</code> return, and why?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="zero">0 — every bar only ever has a taller (or equal) wall on its left, never on its right, so nothing is ever trapped</button>
+      <button class="btn dsa-quiz-option" data-value="ten">10 — the sum of the differences between consecutive bars</button>
+      <button class="btn dsa-quiz-option" data-value="throws">It throws, because the array is never rotated back to ascending order</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="foldfirst" data-explain="leftMax and rightMax must be updated to include the current pointer's own height before the comparison that decides which side to resolve. Deciding first and updating only the chosen side afterward uses stale information and can silently return a wrong (too-low) total — verified against height = [1, 3, 2, 6], where the buggy ordering returns 0 instead of the correct 1." >
+    <p class="q-text">5. Why does <code>trapOptimal</code> fold <code>height[left]</code> into <code>leftMax</code> (and <code>height[right]</code> into <code>rightMax</code>) <em>before</em> comparing them, rather than after?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="foldfirst">Comparing before folding in the current pointer's own height uses stale maxima and can silently undercount the total — it's a real, verifiable bug, not just a style choice</button>
+      <button class="btn dsa-quiz-option" data-value="stylistic">Either ordering gives the same result — it's purely a matter of code style</button>
+      <button class="btn dsa-quiz-option" data-value="perf">Folding first is only about performance, shaving off a redundant comparison, with no effect on correctness</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Two Pointers problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'trapping-rain-water';
+
+  // Shared example for both animations — verified against trapBrute and trapOptimal via
+  // `node -e` before this page was written, plus 1000+ randomized cross-checks between the
+  // two solutions on random height arrays (length 1-15, values 0-10).
+  const DEMO_HEIGHTS = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];
+
+  // ---- Solution 1: brute force — fresh left/right scan for every index ----
+  function buildBruteSteps(height) {
+    const n = height.length;
+    const steps = [];
+    const finalized = {};
+    let total = 0;
+
+    function baseStates(extra) {
+      const states = {};
+      for (const k in finalized) states[k] = 'sorted';
+      Object.assign(states, extra);
+      return states;
+    }
+
+    steps.push({
+      narration: `Start: height = [${height.join(', ')}]. For each index i, water above it is min(tallest bar to its left, tallest bar to its right) - height[i], found by scanning outward from i every time.`,
+      states: {},
+    });
+
+    for (let i = 0; i < n; i++) {
+      let maxLeft = 0;
+      for (let l = i; l >= 0; l--) maxLeft = Math.max(maxLeft, height[l]);
+      const leftRange = {};
+      for (let l = 0; l <= i; l++) leftRange[l] = 'compare';
+      steps.push({
+        narration: `i=${i} (height=${height[i]}): scan left from i down to 0. Tallest bar on the left: maxLeft = ${maxLeft}.`,
+        states: baseStates(Object.assign(leftRange, { [i]: 'pointer' })),
+      });
+
+      let maxRight = 0;
+      for (let r = i; r < n; r++) maxRight = Math.max(maxRight, height[r]);
+      const rightRange = {};
+      for (let r = i; r < n; r++) rightRange[r] = 'compare';
+      steps.push({
+        narration: `i=${i} (height=${height[i]}): scan right from i to n-1. Tallest bar on the right: maxRight = ${maxRight}.`,
+        states: baseStates(Object.assign(rightRange, { [i]: 'pointer' })),
+      });
+
+      const water = Math.max(0, Math.min(maxLeft, maxRight) - height[i]);
+      total += water;
+      finalized[i] = true;
+      if (water > 0) {
+        steps.push({
+          narration: `min(maxLeft=${maxLeft}, maxRight=${maxRight}) - height[i]=${height[i]} = ${water}. Water trapped above index ${i}: ${water}. Running total: ${total}.`,
+          states: baseStates({ [i]: 'swap' }),
+        });
+      } else {
+        steps.push({
+          narration: `min(maxLeft=${maxLeft}, maxRight=${maxRight}) - height[i]=${height[i]} <= 0. No water sits above index ${i}. Running total: ${total}.`,
+          states: baseStates({ [i]: 'sorted' }),
+        });
+      }
+    }
+
+    steps.push({
+      narration: `Done — every index got a fresh left/right scan. Total water trapped: ${total}.`,
+      states: baseStates({}),
+    });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal — two pointers, resolve the smaller-max side ----
+  function buildOptimalSteps(height) {
+    const n = height.length;
+    const steps = [];
+    let left = 0;
+    let right = n - 1;
+    let leftMax = 0;
+    let rightMax = 0;
+    let total = 0;
+    const finalized = {};
+
+    function baseStates(extra) {
+      const states = {};
+      for (const k in finalized) states[k] = 'sorted';
+      Object.assign(states, extra);
+      return states;
+    }
+
+    steps.push({
+      narration: `Start: height = [${height.join(', ')}]. left=0, right=${right}, leftMax=0, rightMax=0, total=0.`,
+      states: baseStates({ [left]: 'pointer', [right]: 'active' }),
+    });
+
+    while (left < right) {
+      const curLeftMax = Math.max(leftMax, height[left]);
+      const curRightMax = Math.max(rightMax, height[right]);
+      steps.push({
+        narration: `left=${left} (height=${height[left]}), right=${right} (height=${height[right]}). leftMax so far = ${curLeftMax}, rightMax so far = ${curRightMax}.`,
+        states: baseStates({ [left]: 'pointer', [right]: 'active' }),
+      });
+
+      if (curLeftMax <= curRightMax) {
+        leftMax = curLeftMax;
+        const water = leftMax - height[left];
+        total += water;
+        finalized[left] = true;
+        if (water > 0) {
+          steps.push({
+            narration: `leftMax (${leftMax}) <= rightMax (${curRightMax}) — the left side is the smaller max, safe to resolve. Water above index ${left}: leftMax - height[left] = ${water}. Running total: ${total}. left moves to ${left + 1}.`,
+            states: baseStates({ [left]: 'swap', [right]: 'active' }),
+          });
+        } else {
+          steps.push({
+            narration: `leftMax (${leftMax}) <= rightMax (${curRightMax}) — resolve left. height[left]=${height[left]} IS the new leftMax, so no water sits above it. left moves to ${left + 1}.`,
+            states: baseStates({ [left]: 'sorted', [right]: 'active' }),
+          });
+        }
+        left++;
+      } else {
+        rightMax = curRightMax;
+        const water = rightMax - height[right];
+        total += water;
+        finalized[right] = true;
+        if (water > 0) {
+          steps.push({
+            narration: `rightMax (${rightMax}) < leftMax (${curLeftMax}) — the right side is the smaller max, safe to resolve. Water above index ${right}: rightMax - height[right] = ${water}. Running total: ${total}. right moves to ${right - 1}.`,
+            states: baseStates({ [left]: 'pointer', [right]: 'swap' }),
+          });
+        } else {
+          steps.push({
+            narration: `rightMax (${rightMax}) < leftMax (${curLeftMax}) — resolve right. height[right]=${height[right]} IS the new rightMax, so no water sits above it. right moves to ${right - 1}.`,
+            states: baseStates({ [left]: 'pointer', [right]: 'sorted' }),
+          });
+        }
+        right--;
+      }
+
+      steps.push({
+        narration: `Window narrows to left=${left}, right=${right}.`,
+        states: left <= right ? baseStates({ [left]: 'pointer', [right]: 'active' }) : baseStates({}),
+      });
+    }
+
+    finalized[left] = true;
+    steps.push({
+      narration: `left === right === ${left} — pointers met. Total water trapped: ${total}.`,
+      states: baseStates({ [left]: 'sorted' }),
+    });
+    return steps;
+  }
+
+  const DATA_MIN = 0;
+  const DATA_MAX = Math.max.apply(null, DEMO_HEIGHTS);
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: DATA_MIN, max: DATA_MAX });
+  bars1.setData(DEMO_HEIGHTS);
+  const steps1 = buildBruteSteps(DEMO_HEIGHTS);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 650,
+    onStep(step) {
+      if (!step) { bars1.paint({}, DEMO_HEIGHTS); return; }
+      bars1.paint(step.states, DEMO_HEIGHTS);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: DATA_MIN, max: DATA_MAX });
+  bars2.setData(DEMO_HEIGHTS);
+  const steps2 = buildOptimalSteps(DEMO_HEIGHTS);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 800,
+    onStep(step) {
+      if (!step) { bars2.paint({}, DEMO_HEIGHTS); return; }
+      bars2.paint(step.states, DEMO_HEIGHTS);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('trapping-rain-water', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
