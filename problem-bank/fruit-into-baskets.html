@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fruit Into Baskets — Problem Bank</title>
+<meta name="description" content="Fruit Into Baskets: an O(n^3) brute force checking every subarray with a Set distinct-count vs. the O(n) variable-size sliding window with a frequency map, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/fruit-into-baskets.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Fruit Into Baskets — Problem Bank" />
+<meta property="og:description" content="Fruit Into Baskets: an O(n^3) brute force checking every subarray with a Set distinct-count vs. the O(n) variable-size sliding window with a frequency map, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/fruit-into-baskets.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Fruit Into Baskets — Problem Bank" />
+<meta name="twitter:description" content="Fruit Into Baskets: an O(n^3) brute force checking every subarray with a Set distinct-count vs. the O(n) variable-size sliding window with a frequency map, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Fruit Into Baskets", "item": "https://dsa.itszain.tech/problem-bank/fruit-into-baskets.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day05.html">Day 5: Sliding Window Pattern</a></strong> —
+      the optimal solution below is a variable-size ("grow and shrink") window over a frequency map;
+      read that lesson first if the two-pointer expand/shrink mental model is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">SLIDING WINDOW &middot; MEDIUM</p>
+  <h1>Fruit Into Baskets <span class="leetcode-link">(<a href="https://leetcode.com/problems/fruit-into-baskets/" target="_blank" rel="noopener">LeetCode: Fruit Into Baskets</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're walking a row of fruit trees, given as an array <code>fruits</code> where
+    <code>fruits[i]</code> is the type of fruit growing at position <code>i</code>. You're carrying
+    exactly <strong>2 baskets</strong>, and each basket can hold only <strong>one type</strong> of
+    fruit — but an unlimited quantity of that type. Starting from any tree, you must pick fruit from
+    every tree you pass as you walk in one direction, and you have to stop the moment you'd need a
+    third basket for a third type. Return the maximum total number of fruits you can collect.</p>
+  <p>Strip away the orchard framing and this is exactly <strong>"longest contiguous subarray
+    containing at most 2 distinct values"</strong> — a specific case (K=2) of a well-known general
+    pattern. For example, <code>fruits=[1,2,1]</code> → <code>3</code> (all three trees, only 2
+    types present). <code>fruits=[0,1,2,2]</code> → <code>3</code> (the run <code>[1,2,2]</code> —
+    starting at tree 0 would force a third type at tree 2). <code>fruits=[1,2,3,2,2]</code> →
+    <code>4</code> (the run <code>[2,3,2,2]</code>, trees 1 through 4).</p>
+
+  <h2>Solution 1: Brute force — check every subarray with a fresh Set</h2>
+  <p>The most direct reading of the problem: try every possible contiguous run of trees. For each
+    candidate subarray <code>[i..j]</code>, build a brand-new <code>Set</code> from its contents and
+    check how many distinct fruit types it holds. If that count is at most 2, it's a legal run —
+    compare its length against the best one seen so far. There's no cleverness here, just an
+    exhaustive check of every window and how many types it contains.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: for every start index i and every end index j at or after i, build a Set from the subarray i through j, and if that Set holds at most 2 distinct values keep the subarray's length as a candidate for the best answer.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: every (i, j) pair, fresh Set each time</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">for every i, j &#8805; i</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">O(n&#178;) subarrays</text>
+      <rect x="220" y="60" width="210" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="325" y="82" fill="#282C34">new Set(fruits.slice(i, j+1))</text>
+      <text x="325" y="98" fill="#282C34" font-size="10">O(n) per subarray</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="540" y="82" fill="#E2E3E7">size &#8804; 2 ?</text>
+      <text x="540" y="98" fill="#9198A6" font-size="10">keep max length</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-fib" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-fib)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="430" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&#178;) subarrays &times; O(n) Set-build per subarray = O(n&#179;)</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">total — every candidate window is scanned completely from scratch.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-active"></i> trees inside the candidate subarray [i..j]</span>
+    <span><i class="lg-compare"></i> right edge j — just added, distinct count being checked</span>
+    <span><i class="lg-sorted"></i> best subarray found, highlighted at the end</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    fruits=[1,2,3,2,2] — the same array used for Solution 2, so step counts can be compared
+    directly. Expected answer: 4 (the run [2,3,2,2] starting at tree index 1), verified with
+    <code>node -e</code> before this page was written.</p>
+
+  <h3>The code</h3>
+  <pre><code>function totalFruitBrute(fruits) {
+  const n = fruits.length;
+  let best = 0;
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i; j < n; j++) {
+      const types = new Set(fruits.slice(i, j + 1));
+      if (types.size <= 2) {
+        best = Math.max(best, j - i + 1);
+      }
+    }
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The two nested loops enumerate every possible <code>(i, j)</code> start/end pair —
+      every contiguous subarray of <code>fruits</code>, O(n&sup2;) of them total.</li>
+    <li><code>fruits.slice(i, j + 1)</code> copies out the subarray, and
+      <code>new Set(...)</code> collapses it down to its distinct values — both O(n) operations,
+      run fresh for every single <code>(i, j)</code> pair with no reuse of work from the previous
+      pair.</li>
+    <li><code>if (types.size &lt;= 2)</code> is the entire correctness check: at most 2 distinct
+      fruit types fit in 2 baskets, so any subarray failing this is simply skipped.</li>
+    <li><code>best = Math.max(best, j - i + 1)</code> only updates when the subarray both qualifies
+      and beats the current record — no early exit, no memory of previous subarrays' contents.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&sup3;)</td><td>O(n)</td><td>O(n&sup2;) subarrays, each requiring a fresh O(n) Set build to count distinct types</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — variable-size sliding window with a frequency map</h2>
+  <p>Instead of re-examining every subarray from scratch, slide a window across the array exactly
+    once. Maintain a <code>Map</code> that counts how many of each fruit type currently sit inside
+    the window <code>[left..right]</code>. Expand <code>right</code> one tree at a time, adding to
+    the map. The moment the map holds more than 2 distinct types (<code>map.size &gt; 2</code>), the
+    window has become illegal — shrink from <code>left</code>, decrementing counts and deleting any
+    type whose count hits zero, until the map is back down to at most 2 keys. After every expansion
+    (and any shrinking it triggered), the window <code>[left..right]</code> is guaranteed valid, so
+    its length is a candidate for the best answer.</p>
+  <p>The reason this is O(n) rather than O(n&sup2;) is the classic amortized sliding-window
+    argument: <code>right</code> moves forward exactly once per outer iteration, n times total across
+    the whole run. <code>left</code> only ever moves forward too — it never resets or steps
+    backward — so across the entire algorithm it can advance at most n times as well. Two pointers,
+    each doing at most n forward steps total, gives O(n) + O(n) = O(n) overall, not O(n) work
+    repeated for every position of <code>right</code>.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: expand right across the array while adding to a frequency map, and whenever the map holds more than 2 distinct types shrink left one step at a time, removing counts and deleting zeroed entries, until the map is back to at most 2 types, then record the window length as a candidate best.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: expand right, shrink left, track a frequency map</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="105" y="82" fill="#282C34">expand right</text>
+      <text x="105" y="98" fill="#282C34" font-size="10">map.set(type, +1)</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">map.size &gt; 2 ?</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">shrink left until &#8804; 2</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">record window length</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">always valid here</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-fib)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — right and left each move forward at most n times</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">total, across the whole run. O(1) space — the map never holds more than 3 keys.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> right pointer expanding the window</span>
+    <span><i class="lg-active"></i> current valid window</span>
+    <span><i class="lg-compare"></i> checking the frequency map's distinct count</span>
+    <span><i class="lg-swap"></i> left pointer shrinking past a tree</span>
+    <span><i class="lg-sorted"></i> best window found, highlighted at the end</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same fruits=[1,2,3,2,2] as Solution 1 —
+    watch the window shrink once (when type 3 arrives at index 2 and pushes the map to 3 distinct
+    types) then grow back out to the same best answer, 4, in far fewer steps.</p>
+
+  <h3>The code</h3>
+  <pre><code>function totalFruitOptimal(fruits) {
+  const count = new Map();
+  let left = 0;
+  let best = 0;
+
+  for (let right = 0; right < fruits.length; right++) {
+    const type = fruits[right];
+    count.set(type, (count.get(type) || 0) + 1);
+
+    while (count.size > 2) {
+      const leftType = fruits[left];
+      const next = count.get(leftType) - 1;
+      if (next === 0) {
+        count.delete(leftType);
+      } else {
+        count.set(leftType, next);
+      }
+      left++;
+    }
+
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>count</code> is a <code>Map</code> from fruit type &rarr; how many of that type sit
+      inside the current window <code>[left..right]</code>.</li>
+    <li><code>count.set(type, (count.get(type) || 0) + 1)</code> adds the newly-included tree at
+      <code>right</code> to the map — this always runs, every iteration, before any shrinking is
+      considered.</li>
+    <li><code>while (count.size &gt; 2)</code> — not <code>if</code> — because a single left-step
+      might remove a type's last copy and still leave the map at 3 keys if, hypothetically, more
+      than one type needed clearing; a <code>while</code> guarantees the window is fully legal
+      before moving on. (In this specific problem one shrink step always suffices, since only one
+      new type can appear per expansion, but <code>while</code> is the version that generalizes
+      correctly and is what an interviewer would expect.)</li>
+    <li><code>if (next === 0) count.delete(leftType)</code> — deleting the key, not just leaving a
+      zero count sitting in the map, is what keeps <code>count.size</code> an honest measure of
+      "distinct types currently present." A stale zero-count entry would make <code>size</code> lie.</li>
+    <li><code>best = Math.max(best, right - left + 1)</code> runs once per outer iteration, after
+      any shrinking — at this point the window is always guaranteed valid (&#8804; 2 distinct
+      types), so every measurement here is a legitimate candidate.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Variable-size sliding window — right and left each advance forward at most n times total; the frequency map never holds more than 3 keys</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (every subarray, fresh Set)</td><td>O(n&sup3;)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (sliding window + frequency map)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a dramatic, real complexity gap, not a same-technique relabeling. The brute force
+    redoes O(n) work — building a whole new Set — for every one of O(n&sup2;) candidate subarrays.
+    The sliding window replaces that with two pointers that only ever move forward, each doing at
+    most n total steps across the entire run, and a frequency map that stays bounded at 2&ndash;3
+    keys regardless of how large <code>fruits</code> is — O(n) time collapses to a single pass, and
+    O(n) space collapses to O(1) because the map's size is capped by the problem's own "2 baskets"
+    constraint, not by the input length.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">This problem is often described as "longest substring with at most K distinct
+        characters, for K=2." What changes if the interviewer generalizes it to K distinct types
+        instead of exactly 2?</p>
+      <ul class="pb-ia">
+        <li>Almost nothing about the algorithm's shape changes — the same expand-right,
+          shrink-left-while-over-limit structure works unmodified. The only edit is the shrink
+          condition: <code>while (count.size &gt; K)</code> instead of <code>&gt; 2</code>.</li>
+        <li>The complexity story is identical too: still O(n) time, since both pointers still only
+          move forward, and still O(K) space, since the map is capped at K+1 keys at any instant
+          (K existing types plus the one just added, right before a shrink brings it back down).</li>
+        <li>Recognizing that "2 baskets" is just K=2 of a general pattern — rather than a
+          special-cased trick — is exactly the kind of connection that signals real pattern
+          understanding instead of memorized solutions to individual LeetCode problems.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is <code>while (count.size &gt; 2)</code> safe to write as a loop that
+        could in principle run multiple times per outer iteration, without breaking the claimed
+        O(n) time complexity?</p>
+      <ul class="pb-ia">
+        <li>The amortized argument doesn't care how the shrink work is distributed across outer
+          iterations — it only cares about the total number of times <code>left</code> moves,
+          summed over the entire run.</li>
+        <li>Since <code>left</code> only ever increases and is bounded above by <code>n</code>
+          (it can never pass <code>right</code>, which itself never exceeds <code>n - 1</code>),
+          it can advance at most n times total across every iteration of the outer loop combined
+          — regardless of whether those n steps happen one at a time or in occasional bursts.</li>
+        <li>That's the standard "each pointer does at most n units of forward-only work, across
+          the whole algorithm" argument — it's what makes two nested-looking loops still sum to
+          O(n), not O(n&sup2;), and it's worth being able to state explicitly rather than just
+          asserting "it's O(n), trust me."</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the optimal solution delete a key from the map the instant its
+        count hits zero, instead of just leaving a <code>0</code> value sitting there?</p>
+      <ul class="pb-ia">
+        <li>The whole shrink condition, <code>count.size &gt; 2</code>, depends on
+          <code>size</code> meaning "number of distinct types actually present in the window right
+          now." A key with a stale <code>0</code> count would still count toward
+          <code>.size</code>, even though that type isn't really in the window anymore.</li>
+        <li>Leaving zero-count entries around would make the algorithm shrink far too eagerly (or
+          fail to detect that a window is actually valid), producing a wrong answer — not just
+          wasted work.</li>
+        <li><code>count.delete(leftType)</code> is what keeps the map's size an honest, minimal
+          representation of "which types are currently between <code>left</code> and
+          <code>right</code>," which is exactly the invariant the shrink loop relies on.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — the frequency map here is built with a real
+        <code>Map</code>. Would swapping it for a plain object change anything, given that fruit
+        types in this problem are always small integers?</p>
+      <pre><code>const obj = {};
+obj[1] = 'from a number key';
+obj['1'] = 'from a string key';
+console.log(Object.keys(obj).length);   // ?
+
+const map = new Map();
+map.set(1, 'from a number key');
+map.set('1', 'from a string key');
+console.log(map.size);                  // ?</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>Object.keys(obj).length</code> is <code>1</code>, but
+          <code>map.size</code> is <code>2</code> — not matching counts.</li>
+        <li>A plain object coerces every key to a string, so the property written by
+          <code>obj[1] = ...</code> and the one written by <code>obj['1'] = ...</code> are the
+          exact same property — the second write silently overwrites the first.</li>
+        <li>A <code>Map</code> never coerces keys — the number <code>1</code> and the string
+          <code>'1'</code> are distinct keys, so both entries exist independently and
+          <code>size</code> correctly reports 2.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: for this exact problem it happens to be harmless either way, since
+        LeetCode's <code>fruits</code> array elements are always plain numbers, never a mix of
+        numbers and numeric strings — so an object-based frequency map would give the same answer
+        here. But it's the general, correctness-relevant reason a <code>Map</code> is the right
+        default tool for "count distinct keys of arbitrary type" rather than an object: an object's
+        implicit string-coercion is a silent correctness hazard the moment key types could ever
+        mix, while <code>Map</code> has no such gotcha to reason about in the first place.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="k2" data-explain="Fruit Into Baskets is exactly 'longest substring with at most K distinct characters/values' with K fixed at 2 — the '2 baskets, 1 type each' framing is just a concrete story wrapped around a general sliding-window pattern.">
+    <p class="q-text">1. This problem is a specific case of a well-known general pattern. Which one?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="k2">Longest subarray/substring with at most K distinct values, with K fixed at 2</button>
+      <button class="btn dsa-quiz-option" data-value="fixedwindow">Fixed-size sliding window of exactly 2 elements</button>
+      <button class="btn dsa-quiz-option" data-value="twosum">A variant of the classic Two Sum problem</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="fresheach" data-explain="Every one of the O(n²) (i, j) subarray pairs triggers its own fresh fruits.slice(i, j+1) plus new Set(...) — an O(n) operation repeated for every pair, with zero reuse of work between overlapping subarrays. That's what turns O(n²) subarrays into O(n³) total work.">
+    <p class="q-text">2. What specifically makes the brute-force solution O(n&sup3;) rather than O(n&sup2;)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="fresheach">Every one of the O(n&sup2;) subarrays triggers a fresh O(n) Set build, with no work reused between overlapping subarrays</button>
+      <button class="btn dsa-quiz-option" data-value="triplenest">The solution uses three explicitly nested for-loops written directly in the code</button>
+      <button class="btn dsa-quiz-option" data-value="sortcost">Sorting each subarray before counting its distinct values is what adds the extra factor of n</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="forwardonly" data-explain="left never resets and never steps backward — across the ENTIRE run it advances at most n times total, same as right. Two pointers each doing at most n forward steps overall sums to O(n), not O(n) work repeated for every position of right." >
+    <p class="q-text">3. The optimal solution has an inner while loop nested inside a for loop. Why is the overall time still O(n), not O(n&sup2;)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="forwardonly">left only ever moves forward and never resets, so across the whole run it advances at most n times total — same bound as right</button>
+      <button class="btn dsa-quiz-option" data-value="mapfast">Map operations are so fast in practice that the nested loop's cost becomes negligible</button>
+      <button class="btn dsa-quiz-option" data-value="rarelyruns">The while loop is expected to run zero times on most realistic inputs, so its cost can be ignored</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="deletehonest" data-explain="count.size is what the shrink condition depends on to mean 'distinct types actually present.' A key left at count 0 would still count toward .size even though that type isn't really in the window — deleting it is what keeps the invariant correct, not just tidy." >
+    <p class="q-text">4. Why does the optimal solution call <code>count.delete(leftType)</code> instead of just leaving that entry at count 0?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="deletehonest">A stale 0-count entry would still count toward count.size, breaking the shrink condition's meaning and producing wrong answers</button>
+      <button class="btn dsa-quiz-option" data-value="memoryonly">It's purely a memory-usage optimization with no effect on correctness</button>
+      <button class="btn dsa-quiz-option" data-value="mapforbids6">A Map throws an error if a value is ever set to exactly 0</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="spacebound" data-explain="The frequency map's size is capped by the problem's own constraint (at most 2 valid types, plus momentarily a 3rd right before a shrink corrects it) — bounded at 2-3 keys no matter how large fruits grows. That's what makes the optimal solution O(1) space, not O(n) like the brute force's Set." >
+    <p class="q-text">5. Why is the optimal solution's space complexity O(1) rather than O(n), even though it uses a Map that could in principle grow?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="spacebound">The map's size is capped by the "at most 2 types" constraint itself — it never holds more than 2-3 keys, regardless of input length</button>
+      <button class="btn dsa-quiz-option" data-value="jsoptimizes">The JavaScript engine automatically compresses Map objects once they exceed a certain size</button>
+      <button class="btn dsa-quiz-option" data-value="alwaysempty">The map is cleared and rebuilt from scratch after every window, so it never accumulates entries</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Sliding Window problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'fruit-into-baskets';
+  const DEMO_FRUITS = [1, 2, 3, 2, 2];
+
+  // Paint every index in [lo..hi] with `state`, without overwriting any index
+  // already present in `obj` (lets a single call layer a highlighted index
+  // — e.g. the right pointer — over a broader "active window" range).
+  function rangeStates(lo, hi, state, obj) {
+    obj = obj || {};
+    for (let k = lo; k <= hi; k++) {
+      if (obj[k] === undefined) obj[k] = state;
+    }
+    return obj;
+  }
+
+  // ---- Solution 1: brute force (every subarray, fresh Set each time) ----
+  function buildBruteSteps(fruits) {
+    const n = fruits.length;
+    const steps = [];
+    let best = 0, bestI = 0, bestJ = -1;
+
+    steps.push({
+      narration: 'Check every contiguous subarray [i..j]. For each one, count its distinct fruit types with a fresh Set — keep it only if that count is at most 2.',
+      states: {},
+    });
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i; j < n; j++) {
+        const types = new Set(fruits.slice(i, j + 1));
+        const size = types.size;
+        const len = j - i + 1;
+        const keep = size <= 2;
+        const improved = keep && len > best;
+        if (improved) { best = len; bestI = i; bestJ = j; }
+
+        const states = rangeStates(i, j, 'active', { [j]: 'compare' });
+        let narration = `Subarray [${i}..${j}] = [${fruits.slice(i, j + 1).join(', ')}]: new Set(...) has ${size} distinct type${size === 1 ? '' : 's'}. `;
+        narration += keep
+          ? `≤ 2, valid, length ${len}${improved ? ' — new best!' : ` (best stays ${best})`}.`
+          : '> 2, discard.';
+
+        steps.push({ narration, states });
+      }
+    }
+
+    steps.push({
+      narration: `Best subarray: [${bestI}..${bestJ}], length ${best} — the maximum number of fruits collectable with at most 2 types.`,
+      states: rangeStates(bestI, bestJ, 'sorted'),
+    });
+
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData(DEMO_FRUITS);
+  const bruteSteps = buildBruteSteps(DEMO_FRUITS);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 850,
+    onStep(step) {
+      bars1.paint(step ? step.states : {});
+    },
+  });
+
+  // ---- Solution 2: optimal (variable-size sliding window + frequency map) ----
+  function buildOptimalSteps(fruits) {
+    const steps = [];
+    const count = new Map();
+    let left = 0, best = 0, bestL = 0, bestR = -1;
+
+    steps.push({
+      narration: 'Expand right across the array, tracking a frequency map of fruit types in the window [left..right]. Shrink left whenever the map holds more than 2 distinct types.',
+      states: {},
+    });
+
+    for (let right = 0; right < fruits.length; right++) {
+      const type = fruits[right];
+      count.set(type, (count.get(type) || 0) + 1);
+      steps.push({
+        narration: `right=${right} expands the window to include type ${type}. Add it to the frequency map.`,
+        states: rangeStates(left, right - 1, 'active', { [right]: 'pointer' }),
+      });
+
+      steps.push({
+        narration: count.size > 2
+          ? `Frequency map now has ${count.size} distinct types — over the limit of 2. Must shrink from the left.`
+          : `Frequency map has ${count.size} distinct type${count.size === 1 ? '' : 's'} — still within the limit of 2. Window stays valid.`,
+        states: rangeStates(left, right - 1, 'active', { [right]: 'compare' }),
+      });
+
+      while (count.size > 2) {
+        const leftType = fruits[left];
+        const next = count.get(leftType) - 1;
+        if (next === 0) {
+          count.delete(leftType);
+        } else {
+          count.set(leftType, next);
+        }
+        steps.push({
+          narration: `left=${left} (type ${leftType}) leaves the window. ${next === 0 ? `Type ${leftType} is fully removed from the map.` : `Type ${leftType} now has ${next} left in the window.`}`,
+          states: rangeStates(left + 1, right, 'active', { [left]: 'swap' }),
+        });
+        left++;
+      }
+
+      const len = right - left + 1;
+      const improved = len > best;
+      if (improved) { best = len; bestL = left; bestR = right; }
+      steps.push({
+        narration: `Window [${left}..${right}] has length ${len}${improved ? ' — new best!' : ` (best stays ${best})`}.`,
+        states: rangeStates(left, right, 'active'),
+      });
+    }
+
+    steps.push({
+      narration: `Best window: [${bestL}..${bestR}], length ${best} — the maximum number of fruits collectable with at most 2 types.`,
+      states: rangeStates(bestL, bestR, 'sorted'),
+    });
+
+    return steps;
+  }
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData(DEMO_FRUITS);
+  const optimalSteps = buildOptimalSteps(DEMO_FRUITS);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 850,
+    onStep(step) {
+      bars2.paint(step ? step.states : {});
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('fruit-into-baskets', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
