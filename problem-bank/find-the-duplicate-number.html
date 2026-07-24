@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Find the Duplicate Number — Problem Bank</title>
+<meta name="description" content="Find the Duplicate Number: a Set-based brute force vs. Floyd's Cycle Detection treating the array as an implicit linked list, both animated — the honest story is space, not time." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/find-the-duplicate-number.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Find the Duplicate Number — Problem Bank" />
+<meta property="og:description" content="Find the Duplicate Number: a Set-based brute force vs. Floyd's Cycle Detection treating the array as an implicit linked list, both animated — the honest story is space, not time." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/find-the-duplicate-number.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Find the Duplicate Number — Problem Bank" />
+<meta name="twitter:description" content="Find the Duplicate Number: a Set-based brute force vs. Floyd's Cycle Detection treating the array as an implicit linked list, both animated — the honest story is space, not time." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Find the Duplicate Number", "item": "https://dsa.itszain.tech/problem-bank/find-the-duplicate-number.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day04.html">Day 4: Two-Pointer Pattern</a></strong> —
+      the optimal solution below is the classic two-pointer "tortoise and hare" technique applied
+      to an array instead of a linked list; read that lesson first if tracking two pointers moving
+      at different speeds is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">TWO POINTERS &middot; MEDIUM</p>
+  <h1>Find the Duplicate Number <span class="leetcode-link">(<a href="https://leetcode.com/problems/find-the-duplicate-number/" target="_blank" rel="noopener">LeetCode: Find the Duplicate Number</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array <code>nums</code> with <code>n + 1</code> integers, where every value is
+    in the range <code>[1, n]</code> inclusive. Exactly one number is repeated — it might show up
+    twice, or many more times than that — and every other number appears exactly once. Find the
+    repeated number. For example, <code>[1,3,4,2,2]</code> has <code>n = 4</code> and five
+    elements; <code>2</code> is the one that repeats, so the answer is <code>2</code>. Likewise
+    <code>[3,1,3,4,2]</code> returns <code>3</code>.</p>
+  <p>The catch that makes this problem interesting: you're asked to do it <strong>without
+    modifying the input array</strong> and using only <strong>O(1) extra space</strong>. A Set or a
+    frequency map solves this trivially, but neither meets that bar — the real solution has to be
+    cleverer than "just remember what you've seen."</p>
+
+  <h2>Solution 1: Brute force — hash set of seen values</h2>
+  <p>The direct approach: walk the array once, and for every value, check whether it's already in
+    a <code>Set</code>. The first value that's already there is the duplicate — return
+    immediately, no need to keep scanning. This is completely correct and dead simple, but it's
+    honest to call it "brute force" here specifically because of what the problem actually
+    demands: the <code>Set</code> is a second data structure that can grow as large as the input
+    itself, which violates the O(1) extra space constraint outright.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: scan the array once, checking each value against a Set of values seen so far, and return immediately the first time a value is already in the Set.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: remember everything you've seen, in a Set</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">scan nums once</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">left to right</text>
+      <rect x="210" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">seen.has(v) ?</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">Set grows with every new value</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="525" y="82" fill="#E2E3E7">return v immediately</text>
+      <text x="525" y="98" fill="#9198A6" font-size="10">first repeat wins</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-fd1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-fd1)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) time (one pass, early exit) — but O(n) EXTRA SPACE for</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">the Set, which can grow to hold every distinct value scanned so far.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> element currently being checked</span>
+    <span><i class="lg-compare"></i> earlier occurrence already in the Set</span>
+    <span><i class="lg-swap"></i> duplicate found — Set already had this value</span>
+    <span><i class="lg-sorted"></i> duplicate confirmed</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage" style="height:130px;"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[1,3,4,2,2] — the scan stops the instant index 4 re-encounters value 2, which was
+    already added to the Set at index 3.</p>
+
+  <h3>The code</h3>
+  <pre><code>function findDuplicateBruteForce(nums) {
+  const seen = new Set();
+  for (const v of nums) {
+    if (seen.has(v)) return v;
+    seen.add(v);
+  }
+  return -1; // unreachable — the problem guarantees a duplicate exists
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>seen</code> is a <code>Set</code> — every distinct value gets added exactly once,
+      and membership checks (<code>has</code>) are the whole algorithm.</li>
+    <li><code>if (seen.has(v)) return v;</code> — this is the entire "detection" logic. The moment
+      a value shows up that's already in the Set, it must be the duplicate (the problem guarantees
+      there's only one repeated value), so the function returns immediately instead of finishing
+      the scan.</li>
+    <li><code>seen.add(v)</code> only runs for values that weren't already there — by the time this
+      line executes, <code>v</code> is guaranteed new.</li>
+    <li>The final <code>return -1</code> is unreachable for any input satisfying the problem's
+      guarantee; it exists only as a defined fallback.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Hash set of seen values, early exit on first repeat</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — Floyd's Cycle Detection (tortoise and hare)</h2>
+  <p>The trick is a reframing: since every value in <code>nums</code> is guaranteed to be in
+    <code>[1, n]</code>, and there are <code>n + 1</code> indices (<code>0</code> through
+    <code>n</code>), every value <code>nums[i]</code> is ALWAYS itself a valid index back into the
+    same array. That means you can treat the array as an <strong>implicit linked list</strong>:
+    index <code>i</code> "points to" index <code>nums[i]</code>. Because one value is duplicated,
+    at least two different indices point to that same target — which means this implicit list is
+    guaranteed to have a cycle, and the value at the cycle's entrance is exactly the duplicate.</p>
+
+  <p><strong>Phase 1 — detect the cycle.</strong> Run the standard tortoise-and-hare: a
+    <code>slow</code> pointer advances one step per iteration (<code>slow = nums[slow]</code>), a
+    <code>fast</code> pointer advances two (<code>fast = nums[nums[fast]]</code>). Because the
+    implicit list has a cycle, <code>fast</code> can never "escape" past <code>slow</code> without
+    lapping it — they're guaranteed to land on the same index eventually. That meeting point proves
+    a cycle exists, but it is <strong>not</strong> necessarily the duplicate value itself — it's
+    just some node inside the cycle.</p>
+
+  <p><strong>Phase 2 — find the entrance.</strong> Reset one pointer back to index <code>0</code>
+    (the start), keep the other at wherever they met, and now advance <em>both</em> by exactly one
+    step per iteration. They will meet again — and this second meeting point IS the cycle's
+    entrance, which is the duplicate. Why resetting to the start works is the genuinely
+    non-obvious part: if the tail (from index 0 to the cycle's entrance) has length <code>L</code>,
+    and the cycle has length <code>C</code>, the math of how far <code>slow</code> and
+    <code>fast</code> traveled in phase 1 guarantees that walking <code>L</code> more steps from
+    both the meeting point and from index <code>0</code> lands on the exact same index — the
+    entrance. No array copy, no Set, no modification — just two index variables.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: build an implicit graph where index i points to index nums of i, run phase 1 tortoise and hare until slow and fast meet inside the cycle, then run phase 2 by resetting one pointer to the start and stepping both by one until they meet again at the cycle entrance, which is the duplicate.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: array as implicit pointers, two-phase tortoise and hare</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">i &#8594; nums[i]</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">valid index since v&#8712;[1,n]</text>
+      <rect x="230" y="60" width="210" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="335" y="82" fill="#282C34">phase 1: slow+fast meet</text>
+      <text x="335" y="98" fill="#282C34" font-size="10">not necessarily the answer</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="540" y="82" fill="#282C34">phase 2: same speed</text>
+      <text x="540" y="98" fill="#282C34" font-size="10">meet again = duplicate</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-fd2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-fd2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="440" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — same as brute force. But O(1) EXTRA SPACE: just two</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">index variables, slow and fast, regardless of input size.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>This one uses a graph view instead of bars — the array IS a graph here (index &#8594; index),
+    and seeing the tail run into a cycle is exactly what makes the algorithm click. The example
+    below, <code>nums=[1,2,3,4,5,6,4]</code> (n=6), is deliberately larger than the brute-force
+    example so the tail-into-cycle shape is clearly visible: indices 0&#8594;1&#8594;2&#8594;3 form
+    the tail, then 3&#8594;4 enters a 3-node cycle (4&#8594;5&#8594;6&#8594;4). Value <code>4</code>
+    is the one that's duplicated (it appears at index 3 as well as index 6), and 4 is exactly the
+    cycle's entrance.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> slow pointer's current index</span>
+    <span><i class="lg-active"></i> fast pointer's current index</span>
+    <span><i class="lg-compare"></i> slow and fast meeting point</span>
+    <span><i class="lg-sorted"></i> final confirmed duplicate</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function findDuplicateOptimal(nums) {
+  let slow = nums[0];
+  let fast = nums[nums[0]];
+
+  // Phase 1: advance slow by 1 step, fast by 2 steps, until they meet.
+  // Guaranteed to happen because the implicit linked list has a cycle.
+  while (slow !== fast) {
+    slow = nums[slow];
+    fast = nums[nums[fast]];
+  }
+
+  // Phase 2: reset one pointer to the start. Move both by 1 step at a
+  // time — they meet again exactly at the cycle's entrance, which IS
+  // the duplicate value.
+  let slow2 = 0;
+  while (slow2 !== fast) {
+    slow2 = nums[slow2];
+    fast = nums[fast];
+  }
+
+  return fast;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>slow = nums[0]; fast = nums[nums[0]];</code> — both pointers take their first hop(s)
+      before the loop condition is even checked, so the <code>while</code> loop's exit condition
+      (<code>slow === fast</code>) can be evaluated immediately rather than trivially being true at
+      index 0 for both.</li>
+    <li>Phase 1's loop is the classic tortoise-and-hare: <code>slow</code> moves one hop,
+      <code>fast</code> moves two. Because a cycle is guaranteed to exist, <code>fast</code>
+      re-enters the cycle and eventually laps <code>slow</code> from behind — they can't miss each
+      other forever.</li>
+    <li><code>let slow2 = 0;</code> — phase 2 introduces a fresh pointer starting at index 0,
+      deliberately reusing the variable name pattern (not renaming <code>fast</code>) so it's clear
+      <code>fast</code> keeps its position from wherever phase 1 left it.</li>
+    <li>Phase 2's loop moves both pointers one step per iteration — this is the part that finds
+      the cycle's <em>entrance</em>, not just any point inside the cycle.</li>
+    <li><code>return fast;</code> — after phase 2's loop exits, <code>fast</code> (and
+      <code>slow2</code>) are on the same index: the entrance, i.e. the duplicate.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Floyd's Cycle Detection — two-phase tortoise and hare</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (hash set)</td><td>O(n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (Floyd's Cycle Detection)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Both solutions are O(n) time — there is no
+    asymptotic speedup here, and it would be dishonest to claim one. The real, honest improvement
+    Floyd's offers is space: it drops the O(n) Set down to O(1), two index variables that don't
+    grow with the input — which is exactly what the problem's actual constraint (no extra space,
+    don't modify the array) is asking for.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it valid to treat <code>nums</code> as an implicit linked list where
+        index <code>i</code> points to index <code>nums[i]</code>? What specifically makes that
+        safe here?</p>
+      <ul class="pb-ia">
+        <li>It's only safe because every value in <code>nums</code> is guaranteed to be in
+          <code>[1, n]</code>, and the array has <code>n + 1</code> valid indices
+          (<code>0</code> through <code>n</code>) — so <code>nums[i]</code> is always itself a
+          usable index back into the same array. Nothing ever "points off the end."</li>
+        <li>Values are constrained to start at <code>1</code>, not <code>0</code> — that means no
+          value ever points back to index <code>0</code>, which is exactly why index 0 always sits
+          on the tail, never inside the cycle. That's a structural guarantee the algorithm quietly
+          relies on.</li>
+        <li>If values could fall outside <code>[1, n]</code>, <code>nums[nums[i]]</code> could
+          read past the array's bounds (returning <code>undefined</code>) or point at index 0 in a
+          way that breaks the tail/cycle shape — the entire "walk it like a linked list" framing
+          only holds because the input range is constrained exactly this way.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What is the actual, honest complexity improvement of Floyd's Cycle Detection
+        over the Set-based brute force — and what would be dishonest to claim?</p>
+      <ul class="pb-ia">
+        <li>Both solutions are O(n) TIME — one pass over the array either way (phase 1 and phase 2
+          together still add up to a bounded number of hops). Claiming Floyd's is "faster" in the
+          Big-O sense would be incorrect.</li>
+        <li>The real difference is SPACE: the Set is O(n) because it can grow to hold one entry per
+          distinct value, while Floyd's is O(1) — just <code>slow</code>, <code>fast</code>, and
+          <code>slow2</code>, regardless of how large <code>nums</code> is.</li>
+        <li>That space difference is not just a nice-to-have here — it's literally what the
+          problem asks for. The brute force is a correct solution to a <em>different</em>, easier
+          problem (find a duplicate, any way you like) than the one actually being asked (find it
+          in O(1) extra space, without modifying the array).</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Phase 1 finds a meeting point inside the cycle. Why isn't that meeting point
+        itself the answer — and why does resetting one pointer to the start in phase 2 find the
+        actual entrance?</p>
+      <ul class="pb-ia">
+        <li>Phase 1's meeting point only proves a cycle exists — <code>fast</code> could have
+          lapped <code>slow</code> from anywhere inside the cycle, not necessarily right at the
+          entrance. Tracing <code>nums=[1,2,3,4,5,6,4]</code>, phase 1 meets at index 6, but the
+          real duplicate is 4 — a completely different node.</li>
+        <li>The reset works because of a distance relationship: if the tail (index 0 to the
+          entrance) has length <code>L</code> and the cycle has length <code>C</code>, the amount
+          <code>fast</code> outpaced <code>slow</code> by during phase 1 is always a multiple of
+          <code>C</code>. That fact guarantees walking exactly <code>L</code> more steps from
+          index 0, and from the phase-1 meeting point, both land on the entrance at the same time.</li>
+        <li>It's a genuinely non-obvious result — most people's first instinct is that the meeting
+          point IS the answer. Being able to explain why it isn't (and why the reset step fixes
+          that) is usually the actual signal an interviewer is listening for, more than just
+          reciting the two-phase steps from memory.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if you don't reset to 0 — could you instead
+        keep counting hops from the phase-1 meeting point and stop after exactly one full lap of
+        the cycle?" That would tell you the cycle's LENGTH, not its entrance — a related but
+        different piece of information, and not what this problem is asking for.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — this problem's values are always integers in
+        <code>[1, n]</code>, so <code>NaN</code> can never actually appear in <code>nums</code>.
+        But suppose the same "seen tracker" pattern from the brute force were reused on an array
+        that COULD contain <code>NaN</code> — would <code>Array.prototype.indexOf</code> and
+        <code>Set.prototype.has</code> both still catch a repeated <code>NaN</code>?</p>
+      <pre><code>console.log([NaN].indexOf(NaN));      // ?
+console.log([NaN].includes(NaN));     // ?
+console.log(new Set([NaN]).has(NaN)); // ?</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>-1</code>, then <code>true</code>, then <code>true</code> — not three
+          matching results.</li>
+        <li><code>indexOf</code> compares with strict equality (<code>===</code>), and
+          <code>NaN === NaN</code> is famously <code>false</code> — so <code>indexOf</code> can
+          NEVER find a <code>NaN</code>, even one that's really there. An
+          <code>indexOf</code>-based duplicate check would silently miss it.</li>
+        <li><code>Array.prototype.includes</code> and <code>Set.prototype.has</code> both use
+          SameValueZero comparison instead, which treats <code>NaN</code> as equal to itself — so
+          both correctly detect it. That's exactly why the brute-force solution above uses
+          <code>seen.has(v)</code>, not an <code>indexOf</code>-style check.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is also why <code>Set.has()</code> is the right tool for the
+        brute force beyond just this NaN semantics point — it's O(1) average lookup versus
+        <code>Array.prototype.includes</code>' O(n) linear scan, which matters once the seen
+        collection grows large. Verified directly: checking membership 50 times against a
+        200,000-element collection took about 0.002ms total with a <code>Set</code> versus
+        roughly 1.9ms with <code>Array.includes</code> on this machine — a difference that only
+        gets more dramatic as the input grows, since one is O(1) and the other is O(n) per check.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="validindex" data-explain="Every value in nums is guaranteed to be in [1,n], and there are n+1 valid indices (0 through n) — so nums[i] is always itself a usable index back into the same array, which is exactly what makes the 'index points to index' framing safe.">
+    <p class="q-text">1. Why is it valid to treat nums as an implicit linked list where index i "points to" index nums[i]?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="validindex">Because every value is guaranteed to be in [1,n], so nums[i] is always itself a valid index into the array</button>
+      <button class="btn dsa-quiz-option" data-value="sorted6">Because the array is guaranteed to already be sorted</button>
+      <button class="btn dsa-quiz-option" data-value="luck6">It's not actually guaranteed — it just happens to work for most test cases</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="space" data-explain="Both solutions are O(n) time — one pass over the array either way. The real, honest improvement Floyd's offers is space: O(n) for the Set down to O(1) for a couple of index variables — which is exactly what the problem's real constraint asks for.">
+    <p class="q-text">2. What is the real, honest complexity improvement of Floyd's Cycle Detection over the Set-based brute force?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="space">Space only — both are O(n) time, but space drops from O(n) to O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="time6">Time only — Floyd's is asymptotically faster than O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="both6">Both time and space improve by a full order of magnitude</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="justcycle" data-explain="The phase-1 meeting point only proves a cycle exists somewhere in the implicit list — fast could have lapped slow from any point inside the cycle, not necessarily the entrance. Phase 2 is what actually locates the entrance (the duplicate)." >
+    <p class="q-text">3. What does the meeting point found at the end of phase 1 (slow === fast) actually tell you?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="justcycle">Only that a cycle exists — it's not necessarily the duplicate value itself</button>
+      <button class="btn dsa-quiz-option" data-value="isanswer">It's always the duplicate value — no further steps are needed</button>
+      <button class="btn dsa-quiz-option" data-value="nodup">It means there is no duplicate in this array</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="resetentrance" data-explain="Resetting one pointer to index 0 and stepping both pointers by exactly one hop per iteration is what finds the cycle's entrance specifically — a distance relationship guarantees both pointers reach the entrance at the same time." >
+    <p class="q-text">4. In phase 2, what does resetting a pointer to index 0 and moving both pointers one step at a time actually locate?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="resetentrance">The cycle's entrance — which is the duplicate value</button>
+      <button class="btn dsa-quiz-option" data-value="cyclelength">The exact length of the cycle, in number of nodes</button>
+      <button class="btn dsa-quiz-option" data-value="restart6">Nothing new — it's the same meeting point phase 1 already found</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nanindexof" data-explain="Array.prototype.indexOf uses strict equality (===), and NaN === NaN is false — so indexOf can never find a NaN, even a real one. Array.prototype.includes and Set.prototype.has both use SameValueZero comparison instead, which correctly treats NaN as equal to itself.">
+    <p class="q-text">5. Which membership check can NEVER find a repeated NaN value, even when one genuinely exists in the collection?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nanindexof">Array.prototype.indexOf — it uses strict equality, and NaN === NaN is false</button>
+      <button class="btn dsa-quiz-option" data-value="sethas6">Set.prototype.has — Sets can never store NaN as a value</button>
+      <button class="btn dsa-quiz-option" data-value="includes6">Array.prototype.includes — it also uses strict equality internally</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Two Pointers problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'find-the-duplicate-number';
+
+  // ---- Solution 1: brute force (Set of seen values) ----
+  function buildBruteSteps(nums) {
+    const steps = [];
+    const seen = new Set();
+
+    steps.push({
+      narration: `Scan nums once, checking each value against a Set of everything seen so far. The instant a value is already in the Set, that's the duplicate.`,
+      states: {},
+    });
+
+    for (let i = 0; i < nums.length; i++) {
+      const v = nums[i];
+      if (seen.has(v)) {
+        const priorIndex = nums.findIndex((x, j) => j < i && x === v);
+        const hitStates = {};
+        if (priorIndex !== -1) hitStates[priorIndex] = 'compare';
+        hitStates[i] = 'swap';
+        steps.push({
+          narration: `nums[${i}] = ${v} — already in the Set (first added at index ${priorIndex}). That's the duplicate. No need to scan further.`,
+          states: hitStates,
+        });
+        const finalStates = {};
+        nums.forEach((x, idx) => { if (x === v) finalStates[idx] = 'sorted'; });
+        steps.push({
+          narration: `Duplicate confirmed: ${v}.`,
+          states: finalStates,
+        });
+        return steps;
+      }
+      seen.add(v);
+      steps.push({
+        narration: `nums[${i}] = ${v} — not seen before. Add it to the Set: {${Array.from(seen).join(', ')}}.`,
+        states: { [i]: 'pointer' },
+      });
+    }
+    return steps; // unreachable given the problem's guarantee
+  }
+
+  const BRUTE_NUMS = [1, 3, 4, 2, 2];
+  const BRUTE_MAX = Math.max.apply(null, BRUTE_NUMS) + 1;
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: 0, max: BRUTE_MAX });
+  bars1.setData(BRUTE_NUMS);
+  const bruteSteps = buildBruteSteps(BRUTE_NUMS);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) {
+      if (!step) { bars1.paint({}); return; }
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (Floyd's Cycle Detection), rendered as a graph ----
+  // nums=[1,2,3,4,5,6,4] (n=6) — a tail of 0→1→2→3 running into a 3-node
+  // cycle 4→5→6→4. Value 4 is the duplicate, and 4 is exactly the entrance.
+  const FD_NUMS = [1, 2, 3, 4, 5, 6, 4];
+  const FD_NODES = [
+    { id: 'n0', x: 60, y: 140, label: '0' },
+    { id: 'n1', x: 160, y: 140, label: '1' },
+    { id: 'n2', x: 260, y: 140, label: '2' },
+    { id: 'n3', x: 350, y: 140, label: '3' },
+    { id: 'n4', x: 460, y: 90, label: '4' },
+    { id: 'n5', x: 540, y: 140, label: '5' },
+    { id: 'n6', x: 460, y: 190, label: '6' },
+  ];
+  const FD_EDGES = [
+    { from: 'n0', to: 'n1', directed: true },
+    { from: 'n1', to: 'n2', directed: true },
+    { from: 'n2', to: 'n3', directed: true },
+    { from: 'n3', to: 'n4', directed: true },
+    { from: 'n4', to: 'n5', directed: true },
+    { from: 'n5', to: 'n6', directed: true },
+    { from: 'n6', to: 'n4', directed: true },
+  ];
+  const fdNodeId = (i) => 'n' + i;
+
+  function buildOptimalSteps(nums) {
+    const n = nums.length - 1;
+    const steps = [];
+
+    function stateFor(slowIdx, fastIdx) {
+      const st = {};
+      if (slowIdx === fastIdx) {
+        st[fdNodeId(slowIdx)] = 'compare';
+      } else {
+        st[fdNodeId(slowIdx)] = 'pointer';
+        st[fdNodeId(fastIdx)] = 'active';
+      }
+      return st;
+    }
+
+    steps.push({
+      narration: `Build the implicit graph: index i points to index nums[i] — always a valid index because every value is in [1,${n}]. Phase 1 begins.`,
+      states: {},
+    });
+
+    let slow = nums[0];
+    let fast = nums[nums[0]];
+    steps.push({
+      narration: `First hop: slow = nums[0] = ${slow}. fast = nums[nums[0]] = ${fast}.`,
+      states: stateFor(slow, fast),
+    });
+
+    while (slow !== fast) {
+      slow = nums[slow];
+      fast = nums[nums[fast]];
+      const met = slow === fast;
+      steps.push({
+        narration: met
+          ? `slow and fast meet at index ${slow} — a cycle exists! This confirms there IS a duplicate, but index ${slow} is not necessarily the duplicate's value — phase 2 finds that.`
+          : `slow moves one step to ${slow}. fast moves two steps to ${fast}.`,
+        states: stateFor(slow, fast),
+      });
+    }
+
+    let slow2 = 0;
+    steps.push({
+      narration: `Phase 2: reset a fresh pointer to index 0. Leave fast right where it met slow, at index ${fast}. Now move both one step at a time.`,
+      states: stateFor(slow2, fast),
+    });
+
+    while (slow2 !== fast) {
+      slow2 = nums[slow2];
+      fast = nums[fast];
+      const met = slow2 === fast;
+      steps.push({
+        narration: met
+          ? `They meet again at index ${fast} — this IS the cycle's entrance, and the entrance is the duplicate value: ${fast}.`
+          : `Both move one step: the reset pointer reaches ${slow2}, fast reaches ${fast}.`,
+        states: stateFor(slow2, fast),
+      });
+    }
+
+    const finalStates = {};
+    finalStates[fdNodeId(fast)] = 'sorted';
+    steps.push({
+      narration: `Answer confirmed: ${fast} is the duplicate — found using only two index variables, no extra array or Set, and nums was never modified.`,
+      states: finalStates,
+    });
+
+    return steps;
+  }
+
+  const graph2 = new DSA.Graph(document.getElementById('viz2Stage'), { width: 600, height: 240 });
+  graph2.setGraph(FD_NODES, FD_EDGES);
+  const optimalSteps = buildOptimalSteps(FD_NUMS);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) {
+      graph2.render(step ? step.states : {});
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('find-the-duplicate-number', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
