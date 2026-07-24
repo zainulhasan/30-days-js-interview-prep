@@ -968,6 +968,40 @@ data, sitemap.xml, robots.txt, GSC submission).
   unfindable via `.indexOf()` but findable via `.includes()`/`Set.has()`, due to `===` vs
   SameValueZero semantics).
 
+## Done — Sliding Window batch (5 problems, Problem Bank)
+
+- Minimum Window Substring, Permutation in String, Contains Duplicate II, Fruit Into Baskets,
+  Max Consecutive Ones III — all prereq Day 5 ("Sliding Window Pattern"). `js/problemBank.js`
+  grew to 39 total problems across 10 patterns.
+- Same fully-delegated parallel dispatch model, "commit only, do NOT push" holding for all 5
+  agents again (no premature pushes this batch).
+- One builder (Minimum Window Substring) self-caught and fixed a legend/emitted-state mismatch
+  on `pointer` before committing. One builder (Max Consecutive Ones III) caught and corrected a
+  wrong example baked into its own orchestrator-written build brief (`[1,1,1,0,0,0,1,1,1,1,0]`,
+  `k=2` → real answer is 6, not what the brief's paraphrase implied) — independently
+  re-confirmed by its reviewer.
+- **The review pass caught a REAL bug this batch** — the first genuine regression since the
+  SVG-overflow check (bug class #4) was added to the workflow: Max Consecutive Ones III's
+  optimal-solution diagram had a second "Cost:" line (already split once by the builder to fix
+  an earlier overflow) that was ITSELF still ~6px too long. The builder's own pre-commit check
+  apparently missed this specific line. Fixed directly (split into a third line, `y="172"`,
+  viewBox height bumped 186→202) and re-verified via the same `getBBox()` snippet — confirms the
+  overflow check needs to be re-run after EVERY edit to a diagram's text, not just once before
+  the first commit, since a "fix" that shortens one overflowing line can still leave a
+  neighboring line too long.
+- Otherwise a clean batch — 4 of 5 pages passed with zero findings; reviewers ran 2000-case
+  randomized cross-checks on 3 of the 5 pages (Minimum Window Substring, Contains Duplicate II,
+  Fruit Into Baskets) and independently re-verified the "O(1) amortized window slide" claim on
+  Permutation in String by instrumenting the actual shipped code's per-call counts against the
+  closed-form prediction, not just trusting the complexity table.
+- Trick questions this batch: Minimum Window Substring (`Object.keys()` integer-like-key
+  reordering — enumerates numeric-string keys ascending before insertion-order keys),
+  Permutation in String (same `Object.keys()` vs `Map` insertion-order contrast), Contains
+  Duplicate II (`NaN !== NaN` but `Set.has(NaN)` is `true`, SameValueZero vs `===`), Fruit Into
+  Baskets (`Map.size` vs `Object.keys(obj).length` for tracking distinct-count), Max Consecutive
+  Ones III (`zeroCount > undefined` and `zeroCount <= undefined` are both `false` — a real
+  `k`-omitted-argument trap relevant to the shrink-condition check).
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
