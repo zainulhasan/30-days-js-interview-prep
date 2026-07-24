@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Median of Two Sorted Arrays — Problem Bank</title>
+<meta name="description" content="Median of Two Sorted Arrays: an honest O(m+n) linear merge vs. the real O(log(min(m,n))) optimal — binary search on the smaller array's partition point — both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/median-of-two-sorted-arrays.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Median of Two Sorted Arrays — Problem Bank" />
+<meta property="og:description" content="Median of Two Sorted Arrays: an honest O(m+n) linear merge vs. the real O(log(min(m,n))) optimal — binary search on the smaller array's partition point — both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/median-of-two-sorted-arrays.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Median of Two Sorted Arrays — Problem Bank" />
+<meta name="twitter:description" content="Median of Two Sorted Arrays: an honest O(m+n) linear merge vs. the real O(log(min(m,n))) optimal — binary search on the smaller array's partition point — both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Median of Two Sorted Arrays", "item": "https://dsa.itszain.tech/problem-bank/median-of-two-sorted-arrays.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day13.html">Day 13: Binary Search Variations</a></strong> —
+      the optimal solution below binary searches on a PARTITION INDEX rather than a value, the
+      trickiest variation covered in that lesson; read it first if that idea is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">BINARY SEARCH &middot; HARD</p>
+  <h1>Median of Two Sorted Arrays <span class="leetcode-link">(<a href="https://leetcode.com/problems/median-of-two-sorted-arrays/" target="_blank" rel="noopener">LeetCode: Median of Two Sorted Arrays</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given two arrays <code>nums1</code> (size <code>m</code>) and <code>nums2</code> (size
+    <code>n</code>), each already sorted ascending, return the median of the combined
+    <code>m + n</code> values — the middle value if the combined length is odd, or the average of
+    the two middle values if it's even. Example: <code>nums1=[1,3]</code>,
+    <code>nums2=[2]</code> → combined is <code>[1,2,3]</code>, median <code>2.0</code>.
+    <code>nums1=[1,2]</code>, <code>nums2=[3,4]</code> → combined is <code>[1,2,3,4]</code>,
+    median <code>(2+3)/2 = 2.5</code>. The catch that makes this a Hard: you're asked to do it in
+    <code>O(log(min(m,n)))</code> time — actually constructing the combined array first is too
+    slow, so the optimal solution below never builds it at all.</p>
+
+  <h2>Solution 1: Brute force — linear merge, then read the middle</h2>
+  <p>This is the honest, obvious approach: since both inputs are already sorted, merge them into
+    one sorted array using the same two-pointer walk from the merge step of merge sort — at each
+    step, compare the two pointers' current values and push whichever is smaller, advancing that
+    pointer. Once one array is exhausted, append the remainder of the other. Once the full merged
+    array exists, the median is just an index lookup: the middle element for odd length, or the
+    average of the two middle elements for even length. It's a real, correct algorithm — but it's
+    <strong>not</strong> the <code>O(log(min(m,n)))</code> the problem asks for, because it
+    touches every element of both arrays at least once, no matter how the median is computed.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the brute-force solution: compare the two pointers' current values and push the smaller one advancing that pointer, repeat until one array is exhausted then append the remainder of the other, then read the median directly by index from the fully merged array.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: two-pointer merge, then index into the result</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">compare nums1[i], nums2[j]</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">O(1) per step</text>
+      <rect x="220" y="60" width="190" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">push smaller, advance</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">repeat until one drains</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">read median by index</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">from the full merged array</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-median" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-median)">
+      <line x1="190" y1="83" x2="218" y2="83"/>
+      <line x1="410" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(m+n) — every element of both arrays is visited once during the</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">merge, even though only 1-2 middle values are actually needed.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> pointer's starting position</span>
+    <span><i class="lg-compare"></i> element currently being compared</span>
+    <span><i class="lg-swap"></i> element just pushed into the merged array</span>
+    <span><i class="lg-sorted"></i> already merged / consumed</span>
+    <span><i class="lg-active"></i> median position in the final merged array</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="width:100%;">
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:0 0 0.4rem;">NUMS1</p>
+        <div id="viz1Nums1Bars" style="height:80px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.1rem 0 0.4rem;">NUMS2</p>
+        <div id="viz1Nums2Bars" style="height:80px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.1rem 0 0.4rem;">MERGED (growing)</p>
+        <div id="viz1MergedBars" style="height:80px;"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces nums1=[2, 4, 5],
+    nums2=[1, 6, 7, 9] — combined length 7 (odd), verified above before any HTML was written.</p>
+
+  <h3>The code</h3>
+  <pre><code>function medianBruteForce(nums1, nums2) {
+  const merged = [];
+  let i = 0, j = 0;
+
+  while (i < nums1.length && j < nums2.length) {
+    if (nums1[i] <= nums2[j]) merged.push(nums1[i++]);
+    else merged.push(nums2[j++]);
+  }
+  while (i < nums1.length) merged.push(nums1[i++]);
+  while (j < nums2.length) merged.push(nums2[j++]);
+
+  const n = merged.length;
+  if (n % 2 === 1) return merged[(n - 1) / 2];
+  return (merged[n / 2 - 1] + merged[n / 2]) / 2;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The first <code>while</code> loop is the classic merge-sort merge step: as long as both
+      pointers are still in range, compare the two current values and push whichever is smaller,
+      advancing only that pointer. Using <code>&lt;=</code> (not <code>&lt;</code>) keeps the
+      merge stable, though for a median that choice doesn't actually change the answer.</li>
+    <li>Once one array runs out, exactly one of the next two <code>while</code> loops fires — it
+      appends whatever's left of the other array, which is already sorted, so no more comparisons
+      are needed.</li>
+    <li><code>n % 2 === 1</code> picks the single middle element directly by index for an odd
+      combined length; the <code>else</code> branch averages the two elements straddling the
+      middle for an even length.</li>
+    <li>Every element of both inputs ends up inside <code>merged</code> at least once — that full
+      construction, not the final index lookup, is what the complexity below is really paying
+      for.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(m+n)</td><td>O(m+n)</td><td>Two-pointer merge builds the full combined array, then an O(1) index lookup finds the median</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — binary search the smaller array's partition point</h2>
+  <p>The merged array never needs to exist — only its middle needs to be identified. Any way of
+    splitting <em>both</em> arrays into a "left half" and a "right half" so that every left-half
+    value is ≤ every right-half value, and the two halves are the correct sizes, has found the
+    median without merging anything: it's <code>max(leftHalf)</code> (odd total) or the average
+    of <code>max(leftHalf)</code> and <code>min(rightHalf)</code> (even total). Binary search
+    directly for that split.</p>
+  <p>First, swap <code>nums1</code>/<code>nums2</code> if needed so <code>nums1</code> is always
+    the <em>smaller</em> array — call it <code>A</code> (size <code>m</code>), and the other
+    <code>B</code> (size <code>n</code>). Binary search a partition index <code>i</code> in
+    <code>A</code>, in the range <code>[0, m]</code>. Once <code>i</code> is chosen, the matching
+    partition index <code>j</code> in <code>B</code> is <em>forced</em> — it's whatever makes the
+    left side hold exactly <code>⌈(m+n)/2⌉</code> elements total, computed in O(1) as
+    <code>j = half - i</code>. Compare the boundary elements:
+    <code>maxLeft(A) &lt;= minRight(B)</code> and <code>maxLeft(B) &lt;= minRight(A)</code>. If
+    both hold, the split is valid — read off the median. If <code>maxLeft(A)</code> is too big,
+    <code>i</code> is too high, search lower; otherwise search higher. When <code>i</code> is at
+    an array boundary (<code>0</code> or <code>m</code>), there's no real element on that side, so
+    <code>-Infinity</code> / <code>Infinity</code> sentinels stand in — they can never be the
+    reason a comparison fails, which is exactly the point: an empty side should never block a
+    valid split.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: binary search a partition index in the smaller array, derive the matching partition index in the larger array in O(1), then check whether the boundary elements satisfy the left-less-than-right condition on both sides, narrowing the search until a valid partition is found.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: binary search only the smaller array's partition point</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">binary search i in A</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">A = smaller array</text>
+      <rect x="220" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">derive j = half - i in B</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">O(1), never searched</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">check both boundaries</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">valid → done; else narrow i</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-median)">
+      <line x1="200" y1="83" x2="218" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(log(min(m,n))) — binary search only ever ranges over the smaller</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">array's indices; the larger array's split is always an O(1) derivation.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> boundary element (max of that side's left half)</span>
+    <span><i class="lg-compare"></i> cross-checked element (min of the other side's right half)</span>
+    <span><i class="lg-sorted"></i> identified as (part of) the median</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage">
+      <div style="width:100%;">
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:0 0 0.4rem;">SMALLER ARRAY — binary searched (A)</p>
+        <div id="viz2ABars" style="height:80px;"></div>
+        <p class="mono" style="color:var(--text-dim);font-size:0.75rem;margin:1.1rem 0 0.4rem;">LARGER ARRAY — partition derived in O(1) (B)</p>
+        <div id="viz2BBars" style="height:80px;"></div>
+      </div>
+    </div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same nums1=[2, 4, 5], nums2=[1, 6, 7, 9] as
+    Solution 1 — nums1 is already the smaller array here, so no swap is needed for this demo; the
+    binary search takes 3 tries to converge, and the resulting median (5) matches Solution 1
+    exactly, cross-checked above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function medianOptimal(nums1, nums2) {
+  let A = nums1, B = nums2;
+  if (A.length > B.length) { const t = A; A = B; B = t; }
+  const m = A.length, n = B.length;
+
+  let lo = 0, hi = m;
+  const half = Math.floor((m + n + 1) / 2);
+
+  while (lo <= hi) {
+    const i = Math.floor((lo + hi) / 2);
+    const j = half - i;
+
+    const maxLeftA = i === 0 ? -Infinity : A[i - 1];
+    const minRightA = i === m ? Infinity : A[i];
+    const maxLeftB = j === 0 ? -Infinity : B[j - 1];
+    const minRightB = j === n ? Infinity : B[j];
+
+    if (maxLeftA <= minRightB && maxLeftB <= minRightA) {
+      if ((m + n) % 2 === 1) return Math.max(maxLeftA, maxLeftB);
+      return (Math.max(maxLeftA, maxLeftB) + Math.min(minRightA, minRightB)) / 2;
+    } else if (maxLeftA > minRightB) {
+      hi = i - 1;
+    } else {
+      lo = i + 1;
+    }
+  }
+  throw new Error('input arrays must be sorted');
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The swap guarantees <code>A</code> is always the smaller-or-equal-size array, so the
+      binary search range <code>[0, m]</code> below is always bounded by
+      <code>min(m,n)</code> — this one swap is the entire reason the complexity is
+      <code>log(min(m,n))</code> and not <code>log(max(m,n))</code>.</li>
+    <li><code>half = Math.floor((m + n + 1) / 2)</code> is the exact left-half size that works for
+      <em>both</em> parities: it's <code>(total+1)/2</code> for odd totals (the extra element
+      lands on the left) and <code>total/2</code> for even totals — one formula, no branching.</li>
+    <li>Given a candidate <code>i</code>, <code>j = half - i</code> is not searched — it's the only
+      value of <code>j</code> that makes the combined left side exactly <code>half</code> elements,
+      derived in O(1).</li>
+    <li>The four <code>maxLeft</code>/<code>minRight</code> lines use <code>-Infinity</code> /
+      <code>Infinity</code> sentinels exactly when a partition sits at an array's edge (nothing
+      real on that side) — this is essential: without it, an edge partition would either read
+      <code>undefined</code> or crash on <code>A[-1]</code>, and every comparison below would
+      break silently.</li>
+    <li>Both cross-conditions holding means the split is valid: read the median directly, no
+      averaging needed for odd totals, averaging the two boundary values for even ones.</li>
+    <li><code>maxLeftA &gt; minRightB</code> means too many elements were taken from
+      <code>A</code>'s left — shrink <code>i</code> by moving <code>hi</code> down; the opposite
+      case grows <code>i</code> by moving <code>lo</code> up. Every iteration halves the search
+      range, giving <code>O(log m)</code> total iterations.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(log(min(m,n)))</td><td>O(1)</td><td>Binary search a partition index in the smaller array only; the larger array's matching partition is always an O(1) derivation, never itself searched</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (linear merge)</td><td>O(m+n)</td><td>O(m+n)</td></tr>
+      <tr><td>Optimal (partition binary search)</td><td>O(log(min(m,n)))</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic improvement, not just a constant-factor speedup — going from
+    linear in the combined size to logarithmic in the smaller size. The <code>min(m,n)</code> is
+    specific and earned, not a loose bound: searching the smaller array bounds the number of
+    binary-search iterations by that array's size, and the larger array's matching partition is
+    always derivable from the smaller array's current guess in O(1) — it never needs its own
+    search. If the roles were reversed (searching the larger array), the algorithm would still be
+    correct, just <code>O(log(max(m,n)))</code> — strictly worse whenever the arrays differ in
+    size, which is exactly why the swap-to-smaller step at the top of Solution 2 isn't optional.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why binary search specifically the SMALLER array, rather than either array
+        or always the larger one?</p>
+      <ul class="pb-ia">
+        <li>The binary search range is <code>[0, m]</code> where <code>m</code> is the length of
+          whichever array is being searched — so the number of iterations is bounded by that
+          array's size, not the other one's.</li>
+        <li>The matching partition index in the OTHER array is always derivable in O(1) from the
+          chosen index (<code>j = half - i</code>) — it never needs a search of its own, so its
+          size doesn't affect the iteration count at all.</li>
+        <li>Choosing to search the larger array instead would still be correct, just
+          <code>O(log(max(m,n)))</code> — strictly worse (or equal) whenever the two sizes
+          differ, which is why the problem's stated bound is specifically
+          <code>log(min(m,n))</code>, not just "logarithmic".</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does <code>half = Math.floor((m + n + 1) / 2)</code> correctly handle
+        BOTH odd and even combined lengths with one formula, no branch?</p>
+      <ul class="pb-ia">
+        <li>For an odd total, the true median is a single element that must sit as the last
+          element of the left half — that requires the left half to hold
+          <code>(total + 1) / 2</code> elements, one more than a plain half-split.</li>
+        <li>For an even total, <code>(total + 1) / 2</code> floors back down to exactly
+          <code>total / 2</code> — an even split, which is what's needed so the median can be
+          averaged from the boundary of each side.</li>
+        <li>Because integer division floors automatically, one expression produces the "+1 for
+          odd, exact half for even" behavior without an <code>if (total % 2)</code> branch
+          anywhere in the partition math.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">What would break if the <code>-Infinity</code> / <code>Infinity</code>
+        sentinels were removed and <code>A[i - 1]</code> / <code>A[i]</code> were read directly
+        even at the array's edges?</p>
+      <ul class="pb-ia">
+        <li>At <code>i = 0</code>, <code>A[i - 1]</code> is <code>A[-1]</code> — plain array
+          indexing never throws in JS, it just silently returns <code>undefined</code>, which
+          then poisons every downstream comparison (any comparison against
+          <code>undefined</code> evaluates to <code>false</code>).</li>
+        <li>At <code>i = m</code>, <code>A[i]</code> is out of bounds the same way — also
+          <code>undefined</code>, also silently wrong instead of throwing where the bug would be
+          obvious.</li>
+        <li>The sentinels exist precisely so an empty side (nothing taken from this array's left,
+          or nothing left on its right) can never be the reason a valid split gets rejected — a
+          real, common case whenever the two input arrays differ a lot in size, like
+          <code>nums1=[1]</code> against a 7-element <code>nums2</code>.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const partitionState = { maxLeftA: -Infinity, minRightA: 4 };
+console.log(JSON.stringify(partitionState));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>{"maxLeftA":null,"minRightA":4}</code> — NOT
+          <code>{"maxLeftA":-Infinity,"minRightA":4}</code>, and NOT a dropped key either.</li>
+        <li><code>JSON.stringify</code> has no way to represent <code>Infinity</code>,
+          <code>-Infinity</code>, or <code>NaN</code> in JSON (they aren't valid JSON number
+          literals) — its actual behavior is to silently convert any of them to <code>null</code>,
+          while keeping the key.</li>
+        <li>That's different from <code>undefined</code>: an <code>undefined</code>-valued
+          property is dropped from the output entirely, not converted to <code>null</code> — two
+          different "missing-ish" values, two different serialization behaviors.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why nobody should try to
+        <code>JSON.stringify</code> the partition state above for debugging or logging — every
+        boundary sentinel silently becomes <code>null</code>, which reads as "no data" rather than
+        "this side of the partition is empty," actively misleading whoever's debugging. The
+        sentinels are fine to use in live comparisons (<code>-Infinity &lt;= 4</code> works
+        exactly as expected); they just can't survive a round trip through JSON.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="linear" data-explain="The brute-force merge is a two-pointer walk that visits every element of both arrays exactly once before it can even look up the middle — that's O(m+n) work no matter how few values are ultimately needed for the median." >
+    <p class="q-text">1. Why is the brute-force merge solution O(m+n), not O(log(min(m,n)))?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="linear">It walks every element of both arrays once during the merge, so its cost scales linearly with the total size</button>
+      <button class="btn dsa-quiz-option" data-value="equivalent">It's actually equivalent to O(log(min(m,n))) once the arrays are already sorted</button>
+      <button class="btn dsa-quiz-option" data-value="half">It only needs to scan half of each array, so it's really O((m+n)/2)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="smaller" data-explain="Binary searching the smaller array bounds the number of iterations by min(m,n). The matching partition index in the OTHER array is always derived in O(1) from the current guess, so its size never factors into the iteration count at all — that's the entire reason the bound is specifically log(min(m,n))." >
+    <p class="q-text">2. The optimal solution binary searches a partition index. Why in the SMALLER of the two arrays specifically?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="smaller">Because the number of binary-search iterations is bounded by that array's size, and the larger array's partition is always derived in O(1) — never searched itself</button>
+      <button class="btn dsa-quiz-option" data-value="arbitrary">It's an arbitrary convention — searching the larger array would give identical complexity</button>
+      <button class="btn dsa-quiz-option" data-value="mustsort">The smaller array is the only one that needs to be sorted first</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sentinel" data-explain="At i=0 or i=m (and symmetrically for j), one side of the partition is empty for that array — there's no real element to compare. The -Infinity/Infinity sentinels stand in so that an empty side can never be the reason a valid split is rejected, without needing separate boundary-case branches." >
+    <p class="q-text">3. What do the <code>-Infinity</code> / <code>Infinity</code> sentinels represent when the partition index <code>i</code> equals <code>0</code> or <code>m</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sentinel">There's no real element on that side of the partition (it's empty) — the sentinel guarantees it can never wrongly fail a boundary comparison</button>
+      <button class="btn dsa-quiz-option" data-value="bug">They indicate a bug state that should never actually be reached in a correct run</button>
+      <button class="btn dsa-quiz-option" data-value="actualvalue">They represent the true minimum or maximum value present anywhere in the input arrays</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="oneformula" data-explain="Math.floor((m + n + 1) / 2) equals (total+1)/2 for odd totals (giving the left half the extra middle element) and floors back down to exactly total/2 for even totals — one expression handles both parities without an explicit odd/even branch." >
+    <p class="q-text">4. Why does <code>half = Math.floor((m + n + 1) / 2)</code> correctly size the left partition for BOTH odd and even combined lengths, with no explicit parity branch?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="oneformula">Integer division makes it equal (total+1)/2 for odd totals and exactly total/2 for even totals — one formula covers both cases</button>
+      <button class="btn dsa-quiz-option" data-value="onlyodd">It's only correct for odd totals; even totals require a separate code path not shown here</button>
+      <button class="btn dsa-quiz-option" data-value="alwayshalf">It always produces exactly half of the total regardless of parity, and that's sufficient for both cases</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="maxboth" data-explain="For an odd combined length, once a valid partition is found the true median is whichever boundary value is larger — max(maxLeftA, maxLeftB) — since together the two maxLeft values are exactly the largest element(s) of the correctly-sized left half." >
+    <p class="q-text">5. For nums1=[2,4,5], nums2=[1,6,7,9] (7 total elements, odd), the algorithm finds a valid partition with maxLeftA=5 and maxLeftB=1. What's the median?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="maxboth">5 — max(maxLeftA, maxLeftB), since the total length is odd</button>
+      <button class="btn dsa-quiz-option" data-value="avg">3 — the average of maxLeftA and maxLeftB</button>
+      <button class="btn dsa-quiz-option" data-value="minleft">1 — the smaller of the two maxLeft values</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Binary Search problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'median-of-two-sorted-arrays';
+
+  // ---- Solution 1: brute force — two-pointer merge, then index into the result ----
+  function buildMergeSteps(nums1, nums2) {
+    const steps = [];
+    const merged = [];
+    let i = 0, j = 0;
+
+    function snap(narration, s1, s2) {
+      steps.push({
+        narration,
+        data1: nums1.slice(),
+        states1: s1,
+        data2: nums2.slice(),
+        states2: s2,
+        merged: merged.slice(),
+      });
+    }
+
+    snap(
+      `Two pointers i, j start at index 0 of nums1 and nums2. Merge into a new array as we go.`,
+      nums1.map((_, idx) => (idx === 0 && nums1.length ? 'pointer' : 'default')),
+      nums2.map((_, idx) => (idx === 0 && nums2.length ? 'pointer' : 'default'))
+    );
+
+    while (i < nums1.length && j < nums2.length) {
+      snap(
+        `Compare nums1[${i}]=${nums1[i]} and nums2[${j}]=${nums2[j]}.`,
+        nums1.map((_, idx) => (idx === i ? 'compare' : idx < i ? 'sorted' : 'default')),
+        nums2.map((_, idx) => (idx === j ? 'compare' : idx < j ? 'sorted' : 'default'))
+      );
+      if (nums1[i] <= nums2[j]) {
+        merged.push(nums1[i]);
+        snap(
+          `${nums1[i]} <= ${nums2[j]} — push nums1[${i}] and advance i.`,
+          nums1.map((_, idx) => (idx === i ? 'swap' : idx < i ? 'sorted' : 'default')),
+          nums2.map((_, idx) => (idx === j ? 'compare' : idx < j ? 'sorted' : 'default'))
+        );
+        i++;
+      } else {
+        merged.push(nums2[j]);
+        snap(
+          `${nums2[j]} < ${nums1[i]} — push nums2[${j}] and advance j.`,
+          nums1.map((_, idx) => (idx === i ? 'compare' : idx < i ? 'sorted' : 'default')),
+          nums2.map((_, idx) => (idx === j ? 'swap' : idx < j ? 'sorted' : 'default'))
+        );
+        j++;
+      }
+    }
+    while (i < nums1.length) {
+      merged.push(nums1[i]);
+      snap(
+        `nums2 is exhausted — append the rest of nums1 in order. Pushed ${nums1[i]}.`,
+        nums1.map((_, idx) => (idx === i ? 'swap' : idx < i ? 'sorted' : 'default')),
+        nums2.map(() => 'sorted')
+      );
+      i++;
+    }
+    while (j < nums2.length) {
+      merged.push(nums2[j]);
+      snap(
+        `nums1 is exhausted — append the rest of nums2 in order. Pushed ${nums2[j]}.`,
+        nums1.map(() => 'sorted'),
+        nums2.map((_, idx) => (idx === j ? 'swap' : idx < j ? 'sorted' : 'default'))
+      );
+      j++;
+    }
+
+    const n = merged.length;
+    let median, medianIdx;
+    if (n % 2 === 1) {
+      median = merged[(n - 1) / 2];
+      medianIdx = [(n - 1) / 2];
+    } else {
+      median = (merged[n / 2 - 1] + merged[n / 2]) / 2;
+      medianIdx = [n / 2 - 1, n / 2];
+    }
+    steps.push({
+      narration: `Merged array is [${merged.join(', ')}] (length ${n}). Median = ${median}.`,
+      data1: nums1.slice(),
+      states1: nums1.map(() => 'sorted'),
+      data2: nums2.slice(),
+      states2: nums2.map(() => 'sorted'),
+      merged: merged.slice(),
+      medianIdx,
+    });
+    return steps;
+  }
+
+  const viz1Nums1Bars = new DSA.Bars(document.getElementById('viz1Nums1Bars'), { min: 0, max: 10 });
+  const viz1Nums2Bars = new DSA.Bars(document.getElementById('viz1Nums2Bars'), { min: 0, max: 10 });
+  const viz1MergedBars = new DSA.Bars(document.getElementById('viz1MergedBars'), { min: 0, max: 10 });
+  viz1Nums1Bars.setData([2, 4, 5]);
+  viz1Nums2Bars.setData([1, 6, 7, 9]);
+  viz1MergedBars.setData([]);
+
+  const mergeSteps = buildMergeSteps([2, 4, 5], [1, 6, 7, 9]);
+  const player1 = new DSA.StepPlayer({
+    steps: mergeSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) {
+        viz1Nums1Bars.setData([2, 4, 5]);
+        viz1Nums1Bars.paint(nums1DefaultStates());
+        viz1Nums2Bars.setData([1, 6, 7, 9]);
+        viz1Nums2Bars.paint(nums2DefaultStates());
+        viz1MergedBars.setData([]);
+        return;
+      }
+      viz1Nums1Bars.setData(step.data1);
+      viz1Nums1Bars.paint(step.states1);
+      viz1Nums2Bars.setData(step.data2);
+      viz1Nums2Bars.paint(step.states2);
+      viz1MergedBars.setData(step.merged);
+      if (step.medianIdx) {
+        const mergedStates = step.merged.map((_, idx) => (step.medianIdx.includes(idx) ? 'active' : 'default'));
+        viz1MergedBars.paint(mergedStates);
+      } else {
+        viz1MergedBars.paint(step.merged.map(() => 'sorted'));
+      }
+    },
+  });
+  function nums1DefaultStates() { return [2, 4, 5].map(() => 'default'); }
+  function nums2DefaultStates() { return [1, 6, 7, 9].map(() => 'default'); }
+
+  // ---- Solution 2: optimal — binary search the smaller array's partition point ----
+  function buildPartitionSteps(nums1, nums2) {
+    let A = nums1, B = nums2;
+    if (A.length > B.length) { const t = A; A = B; B = t; }
+    const m = A.length, n = B.length;
+    const half = Math.floor((m + n + 1) / 2);
+    let lo = 0, hi = m;
+    const steps = [];
+
+    function snap(narration, iIdx, jIdx, extra1, extra2) {
+      const states1 = A.map((_, idx) => {
+        if (extra1 && extra1[idx]) return extra1[idx];
+        if (idx === iIdx - 1) return 'pointer';
+        if (idx === iIdx) return 'compare';
+        return 'default';
+      });
+      const states2 = B.map((_, idx) => {
+        if (extra2 && extra2[idx]) return extra2[idx];
+        if (idx === jIdx - 1) return 'pointer';
+        if (idx === jIdx) return 'compare';
+        return 'default';
+      });
+      steps.push({ narration, data1: A.slice(), states1, data2: B.slice(), states2 });
+    }
+
+    snap(
+      `Smaller array has ${m} elements, larger has ${n}. Binary search partition index i in [0, ${m}]; the left half needs exactly ${half} elements total.`,
+      -1, -1
+    );
+
+    function lbl(v) { return v === Infinity ? 'Infinity' : v === -Infinity ? '-Infinity' : v; }
+
+    let guard = 0;
+    while (lo <= hi && guard < 20) {
+      guard++;
+      const i = Math.floor((lo + hi) / 2);
+      const j = half - i;
+      const maxLeftA = i === 0 ? -Infinity : A[i - 1];
+      const minRightA = i === m ? Infinity : A[i];
+      const maxLeftB = j === 0 ? -Infinity : B[j - 1];
+      const minRightB = j === n ? Infinity : B[j];
+
+      snap(
+        `Try i=${i} (so j=${half}-${i}=${j}). maxLeftA=${lbl(maxLeftA)}, minRightA=${lbl(minRightA)}, maxLeftB=${lbl(maxLeftB)}, minRightB=${lbl(minRightB)}.`,
+        i, j
+      );
+
+      if (maxLeftA <= minRightB && maxLeftB <= minRightA) {
+        const isOdd = (m + n) % 2 === 1;
+        const median = isOdd
+          ? Math.max(maxLeftA, maxLeftB)
+          : (Math.max(maxLeftA, maxLeftB) + Math.min(minRightA, minRightB)) / 2;
+        const winnerIsA = maxLeftA >= maxLeftB;
+        const e1 = {}, e2 = {};
+        if (i - 1 >= 0 && winnerIsA) e1[i - 1] = 'sorted';
+        if (j - 1 >= 0 && !winnerIsA) e2[j - 1] = 'sorted';
+        if (!isOdd) {
+          if (i < m) e1[i] = 'sorted';
+          if (j < n) e2[j] = 'sorted';
+        }
+        snap(
+          `Both conditions hold: maxLeftA <= minRightB AND maxLeftB <= minRightA. Median = ${median}.`,
+          i, j, e1, e2
+        );
+        break;
+      } else if (maxLeftA > minRightB) {
+        hi = i - 1;
+        snap(`maxLeftA (${lbl(maxLeftA)}) > minRightB (${lbl(minRightB)}) — too many elements taken from A's left side. Search lower: hi = ${hi}.`, i, j);
+      } else {
+        lo = i + 1;
+        snap(`maxLeftB (${lbl(maxLeftB)}) > minRightA (${lbl(minRightA)}) — not enough taken from A's left side. Search higher: lo = ${lo}.`, i, j);
+      }
+    }
+    return steps;
+  }
+
+  const viz2ABars = new DSA.Bars(document.getElementById('viz2ABars'), { min: 0, max: 10 });
+  const viz2BBars = new DSA.Bars(document.getElementById('viz2BBars'), { min: 0, max: 10 });
+  viz2ABars.setData([2, 4, 5]);
+  viz2BBars.setData([1, 6, 7, 9]);
+
+  const partitionSteps = buildPartitionSteps([2, 4, 5], [1, 6, 7, 9]);
+  const player2 = new DSA.StepPlayer({
+    steps: partitionSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) {
+        viz2ABars.setData([2, 4, 5]);
+        viz2ABars.paint([2, 4, 5].map(() => 'default'));
+        viz2BBars.setData([1, 6, 7, 9]);
+        viz2BBars.paint([1, 6, 7, 9].map(() => 'default'));
+        return;
+      }
+      viz2ABars.setData(step.data1);
+      viz2ABars.paint(step.states1);
+      viz2BBars.setData(step.data2);
+      viz2BBars.paint(step.states2);
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('median-of-two-sorted-arrays', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
