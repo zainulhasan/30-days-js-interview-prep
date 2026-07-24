@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>4Sum — Problem Bank</title>
+<meta name="description" content="4Sum: an O(n^4) four-nested-loop brute force with a post-hoc Set dedupe vs. the O(n^3) sort + two-pointer optimal with careful duplicate-skipping, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/4sum.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="4Sum — Problem Bank" />
+<meta property="og:description" content="4Sum: an O(n^4) four-nested-loop brute force with a post-hoc Set dedupe vs. the O(n^3) sort + two-pointer optimal with careful duplicate-skipping, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/4sum.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="4Sum — Problem Bank" />
+<meta name="twitter:description" content="4Sum: an O(n^4) four-nested-loop brute force with a post-hoc Set dedupe vs. the O(n^3) sort + two-pointer optimal with careful duplicate-skipping, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "4Sum", "item": "https://dsa.itszain.tech/problem-bank/4sum.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day04.html">Day 4: Two-Pointer Pattern</a></strong> —
+      the optimal solution below fixes two indices with nested loops and then runs the exact
+      converging left/right scan taught in that lesson on whatever's left of the sorted array —
+      read it first if two pointers closing in from opposite ends still feels unfamiliar.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">TWO POINTERS &middot; MEDIUM</p>
+  <h1>4Sum <span class="leetcode-link">(<a href="https://leetcode.com/problems/4sum/" target="_blank" rel="noopener">LeetCode: 4Sum</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given an array of integers <code>nums</code> and a target integer, find <strong>every unique
+    quadruplet</strong> <code>[a, b, c, d]</code> — four values from the array, using four
+    distinct indices — whose sum equals <code>target</code>. "Unique" means each combination of
+    values appears exactly once in the result, even if the same values could be picked from the
+    array in more than one way (repeated values are common, and the array can contain
+    duplicates). The order of the returned quadruplets doesn't matter, and neither does the order
+    of the four values within a quadruplet. Example: <code>nums = [1, 0, -1, 0, -2, 2]</code>,
+    <code>target = 0</code> → <code>[[-2,-1,1,2], [-2,0,0,2], [-1,0,0,1]]</code>. Note that
+    <code>0</code> appears twice in <code>nums</code>, and both copies get legitimately used
+    across two different quadruplets above — but no quadruplet is ever repeated in the output.</p>
+
+  <h2>Solution 1: Brute force — check every 4-index combination, dedupe with a Set</h2>
+  <p>The most literal reading of the problem: try every possible way to pick 4 distinct indices
+    <code>a &lt; b &lt; c &lt; d</code> out of the array, and check whether their values sum to
+    <code>target</code>. Four nested loops does exactly that. The catch is uniqueness — the same
+    quadruplet of <em>values</em> can turn up from more than one combination of <em>indices</em>
+    when the array has duplicates (that's exactly what happens with the two <code>0</code>s in
+    the example above, and it happens far more aggressively when the array has heavier repeats).
+    So every time a combination sums to <code>target</code>, sort its four values, stringify them
+    into a key, and check a <code>Set</code> of keys already seen — only keep the combination if
+    that key is new. This is correct, but it's genuinely wasteful in two ways: it inspects every
+    single 4-index combination regardless of how obviously wrong most of them are, and it does
+    real extra work (sorting + stringifying + a Set lookup) on every match just to clean up
+    duplicates it could have avoided creating in the first place.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: four nested loops walk every combination of four distinct indices a less than b less than c less than d, check whether their sum equals target, and when it does, dedupe by stringifying the sorted quadruplet and checking a Set before keeping it.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: check every 4-index combination, dedupe with a Set after the fact</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="115" y="82" fill="#E2E3E7">a&lt;b&lt;c&lt;d</text>
+      <text x="115" y="98" fill="#9198A6" font-size="10">four nested loops, every combo</text>
+      <rect x="240" y="60" width="190" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="335" y="82" fill="#282C34">sum === target?</text>
+      <text x="335" y="98" fill="#282C34" font-size="10">check every combo's sum</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="540" y="82" fill="#282C34">Set dedupe</text>
+      <text x="540" y="98" fill="#282C34" font-size="10">stringify + skip if seen</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-4sum-1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-4sum-1)">
+      <line x1="210" y1="83" x2="238" y2="83"/>
+      <line x1="430" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&#8308;) — four nested loops check every index combination, plus</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">real extra work on every match just to clean up duplicates after the fact.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Tracing nums = [1, 1, -1, -1, 0, 0],
+    target = 0 — chosen specifically because it contains repeated values, so the wasted Set-based
+    dedup work actually fires (not just the two matches, but the three duplicate combinations
+    thrown away after the fact).</p>
+  <div class="legend">
+    <span><i class="lg-compare"></i> current 4 indices being checked, sum ≠ target</span>
+    <span><i class="lg-sorted"></i> sum === target, new unique quadruplet</span>
+    <span><i class="lg-swap"></i> sum === target, but already found — discarded as a duplicate</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function fourSumBrute(nums, target) {
+  const n = nums.length;
+  const seen = new Set();
+  const result = [];
+
+  for (let a = 0; a < n; a++) {
+    for (let b = a + 1; b < n; b++) {
+      for (let c = b + 1; c < n; c++) {
+        for (let d = c + 1; d < n; d++) {
+          if (nums[a] + nums[b] + nums[c] + nums[d] === target) {
+            const quad = [nums[a], nums[b], nums[c], nums[d]].sort((x, y) => x - y);
+            const key = quad.join(',');
+            if (!seen.has(key)) {
+              seen.add(key);
+              result.push(quad);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>Four nested loops, each starting one index past the previous one
+      (<code>b = a + 1</code>, <code>c = b + 1</code>, <code>d = c + 1</code>) — this is exactly
+      how "choose 4 distinct indices, order doesn't matter" is generated without ever picking the
+      same set of indices twice.</li>
+    <li><code>nums[a] + nums[b] + nums[c] + nums[d] === target</code> is the only real check —
+      every combination gets summed and compared, with zero shortcuts.</li>
+    <li>On a match, <code>[...].sort((x, y) => x - y)</code> normalizes the four values into a
+      canonical order (see the trick question in Interview Corner for exactly why the comparator
+      here isn't optional), then <code>.join(',')</code> turns that into a single string key like
+      <code>"-1,0,0,1"</code>.</li>
+    <li><code>seen.has(key)</code> is the entire uniqueness mechanism — if this exact sorted
+      combination of values was already recorded, it's silently dropped; otherwise it's added to
+      both <code>seen</code> and <code>result</code>.</li>
+    <li>Nothing about the loop structure changes based on what's been found — every one of the
+      <code>n(n-1)(n-2)(n-3)/24</code> combinations gets fully evaluated, match or not.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&#8308;)</td><td>O(n)</td><td>Four nested loops over every index combination, deduped with a Set</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — sort once, fix two, two-pointer the rest</h2>
+  <p>Sort <code>nums</code> first. Sorting turns the problem's hardest part — avoiding duplicate
+    quadruplets — into something that can be handled by simply <em>skipping over repeated
+    values</em>, because in a sorted array every occurrence of the same value sits right next to
+    its duplicates. Use two nested loops to fix the first two members of the quadruplet,
+    <code>i</code> and <code>j</code>. At each level, if the current index's value is the same as
+    the value right before it <em>at that same nesting level</em>, skip it — trying it again would
+    only ever regenerate a quadruplet already produced by the previous, identical value. For the
+    remaining two members, run a standard two-pointer scan: <code>left</code> starts right after
+    <code>j</code>, <code>right</code> starts at the end of the array, and they converge inward
+    based on whether the running sum of all four values is above or below target. When a match is
+    found, apply the same duplicate-skipping idea to <code>left</code> and <code>right</code>
+    before continuing, so the exact same quadruplet never gets recorded twice.</p>
+
+  <p><strong>Be honest about what this buys you.</strong> This is a real asymptotic improvement —
+    O(n&#179;) beats O(n&#8308;) — but it's a modest one, not a dramatic one. The two outer loops
+    fixing <code>i</code> and <code>j</code> are still O(n&#178;) on their own; the two-pointer
+    scan only shrinks the innermost pair of loops from O(n&#178;) down to O(n). One power of
+    <code>n</code> disappears, not three. The bigger practical win isn't even the asymptotic
+    complexity — it's that duplicate quadruplets are never generated in the first place, instead
+    of being generated and then cleaned up with the wasteful sort-stringify-Set-lookup dance from
+    Solution 1.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: sort the array once, then fix i and j with two nested loops that skip duplicate values, then run a two-pointer scan with left and right converging inward, looping back to the next j or next i.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: sort once, fix i/j with dup-skipping, two-pointer scan the rest</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="95" y="82" fill="#E2E3E7">sort nums</text>
+      <text x="95" y="98" fill="#9198A6" font-size="10">ascending, once</text>
+      <rect x="200" y="60" width="200" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="300" y="82" fill="#282C34">fix i, j</text>
+      <text x="300" y="98" fill="#282C34" font-size="10">skip duplicate values</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">left / right scan</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">O(n), converge inward</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-4sum-2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-4sum-2)">
+      <line x1="170" y1="83" x2="198" y2="83"/>
+      <line x1="400" y1="83" x2="428" y2="83"/>
+    </g>
+    <path d="M525,106 C480,140 340,140 300,108" stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-4sum-2)"/>
+    <text x="412" y="152" font-size="10" fill="#9198A6" text-anchor="middle">next j (or next i), skipping duplicates</text>
+    <text x="20" y="176" font-size="12" fill="#98C379">Cost: O(n&#179;) — a real win over O(n&#8308;), but a modest one: only one power of n drops.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same values as Solution 1, sorted:
+    nums = [-1, -1, 0, 0, 1, 1], target = 0 — watch how few sum comparisons this needs compared to
+    the 15 combinations Solution 1 had to check on the same data.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> fixed index i or j</span>
+    <span><i class="lg-active"></i> current left / right two-pointer positions</span>
+    <span><i class="lg-compare"></i> comparing the running sum against target</span>
+    <span><i class="lg-sorted"></i> confirmed quadruplet, all 4 members</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function fourSumOptimal(nums, target) {
+  const n = nums.length;
+  const sorted = nums.slice().sort((a, b) => a - b);
+  const result = [];
+
+  for (let i = 0; i < n - 3; i++) {
+    if (i > 0 && sorted[i] === sorted[i - 1]) continue;
+
+    for (let j = i + 1; j < n - 2; j++) {
+      if (j > i + 1 && sorted[j] === sorted[j - 1]) continue;
+
+      let left = j + 1;
+      let right = n - 1;
+
+      while (left < right) {
+        const sum = sorted[i] + sorted[j] + sorted[left] + sorted[right];
+        if (sum === target) {
+          result.push([sorted[i], sorted[j], sorted[left], sorted[right]]);
+          left++;
+          right--;
+          while (left < right && sorted[left] === sorted[left - 1]) left++;
+          while (left < right && sorted[right] === sorted[right + 1]) right--;
+        } else if (sum < target) {
+          left++;
+        } else {
+          right--;
+        }
+      }
+    }
+  }
+
+  return result;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>sorted = nums.slice().sort((a, b) => a - b)</code> — sorts a copy, numerically (see
+      the trick question below for why the comparator is non-negotiable here). Everything after
+      this line depends on <code>sorted</code> actually being in ascending order.</li>
+    <li><code>i</code> runs up to <code>n - 3</code> and <code>j</code> up to <code>n - 2</code> —
+      each needs to leave room for at least two more elements (<code>left</code> and
+      <code>right</code>) after it.</li>
+    <li><code>if (i > 0 && sorted[i] === sorted[i - 1]) continue;</code> — the classic
+      duplicate-skip. This only fires when <code>i</code> isn't the first index AND its value
+      repeats the immediately preceding one; trying the same starting value twice at the same
+      nesting level would only rebuild quadruplets already fully explored the first time.</li>
+    <li>The identical pattern guards <code>j</code>, with one important difference:
+      <code>j > i + 1</code>, not <code>j > 0</code>. <code>j</code> is compared against the
+      slot directly before it in the CURRENT inner loop, not against <code>i</code> — comparing
+      against <code>i</code> would wrongly skip a legitimately different value.</li>
+    <li><code>left = j + 1</code>, <code>right = n - 1</code> — the two-pointer scan always
+      starts on the untouched remainder of the array, strictly after <code>j</code>.</li>
+    <li>On a match, both pointers move inward, and then two more <code>while</code> loops skip
+      past any repeated values at the NEW <code>left</code> and <code>right</code> positions —
+      this is what stops the exact same quadruplet from being recorded a second time when, say,
+      three or four copies of the same value sit next to each other.</li>
+    <li><code>sum < target</code> moves <code>left</code> rightward (toward larger values);
+      <code>sum > target</code> moves <code>right</code> leftward (toward smaller values) — the
+      same convergence rule from the two-pointer lesson, just with two of the four terms already
+      pinned by the outer loops.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n&#179;)</td><td>O(n) or O(log n)</td><td>Sort once, fix i/j with dup-skipping, two-pointer scan the remainder</td></tr></tbody>
+  </table>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Space here depends on the sort — this
+    solution builds a sorted copy of <code>nums</code> explicitly (O(n)); if sorting in place were
+    acceptable, only the sort algorithm's own internal stack space would count (commonly
+    O(log n) for a typical comparison sort), on top of O(1) for the pointers themselves. Either
+    way, the output array itself isn't counted as extra space, by the usual convention.</p>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (four nested loops + Set dedupe)</td><td>O(n&#8308;)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (sort + two-pointer)</td><td>O(n&#179;)</td><td>O(n) for the sorted copy</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic improvement — O(n&#179;) really is better than O(n&#8308;) — but
+    it's worth being honest that it's a modest one, not a dramatic one: the two outer loops
+    fixing <code>i</code> and <code>j</code> stay at O(n&#178;) regardless, and the two-pointer
+    scan only removes one power of <code>n</code> from what used to be two nested loops for
+    <code>c</code> and <code>d</code>. O(n&#179;) is still not "fast" in any absolute sense for
+    large inputs — it's a real win over the brute force, not a transformation into something
+    lightweight. The more meaningful practical difference is that duplicate quadruplets are never
+    generated at all in the optimal solution, instead of being generated and then cleaned up after
+    the fact with a Set.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does sorting the array first make the duplicate-skipping trick
+        possible, when the brute force couldn't use anything like it?</p>
+      <ul class="pb-ia">
+        <li>In a sorted array, every occurrence of the same value is adjacent to its other
+          occurrences — there's no way for two copies of the same value to be sorted but not
+          next to each other.</li>
+        <li>That means "have I already tried this exact value at this exact nesting level?"
+          collapses into a single comparison: check the value immediately before the current
+          index. If it's equal, the current index is guaranteed to be a repeat of something
+          already fully explored.</li>
+        <li>The brute force iterates over the ORIGINAL array order, where equal values can be
+          scattered anywhere — there's no adjacent-comparison shortcut available, which is
+          exactly why it has to fall back to a Set keyed by the full sorted-and-stringified
+          quadruplet instead.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">In the inner loop, why is the duplicate check
+        <code>j &gt; i + 1 &amp;&amp; sorted[j] === sorted[j - 1]</code> and not
+        <code>j &gt; 0 &amp;&amp; sorted[j] === sorted[j - 1]</code>?</p>
+      <ul class="pb-ia">
+        <li><code>j</code> always starts at <code>i + 1</code> for a fresh <code>i</code> — that
+          very first <code>j</code> in each new outer iteration must always be allowed to run,
+          even if <code>sorted[j] === sorted[j - 1]</code> happens to be true (which it very well
+          could be, since <code>sorted[j - 1]</code> might just be <code>sorted[i]</code> itself,
+          an entirely different nesting level).</li>
+        <li>Using <code>j &gt; 0</code> would incorrectly compare against a value chosen by a
+          DIFFERENT, outer-loop index, and could wrongly skip the first valid <code>j</code> for
+          a new <code>i</code> — silently dropping quadruplets that should have been found.</li>
+        <li><code>j &gt; i + 1</code> restricts the comparison to only fire when <code>j</code>
+          has already advanced at least once past its own starting point within the CURRENT
+          <code>i</code>, which is the only time "compare to the previous <code>j</code>" is even
+          a meaningful statement.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">After a match, why does the code skip duplicates at <code>left</code> and
+        <code>right</code> AFTER moving the pointers inward, rather than before?</p>
+      <ul class="pb-ia">
+        <li>The dup-skip's job is to prevent re-recording the SAME quadruplet — but the
+          quadruplet just found used the values at the OLD <code>left</code> and
+          <code>right</code>, so those exact positions have already correctly contributed one
+          result.</li>
+        <li><code>left++; right--;</code> happens first specifically so the values being checked
+          for repeats are the NEXT candidates, not the ones that were just recorded.</li>
+        <li>Checking for duplicates before advancing would compare each position to itself
+          (trivially always "equal") and never actually move past a genuine run of repeated
+          values — the loop would find the same quadruplet, advance nothing, and either loop
+          forever or (with the <code>left &lt; right</code> guard) simply never make progress on
+          real duplicate runs.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if the array had 5 copies of the same value
+        in a row, all part of the answer?" The two <code>while</code> loops handle it correctly —
+        each one keeps advancing past every matching neighbor, not just one, so a long run of
+        duplicates collapses to exactly one surviving position rather than needing one dup-check
+        per pair.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const nums = [10, 2, -1, -10, 5];
+console.log(nums.slice().sort());
+console.log(nums.slice().sort((a, b) => a - b));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: the first line logs <code>[-1, -10, 10, 2, 5]</code> — visibly NOT sorted by
+          numeric value. The second logs <code>[-10, -1, 2, 5, 10]</code> — the actually correct
+          numeric order.</li>
+        <li>Array.prototype.sort() with no comparator converts every element to a STRING and
+          sorts lexicographically (dictionary order) by default — not numerically. String
+          comparison puts <code>"10"</code> before <code>"2"</code> because the character
+          <code>'1'</code> sorts before <code>'2'</code>, completely ignoring that
+          <code>10 &gt; 2</code> as numbers. It gets worse with negative signs, since
+          <code>'-'</code> is just another character being compared position by position, not a
+          sign the comparison understands.</li>
+        <li>This is exactly why <code>fourSumOptimal</code> above sorts with
+          <code>.sort((a, b) =&gt; a - b)</code> and never bare <code>.sort()</code> — the entire
+          duplicate-skip and two-pointer convergence logic silently assumes true numeric
+          ascending order. With the default sort, values like <code>-10</code> would land in the
+          wrong position relative to <code>-1</code>, and the "check the immediately preceding
+          value" duplicate trick would compare against the wrong neighbor entirely.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this bites hardest exactly on arrays with negative numbers or
+        multi-digit values — the kind 4Sum test cases are full of — while small single-digit
+        positive-only arrays can accidentally "look right" with a bare <code>.sort()</code> and
+        hide the bug until a nastier input exposes it.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="adjacent" data-explain="Sorting places every occurrence of a value directly next to its other occurrences, so checking 'does this equal the value right before it' is enough to detect a repeat at that nesting level. The original array order gives no such adjacency, which is exactly why the brute force needs a Set instead." >
+    <p class="q-text">1. Why does sorting the array first make the duplicate-skipping trick (comparing each index to the one before it) work correctly?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="adjacent">Sorting puts every occurrence of a value directly next to its duplicates, so comparing to the immediately preceding index is enough to catch a repeat</button>
+      <button class="btn dsa-quiz-option" data-value="random1">It doesn't actually matter — the same comparison would work identically on the unsorted array</button>
+      <button class="btn dsa-quiz-option" data-value="removesdup">Sorting itself removes duplicate values from the array before the loops even run</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="ijoffset" data-explain="j always starts fresh at i + 1 for a new i, and that first j must be allowed to run even if it happens to equal sorted[j-1] (which could just be sorted[i], a different nesting level entirely). Comparing against j > 0 instead would wrongly skip valid quadruplets by comparing against a value chosen by the outer loop." >
+    <p class="q-text">2. Why is the inner loop's duplicate check written as <code>j &gt; i + 1 &amp;&amp; sorted[j] === sorted[j-1]</code> instead of <code>j &gt; 0 &amp;&amp; sorted[j] === sorted[j-1]</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="ijoffset">j > 0 would wrongly compare the first j of a new i against a value chosen by the outer loop, and could skip valid quadruplets</button>
+      <button class="btn dsa-quiz-option" data-value="stylistic2">Both versions behave identically — it's purely a style choice</button>
+      <button class="btn dsa-quiz-option" data-value="perfonly">j > i + 1 is only a minor performance optimization with no correctness impact</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="afteradvance" data-explain="left++ and right-- happen first so the duplicate check compares the NEXT candidate positions, not the ones that were just recorded as part of the match. Checking before advancing would compare each position to itself and never make progress past a real run of duplicates." >
+    <p class="q-text">3. After finding a match, why does the code advance <code>left</code> and <code>right</code> BEFORE checking them for duplicates, rather than after?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="afteradvance">Advancing first means the duplicate check compares the next candidates, not the positions that were just recorded — checking first would compare a position to itself and never progress</button>
+      <button class="btn dsa-quiz-option" data-value="orderfree">The order doesn't matter — both sequences produce the same result</button>
+      <button class="btn dsa-quiz-option" data-value="onlyleft">Only left needs this treatment; right never has duplicate neighbors</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="modest" data-explain="O(n^3) is a real improvement over O(n^4), but a modest one — the two outer loops fixing i and j stay at O(n^2), and the two-pointer scan only removes one power of n from what used to be two more nested loops. It's not a dramatic speedup, and O(n^3) is still not 'fast' in any absolute sense on large input." >
+    <p class="q-text">4. How should the O(n&#179;) vs O(n&#8308;) improvement be honestly described?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="modest">A real but modest asymptotic improvement — one power of n drops, not a dramatic speedup, and O(n^3) still isn't "fast" in absolute terms</button>
+      <button class="btn dsa-quiz-option" data-value="huge">A massive speedup that makes the optimal solution fast for any input size</button>
+      <button class="btn dsa-quiz-option" data-value="notreal">Not a real improvement — both are effectively the same complexity in practice</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortcomparator" data-explain="Array.prototype.sort() with no arguments converts elements to strings and sorts lexicographically, which is wrong for numbers (e.g. '10' sorts before '2', and negative signs are compared as characters, not as a sign). fourSumOptimal's entire duplicate-skip and two-pointer logic depends on true ascending numeric order, so it must use .sort((a, b) => a - b)." >
+    <p class="q-text">5. Why must <code>fourSumOptimal</code> sort with <code>.sort((a, b) =&gt; a - b)</code> instead of a bare <code>.sort()</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortcomparator">Bare .sort() converts elements to strings and sorts lexicographically, which is wrong for numbers — the algorithm's logic depends on true ascending numeric order</button>
+      <button class="btn dsa-quiz-option" data-value="speedonly">The comparator only makes sort() run faster; both produce the same order</button>
+      <button class="btn dsa-quiz-option" data-value="nodiff5">There's no real difference for this problem since nums only ever contains small numbers</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Two Pointers problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = '4sum';
+
+  // Shared example for both animations — verified against fourSumBrute and fourSumOptimal via
+  // `node -e` before this page was written (also stress-tested across 500 random small arrays
+  // with heavy duplicates). Chosen specifically because it contains repeated values, so both
+  // the Set-dedup path in Solution 1 and the duplicate-skip path in Solution 2 actually fire.
+  const DEMO_NUMS = [1, 1, -1, -1, 0, 0];
+  const TARGET = 0;
+
+  // ---- Solution 1: brute force — four nested loops, dedupe with a Set ----
+  function buildBruteSteps(nums, target) {
+    const n = nums.length;
+    const steps = [];
+    const seen = new Set();
+    const found = [];
+
+    steps.push({
+      narration: `Start: nums = [${nums.join(', ')}], target = ${target}. Check every combination of 4 distinct indices a<b<c<d — n=${n} gives C(${n},4)=${(n * (n - 1) * (n - 2) * (n - 3)) / 24} combinations.`,
+      states: {},
+    });
+
+    for (let a = 0; a < n; a++) {
+      for (let b = a + 1; b < n; b++) {
+        for (let c = b + 1; c < n; c++) {
+          for (let d = c + 1; d < n; d++) {
+            const sum = nums[a] + nums[b] + nums[c] + nums[d];
+            if (sum === target) {
+              const quad = [nums[a], nums[b], nums[c], nums[d]].slice().sort((x, y) => x - y);
+              const key = quad.join(',');
+              const dup = seen.has(key);
+              if (!dup) { seen.add(key); found.push(quad); }
+              const st = dup ? 'swap' : 'sorted';
+              steps.push({
+                narration: `[${a},${b},${c},${d}] → [${nums[a]},${nums[b]},${nums[c]},${nums[d]}] sums to ${sum} = target. ${dup ? `Already found {${key}} — duplicate, discard.` : `New unique quadruplet: {${key}}.`}`,
+                states: { [a]: st, [b]: st, [c]: st, [d]: st },
+              });
+            } else {
+              steps.push({
+                narration: `[${a},${b},${c},${d}] → [${nums[a]},${nums[b]},${nums[c]},${nums[d]}] sums to ${sum}, not ${target}.`,
+                states: { [a]: 'compare', [b]: 'compare', [c]: 'compare', [d]: 'compare' },
+              });
+            }
+          }
+        }
+      }
+    }
+
+    steps.push({
+      narration: `Done — checked all ${(n * (n - 1) * (n - 2) * (n - 3)) / 24} combinations. ${found.length} unique quadruplets found: ${found.map((q) => '[' + q.join(',') + ']').join(', ')}.`,
+      states: {},
+    });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal — sort, fix i/j with dup-skipping, two-pointer scan ----
+  function buildOptimalSteps(nums, target) {
+    const n = nums.length;
+    const sorted = nums.slice().sort((a, b) => a - b);
+    const steps = [];
+    const found = [];
+
+    steps.push({
+      narration: `Start: sort nums → [${sorted.join(', ')}]. Fix i and j with two nested loops (skipping duplicate values), then two-pointer scan left/right on the sorted remainder.`,
+      states: {},
+      data: sorted,
+    });
+
+    for (let i = 0; i < n - 3; i++) {
+      if (i > 0 && sorted[i] === sorted[i - 1]) {
+        steps.push({
+          narration: `i=${i}: sorted[i]=${sorted[i]} equals sorted[i-1] — skip to avoid a duplicate quadruplet.`,
+          states: { [i]: 'pointer' },
+          data: sorted,
+        });
+        continue;
+      }
+      steps.push({
+        narration: `Fix i=${i} (value ${sorted[i]}).`,
+        states: { [i]: 'pointer' },
+        data: sorted,
+      });
+
+      for (let j = i + 1; j < n - 2; j++) {
+        if (j > i + 1 && sorted[j] === sorted[j - 1]) {
+          steps.push({
+            narration: `j=${j}: sorted[j]=${sorted[j]} equals sorted[j-1] — skip to avoid a duplicate quadruplet.`,
+            states: { [i]: 'pointer', [j]: 'pointer' },
+            data: sorted,
+          });
+          continue;
+        }
+        steps.push({
+          narration: `Fix j=${j} (value ${sorted[j]}). i=${i}, j=${j}.`,
+          states: { [i]: 'pointer', [j]: 'pointer' },
+          data: sorted,
+        });
+
+        let left = j + 1;
+        let right = n - 1;
+        steps.push({
+          narration: `left=${left}, right=${right} — window is everything after j.`,
+          states: { [i]: 'pointer', [j]: 'pointer', [left]: 'active', [right]: 'active' },
+          data: sorted,
+        });
+
+        while (left < right) {
+          const sum = sorted[i] + sorted[j] + sorted[left] + sorted[right];
+          steps.push({
+            narration: `Compare sum ${sorted[i]}+${sorted[j]}+${sorted[left]}+${sorted[right]}=${sum} against target ${target}.`,
+            states: { [i]: 'pointer', [j]: 'pointer', [left]: 'compare', [right]: 'compare' },
+            data: sorted,
+          });
+          if (sum === target) {
+            const quad = [sorted[i], sorted[j], sorted[left], sorted[right]];
+            found.push(quad);
+            steps.push({
+              narration: `Match! [${quad.join(',')}] sums to target — record it.`,
+              states: { [i]: 'pointer', [j]: 'pointer', [left]: 'sorted', [right]: 'sorted' },
+              data: sorted,
+            });
+            left++;
+            right--;
+            while (left < right && sorted[left] === sorted[left - 1]) {
+              steps.push({
+                narration: `left=${left}: sorted[left]=${sorted[left]} equals the previous left value — skip duplicate, left++.`,
+                states: { [i]: 'pointer', [j]: 'pointer', [left]: 'active' },
+                data: sorted,
+              });
+              left++;
+            }
+            while (left < right && sorted[right] === sorted[right + 1]) {
+              steps.push({
+                narration: `right=${right}: sorted[right]=${sorted[right]} equals the previous right value — skip duplicate, right--.`,
+                states: { [i]: 'pointer', [j]: 'pointer', [right]: 'active' },
+                data: sorted,
+              });
+              right--;
+            }
+            if (left < right) {
+              steps.push({
+                narration: `Move both pointers inward: left=${left}, right=${right}.`,
+                states: { [i]: 'pointer', [j]: 'pointer', [left]: 'active', [right]: 'active' },
+                data: sorted,
+              });
+            }
+          } else if (sum < target) {
+            steps.push({
+              narration: `sum ${sum} < target ${target} — move left rightward to increase the sum.`,
+              states: { [i]: 'pointer', [j]: 'pointer', [left]: 'active', [right]: 'active' },
+              data: sorted,
+            });
+            left++;
+          } else {
+            steps.push({
+              narration: `sum ${sum} > target ${target} — move right leftward to decrease the sum.`,
+              states: { [i]: 'pointer', [j]: 'pointer', [left]: 'active', [right]: 'active' },
+              data: sorted,
+            });
+            right--;
+          }
+        }
+      }
+    }
+
+    steps.push({
+      narration: `Done — ${found.length} unique quadruplets found: ${found.map((q) => '[' + q.join(',') + ']').join(', ')}.`,
+      states: {},
+      data: sorted,
+    });
+    return steps;
+  }
+
+  const DATA_MIN = Math.min.apply(null, DEMO_NUMS);
+  const DATA_MAX = Math.max.apply(null, DEMO_NUMS);
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: DATA_MIN, max: DATA_MAX });
+  bars1.setData(DEMO_NUMS);
+  const steps1 = buildBruteSteps(DEMO_NUMS, TARGET);
+  new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 700,
+    onStep(step) {
+      if (!step) { bars1.paint({}, DEMO_NUMS); return; }
+      bars1.paint(step.states, DEMO_NUMS);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: DATA_MIN, max: DATA_MAX });
+  bars2.setData(DEMO_NUMS);
+  const steps2 = buildOptimalSteps(DEMO_NUMS, TARGET);
+  new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 700,
+    onStep(step) {
+      if (!step) { bars2.paint({}, steps2[0].data); return; }
+      bars2.paint(step.states, step.data);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('4sum', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
