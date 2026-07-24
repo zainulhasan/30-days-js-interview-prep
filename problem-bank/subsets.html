@@ -116,7 +116,7 @@
     record the current path as a valid subset — the empty prefix, every partial selection, and
     every full selection are all valid subsets.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: record the current path as a subset at every recursion node, then for each remaining element choose to include it and recurse, or leave it out.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: record the current path as a subset at every recursion node, then for each remaining element choose to include it and recurse, or leave it out.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: record at every node, then include/exclude each element</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
@@ -129,7 +129,8 @@
       <text x="530" y="82" fill="#E2E3E7">include, recurse, exclude</text>
       <text x="530" y="98" fill="#9198A6" font-size="10">then backtrack</text>
     </g>
-    <text x="20" y="140" font-size="12" fill="#DCDFE4">Cost: O(n &times; 2^n) — same class as bitmask, but generalizes to non-integer-index structures.</text>
+    <text x="20" y="140" font-size="12" fill="#DCDFE4">Cost: O(n &times; 2^n) — same class as bitmask, but generalizes to</text>
+    <text x="20" y="156" font-size="12" fill="#DCDFE4">non-integer-index structures.</text>
   </svg>
 
   <h3>Interactive visualization</h3>

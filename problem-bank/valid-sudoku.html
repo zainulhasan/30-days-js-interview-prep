@@ -63,7 +63,7 @@
     cell belongs to from scratch for every single pair, and it spends a full comparison on pairs
     that don't even share a unit, only to discover that fact after the fact.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: collect every filled cell, then for every pair of them check whether they share a row, column, or box and hold the same digit — if so, the board is invalid.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: collect every filled cell, then for every pair of them check whether they share a row, column, or box and hold the same digit — if so, the board is invalid.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: pairwise comparison across every filled cell</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
@@ -85,7 +85,8 @@
       <line x1="190" y1="83" x2="218" y2="83"/>
       <line x1="420" y1="83" x2="448" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup4;) in the general case — up to n&sup2; filled cells, every pair of them compared.</text>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup4;) in the general case — up to n&sup2; filled cells,</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">every pair of them compared.</text>
   </svg>
 
   <h3>Interactive visualization</h3>

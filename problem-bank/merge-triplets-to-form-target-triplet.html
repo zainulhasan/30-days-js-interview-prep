@@ -60,7 +60,7 @@
     by some sequence of merges — but it does real work for something that turns out not to need
     any merging at all.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: merge every pair of known triplets, collect any new results into the known set, and repeat the whole process until a round produces nothing new or the target appears.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: merge every pair of known triplets, collect any new results into the known set, and repeat the whole process until a round produces nothing new or the target appears.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: actually merge every pair, repeat until stable</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
@@ -82,7 +82,8 @@
       <line x1="190" y1="83" x2="228" y2="83"/>
       <line x1="400" y1="83" x2="438" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup2;) pairs per round, repeated until nothing new appears — the known set can grow every round.</text>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n&sup2;) pairs per round, repeated until nothing new appears —</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">the known set can grow every round.</text>
   </svg>
 
   <h3>Interactive visualization</h3>
@@ -168,7 +169,7 @@
     triplet. If all 3 get hit, merging all the triplets that hit them (in one shot) produces
     exactly <code>target</code> — no actual merge operation needs to be simulated to know that.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: for each triplet, check whether all 3 coordinates fit within target - if any coordinate overshoots, discard it, otherwise mark any target coordinates it matches exactly as achieved. After checking every triplet, return true only if all 3 coordinates were achieved.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: for each triplet, check whether all 3 coordinates fit within target - if any coordinate overshoots, discard it, otherwise mark any target coordinates it matches exactly as achieved. After checking every triplet, return true only if all 3 coordinates were achieved.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: filter usable triplets, track achieved coordinates</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="170" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
@@ -190,7 +191,8 @@
       <line x1="190" y1="83" x2="228" y2="83"/>
       <line x1="400" y1="83" x2="438" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every triplet is looked at exactly once, no merge operation ever actually runs.</text>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every triplet is looked at exactly once, no merge</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">operation ever actually runs.</text>
   </svg>
 
   <h3>Interactive visualization</h3>

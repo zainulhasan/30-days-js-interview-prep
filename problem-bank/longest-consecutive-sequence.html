@@ -160,7 +160,7 @@
     — <code>v + 1</code>, <code>v + 2</code>, ... — while each is in the set, tracking how long the
     run gets.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal solution: insert all values into a Set, then for each value check whether value minus one is in the set — if not, it's a genuine sequence start, so count forward while value plus one, value plus two, and so on remain in the set, tracking the longest run found.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: insert all values into a Set, then for each value check whether value minus one is in the set — if not, it's a genuine sequence start, so count forward while value plus one, value plus two, and so on remain in the set, tracking the longest run found.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: Set + sequence-start check, count forward only from starts</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
@@ -177,7 +177,8 @@
       <line x1="170" y1="83" x2="198" y2="83"/>
       <line x1="400" y1="83" x2="428" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) amortized — the start-check bounds total forward-counting work across the whole run to O(n).</text>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) amortized — the start-check bounds total forward-counting</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">work across the whole run to O(n).</text>
   </svg>
 
   <h3>Interactive visualization</h3>

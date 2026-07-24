@@ -153,7 +153,7 @@
     that value's count from each of the next <code>groupSize - 1</code> values immediately;
     if any of them doesn't have enough copies, fail right away.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal solution: build a frequency map of card counts, sort only the distinct values ascending, then for the smallest value with count above zero, consume that many copies from each of the next groupSize minus one values, failing immediately if any is short.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: build a frequency map of card counts, sort only the distinct values ascending, then for the smallest value with count above zero, consume that many copies from each of the next groupSize minus one values, failing immediately if any is short.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: frequency map, sort distinct values, consume in bulk</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
@@ -170,7 +170,8 @@
       <line x1="190" y1="83" x2="218" y2="83"/>
       <line x1="400" y1="83" x2="428" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n) — the sort of distinct values is the bottleneck, each count touched once.</text>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n log n) — the sort of distinct values is the bottleneck,</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">each count touched once.</text>
   </svg>
 
   <h3>Interactive visualization</h3>

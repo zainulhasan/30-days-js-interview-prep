@@ -58,7 +58,7 @@
     the one whose count clears the <code>⌊n/2⌋</code> bar. This is completely correct and needs
     no cleverness, but it pays for a second data structure the size of the input.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: scan the array once building a frequency map keyed by value, then scan the map's entries for the one whose count exceeds floor n over 2.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: scan the array once building a frequency map keyed by value, then scan the map's entries for the one whose count exceeds floor n over 2.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: count everything, then check the counts</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
@@ -80,7 +80,8 @@
       <line x1="190" y1="83" x2="208" y2="83"/>
       <line x1="410" y1="83" x2="428" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) time (one pass to count, one to check) — but O(n) EXTRA SPACE for the map, since it can grow to hold every distinct value.</text>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n) time (one pass to count, one to check) — but O(n)</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">EXTRA SPACE for the map, since it can grow to hold every distinct value.</text>
   </svg>
 
   <h3>Interactive visualization</h3>
@@ -164,7 +165,7 @@
     <code>n/2</code>) before trusting the result. LeetCode's guarantee is exactly what licenses
     skipping that verification pass here.</p>
 
-  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: walk the array once tracking a candidate and a count - if count is zero adopt the current element as the new candidate, then increment count on a match or decrement on a mismatch.">
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: walk the array once tracking a candidate and a count - if count is zero adopt the current element as the new candidate, then increment count on a match or decrement on a mismatch.">
     <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, two variables, votes cancel out</text>
     <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
       <rect x="20" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
@@ -181,7 +182,8 @@
       <line x1="200" y1="83" x2="218" y2="83"/>
       <line x1="430" y1="83" x2="448" y2="83"/>
     </g>
-    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — same as brute force. But O(1) space: no map, just candidate and count.</text>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — same as brute force. But O(1) space:</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">no map, just candidate and count.</text>
   </svg>
 
   <h3>Interactive visualization</h3>
