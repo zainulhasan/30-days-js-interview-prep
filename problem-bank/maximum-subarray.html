@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maximum Subarray — Problem Bank</title>
+<meta name="description" content="Maximum Subarray: an O(n²) running-sum brute force that checks every contiguous window vs. Kadane's O(n) single pass that extends-or-restarts at each element, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/maximum-subarray.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Maximum Subarray — Problem Bank" />
+<meta property="og:description" content="Maximum Subarray: an O(n²) running-sum brute force that checks every contiguous window vs. Kadane's O(n) single pass that extends-or-restarts at each element, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/maximum-subarray.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Maximum Subarray — Problem Bank" />
+<meta name="twitter:description" content="Maximum Subarray: an O(n²) running-sum brute force that checks every contiguous window vs. Kadane's O(n) single pass that extends-or-restarts at each element, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Maximum Subarray", "item": "https://dsa.itszain.tech/problem-bank/maximum-subarray.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day06.html">Day 6: Hash Maps & Sets</a></strong> —
+      this problem doesn't use a hash map itself, but it lives in the same "scan an array once,
+      keep a running summary instead of re-deriving it" family of ideas that day introduces —
+      read that lesson first if tracking running state across a single pass still feels unfamiliar.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">ARRAYS &amp; HASHING &middot; MEDIUM</p>
+  <h1>Maximum Subarray <span class="leetcode-link">(<a href="https://leetcode.com/problems/maximum-subarray/" target="_blank" rel="noopener">LeetCode: Maximum Subarray</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array of integers <code>nums</code> — it may contain negative numbers. Find
+    the contiguous subarray (a run of consecutive elements, no skipping around) that has the
+    largest possible sum, and return that sum — not the subarray itself. The subarray must contain
+    <strong>at least one number</strong>; you can't "opt out" and claim an empty subarray sums to
+    zero.</p>
+  <p>Example: <code>nums = [-2,1,-3,4,-1,2,1,-5,4]</code> → <code>6</code>, from the subarray
+    <code>[4,-1,2,1]</code>. A single-element array like <code>[1]</code> just returns
+    <code>1</code>. And because "at least one number" is a hard requirement, an all-negative array
+    like <code>[-3,-1,-8,-2]</code> returns <code>-1</code> — the least-negative single element —
+    never <code>0</code>.</p>
+
+  <h2>Solution 1: Brute force — every window, with a running sum</h2>
+  <p>The most direct reading of the problem is "try every contiguous window and keep the best
+    sum." The fully naive version of that idea is O(n³): for every <code>(start, end)</code> pair,
+    re-add up all the elements between them from scratch. That's wasteful in a way that has
+    nothing to do with the actual algorithmic idea being demonstrated here — it's just redundant
+    re-summation. So the version below is the <strong>improved</strong> O(n²) brute force: for each
+    <code>start</code>, walk <code>end</code> forward and maintain a running <code>sum</code>,
+    adding just <code>nums[end]</code> each step instead of re-summing the whole window. Same
+    nested-loop shape, same "try every window" idea, but each window now costs O(1) instead of
+    O(n) — which is what turns this into a clean two-step complexity story (O(n²) → O(n)) against
+    the optimal solution below, instead of a throwaway O(n³) comparison that would only be about
+    fixing an unrelated inefficiency.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: for each start index, walk end forward while maintaining a running sum, and compare that sum against the best found so far - repeated for every start, giving quadratic total work.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: for each start, grow end with a running sum</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">for each start s</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">0 .. n-1</text>
+      <rect x="215" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">end grows, sum += nums[end]</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">running sum, not re-summed</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">best = max(best, sum)</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">checked every (s, end) pair</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="190" y1="83" x2="213" y2="83"/>
+      <line x1="415" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n²) — the running sum removes re-summation, but every (start, end) pair is still visited.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> end index just added to the running sum</span>
+    <span><i class="lg-active"></i> window [start..end] — new best sum</span>
+    <span><i class="lg-compare"></i> window [start..end] — checked, doesn't beat the best</span>
+    <span><i class="lg-sorted"></i> winning window (shown at the end)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums = [-2, 1, -3, 4, -1, 2] — a small 6-element case kept separate from the canonical
+    example above so the full O(n²) sweep (21 window checks) stays watchable.</p>
+
+  <h3>The code</h3>
+  <pre><code>function maxSubArrayBrute(nums) {
+  let best = -Infinity;
+  for (let start = 0; start < nums.length; start++) {
+    let sum = 0;
+    for (let end = start; end < nums.length; end++) {
+      sum += nums[end];
+      if (sum > best) best = sum;
+    }
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>best</code> starts at <code>-Infinity</code>, not <code>0</code> — the problem
+      requires at least one number in the subarray, so an implicit empty/zero-sum subarray must
+      never be allowed to win.</li>
+    <li>The outer loop fixes <code>start</code>; the inner loop grows <code>end</code> one step at
+      a time.</li>
+    <li><code>sum += nums[end]</code> is the "running sum" optimization: each new <code>end</code>
+      only costs one addition, instead of re-adding every element from <code>start</code> to
+      <code>end</code> from scratch.</li>
+    <li><code>if (sum > best) best = sum</code> checks every window's sum exactly once, the
+      moment it's computed.</li>
+    <li>Every <code>(start, end)</code> pair is still visited — that's what keeps this O(n²)
+      despite the running-sum improvement.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n²)</td><td>O(1)</td><td>Every window checked, with a running sum instead of re-summing each one</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — Kadane's Algorithm, single pass</h2>
+  <p>Every window-sum in the brute force answers the same underlying question over and over: "what's
+    the best subarray sum that <em>ends exactly at this index</em>?" That question has a clean
+    recurrence. Let <code>currentSum</code> be the best sum of a subarray ending at the current
+    index. At each element, there are only two options: extend the previous run by adding this
+    element (<code>currentSum + nums[i]</code>), or abandon that run and start fresh right here
+    (<code>nums[i]</code> alone) — worth doing whenever the previous run had gone so negative that
+    dragging it forward would only hurt. Kadane's algorithm is exactly that one-line decision, made
+    once per index: <code>currentSum = Math.max(nums[i], currentSum + nums[i])</code>. A second
+    running variable, <code>maxSum</code>, remembers the best <code>currentSum</code> seen across
+    the whole scan.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: scan index i once, decide whether to extend the previous run or restart at this element, then update maxSum if this run is now the best seen - one pass, no re-scanning.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, extend-or-restart at every index</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">scan i once</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">left to right</text>
+      <rect x="210" y="60" width="210" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">extend or restart?</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">currentSum = max(nums[i], currentSum+nums[i])</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">maxSum = max(maxSum, currentSum)</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">only if this run is now best</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="420" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — every index is scanned exactly once, never re-visited.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> index i (scanning)</span>
+    <span><i class="lg-active"></i> current run [runStart..i] — new best sum</span>
+    <span><i class="lg-compare"></i> current run [runStart..i] — checked, doesn't beat the best</span>
+    <span><i class="lg-sorted"></i> winning subarray (shown at the end)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same array as above,
+    nums = [-2, 1, -3, 4, -1, 2], so the two traces are directly comparable — both land on the
+    same winning window and the same sum, 5.</p>
+
+  <h3>The code</h3>
+  <pre><code>function maxSubArrayOptimal(nums) {
+  let currentSum = nums[0];
+  let maxSum = nums[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    currentSum = Math.max(nums[i], currentSum + nums[i]);
+    maxSum = Math.max(maxSum, currentSum);
+  }
+  return maxSum;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>currentSum</code> and <code>maxSum</code> both start at <code>nums[0]</code>, not
+      <code>0</code> or <code>-Infinity</code> — the array is guaranteed non-empty, and starting at
+      the first real element correctly seeds both a single-element array and an all-negative one.</li>
+    <li><code>currentSum = Math.max(nums[i], currentSum + nums[i])</code> is the entire algorithm:
+      extend the run by adding <code>nums[i]</code>, unless the run so far had gone negative
+      enough that starting fresh at <code>nums[i]</code> alone is strictly better.</li>
+    <li><code>maxSum = Math.max(maxSum, currentSum)</code> runs on <em>every</em> iteration,
+      whether or not this step restarted — the best subarray doesn't have to end at the very last
+      index, so the running best has to be captured as the scan goes.</li>
+    <li>The loop never looks backward past <code>currentSum</code> — that one number already
+      summarizes everything relevant about every earlier index.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Single pass, two running variables, extend-or-restart at each index</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (running sum over every window)</td><td>O(n²)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (Kadane's, one pass)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic time improvement, not a constant-factor tweak — Kadane's
+    algorithm drops from quadratic to linear by proving that "the best sum of every window" can be
+    replaced with "the best sum ending at each index," a single running number updated once per
+    element. Space stays O(1) on both sides — the running-sum brute force never allocates a table,
+    it just doesn't visit indices any faster.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it safe for <code>currentSum</code> to summarize the entire scan so
+        far, without keeping any other history?</p>
+      <ul class="pb-ia">
+        <li><code>currentSum</code> is defined as "the best sum of a subarray ending exactly at
+          the current index" — that's a complete answer for this index, not a partial one.</li>
+        <li>Any subarray ending at index <code>i</code> is either the single element
+          <code>nums[i]</code>, or some earlier subarray extended by <code>nums[i]</code> — and
+          the best "earlier subarray" for that purpose is exactly the best one ending at
+          <code>i-1</code>, which is what the previous <code>currentSum</code> already holds.</li>
+        <li>Nothing further back than <code>i-1</code> can ever matter once <code>currentSum</code>
+          at <code>i-1</code> is known — that's what makes O(1) extra state enough.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why must <code>maxSum</code> be initialized to <code>nums[0]</code>, and
+        not <code>0</code>?</p>
+      <ul class="pb-ia">
+        <li>The problem requires the subarray to contain <em>at least one number</em> — an empty
+          subarray (implicitly summing to <code>0</code>) is not a valid answer.</li>
+        <li>Initializing to <code>0</code> would silently let that invalid empty subarray win
+          whenever every real subarray sums to something negative — exactly the all-negative-array
+          case, e.g. <code>[-3,-1,-8,-2]</code>, whose correct answer is <code>-1</code>, not
+          <code>0</code>.</li>
+        <li>Seeding both <code>currentSum</code> and <code>maxSum</code> with the first real
+          element instead sidesteps the whole "what does empty even mean here" question.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">This solution only returns the maximum <em>sum</em> — how would you adapt
+        it to also return the winning subarray itself?</p>
+      <ul class="pb-ia">
+        <li>Track one more index alongside <code>currentSum</code>: <code>runStart</code>, the
+          index where the current run began. Reset it to <code>i</code> whenever the algorithm
+          restarts instead of extends.</li>
+        <li>Whenever <code>maxSum</code> updates, also snapshot <code>bestStart = runStart</code>
+          and <code>bestEnd = i</code> — exactly what the visualizations above are doing under the
+          hood to know which window to highlight as "sorted" at the end.</li>
+        <li>This adds O(1) extra bookkeeping — no change to the O(n) time or O(1) space bounds.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const nums = [];
+console.log(Math.max(...nums));</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>-Infinity</code> — not <code>undefined</code>, and not a thrown error.</li>
+        <li><code>Math.max()</code> called with zero arguments (which is exactly what
+          <code>Math.max(...[])</code> spreads down to) is specified to return
+          <code>-Infinity</code> — the identity value for "the maximum of nothing."</li>
+        <li>Both solutions on this page use <code>Math.max</code> heavily, but never on a
+          possibly-empty spread — that's exactly why the "at least one number" guarantee in the
+          problem statement matters in practice.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: if you were tempted to "one-line" a solution as something like
+        <code>Math.max(...allWindowSums)</code>, an accidentally-empty <code>nums</code> wouldn't
+        throw or warn you — it would silently return <code>-Infinity</code>, a wrong-looking
+        number that's easy to miss in review precisely because nothing crashes.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="recurrence" data-explain="currentSum = Math.max(nums[i], currentSum + nums[i]) is the entire recurrence: either extend the previous run by adding this element, or abandon it and start fresh at this element alone, whichever gives the bigger sum." >
+    <p class="q-text">1. What's the key recurrence at the heart of Kadane's algorithm?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="recurrence">currentSum = Math.max(nums[i], currentSum + nums[i]) — either extend the previous run or start fresh at this element</button>
+      <button class="btn dsa-quiz-option" data-value="sumall">currentSum always adds every element seen so far, with no reset</button>
+      <button class="btn dsa-quiz-option" data-value="sortfirst">Sort the array first, then sum the largest contiguous block</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="cleanstory" data-explain="The fully naive O(n³) version's slowness comes from redundant re-summation, an inefficiency unrelated to the actual algorithmic idea being compared. The running-sum O(n²) version keeps the same 'try every window' shape but removes that redundancy, giving a genuine two-step complexity story (O(n²) to O(n)) against Kadane's algorithm." >
+    <p class="q-text">2. Why does this page compare Kadane's algorithm against the O(n²) running-sum brute force, rather than the fully naive O(n³) version?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="cleanstory">The O(n³) version's extra cost comes from redundant re-summation, not the core algorithmic idea — the running-sum O(n²) version gives a cleaner, more meaningful complexity comparison</button>
+      <button class="btn dsa-quiz-option" data-value="samecost">Both versions are actually O(n²), so it doesn't matter which is shown</button>
+      <button class="btn dsa-quiz-option" data-value="onlyworks">The O(n³) version produces a different, incorrect answer</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="leastneg" data-explain="The problem requires the subarray to contain at least one number, so an empty (implicitly zero-sum) subarray is never a valid answer. For an all-negative array, the best you can do is the single least-negative element." >
+    <p class="q-text">3. For the all-negative input <code>[-3,-1,-8,-2]</code>, what should the function return?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="leastneg">-1 — the least-negative single element, since the subarray must contain at least one number</button>
+      <button class="btn dsa-quiz-option" data-value="zero">0, by returning an empty subarray</button>
+      <button class="btn dsa-quiz-option" data-value="mostneg">-8, the most negative element, since that's the "extreme" value</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onerunning" data-explain="The brute force examines O(n²) distinct (start, end) windows, one at a time. Kadane's algorithm replaces all of that with two running variables — currentSum and maxSum — updated once per index in a single O(n) pass, which is what drops the time bound from quadratic to linear." >
+    <p class="q-text">4. What specifically causes the drop from O(n²) to O(n) between the two solutions?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onerunning">Kadane's replaces checking every (start, end) window with two running variables updated once per index in a single pass</button>
+      <button class="btn dsa-quiz-option" data-value="skipneg">Kadane's algorithm simply skips over negative numbers entirely</button>
+      <button class="btn dsa-quiz-option" data-value="smallerinput">It's tested on a smaller example array, not a real complexity difference</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="everyiter" data-explain="The best subarray doesn't have to end at the very last index scanned — it could end anywhere. If maxSum only updated when a restart happened, a run that kept extending and growing larger without ever restarting could be missed entirely." >
+    <p class="q-text">5. Why must <code>maxSum = Math.max(maxSum, currentSum)</code> run on every loop iteration, not just when the run restarts?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="everyiter">The winning subarray can end at any index, including one where the run kept extending rather than restarting — skipping those iterations could miss it</button>
+      <button class="btn dsa-quiz-option" data-value="performance">It's purely a performance optimization with no effect on the answer</button>
+      <button class="btn dsa-quiz-option" data-value="restartonly">maxSum only needs to change at the moment a run restarts</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Arrays &amp; Hashing problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'maximum-subarray';
+  const EXAMPLE = [-2, 1, -3, 4, -1, 2];
+
+  // ---- Solution 1: brute force (every window, running sum) ----
+  function buildBruteSteps(nums) {
+    const n = nums.length;
+    const steps = [];
+    let best = -Infinity, bestStart = 0, bestEnd = 0;
+
+    steps.push({
+      narration: `Start: nums = [${nums.join(', ')}]. Try every contiguous window, keeping a running sum so each new end index only costs one addition instead of a full re-sum.`,
+      values: nums.slice(),
+      states: {},
+    });
+
+    for (let start = 0; start < n; start++) {
+      let sum = 0;
+      for (let end = start; end < n; end++) {
+        sum += nums[end];
+        const improved = sum > best;
+        if (improved) { best = sum; bestStart = start; bestEnd = end; }
+        const states = {};
+        for (let k = start; k <= end; k++) states[k] = improved ? 'active' : 'compare';
+        states[end] = 'pointer';
+        steps.push({
+          narration: `start=${start}, end=${end}: running sum = ${sum}.${improved ? ` New best sum: ${best} (window [${start}..${end}]).` : ` Best sum stays ${best} — this window doesn't beat it.`}`,
+          values: nums.slice(),
+          states,
+        });
+      }
+    }
+
+    const finalStates = {};
+    for (let k = bestStart; k <= bestEnd; k++) finalStates[k] = 'sorted';
+    steps.push({
+      narration: `Done — checked every (start, end) pair. Maximum subarray sum: ${best}, from window [${bestStart}..${bestEnd}].`,
+      values: nums.slice(),
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (Kadane's algorithm, single pass) ----
+  function buildOptimalSteps(nums) {
+    const n = nums.length;
+    const steps = [];
+    let currentSum = nums[0], maxSum = nums[0], runStart = 0, bestStart = 0, bestEnd = 0;
+
+    steps.push({
+      narration: `Start: currentSum = maxSum = nums[0] = ${nums[0]}. The running window begins at index 0.`,
+      values: nums.slice(),
+      states: { 0: 'pointer' },
+    });
+
+    for (let i = 1; i < n; i++) {
+      const extendVal = currentSum + nums[i];
+      const restartVal = nums[i];
+      let decisionNarration;
+      if (restartVal > extendVal) {
+        runStart = i;
+        currentSum = restartVal;
+        decisionNarration = `Extending the run would give ${extendVal}; starting fresh at index ${i} gives ${restartVal} — that's bigger, so start a new run here.`;
+      } else {
+        currentSum = extendVal;
+        decisionNarration = `Extending the run: currentSum + nums[${i}] = ${extendVal}, at least as good as starting fresh at ${restartVal} — keep extending.`;
+      }
+      const improved = currentSum > maxSum;
+      if (improved) { maxSum = currentSum; bestStart = runStart; bestEnd = i; }
+      const states = {};
+      for (let k = runStart; k <= i; k++) states[k] = improved ? 'active' : 'compare';
+      states[i] = 'pointer';
+      steps.push({
+        narration: `${decisionNarration} currentSum = ${currentSum}.${improved ? ` New maxSum: ${maxSum} (window [${runStart}..${i}]).` : ` maxSum stays ${maxSum} — this run doesn't beat it.`}`,
+        values: nums.slice(),
+        states,
+      });
+    }
+
+    const finalStates = {};
+    for (let k = bestStart; k <= bestEnd; k++) finalStates[k] = 'sorted';
+    steps.push({
+      narration: `Done — one pass, no re-summing. Maximum subarray sum: ${maxSum}, from window [${bestStart}..${bestEnd}].`,
+      values: nums.slice(),
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const bars1 = new DSA.Bars(viz1Stage, { min: -5, max: 4 });
+  bars1.setData(EXAMPLE);
+  const steps1 = buildBruteSteps(EXAMPLE);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 750,
+    onStep(step) { if (!step) { bars1.paint({}, EXAMPLE); return; } bars1.paint(step.states, step.values); },
+  });
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const bars2 = new DSA.Bars(viz2Stage, { min: -5, max: 4 });
+  bars2.setData(EXAMPLE);
+  const steps2 = buildOptimalSteps(EXAMPLE);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) { if (!step) { bars2.paint({}, EXAMPLE); return; } bars2.paint(step.states, step.values); },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('maximum-subarray', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
