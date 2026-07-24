@@ -306,6 +306,51 @@ const PROBLEM_BANK = [
     prereqTitle: 'Two-Pointer Pattern',
     leetcodeUrl: 'https://leetcode.com/problems/find-the-duplicate-number/',
   },
+  {
+    slug: 'minimum-window-substring',
+    title: 'Minimum Window Substring',
+    pattern: 'Sliding Window',
+    difficulty: 'Hard',
+    prereqDay: 5,
+    prereqTitle: 'Sliding Window Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/minimum-window-substring/',
+  },
+  {
+    slug: 'permutation-in-string',
+    title: 'Permutation in String',
+    pattern: 'Sliding Window',
+    difficulty: 'Medium',
+    prereqDay: 5,
+    prereqTitle: 'Sliding Window Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/permutation-in-string/',
+  },
+  {
+    slug: 'contains-duplicate-ii',
+    title: 'Contains Duplicate II',
+    pattern: 'Sliding Window',
+    difficulty: 'Easy',
+    prereqDay: 5,
+    prereqTitle: 'Sliding Window Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/contains-duplicate-ii/',
+  },
+  {
+    slug: 'fruit-into-baskets',
+    title: 'Fruit Into Baskets',
+    pattern: 'Sliding Window',
+    difficulty: 'Medium',
+    prereqDay: 5,
+    prereqTitle: 'Sliding Window Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/fruit-into-baskets/',
+  },
+  {
+    slug: 'max-consecutive-ones-iii',
+    title: 'Max Consecutive Ones III',
+    pattern: 'Sliding Window',
+    difficulty: 'Medium',
+    prereqDay: 5,
+    prereqTitle: 'Sliding Window Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/max-consecutive-ones-iii/',
+  },
 ];
 
 const PROBLEM_BANK_PATTERNS = [
@@ -318,6 +363,7 @@ const PROBLEM_BANK_PATTERNS = [
   { key: 'Stack', title: 'Stack' },
   { key: 'Binary Search', title: 'Binary Search' },
   { key: 'Two Pointers', title: 'Two Pointers' },
+  { key: 'Sliding Window', title: 'Sliding Window' },
 ];
 
 function problemBankInfo(slug) {
