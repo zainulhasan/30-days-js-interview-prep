@@ -937,6 +937,37 @@ data, sitemap.xml, robots.txt, GSC submission).
   value is `undefined` but keeps ones set to `null` — relevant to the sentinel-boundary logic
   in the optimal solution).
 
+## Done — Two Pointers batch (4 problems, Problem Bank)
+
+- Trapping Rain Water, 4Sum, Next Permutation, Find the Duplicate Number — all prereq Day 4
+  ("Two-Pointer Pattern"). `js/problemBank.js` grew to 34 total problems across 9 patterns.
+- Same fully-delegated parallel dispatch model, with an explicit new instruction this batch:
+  "commit only, do NOT push" — a direct fix for the process gap noted in the Stack + Binary
+  Search batch, where 2 of 4 agents pushed unprompted. All 4 agents followed it correctly this
+  time; the orchestrator pushed once after the full review pass confirmed clean.
+- **Third consecutive batch to go fully clean on review** — 4-for-4, zero findings (following
+  Arrays & Hashing's 5-for-5 and Stack + Binary Search's 4-for-4). Two implementers self-caught
+  and fixed real bugs in their own first drafts before ever committing: Trapping Rain Water's
+  two-pointer solution initially decided direction using a stale max (fixed, then turned into an
+  Interview Corner question); Next Permutation's builder ran the strongest possible correctness
+  proof unprompted — applying the algorithm 23 times from `[1,2,3,4]` and diffing the resulting
+  sequence against an independently-computed sorted list of all 24 permutations, byte-identical.
+  Reviewers independently re-ran equivalent proofs rather than trusting the reports.
+- Renderer note: Find the Duplicate Number's optimal solution (Floyd's Cycle Detection) used
+  `DSA.Graph` instead of `DSA.Bars` for its "array as implicit linked list, values point to
+  indices" framing — the reviewer specifically traced both phases of the two-pointer algorithm
+  (meet-inside-cycle, then reset-and-re-meet-at-entrance) directly against the shipped code to
+  confirm neither phase was shortcut, since a broken phase 2 is the classic way this famous
+  algorithm silently produces wrong answers while still passing easy test cases.
+  4Sum's reviewer additionally verified the specific numeric-vs-lexicographic `.sort()` gotcha
+  the page's trick question was built around, independently of the page's own claim.
+- Trick questions this batch: Trapping Rain Water (`Math.max(...[])`/`Math.min(...[])` on an
+  empty array), 4Sum (`.sort()` defaults to lexicographic/string order on numbers, not numeric —
+  `[10,2,1].sort()` → `[1,10,2]`), Next Permutation (`Array.prototype.reverse()` mutates in
+  place and returns the SAME reference, not a copy), Find the Duplicate Number (`NaN` is
+  unfindable via `.indexOf()` but findable via `.includes()`/`Set.has()`, due to `===` vs
+  SameValueZero semantics).
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
