@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Longest Consecutive Sequence — Problem Bank</title>
+<meta name="description" content="Longest Consecutive Sequence: a brute-force sort-based scan vs. an optimal O(n) hash-set solution with sequence-start detection, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/longest-consecutive-sequence.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Longest Consecutive Sequence — Problem Bank" />
+<meta property="og:description" content="Longest Consecutive Sequence: a brute-force sort-based scan vs. an optimal O(n) hash-set solution with sequence-start detection, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/longest-consecutive-sequence.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Longest Consecutive Sequence — Problem Bank" />
+<meta name="twitter:description" content="Longest Consecutive Sequence: a brute-force sort-based scan vs. an optimal O(n) hash-set solution with sequence-start detection, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Longest Consecutive Sequence", "item": "https://dsa.itszain.tech/problem-bank/longest-consecutive-sequence.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day06.html">Day 6: Hash Maps & Sets</a></strong> —
+      the optimal solution below is a direct application of O(1) average <code>Set</code> lookups;
+      read that lesson first if hash-based membership checks are still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">ARRAYS &amp; HASHING &middot; MEDIUM</p>
+  <h1>Longest Consecutive Sequence <span class="leetcode-link">(<a href="https://leetcode.com/problems/longest-consecutive-sequence/" target="_blank" rel="noopener">LeetCode: Longest Consecutive Sequence</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>Given an unsorted array of integers <code>nums</code>, find the length of the longest run of
+    consecutive integers that are all present somewhere in the array. The run doesn't need to be
+    contiguous <em>in the array</em> — only the values themselves need to be consecutive. For
+    example, <code>[100, 4, 200, 1, 3, 2]</code> contains the values <code>1, 2, 3, 4</code>
+    scattered across positions 3, 5, 4, and 1 — but since all four are present, that's a
+    consecutive run of length 4, and it's the longest one available. The required optimal solution
+    must run in O(n) time.</p>
+
+  <h2>Solution 1: Brute force — sort, then a single pass</h2>
+  <p>The simplest correct idea: if the values were in order, spotting a consecutive run would just
+    be a matter of walking left to right and checking whether each value is exactly one more than
+    the last. So make that true — sort the array first — then do exactly that single pass,
+    resetting a running counter to 1 every time the gap to the previous <em>distinct</em> value
+    isn't exactly 1, and explicitly skipping over duplicate values so they don't get mistaken for
+    a broken run.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: sort the array ascending, then walk it once left to right, extending a running counter when the next distinct value is exactly one more than the previous, resetting to one on any gap, and skipping duplicates without resetting.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: sort, then one linear pass with a reset counter</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="150" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="95" y="82" fill="#282C34">sort ascending</text>
+      <text x="95" y="98" fill="#282C34" font-size="10">O(n log n), once</text>
+      <rect x="200" y="60" width="220" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="310" y="82" fill="#E2E3E7">walk once, compare to prev</text>
+      <text x="310" y="98" fill="#9198A6" font-size="10">extend / reset / skip duplicate</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">track best run seen</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">O(1) update per step</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-h" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-h)">
+      <line x1="170" y1="83" x2="198" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n log n) — the sort dominates; the pass itself is only O(n).</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> value currently being examined</span>
+    <span><i class="lg-compare"></i> value being compared for the gap check</span>
+    <span><i class="lg-active"></i> part of the run currently being counted</span>
+    <span><i class="lg-sorted"></i> confirmed part of the final longest run</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[100,4,200,1,3,2] — LeetCode's own canonical example (expected: 4), verified above before
+    any HTML was written.</p>
+
+  <h3>The code</h3>
+  <pre><code>function longestConsecutiveBrute(nums) {
+  if (nums.length === 0) return 0;
+
+  const sorted = nums.slice().sort((a, b) => a - b);
+  let longest = 1;
+  let current = 1;
+
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === sorted[i - 1]) continue; // duplicate — same value, not a gap
+    if (sorted[i] === sorted[i - 1] + 1) {
+      current++;
+    } else {
+      current = 1; // gap — restart the run here
+    }
+    longest = Math.max(longest, current);
+  }
+  return longest;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>nums.length === 0</code> is handled up front — an empty array has no run at all,
+      length 0, and every index below assumes at least one element exists.</li>
+    <li><code>nums.slice().sort((a, b) => a - b)</code> — sorts ascending numerically (the default
+      sort without a comparator would stringify values, so <code>10</code> would sort before
+      <code>2</code>). <code>.slice()</code> keeps the caller's original array untouched.</li>
+    <li><code>if (sorted[i] === sorted[i - 1]) continue;</code> — duplicates sit adjacent after
+      sorting but represent the same value, not forward progress. This isn't a cosmetic
+      optimization: skip it and see the trap in Interview Corner below.</li>
+    <li><code>sorted[i] === sorted[i - 1] + 1</code> — the actual consecutive check: only a gap of
+      exactly 1 extends the run; anything else (a gap of 2+) resets <code>current</code> back to
+      1, because a brand-new potential run starts at <code>sorted[i]</code>.</li>
+    <li><code>longest = Math.max(longest, current)</code> runs every iteration so the best run seen
+      so far is always captured, even if a later, shorter run follows it.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n log n)</td><td>O(n)</td><td>Sort dominates; assumes a typical engine's
+      <code>Array.prototype.sort</code> (e.g. V8's TimSort, which is not in-place and needs O(n)
+      auxiliary space) — an in-place O(log n)-space quicksort variant exists in other languages,
+      but it isn't what actually runs here</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — hash set with sequence-start detection</h2>
+  <p>Put every value into a <code>Set</code> for O(1) average membership checks. The key trick:
+    only start counting a run <em>from</em> a value <code>v</code> if <code>v - 1</code> is
+    <strong>not</strong> in the set. If <code>v - 1</code> is present, <code>v</code> can't be the
+    start of anything — it's the middle (or end) of a run that some smaller value already owns, and
+    that smaller value will (or already did) count it. Once a genuine start is found, walk forward
+    — <code>v + 1</code>, <code>v + 2</code>, ... — while each is in the set, tracking how long the
+    run gets.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram of the optimal solution: insert all values into a Set, then for each value check whether value minus one is in the set — if not, it's a genuine sequence start, so count forward while value plus one, value plus two, and so on remain in the set, tracking the longest run found.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: Set + sequence-start check, count forward only from starts</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="95" y="82" fill="#E2E3E7">build the Set</text>
+      <text x="95" y="98" fill="#9198A6" font-size="10">O(n), once</text>
+      <rect x="200" y="60" width="200" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="300" y="82" fill="#282C34">v-1 in set?</text>
+      <text x="300" y="98" fill="#282C34" font-size="10">skip if yes — not a start</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="525" y="82" fill="#282C34">count v+1, v+2, ...</text>
+      <text x="525" y="98" fill="#282C34" font-size="10">only from real starts</text>
+    </g>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-h)">
+      <line x1="170" y1="83" x2="198" y2="83"/>
+      <line x1="400" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) amortized — the start-check bounds total forward-counting work across the whole run to O(n).</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> checking whether v-1 is in the set</span>
+    <span><i class="lg-pointer"></i> confirmed sequence start</span>
+    <span><i class="lg-active"></i> part of the run being counted forward</span>
+    <span><i class="lg-sorted"></i> confirmed part of the final longest run</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same nums=[100,4,200,1,3,2] as Solution 1, so
+    step counts are directly comparable. Distinct values are shown sorted left to right purely for
+    visual clarity — a real <code>Set</code> iterates in insertion order, and correctness never
+    depends on the order values are visited in.</p>
+
+  <h3>The code</h3>
+  <pre><code>function longestConsecutiveOptimal(nums) {
+  const set = new Set(nums);
+  let longest = 0;
+
+  for (const v of set) {
+    if (set.has(v - 1)) continue; // not a sequence start — some smaller value owns this run
+
+    let length = 1;
+    let cur = v;
+    while (set.has(cur + 1)) {
+      cur++;
+      length++;
+    }
+    longest = Math.max(longest, length);
+  }
+  return longest;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>new Set(nums)</code> — O(n) to build, and duplicates collapse for free: a value
+      either is or isn't in the set, its count doesn't matter for this problem.</li>
+    <li><code>for (const v of set)</code> visits every <em>distinct</em> value exactly once, in
+      whatever order the Set stores them (insertion order in JS — never assume sorted order here).</li>
+    <li><code>if (set.has(v - 1)) continue;</code> — the whole trick. If a smaller value one less
+      than <code>v</code> exists, <code>v</code> is guaranteed to be counted by that smaller
+      value's forward walk instead, so starting a redundant walk from <code>v</code> too would be
+      wasted work.</li>
+    <li>The inner <code>while (set.has(cur + 1))</code> loop only ever runs starting from a
+      confirmed sequence start — see the amortized-cost interview question below for exactly why
+      that keeps the total work linear despite the loop looking nested inside the <code>for</code>.</li>
+    <li><code>longest = Math.max(longest, length)</code> updates once per completed run, not once
+      per element — cheap relative to the walk itself.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n) amortized</td><td>O(n)</td><td>Hash set membership + sequence-start
+      detection bounds every element to being walked forward at most once across the entire
+      algorithm</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (sort + single pass)</td><td>O(n log n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (hash set + sequence-start check)</td><td>O(n) amortized</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a real, honest time improvement — O(n log n) down to O(n) — not just a different
+    technique at the same complexity. Both use O(n) extra space (a sorted copy of the array for
+    Solution 1, a hash set for Solution 2), so the space cost is a wash; the win is purely in time,
+    and it comes from replacing the sort's ordering guarantee with O(1) average hash lookups that
+    don't need any ordering to detect adjacency.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">The inner <code>while</code> loop is nested inside the outer <code>for</code>
+        loop — doesn't that make this O(n²) in the worst case, like a naive nested loop would?</p>
+      <ul class="pb-ia">
+        <li>It looks nested, but the outer loop's <code>if (set.has(v - 1)) continue;</code> check
+          means the inner <code>while</code> loop only ever actually runs starting from a genuine
+          sequence start — a value with no smaller neighbor in the set.</li>
+        <li>Across the entire array, every value can be the start of at most one run (its own),
+          and every value can only ever be <em>walked past</em> by the inner loop once — as part of
+          the one run it belongs to.</li>
+        <li>Summed over the whole algorithm, the total number of inner-loop iterations across
+          every outer-loop pass is bounded by the total number of distinct values, <code>n</code>
+          — not <code>n</code> restarts of an <code>n</code>-length walk. That's what "amortized
+          O(n)" means here: the cost is spread evenly across all elements, not concentrated
+          per-element.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Solution 1 needs a sort to detect adjacency. Why doesn't Solution 2 need any
+        ordering at all?</p>
+      <ul class="pb-ia">
+        <li>Sorting exists in Solution 1 purely to make "is there a value one more than this one?"
+          answerable by just looking at the next array position — an indirect substitute for a
+          direct lookup.</li>
+        <li>A hash <code>Set</code> gives that lookup directly: <code>set.has(v + 1)</code> is
+          O(1) average, regardless of what order values were inserted in.</li>
+        <li>Since the optimal solution never needs to ask "what's next in sorted order," it never
+          needs the array to be sorted (or even iterated in any particular order) in the first
+          place.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">In Solution 1, is <code>if (sorted[i] === sorted[i - 1]) continue;</code>
+        just a performance nicety, or does skipping it actually break correctness?</p>
+      <ul class="pb-ia">
+        <li>It's required for correctness, not just tidiness. Consider
+          <code>nums = [1, 2, 2, 3]</code> — sorted, that's <code>[1, 2, 2, 3]</code>.</li>
+        <li>Without the duplicate check, at <code>i = 2</code> the comparison is
+          <code>sorted[2] === sorted[1] + 1</code>, i.e. <code>2 === 3</code> — false. The code
+          would treat the duplicate as a gap and wrongly reset <code>current</code> back to 1.</li>
+        <li>That produces a final answer of 2 instead of the correct 3 (verified directly:
+          removing the duplicate check on this exact input yields 2, not 3) — the duplicate would
+          be silently mistaken for a break in the run instead of a repeat of a value already
+          counted.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const set = new Set([-0]);
+console.log(1 / [...set][0]);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>Infinity</code>, not <code>-Infinity</code> — even though
+          <code>-0</code> was the value inserted.</li>
+        <li><code>Set</code> (and <code>Map</code>) use the SameValueZero algorithm for equality,
+          which treats <code>-0</code> and <code>+0</code> as the same value for membership
+          purposes — that part is well known.</li>
+        <li>Less well known: when a JS engine stores <code>-0</code> in a <code>Set</code>, it
+          canonicalizes it to <code>+0</code> on the way in — so reading the value back out gives
+          <code>+0</code>, and <code>1 / 0</code> is <code>Infinity</code>, not
+          <code>1 / -0</code>'s <code>-Infinity</code>. Verified directly:
+          <code>Object.is([...new Set([-0])][0], -0)</code> is <code>false</code>;
+          <code>Object.is(..., 0)</code> is <code>true</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why <code>new Set(nums)</code> in the solution
+        above is safe to reason about with plain <code>===</code>-style thinking for ordinary
+        integers, but would be a subtle footgun for a variant of this problem that allowed
+        floating-point input containing both <code>0</code> and <code>-0</code> as "different"
+        sentinel values — a <code>Set</code> silently treats them as one and the same.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="notstart" data-explain="If v - 1 is already in the set, v can never be the lowest member of its run — some smaller value owns the walk that will (or already did) count v. Starting from v anyway would repeat work that's already accounted for elsewhere.">
+    <p class="q-text">1. In the optimal solution, why does the algorithm skip starting a forward walk from any value <code>v</code> where <code>v - 1</code> is also in the set?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="notstart">v can't be the start of its run — a smaller value already owns (or will own) counting it, so walking from v too would be redundant work</button>
+      <button class="btn dsa-quiz-option" data-value="perf">It's a minor performance tweak with no effect on correctness or the overall time complexity</button>
+      <button class="btn dsa-quiz-option" data-value="setrule">Sets in JavaScript refuse to iterate values that have a smaller neighbor already inserted</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="amortized" data-explain="The sequence-start check means the inner while loop only ever runs from a genuine run start, and every value gets walked past by at most one such run across the whole algorithm. Total inner-loop work summed over every outer-loop iteration is bounded by n, not n per outer iteration — that's the amortized argument that keeps this O(n), not O(n²).">
+    <p class="q-text">2. The inner <code>while</code> loop is nested inside the outer <code>for</code> loop. Why is the overall time still O(n) instead of O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="amortized">Every value can only ever be walked forward past once, across the entire algorithm, because the while loop only runs from confirmed sequence starts — total work is bounded by n</button>
+      <button class="btn dsa-quiz-option" data-value="capped">The while loop is hard-capped at a fixed number of iterations regardless of input</button>
+      <button class="btn dsa-quiz-option" data-value="jitmagic">The JavaScript engine automatically optimizes nested loops over Sets into O(n) at runtime</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="requiredfix" data-explain="Without the duplicate check, a repeated value is compared to the previous distinct value using the +1 gap test, which fails for an equal value — wrongly resetting the run counter. Verified directly on [1,2,2,3]: removing the check yields 2 instead of the correct 3.">
+    <p class="q-text">3. In the brute-force solution, is <code>if (sorted[i] === sorted[i - 1]) continue;</code> required for correctness, or just a performance optimization?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="requiredfix">Required — without it, a duplicate is wrongly treated as a gap and the run counter incorrectly resets, producing a wrong final answer</button>
+      <button class="btn dsa-quiz-option" data-value="optional">Optional — it only saves a few comparisons, the final answer is identical either way</button>
+      <button class="btn dsa-quiz-option" data-value="throws">Required — without it, comparing equal values throws a runtime error</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sortsubstitute" data-explain="Sorting in the brute-force solution exists only to make adjacency checkable by looking at the next array position. A hash Set gives that same adjacency information directly via O(1) average has() lookups, so there's nothing left for a sort to provide.">
+    <p class="q-text">4. Why doesn't the optimal solution need to sort <code>nums</code> at all, when the brute-force solution's entire strategy depends on sorting first?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sortsubstitute">A Set's O(1) average has() check directly answers "is v+1 present?" — the exact question sorting exists to make answerable in the brute-force version</button>
+      <button class="btn dsa-quiz-option" data-value="alreadysorted">LeetCode guarantees nums arrives pre-sorted for this specific problem</button>
+      <button class="btn dsa-quiz-option" data-value="doesntmatter">Sorting would actually make the optimal solution faster too, it's just skipped for simplicity</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="realimprovement" data-explain="Brute force is O(n log n) time because of the sort; optimal is O(n) time because hash lookups replace the need for any ordering. Both use O(n) extra space, so the time win is real and not offset by a space tradeoff in the other direction.">
+    <p class="q-text">5. What's the honest complexity difference between the two solutions?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="realimprovement">A genuine time improvement — O(n log n) down to O(n) — with both solutions using the same O(n) space</button>
+      <button class="btn dsa-quiz-option" data-value="spacetrade">The optimal solution trades away space savings to get O(n) time — it actually uses less memory than the brute force</button>
+      <button class="btn dsa-quiz-option" data-value="sametime">Both solutions are actually O(n) — the difference is only in constant factors, not asymptotic complexity</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Arrays &amp; Hashing problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'longest-consecutive-sequence';
+
+  // ---- Solution 1: brute force (DSA.Bars, uniform — sorted values shown as labels) ----
+  function buildBruteSteps(nums) {
+    const steps = [];
+    if (nums.length === 0) {
+      steps.push({ narration: 'Empty array — longest consecutive run has length 0.', data: [], states: [] });
+      return steps;
+    }
+
+    const original = nums.slice();
+    steps.push({
+      narration: `Start with ${original.length} unsorted numbers: [${original.join(', ')}].`,
+      data: original.slice(),
+      states: original.map(() => 'default'),
+    });
+
+    const sorted = nums.slice().sort((a, b) => a - b);
+    steps.push({
+      narration: `Sort ascending — O(n log n): [${sorted.join(', ')}]. Equal and consecutive values are now adjacent.`,
+      data: sorted.slice(),
+      states: sorted.map(() => 'default'),
+    });
+
+    let longest = 1;
+    let current = 1;
+    let curStart = 0;
+    let bestStart = 0;
+    let bestEnd = 0;
+
+    function runStates(hiIdx, cmpIdx, pointerIdx) {
+      const states = sorted.map((_, idx) => (idx >= curStart && idx <= hiIdx ? 'active' : 'default'));
+      if (cmpIdx !== undefined && cmpIdx >= 0) states[cmpIdx] = 'compare';
+      if (pointerIdx !== undefined) states[pointerIdx] = 'pointer';
+      return states;
+    }
+
+    for (let i = 1; i < sorted.length; i++) {
+      steps.push({
+        narration: `Compare sorted[${i}]=${sorted[i]} to the previous distinct value sorted[${i - 1}]=${sorted[i - 1]}.`,
+        data: sorted.slice(),
+        states: runStates(i - 1, i, i),
+      });
+
+      if (sorted[i] === sorted[i - 1]) {
+        steps.push({
+          narration: `${sorted[i]} is a duplicate of ${sorted[i - 1]} — skip it, the run length doesn't change.`,
+          data: sorted.slice(),
+          states: runStates(i),
+        });
+      } else if (sorted[i] === sorted[i - 1] + 1) {
+        current++;
+        steps.push({
+          narration: `${sorted[i]} is exactly one more than ${sorted[i - 1]} — extend the run. Current run length: ${current}.`,
+          data: sorted.slice(),
+          states: runStates(i, undefined, i),
+        });
+      } else {
+        current = 1;
+        curStart = i;
+        steps.push({
+          narration: `Gap: ${sorted[i]} is not ${sorted[i - 1] + 1} — the run breaks. Restart the count at ${sorted[i]}.`,
+          data: sorted.slice(),
+          states: runStates(i),
+        });
+      }
+
+      if (current > longest) {
+        longest = current;
+        bestStart = curStart;
+        bestEnd = i;
+      }
+    }
+
+    const finalStates = sorted.map((_, idx) => (idx >= bestStart && idx <= bestEnd ? 'sorted' : 'default'));
+    steps.push({
+      narration: `Longest consecutive run found: [${sorted.slice(bestStart, bestEnd + 1).join(', ')}] — length ${longest}.`,
+      data: sorted.slice(),
+      states: finalStates,
+    });
+
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData([]);
+  const bruteSteps = buildBruteSteps([100, 4, 200, 1, 3, 2]);
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.setData([]); return; }
+      bars1.setData(step.data);
+      bars1.paint(step.states);
+    },
+  });
+
+  // ---- Solution 2: optimal (DSA.Bars, uniform — distinct values shown sorted for display only) ----
+  function buildOptimalSteps(nums) {
+    const steps = [];
+    const set = new Set(nums);
+    const sortedValues = Array.from(set).sort((a, b) => a - b);
+
+    if (sortedValues.length === 0) {
+      steps.push({ narration: 'Empty array — Set is empty, longest run has length 0.', data: [], states: [] });
+      return steps;
+    }
+
+    steps.push({
+      narration: `Insert every value into a Set — O(n), duplicates collapse automatically. Distinct values (shown sorted for clarity; a real Set iterates in insertion order): [${sortedValues.join(', ')}].`,
+      data: sortedValues.slice(),
+      states: sortedValues.map(() => 'default'),
+    });
+
+    let longest = 0;
+    let bestStart = -1;
+    let bestEnd = -1;
+    const idxOf = (v) => sortedValues.indexOf(v);
+
+    for (let vi = 0; vi < sortedValues.length; vi++) {
+      const v = sortedValues[vi];
+      const hasPrev = set.has(v - 1);
+      const prevIdx = idxOf(v - 1);
+      const cmpStates = sortedValues.map(() => 'default');
+      cmpStates[vi] = 'compare';
+      if (prevIdx !== -1) cmpStates[prevIdx] = 'compare';
+      steps.push({
+        narration: hasPrev
+          ? `Is ${v - 1} in the set? Yes — ${v} is NOT a sequence start (it's already covered by the run starting at a smaller value), skip it.`
+          : `Is ${v - 1} in the set? No — ${v} IS a sequence start. Begin counting forward from here.`,
+        data: sortedValues.slice(),
+        states: cmpStates,
+      });
+
+      if (hasPrev) continue;
+
+      let length = 1;
+      let cur = v;
+      const startStates = sortedValues.map(() => 'default');
+      startStates[vi] = 'pointer';
+      steps.push({
+        narration: `Start counting forward from ${v}. Run length so far: ${length}.`,
+        data: sortedValues.slice(),
+        states: startStates,
+      });
+
+      while (set.has(cur + 1)) {
+        cur++;
+        length++;
+        const curIdx = idxOf(cur);
+        const stepStates = sortedValues.map((val, idx) => (idx >= vi && idx <= curIdx ? 'active' : 'default'));
+        stepStates[vi] = 'pointer';
+        steps.push({
+          narration: `${cur} is in the set — extend the run. Run length so far: ${length}.`,
+          data: sortedValues.slice(),
+          states: stepStates,
+        });
+      }
+
+      if (length > longest) {
+        longest = length;
+        bestStart = vi;
+        bestEnd = idxOf(cur);
+      }
+    }
+
+    const finalStates = sortedValues.map((_, idx) => (idx >= bestStart && idx <= bestEnd ? 'sorted' : 'default'));
+    steps.push({
+      narration: `Longest consecutive run found: length ${longest}.`,
+      data: sortedValues.slice(),
+      states: finalStates,
+    });
+
+    return steps;
+  }
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData([]);
+  const optimalSteps = buildOptimalSteps([100, 4, 200, 1, 3, 2]);
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.setData([]); return; }
+      bars2.setData(step.data);
+      bars2.paint(step.states);
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('longest-consecutive-sequence', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
