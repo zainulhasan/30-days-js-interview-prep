@@ -882,6 +882,61 @@ data, sitemap.xml, robots.txt, GSC submission).
   Sequence (`Set` canonicalizing `-0` to `+0` on insertion) — each independently `node -e`
   verified by its own reviewer, not just the builder.
 
+## Done — SVG diagram text-overflow fix (sitewide)
+
+- Found and fixed a real, previously-undetected bug: long `<text>` lines inside diagram SVGs
+  (mainly the "Cost: ..." complexity line, one box label) were overflowing the diagram's own
+  `viewBox` width and getting silently clipped — worst case 338px of text cut off mid-sentence
+  on Majority Element. This slipped through every prior review because the site's mobile-
+  overflow check only measures page-level `scrollWidth`, not clipping inside an SVG's own
+  coordinate space — a genuinely different failure mode.
+- Affected 8 pages across 3 different batches (pilot-era `subsets.html`, Backtracking-era
+  `letter-combinations-of-a-phone-number.html`, Greedy-era `hand-of-straights.html`/
+  `merge-triplets-to-form-target-triplet.html`, and 4 of the just-shipped Arrays & Hashing
+  pages) — proof this wasn't specific to one batch's implementer, it was a gap in the
+  verification process itself.
+- Fixed by splitting the overflowing `<text>` into two lines (`y="140"`/`y="156"`) and growing
+  the `<svg>`'s `viewBox` height from 170 to 186. Verified with a headless `getBBox()`-based
+  overflow-measurement script (0 overflow across all 8, re-confirmed both locally and against
+  the live site) plus a visual screenshot check on the worst case.
+- **Added as a new permanent step to the verification workflow** (`CLAUDE.md`, "bug class #4")
+  — every future diagram must be checked with the overflow snippet before shipping, and it's
+  now baked into every subsequent batch's builder-agent dispatch prompts.
+
+## Done — Stack + Binary Search batch (4 problems, Problem Bank)
+
+- Largest Rectangle in Histogram, Evaluate Reverse Polish Notation (Stack, prereq Day 17);
+  Find Minimum in Rotated Sorted Array, Median of Two Sorted Arrays (Binary Search, prereq
+  Day 13) — `js/problemBank.js` grew to 30 total problems across 8 patterns.
+- Same fully-delegated parallel dispatch model, with the new SVG-overflow check folded directly
+  into every builder agent's required pre-commit verification steps.
+- Renderer notes: Evaluate RPN and Median of Two Sorted Arrays both needed **two simultaneous
+  `DSA.Bars` instances on screen** (token list + live stack; two input arrays respectively) —
+  first time this site has needed more than one Bars instance per solution's visualization.
+- Median of Two Sorted Arrays — the single hardest problem shipped on this site so far
+  (notoriously easy to get subtly wrong) — got extra verification rigor: the builder ran a
+  30-case differential test against its own brute-force solution before shipping, and the
+  reviewer independently re-ran 2000+500 more randomized differential trials (including a
+  batch specifically forcing `nums1` larger than `nums2`, to confirm the "always binary-search
+  the smaller array" swap is actually present and correct) — zero mismatches across all of it.
+- **Second consecutive batch to go fully clean on review** — 4-for-4, zero findings (following
+  the Arrays & Hashing batch's 5-for-5). Largest Rectangle in Histogram's implementer ran 500
+  of its own randomized cross-checks against an O(n³) reference before committing; its reviewer
+  ran 2000 more independently.
+- Process note: 2 of the 4 builder agents pushed to `origin/main` on their own initiative after
+  committing, despite only being instructed to commit — not harmful (direct-to-main pushes are
+  this repo's normal pattern, and the pushed commits were fully self-verified single-file
+  changes) but it meant those 2 pages went live before the review pass completed. Worth being
+  more explicit in future dispatch prompts ("commit only, do not push") if push timing needs to
+  stay synchronized with the review gate.
+- Trick questions this batch: Largest Rectangle (`Array.prototype.pop()` on an empty array
+  returns `undefined` without throwing), Evaluate RPN (`parseInt('3*')` → `3` vs `Number('3*')`
+  → `NaN`), Find Minimum in Rotated Sorted Array (JS's `Math.floor((lo+hi)/2)` doesn't overflow
+  at the 32-bit boundary the way `(a+b)|0` forces wraparound does — a real cross-language
+  contrast point), Median of Two Sorted Arrays (`JSON.stringify` silently drops keys whose
+  value is `undefined` but keeps ones set to `null` — relevant to the sentinel-boundary logic
+  in the optimal solution).
+
 ## Environment for local preview
 ```bash
 cd /Users/zain/projects/dsa
