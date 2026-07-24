@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>First Missing Positive — Problem Bank</title>
+<meta name="description" content="First Missing Positive: a hash-set O(n) time / O(n) space brute force vs. an optimal O(n) time / O(1) space in-place index-as-hash placement, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/first-missing-positive.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="First Missing Positive — Problem Bank" />
+<meta property="og:description" content="First Missing Positive: a hash-set O(n) time / O(n) space brute force vs. an optimal O(n) time / O(1) space in-place index-as-hash placement, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/first-missing-positive.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="First Missing Positive — Problem Bank" />
+<meta name="twitter:description" content="First Missing Positive: a hash-set O(n) time / O(n) space brute force vs. an optimal O(n) time / O(1) space in-place index-as-hash placement, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "First Missing Positive", "item": "https://dsa.itszain.tech/problem-bank/first-missing-positive.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day06.html">Day 6: Hash Maps &amp; Sets</a></strong> —
+      the brute-force solution below is a direct hash-set lookup; read that lesson first if
+      "put everything in a <code>Set</code>, then probe it" is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">ARRAYS &amp; HASHING &middot; HARD</p>
+  <h1>First Missing Positive <span class="leetcode-link">(<a href="https://leetcode.com/problems/first-missing-positive/" target="_blank" rel="noopener">LeetCode: First Missing Positive</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an unsorted integer array <code>nums</code> — it can contain negatives, zeros,
+    duplicates, and positives in any order, any range. Find the smallest positive integer that
+    is <em>not</em> present in the array. For example, <code>[3, 4, -1, 1]</code> is missing
+    <code>2</code> (1 is there, 2 isn't) → answer <code>2</code>. <code>[1, 2, 0]</code> has 1 and
+    2 but not 3 → answer <code>3</code>. <code>[7, 8, 9, 11, 12]</code> doesn't even contain
+    <code>1</code> → answer <code>1</code>. The array's own negatives, zeros, and duplicates never
+    count as "missing" candidates — only positive integers do.</p>
+
+  <h2>Solution 1: Brute force — hash set + linear probe</h2>
+  <p>The most direct reading of the problem: drop every value from <code>nums</code> into a
+    <code>Set</code> so membership checks are O(1), then walk candidates
+    <code>k = 1, 2, 3, ...</code> upward and ask the set "do you have <code>k</code>?" The first
+    <code>k</code> the set doesn't have is the answer. This is correct and runs in O(n) time — but
+    it pays for that speed with an entirely separate O(n)-sized data structure. It's not
+    "brute force" in the slow-time sense; it's brute force in the sense of "the first thing
+    you'd reach for," and it trades space for simplicity.</p>
+
+  <svg class="diagram" viewBox="0 0 640 170" role="img" aria-label="Flow diagram: build a hash set from every value in nums, then probe k starting at 1 and increasing by 1 each time, until a k is found that the set does not contain — that k is the answer.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: hash set membership, then linear probe from 1 upward</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">build set from nums</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">one Set, O(n) values</text>
+      <rect x="230" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="325" y="82" fill="#E2E3E7">probe k = 1, 2, 3, ...</text>
+      <text x="325" y="98" fill="#9198A6" font-size="10">check set.has(k)</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="535" y="82" fill="#282C34">first k not in set</text>
+      <text x="535" y="98" fill="#282C34" font-size="10">→ return k</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E6C07B">Cost: O(n) time (fast) but O(n) extra space — an entire Set copy of nums.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Bars show <code>nums</code> for a small
+    example — the same values verified above. Watch the probe walk <code>k</code> upward
+    (bars are only ever read here, never rearranged).</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> value being scanned into the set</span>
+    <span><i class="lg-compare"></i> current probe candidate <code>k</code>, found in <code>nums</code></span>
+    <span><i class="lg-sorted"></i> already probed and confirmed present</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function firstMissingPositiveBrute(nums) {
+  const set = new Set(nums);
+  let k = 1;
+  while (set.has(k)) {
+    k++;
+  }
+  return k;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>new Set(nums)</code> copies every value — negatives, zeros, duplicates, positives,
+      everything — into a hash set in one pass. Duplicates collapse automatically; irrelevant
+      values (negatives, zero) just sit in the set unused, they're harmless.</li>
+    <li><code>k</code> starts at <code>1</code> because the problem only ever asks about positive
+      integers — <code>0</code> and negatives can never be "the answer."</li>
+    <li><code>while (set.has(k)) k++</code> — as long as the set has this candidate, it can't be
+      the missing one, so move to the next candidate. The loop stops the instant it finds a gap.</li>
+    <li>Why this terminates quickly: an array of length <code>n</code> can contain at most
+      <code>n</code> distinct positive values in the range <code>[1, n]</code>, so the probe can
+      never run past <code>k = n + 1</code> before finding a miss — the loop body runs at most
+      <code>n + 1</code> times total, keeping this O(n).</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Hash set membership + linear probe</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — in-place index-as-hash placement</h2>
+  <p>The set in Solution 1 exists only to answer "is value <code>v</code> present?" quickly. The
+    key insight: if the answer must be somewhere in <code>[1, n+1]</code> (proven above), then
+    <code>nums</code> itself — an array of exactly <code>n</code> slots — is big enough to
+    <em>be</em> that hash set, using each index as the "bucket" for the value it should hold.
+    Value <code>v</code>'s correct home is index <code>v - 1</code>. So walk the array once,
+    and for every value that's in range and not already sitting in its correct home, swap it
+    there — repeating at that same position until whatever lands there is either out of range or
+    already correctly placed. After this placement pass, scan once more: the first index
+    <code>i</code> where <code>nums[i] !== i + 1</code> means <code>i + 1</code> is missing. If
+    every slot matches, the array is a perfect run <code>1..n</code> and the answer is
+    <code>n + 1</code>.</p>
+
+  <svg class="diagram" viewBox="0 0 640 190" role="img" aria-label="Flow diagram: walk the array once, and for each position, repeatedly swap the current value into its correct index (value v belongs at index v minus 1) while it is in range and not already there, then scan once more for the first index whose value does not match index plus one.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: place each value at its own index, in place, then scan for the gap</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">i = 0..n-1</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">value v = nums[i]</text>
+      <rect x="230" y="60" width="220" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="340" y="82" fill="#282C34">1 ≤ v ≤ n and not home?</text>
+      <text x="340" y="98" fill="#282C34" font-size="10">swap nums[i] ↔ nums[v-1]</text>
+      <rect x="470" y="60" width="150" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="545" y="82" fill="#282C34">scan for gap</text>
+      <text x="545" y="98" fill="#282C34" font-size="10">nums[i] ≠ i+1 → i+1</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="450" y1="83" x2="468" y2="83"/>
+    </g>
+    <path d="M340,106 C300,140 260,140 250,108" stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)"/>
+    <text x="300" y="152" font-size="10" fill="#9198A6" text-anchor="middle">loops at i until value is placed or rejected</text>
+    <text x="20" y="176" font-size="12" fill="#98C379">Cost: O(n) time overall, O(1) extra space — placement is done inside nums itself.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same example as Solution 1 — watch values
+    physically swap into their "home" index (value <code>v</code> at index <code>v - 1</code>),
+    then a final scan finds the first mismatch.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> outer index <code>i</code> being processed</span>
+    <span><i class="lg-compare"></i> home index being checked for this value</span>
+    <span><i class="lg-swap"></i> a swap just happened</span>
+    <span><i class="lg-sorted"></i> value confirmed correctly placed (or confirmed correct during the final scan)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function firstMissingPositiveOptimal(nums) {
+  const n = nums.length;
+
+  for (let i = 0; i < n; i++) {
+    while (
+      nums[i] > 0 &&
+      nums[i] <= n &&
+      nums[nums[i] - 1] !== nums[i]
+    ) {
+      const target = nums[i] - 1;
+      [nums[i], nums[target]] = [nums[target], nums[i]];
+    }
+  }
+
+  for (let i = 0; i < n; i++) {
+    if (nums[i] !== i + 1) return i + 1;
+  }
+  return n + 1;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>nums[i] > 0 && nums[i] <= n</code> — only values that COULD ever be the answer are
+      worth placing. Anything ≤ 0 or &gt; n can never be the smallest missing positive (proven
+      above: the answer is always in <code>[1, n+1]</code>), so those values are simply left
+      wherever they sit.</li>
+    <li><code>nums[nums[i] - 1] !== nums[i]</code> — this is the duplicate/already-placed guard.
+      It asks "is the value already sitting in its own home?" If <code>target</code> already
+      holds this exact value (a duplicate, or it's already correctly placed), swapping would just
+      trade the value with itself or bounce two copies back and forth forever — so skip it and
+      move on. This one condition is what prevents the infinite loop that this swap pattern is
+      notorious for.</li>
+    <li><code>[nums[i], nums[target]] = [nums[target], nums[i]]</code> — destructuring assignment
+      swap. Both sides of the RHS array literal are evaluated (reading the OLD values) before
+      either assignment happens, so this is safe even though <code>target</code> was computed
+      from the very value about to be overwritten. (See the trick question below for what breaks
+      if you write this swap the naive way instead.)</li>
+    <li>The <code>while</code>, not <code>if</code>, matters: after a swap, index <code>i</code>
+      holds a brand-new value that also needs checking — keep swapping at <code>i</code> until
+      whatever lands there is out of range or already home, THEN move to <code>i + 1</code>.</li>
+    <li>The final scan's first mismatch <code>nums[i] !== i + 1</code> is the answer, because
+      the placement pass guarantees every value that legitimately belongs in <code>[1, n]</code>
+      made it to its home index if it was present at all — a mismatch can only mean that value
+      was never in the array.</li>
+    <li>If the scan finds no mismatch, <code>nums</code> holds exactly <code>1..n</code> with
+      nothing missing in range, so the smallest missing positive is the next integer up,
+      <code>n + 1</code>.</li>
+  </ul>
+
+  <p><strong>Why the nested loop is still O(n), not O(n²):</strong> it looks quadratic — a
+    <code>for</code> with a <code>while</code> inside it — but the two loops don't multiply the
+    way they would in, say, nested comparisons. Every single swap permanently places one value
+    into its correct home index, and a value is never moved again once it's home (the guard
+    condition stops touching indices that already hold their correct value). There are only
+    <code>n</code> indices total, so there can be at most <code>n</code> swaps across the
+    <em>entire</em> outer loop, combined — not per iteration. The outer loop contributes O(n)
+    steps and the inner <code>while</code> contributes at most O(n) swaps in total across all
+    of those steps, so the whole placement pass is O(n) + O(n) = O(n), and the final scan adds
+    another O(n). Three O(n) phases summed is still O(n).</p>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>In-place index-as-hash placement, then scan</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (hash set + probe)</td><td>O(n)</td><td>O(n)</td></tr>
+      <tr><td>Optimal (in-place placement)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Be honest about what actually improved here: both solutions are O(n) time — there's no
+    asymptotic time win to claim. The real story is <strong>space</strong>. Solution 1 pays for
+    its O(1) membership checks with an entire separate hash set sized to the input. Solution 2
+    gets the same O(1)-style lookup ("is value v present, and where") for free by reusing
+    <code>nums</code>'s own indices as the hash table, dropping extra space from O(n) to O(1) —
+    at the cost of mutating the input array, which isn't always acceptable in a real API.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why must the answer always lie in <code>[1, n+1]</code>, where <code>n</code>
+        is the array length — before you even look at a single value?</p>
+      <ul class="pb-ia">
+        <li>An array of length <code>n</code> can hold at most <code>n</code> distinct values.</li>
+        <li>If every one of <code>1, 2, ..., n</code> happens to be present (using up all n
+          slots on exactly those values), the smallest missing positive is <code>n + 1</code> —
+          there's no room left for it to be anything smaller.</li>
+        <li>If even one of <code>1..n</code> is absent, that gap is smaller than <code>n + 1</code>
+          and wins. Either way, the answer never needs to be searched for past <code>n + 1</code>
+          — which is exactly why the hash-set probe in Solution 1 terminates in at most
+          <code>n + 1</code> steps, and why Solution 2 only needs <code>n</code> index slots to
+          represent every value that could possibly matter.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is the guard <code>nums[nums[i] - 1] !== nums[i]</code> the specific
+        thing that prevents an infinite loop with duplicate values?</p>
+      <ul class="pb-ia">
+        <li>Without it, an array like <code>[1, 1]</code> would try to swap index 0's value
+          (<code>1</code>, whose home is index 0) with itself forever — <code>nums[i]</code>
+          and <code>nums[target]</code> are literally the same slot, or hold the same value, so
+          the swap changes nothing and the while condition never becomes false on its own.</li>
+        <li>The guard explicitly asks "does the target slot already hold this value?" before
+          swapping. If it does — whether because this value is already home, or because a
+          duplicate already claimed that home — swapping is pointless, so the loop exits instead
+          of spinning.</li>
+        <li>This is the exact detail that separates a correct in-place placement pass from a
+          classic infinite-loop bug — it's worth stating explicitly in an interview rather than
+          hoping the interviewer doesn't ask "what if there are duplicates?"</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Walk me through <code>[1, 1]</code> by hand." At
+        <code>i = 0</code>: <code>nums[0] = 1</code>, target = 0, <code>nums[0] === nums[0]</code>
+        is true → guard fails → no swap, move to <code>i = 1</code>. At <code>i = 1</code>:
+        <code>nums[1] = 1</code>, target = 0, <code>nums[0] === nums[1]</code> (both are 1) →
+        guard fails again → no swap. Final scan: index 0 matches (1), index 1 doesn't
+        (<code>nums[1] = 1 !== 2</code>) → answer is 2. Correct, and no infinite loop.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">The problem statement usually asks for O(1) auxiliary space. Does mutating
+        the input array count against that?</p>
+      <ul class="pb-ia">
+        <li>By the convention LeetCode (and most interviewers) use for "O(1) extra space," no —
+          the input array itself isn't counted, since it already exists; "extra" space means
+          space beyond the input.</li>
+        <li>Solution 2 uses a constant number of local variables (<code>i</code>,
+          <code>target</code>, loop counters) regardless of <code>n</code> — that's genuinely
+          O(1) auxiliary space.</li>
+        <li>It's still worth flagging out loud in an interview: this technique permanently
+          reorders the caller's array as a side effect. If the caller needs their original order
+          preserved, you'd need to copy first — which brings space back to O(n) and defeats the
+          purpose, so it's a real design tradeoff, not a free lunch.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const nums = [3, 4, -1, 1];
+const i = 0;
+const target = nums[i] - 1;
+nums[i] = nums[target];
+nums[target] = nums[i];
+console.log(nums);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>[ -1, 4, -1, 1 ]</code> — NOT the correctly swapped
+          <code>[ -1, 4, 3, 1 ]</code> you'd get from the destructuring version above.</li>
+        <li><code>target</code> is <code>nums[0] - 1 = 2</code>. The naive two-line swap
+          overwrites <code>nums[0]</code> first (<code>nums[0] = nums[2]</code>, i.e. <code>-1</code>),
+          THEN reads <code>nums[i]</code> again for the second line — but <code>nums[i]</code> is
+          now <code>-1</code>, not the original <code>3</code>. So <code>nums[2] = nums[i]</code>
+          writes <code>-1</code> right back into index 2, and the original value <code>3</code>
+          is gone entirely, never having reached its home.</li>
+        <li>This is exactly why the real solution above uses
+          <code>[nums[i], nums[target]] = [nums[target], nums[i]]</code> — a destructuring swap
+          evaluates the entire right-hand side array literal (both old values) BEFORE assigning
+          either side, so neither value is lost even though one assignment depends on the
+          pre-swap state of the other.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this bug is easy to miss in review because the array still
+        "looks plausible" afterward — no crash, no obviously wrong shape, just a silently
+        corrupted value. In this problem specifically it would produce a wrong final answer with
+        no error message at all.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="range" data-explain="An array of length n can hold at most n distinct values. If 1..n are all present, the answer is n+1 (no room for anything smaller); if any of 1..n is missing, that gap is smaller than n+1. Either way, the answer is always within [1, n+1]." >
+    <p class="q-text">1. Why is it guaranteed that the answer is always somewhere in <code>[1, n+1]</code>, where <code>n</code> is the array's length?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="range">An array of length n has room for at most n distinct values, so the answer can never need to be larger than n+1</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">It's only true if the array happens to already be sorted</button>
+      <button class="btn dsa-quiz-option" data-value="always1">It isn't guaranteed — the answer could be arbitrarily large depending on the input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="tradeoff" data-explain="Both solutions run in O(n) time — there's no time-complexity win to claim. The real difference is space: the hash set costs O(n) extra memory for O(1) membership checks, while the in-place version gets the same effect for O(1) extra space by reusing the array's own indices, at the cost of mutating the input." >
+    <p class="q-text">2. What is the actual complexity tradeoff between the hash-set solution and the in-place solution?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="tradeoff">Same O(n) time for both — the real difference is O(n) vs O(1) extra space</button>
+      <button class="btn dsa-quiz-option" data-value="timewin">The in-place solution is asymptotically faster in time, O(n) vs O(n²)</button>
+      <button class="btn dsa-quiz-option" data-value="spacewin">The hash-set solution uses less space because Sets are more compact than arrays</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="guard" data-explain="Without checking whether the target index already holds this exact value, a duplicate (or an already-correctly-placed value) would trigger a swap that changes nothing, over and over, because the same value keeps landing back at the same index. The guard detects 'already home or duplicate' and skips the swap instead." >
+    <p class="q-text">3. What specifically stops the in-place solution from looping forever on an array like <code>[1, 1]</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="guard">The guard checks whether the target index already holds this exact value, and skips the swap if so</button>
+      <button class="btn dsa-quiz-option" data-value="setlimit">A hard iteration limit is built into the while loop to force it to stop</button>
+      <button class="btn dsa-quiz-option" data-value="cantloop">Nothing special — duplicate values can never actually occur in valid LeetCode input</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onceeach" data-explain="Even though the while loop is nested inside the for loop, every swap permanently places one value into its correct home index — a value already home is never moved again. That caps the total number of swaps across the ENTIRE run at n, not n per outer iteration, so the whole placement pass is O(n) + O(n) = O(n), not O(n²)." >
+    <p class="q-text">4. Why is the nested for/while placement pass O(n) overall, not O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onceeach">Each swap places a value into its final home for good, so the total number of swaps across the whole run is capped at n, not n per outer step</button>
+      <button class="btn dsa-quiz-option" data-value="actuallyquadratic">It isn't O(n) — this solution is genuinely O(n²), just with a small constant factor</button>
+      <button class="btn dsa-quiz-option" data-value="onlysmall">It's only O(n) for small arrays; larger inputs degrade to O(n²)</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="destructure" data-explain="A naive two-line swap (nums[i] = nums[target]; nums[target] = nums[i];) overwrites nums[i] on the first line, then the second line reads the now-wrong nums[i] — losing the original value entirely. Destructuring assignment evaluates the whole right-hand-side array literal (both old values) before assigning either side, so it's safe." >
+    <p class="q-text">5. Why does the swap use destructuring assignment (<code>[nums[i], nums[target]] = [nums[target], nums[i]]</code>) instead of two plain assignment lines?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="destructure">A naive two-line swap overwrites nums[i] before the second line can read its original value, silently losing data — destructuring reads both old values first</button>
+      <button class="btn dsa-quiz-option" data-value="performance">Destructuring is purely a performance optimization with no correctness difference</button>
+      <button class="btn dsa-quiz-option" data-value="stylistic">It's a stylistic choice only — both forms behave identically in every case</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Arrays &amp; Hashing problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'first-missing-positive';
+
+  // Shared example for both animations — verified against the brute-force and optimal
+  // functions via `node -e` before this page was written.
+  const DEMO_NUMS = [3, 4, -1, 1];
+
+  // ---- Solution 1: brute force — hash set + linear probe ----
+  function buildBruteSteps(inputNums) {
+    const nums = inputNums.slice();
+    const n = nums.length;
+    const steps = [];
+    function snapshot(narration, states) {
+      steps.push({ narration, values: nums.slice(), states: states.slice() });
+    }
+    const baseStates = new Array(n).fill('default');
+    snapshot(`nums = [${nums.join(', ')}]. Build a hash set from every value first.`, baseStates);
+
+    const set = new Set();
+    for (let i = 0; i < n; i++) {
+      set.add(nums[i]);
+      const scanStates = baseStates.slice();
+      scanStates[i] = 'pointer';
+      snapshot(`Add nums[${i}] = ${nums[i]} to the set. Set so far: {${[...set].join(', ')}}.`, scanStates);
+    }
+
+    let k = 1;
+    const confirmed = [];
+    while (true) {
+      const probeStates = baseStates.slice();
+      confirmed.forEach((ci) => { probeStates[ci] = 'sorted'; });
+      const idx = nums.indexOf(k);
+      if (idx !== -1) probeStates[idx] = 'compare';
+      if (set.has(k)) {
+        snapshot(`Probe k = ${k}: set.has(${k}) is true — ${k} is present, try k = ${k + 1}.`, probeStates);
+        if (idx !== -1) confirmed.push(idx);
+        k++;
+      } else {
+        snapshot(`Probe k = ${k}: set.has(${k}) is false — ${k} is missing! Answer: ${k}.`, probeStates);
+        break;
+      }
+    }
+    return steps;
+  }
+
+  // ---- Solution 2: optimal — in-place index-as-hash placement ----
+  function buildOptimalSteps(inputNums) {
+    const nums = inputNums.slice();
+    const n = nums.length;
+    const steps = [];
+    function snapshot(narration, states) {
+      steps.push({ narration, values: nums.slice(), states: states.slice() });
+    }
+    const baseStates = new Array(n).fill('default');
+    snapshot(`nums = [${nums.join(', ')}]. Place each in-range value at its home index (value v belongs at index v - 1).`, baseStates);
+
+    for (let i = 0; i < n; i++) {
+      while (nums[i] > 0 && nums[i] <= n && nums[nums[i] - 1] !== nums[i]) {
+        const target = nums[i] - 1;
+        const checkStates = baseStates.slice();
+        checkStates[i] = 'pointer';
+        checkStates[target] = 'compare';
+        snapshot(`i = ${i}: value ${nums[i]} belongs at index ${target} (holds ${nums[target]}), not home yet — swap.`, checkStates);
+        [nums[i], nums[target]] = [nums[target], nums[i]];
+        const swapStates = baseStates.slice();
+        swapStates[i] = 'swap';
+        swapStates[target] = 'swap';
+        snapshot(`Swapped: nums = [${nums.join(', ')}].`, swapStates);
+      }
+      const settledStates = baseStates.slice();
+      for (let k = 0; k <= i; k++) settledStates[k] = nums[k] === k + 1 ? 'sorted' : 'default';
+      settledStates[i] = nums[i] === i + 1 ? 'sorted' : 'default';
+      snapshot(`i = ${i} done: nums[${i}] = ${nums[i]} is out of range or already home. Move on.`, settledStates);
+    }
+
+    snapshot(`Placement pass complete: nums = [${nums.join(', ')}]. Now scan for the first index where nums[i] !== i + 1.`, baseStates);
+
+    for (let i = 0; i < n; i++) {
+      if (nums[i] !== i + 1) {
+        const failStates = new Array(n).fill('sorted');
+        for (let k = 0; k < i; k++) failStates[k] = 'sorted';
+        failStates[i] = 'swap';
+        for (let k = i + 1; k < n; k++) failStates[k] = 'default';
+        snapshot(`Index ${i}: nums[${i}] = ${nums[i]} !== ${i + 1} — gap found! Answer: ${i + 1}.`, failStates);
+        return steps;
+      }
+      const okStates = new Array(n).fill('default');
+      for (let k = 0; k <= i; k++) okStates[k] = 'sorted';
+      snapshot(`Index ${i}: nums[${i}] = ${nums[i]} === ${i + 1}. Correct, keep scanning.`, okStates);
+    }
+    snapshot(`No mismatch found — nums holds exactly 1..${n}. Answer: ${n + 1}.`, new Array(n).fill('sorted'));
+    return steps;
+  }
+
+  const DATA_MIN = Math.min.apply(null, DEMO_NUMS);
+  const DATA_MAX = Math.max.apply(null, DEMO_NUMS);
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { min: DATA_MIN, max: DATA_MAX });
+  const steps1 = buildBruteSteps(DEMO_NUMS);
+  bars1.setData(steps1[0].values);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars1.paint({}, steps1[0].values); return; }
+      bars1.paint(step.states, step.values);
+    },
+  });
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { min: DATA_MIN, max: DATA_MAX });
+  const steps2 = buildOptimalSteps(DEMO_NUMS);
+  bars2.setData(steps2[0].values);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 900,
+    onStep(step) {
+      if (!step) { bars2.paint({}, steps2[0].values); return; }
+      bars2.paint(step.states, step.values);
+    },
+  });
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('first-missing-positive', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+</script>
+</body>
+</html>
