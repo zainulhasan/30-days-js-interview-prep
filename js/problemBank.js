@@ -234,6 +234,42 @@ const PROBLEM_BANK = [
     prereqTitle: 'Hash Maps & Sets',
     leetcodeUrl: 'https://leetcode.com/problems/longest-consecutive-sequence/',
   },
+  {
+    slug: 'largest-rectangle-in-histogram',
+    title: 'Largest Rectangle in Histogram',
+    pattern: 'Stack',
+    difficulty: 'Hard',
+    prereqDay: 17,
+    prereqTitle: 'Stacks',
+    leetcodeUrl: 'https://leetcode.com/problems/largest-rectangle-in-histogram/',
+  },
+  {
+    slug: 'evaluate-reverse-polish-notation',
+    title: 'Evaluate Reverse Polish Notation',
+    pattern: 'Stack',
+    difficulty: 'Medium',
+    prereqDay: 17,
+    prereqTitle: 'Stacks',
+    leetcodeUrl: 'https://leetcode.com/problems/evaluate-reverse-polish-notation/',
+  },
+  {
+    slug: 'find-minimum-in-rotated-sorted-array',
+    title: 'Find Minimum in Rotated Sorted Array',
+    pattern: 'Binary Search',
+    difficulty: 'Medium',
+    prereqDay: 13,
+    prereqTitle: 'Binary Search Variations',
+    leetcodeUrl: 'https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/',
+  },
+  {
+    slug: 'median-of-two-sorted-arrays',
+    title: 'Median of Two Sorted Arrays',
+    pattern: 'Binary Search',
+    difficulty: 'Hard',
+    prereqDay: 13,
+    prereqTitle: 'Binary Search Variations',
+    leetcodeUrl: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
+  },
 ];
 
 const PROBLEM_BANK_PATTERNS = [
@@ -243,6 +279,8 @@ const PROBLEM_BANK_PATTERNS = [
   { key: 'Backtracking', title: 'Backtracking' },
   { key: 'Greedy', title: 'Greedy' },
   { key: 'Arrays & Hashing', title: 'Arrays & Hashing' },
+  { key: 'Stack', title: 'Stack' },
+  { key: 'Binary Search', title: 'Binary Search' },
 ];
 
 function problemBankInfo(slug) {
