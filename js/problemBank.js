@@ -351,6 +351,33 @@ const PROBLEM_BANK = [
     prereqTitle: 'Sliding Window Pattern',
     leetcodeUrl: 'https://leetcode.com/problems/max-consecutive-ones-iii/',
   },
+  {
+    slug: 'merge-two-sorted-lists',
+    title: 'Merge Two Sorted Lists',
+    pattern: 'Linked List',
+    difficulty: 'Easy',
+    prereqDay: 15,
+    prereqTitle: 'Linked Lists',
+    leetcodeUrl: 'https://leetcode.com/problems/merge-two-sorted-lists/',
+  },
+  {
+    slug: 'copy-list-with-random-pointer',
+    title: 'Copy List with Random Pointer',
+    pattern: 'Linked List',
+    difficulty: 'Medium',
+    prereqDay: 15,
+    prereqTitle: 'Linked Lists',
+    leetcodeUrl: 'https://leetcode.com/problems/copy-list-with-random-pointer/',
+  },
+  {
+    slug: 'remove-nth-node-from-end-of-list',
+    title: 'Remove Nth Node From End of List',
+    pattern: 'Linked List',
+    difficulty: 'Medium',
+    prereqDay: 15,
+    prereqTitle: 'Linked Lists',
+    leetcodeUrl: 'https://leetcode.com/problems/remove-nth-node-from-end-of-list/',
+  },
 ];
 
 const PROBLEM_BANK_PATTERNS = [
@@ -364,6 +391,7 @@ const PROBLEM_BANK_PATTERNS = [
   { key: 'Binary Search', title: 'Binary Search' },
   { key: 'Two Pointers', title: 'Two Pointers' },
   { key: 'Sliding Window', title: 'Sliding Window' },
+  { key: 'Linked List', title: 'Linked List' },
 ];
 
 function problemBankInfo(slug) {
