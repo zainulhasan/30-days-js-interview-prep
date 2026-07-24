@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Max Consecutive Ones III — Problem Bank</title>
+<meta name="description" content="Max Consecutive Ones III: a brute-force O(n³) subarray-and-scan approach vs. an optimal O(n) variable-size sliding window tracking zero count, both animated, with full line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/max-consecutive-ones-iii.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Max Consecutive Ones III — Problem Bank" />
+<meta property="og:description" content="Max Consecutive Ones III: a brute-force O(n³) subarray-and-scan approach vs. an optimal O(n) variable-size sliding window tracking zero count, both animated, with full line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/max-consecutive-ones-iii.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Max Consecutive Ones III — Problem Bank" />
+<meta name="twitter:description" content="Max Consecutive Ones III: a brute-force O(n³) subarray-and-scan approach vs. an optimal O(n) variable-size sliding window tracking zero count, both animated, with full line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Max Consecutive Ones III", "item": "https://dsa.itszain.tech/problem-bank/max-consecutive-ones-iii.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day05.html">Day 5: Sliding Window Pattern</a></strong> —
+      both solutions below search for the longest valid window; read that lesson first if the
+      expand/shrink window mental model is still new.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">SLIDING WINDOW &middot; MEDIUM</p>
+  <h1>Max Consecutive Ones III <span class="leetcode-link">(<a href="https://leetcode.com/problems/max-consecutive-ones-iii/" target="_blank" rel="noopener">LeetCode: Max Consecutive Ones III</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given a binary array <code>nums</code> (every value is <code>0</code> or <code>1</code>)
+    and an integer <code>k</code>. You're allowed to flip at most <code>k</code> of the
+    <code>0</code>s to <code>1</code>s — anywhere in the array, your choice which ones. After
+    flipping, return the length of the longest contiguous run of <code>1</code>s you can produce.
+    You never have to actually perform the flips; you just need the length of the best window.
+    For example, <code>nums = [1,1,1,0,0,0,1,1,1,1,0]</code> with <code>k = 2</code> gives
+    <strong>6</strong>: the window <code>nums[4..9] = [0,0,1,1,1,1]</code> contains exactly 2
+    zeros, both flippable within budget, producing a run of 6 ones — and no window with ≤ 2 zeros
+    is longer than that.</p>
+
+  <h2>Solution 1: Brute force — every subarray, re-counted from scratch</h2>
+  <p>The most literal reading of the problem: try every possible contiguous subarray
+    <code>nums[start..end]</code>, and for each one, scan it to count how many zeros it contains.
+    If that count is within budget (<code>&lt;= k</code>), it's a candidate — keep it if it's the
+    longest one seen so far. There's no memory carried between subarrays; each one is
+    re-examined completely independently, which is exactly what makes this slow.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the brute-force solution: pick every start and end pair to form a subarray, scan that subarray for its zero count, and if the zero count is at most k, keep it as a candidate for the longest window.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: every start/end pair, re-scanned for zeros</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">pick start, end pair</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">O(n²) pairs total</text>
+      <rect x="230" y="60" width="190" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="325" y="82" fill="#282C34">scan window for zeros</text>
+      <text x="325" y="98" fill="#282C34" font-size="10">O(n), fresh every pair</text>
+      <rect x="450" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="535" y="82" fill="#E2E3E7">keep if zeros ≤ k</text>
+      <text x="535" y="98" fill="#9198A6" font-size="10">track longest</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-brute" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-brute)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="420" y1="83" x2="448" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n²) pairs, each paying its own O(n) zero-count scan — O(n³) total,</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">with zero information reused between one subarray and the next.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-compare"></i> valid window (zeros ≤ k), not the longest yet</span>
+    <span><i class="lg-active"></i> valid window — new longest found</span>
+    <span><i class="lg-swap"></i> window rejected — too many zeros</span>
+    <span><i class="lg-sorted"></i> best window found, at the end</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    nums=[1,1,0,0,1,1,1,0], k=2 (node-verified answer: 7, window [0..6]) — a smaller example than
+    the LeetCode one above, kept small on purpose since O(n³) generates a lot of subarrays to
+    check.</p>
+
+  <h3>The code</h3>
+  <pre><code>function longestOnesBrute(nums, k) {
+  const n = nums.length;
+  let best = 0;
+
+  for (let start = 0; start < n; start++) {
+    for (let end = start; end < n; end++) {
+      let zeros = 0;
+      for (let i = start; i <= end; i++) {
+        if (nums[i] === 0) zeros++;
+      }
+      if (zeros <= k) {
+        best = Math.max(best, end - start + 1);
+      }
+    }
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The outer two loops enumerate every <code>(start, end)</code> pair with
+      <code>start &lt;= end</code> — that's every contiguous subarray, <code>O(n²)</code> of
+      them.</li>
+    <li>The innermost loop counts zeros in <code>nums[start..end]</code> by scanning it index by
+      index — <code>O(n)</code> work, and it starts completely fresh for every single pair, even
+      though most of it overlaps with the previous pair's window.</li>
+    <li><code>if (zeros &lt;= k)</code> is the only place the flip budget is enforced — a window
+      with more zeros than <code>k</code> can flip is simply never a candidate.</li>
+    <li><code>best = Math.max(best, end - start + 1)</code> only updates when a window is both
+      valid <em>and</em> longer than anything seen so far.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n³)</td><td>O(1)</td><td>O(n²) subarrays, each re-counting its zeros in a fresh O(n) scan</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — variable-size sliding window tracking zero count</h2>
+  <p>Instead of re-counting zeros for every window from scratch, keep a single running
+    <code>zeroCount</code> for the <em>current</em> window <code>[left, right]</code> and update
+    it incrementally. Expand <code>right</code> across the array one step at a time; every time
+    the new element is a zero, increment <code>zeroCount</code>. Whenever <code>zeroCount</code>
+    exceeds <code>k</code>, the window has become invalid — shrink it from the left (decrementing
+    <code>zeroCount</code> only if the element leaving was itself a zero) until it's valid again.
+    The window's bounds never reset: <code>left</code> only ever moves forward, so this explores
+    every valid window without ever re-examining the same element from scratch.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: expand right and update zero count in O(1), check whether zero count exceeds k, shrink left while it does, and track the longest valid window seen.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: expand right, shrink left, one running zero count</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="10" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="85" y="82" fill="#E2E3E7">expand right</text>
+      <text x="85" y="98" fill="#9198A6" font-size="10">O(1) update</text>
+      <rect x="190" y="60" width="170" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="275" y="82" fill="#282C34">zeroCount &gt; k?</text>
+      <text x="275" y="98" fill="#282C34" font-size="10">checked every step</text>
+      <rect x="390" y="60" width="140" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="460" y="82" fill="#282C34">shrink left</text>
+      <text x="460" y="98" fill="#282C34" font-size="10">until valid</text>
+      <rect x="560" y="60" width="60" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="590" y="79" fill="#282C34">track</text>
+      <text x="590" y="93" fill="#282C34">best</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-opt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-opt)">
+      <line x1="160" y1="83" x2="188" y2="83"/>
+      <line x1="360" y1="83" x2="388" y2="83"/>
+      <line x1="530" y1="83" x2="558" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — right advances at most n times, and left advances at most n times</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">total across the WHOLE run, never resetting, so the two pointers together do O(n) work.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> right pointer expanding the window</span>
+    <span><i class="lg-active"></i> current window</span>
+    <span><i class="lg-compare"></i> zeroCount just checked against k, found over budget</span>
+    <span><i class="lg-swap"></i> left pointer shrinking, leaving the window</span>
+    <span><i class="lg-sorted"></i> best window found, at the end</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same nums=[1,1,0,0,1,1,1,0], k=2 as Solution
+    1 (node-verified answer: 7), so you can compare step counts directly — notice how few steps
+    this takes compared to the brute-force trace above.</p>
+
+  <h3>The code</h3>
+  <pre><code>function longestOnesOptimal(nums, k) {
+  let left = 0;
+  let zeroCount = 0;
+  let best = 0;
+
+  for (let right = 0; right < nums.length; right++) {
+    if (nums[right] === 0) zeroCount++;
+
+    while (zeroCount > k) {
+      if (nums[left] === 0) zeroCount--;
+      left++;
+    }
+
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>left</code> and <code>zeroCount</code> persist across the entire loop — nothing
+      resets between iterations of <code>right</code>, which is exactly the memory the brute
+      force throws away every single pair.</li>
+    <li><code>if (nums[right] === 0) zeroCount++</code> is an O(1) incremental update, replacing
+      the brute force's O(n) re-scan with a single comparison.</li>
+    <li>The <code>while (zeroCount &gt; k)</code> loop only runs when the window is currently
+      invalid, and each iteration moves <code>left</code> forward exactly once — it can never run
+      more times in total than <code>left</code> has room to advance, which is at most
+      <code>n</code> across the whole function (the classic sliding-window amortized argument:
+      <code>right</code> advances n times, <code>left</code> advances at most n times, so total
+      work is O(n) even though there's a loop nested inside a loop).</li>
+    <li><code>best = Math.max(best, right - left + 1)</code> runs once per <code>right</code>,
+      always measuring a window that's already valid at that point — the shrink loop above it
+      guarantees that.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Each pointer advances forward at most n times total — amortized linear, no re-scanning</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (every subarray, re-scanned)</td><td>O(n³)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (sliding window, running zero count)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuinely dramatic gap, not a same-complexity relabeling: the brute force
+    re-examines overlapping windows from scratch (O(n²) windows × O(n) scan each), while the
+    optimal solution never looks at any element more than a constant number of times — each index
+    is added to the window exactly once (by <code>right</code>) and removed at most once (by
+    <code>left</code>). Both use O(1) extra space; the only thing that changes is how much
+    redundant work gets thrown away between iterations.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is it safe for <code>left</code> to only ever move forward, never back
+        up to re-check an earlier position?</p>
+      <ul class="pb-ia">
+        <li>The window is defined by two facts: <code>left</code> is the earliest index that
+          keeps <code>zeroCount &lt;= k</code>, and every index before it was already ruled out as
+          part of the current best window ending at the current <code>right</code>.</li>
+        <li>As <code>right</code> only increases, the window can only need to shrink further (more
+          zeros could enter), never less — so once an index has been excluded because it made the
+          window invalid, adding more elements to the right can't make that same exclusion
+          unnecessary.</li>
+        <li>That monotonic relationship is exactly what makes the amortized O(n) bound work: both
+          pointers move strictly forward, so their combined movement is bounded by
+          <code>2n</code>, not <code>n²</code>.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why is tracking a single running <code>zeroCount</code> integer correct,
+        instead of recomputing the zero count of the window every time it changes?</p>
+      <ul class="pb-ia">
+        <li>The window only ever changes by one element at a time — either <code>right</code>
+          adds exactly one new index, or the shrink loop removes exactly one index at
+          <code>left</code>.</li>
+        <li>Since <code>nums</code> only contains <code>0</code>s and <code>1</code>s, the effect
+          of adding or removing a single element on the zero count is fully known in O(1): +1 if
+          it's a zero entering, -1 if it's a zero leaving, no change otherwise.</li>
+        <li>Recomputing from scratch would give the same answer, just slower — the incremental
+          update is provably equivalent to the brute force's fresh scan, applied one element at a
+          time instead of the whole window at once.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">How would the approach change if the problem asked for a window with
+        <em>exactly</em> <code>k</code> zeros flipped, instead of <em>at most</em>
+        <code>k</code>?</p>
+      <ul class="pb-ia">
+        <li>The core expand/shrink mechanics stay identical — the change is only in which windows
+          count as valid answers.</li>
+        <li>"At most k" lets every valid window (0 through k zeros) compete for the longest
+          length, so the window naturally grows as large as the budget allows.</li>
+        <li>"Exactly k" would need the shrink condition to also fire when <code>zeroCount</code>
+          drops below <code>k</code> in a way that's no longer extendable to exactly k — in
+          practice this is usually solved as <code>atMost(k) - atMost(k - 1)</code> (count windows
+          with at most k zeros, subtract windows with at most k-1), reusing this exact function
+          twice rather than rewriting the window logic.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "Could you solve 'exactly k' with a single pass
+        instead of two calls to 'at most k'?" It's possible with extra bookkeeping, but the
+        two-call reuse is the standard answer because it's provably correct by construction and
+        doesn't require re-deriving a new invariant.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>let zeroCount = 5, k; // k was never assigned
+console.log(zeroCount > k);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>false</code> — not <code>true</code>, and it does not throw.</li>
+        <li><code>k</code> is <code>undefined</code>, and any relational comparison
+          (<code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>) coerces
+          its operands to numbers first — <code>undefined</code> becomes <code>NaN</code>, and
+          <em>every</em> comparison involving <code>NaN</code> evaluates to <code>false</code>,
+          including <code>NaN === NaN</code>.</li>
+        <li>Node-verified: <code>5 &gt; undefined</code>, <code>0 &gt; undefined</code>, and
+          <code>0 &lt;= undefined</code> are all <code>false</code>.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly the line the optimal solution's shrink loop
+        depends on — <code>while (zeroCount &gt; k)</code>. If <code>k</code> were ever
+        accidentally <code>undefined</code> (a typo'd parameter name, a missing argument), that
+        <code>while</code> condition would silently evaluate to <code>false</code> every time
+        instead of throwing an error — the shrink loop would simply never run, and the function
+        would return a wrong (too-large) answer with no crash to point at the bug.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="onlyforward" data-explain="Since right only increases, the window can only need to shrink further as more zeros potentially enter — never less. Once an index has been excluded to keep zeroCount <= k, later growth of the window on the right can't undo that exclusion, so left never needs to move backward." >
+    <p class="q-text">1. Why can <code>left</code> only ever move forward in the optimal solution, never back up?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onlyforward">Because right only increases, the window can only need to shrink further, never less — excluded indices stay excluded</button>
+      <button class="btn dsa-quiz-option" data-value="performance">It's purely a performance choice with no effect on correctness — moving it backward would still work</button>
+      <button class="btn dsa-quiz-option" data-value="arbitrary">It's an arbitrary implementation convention, not something the algorithm depends on</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onechange" data-explain="The window only ever changes by exactly one element at a time (right adds one, or the shrink loop removes one at left). Since nums only contains 0s and 1s, the effect of adding or removing a single element on the zero count is always known in O(1) — no need to rescan." >
+    <p class="q-text">2. Why is it correct to update <code>zeroCount</code> with <code>+1</code>/<code>-1</code> instead of recomputing it from scratch each time the window changes?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onechange">The window only ever changes by exactly one element at a time, so the effect on the zero count is always knowable in O(1)</button>
+      <button class="btn dsa-quiz-option" data-value="approx">It's an approximation that's usually close enough, traded for speed</button>
+      <button class="btn dsa-quiz-option" data-value="onlyzeros">Because nums is guaranteed to contain at least one 1, which makes recomputation unnecessary</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="amortized" data-explain="The while loop is nested inside the for loop, but left can advance at most n times in total across the ENTIRE run of the function, not per iteration of right. Summed over the whole function, right's n steps plus left's at-most-n steps give O(n) total work, not O(n^2)." >
+    <p class="q-text">3. The optimal solution has a <code>while</code> loop nested inside a <code>for</code> loop. Why is the total time still O(n), not O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="amortized">left can advance at most n times total across the whole function (not per outer iteration), so the two pointers together do O(n) combined work</button>
+      <button class="btn dsa-quiz-option" data-value="rarelyruns">The while loop is skipped entirely in almost all real inputs, so its cost doesn't matter</button>
+      <button class="btn dsa-quiz-option" data-value="compileropt">The JavaScript engine automatically optimizes nested loops with a shared counter variable</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="rescans" data-explain="The brute force re-counts zeros for every one of its O(n^2) subarrays with a fresh O(n) scan, even though most of each window overlaps with the previous one. That's O(n^2) x O(n) = O(n^3) work with nothing carried between windows — the exact redundancy the optimal solution's running zeroCount eliminates." >
+    <p class="q-text">4. What specifically makes the brute-force solution O(n³) instead of O(n²)?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="rescans">Each of the O(n²) subarrays pays its own fresh O(n) zero-count scan, with nothing reused between overlapping windows</button>
+      <button class="btn dsa-quiz-option" data-value="sorting">It sorts the array before checking each subarray, adding an extra O(n log n) factor</button>
+      <button class="btn dsa-quiz-option" data-value="recursion">It uses recursive backtracking to explore every possible flip combination</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nan" data-explain="undefined coerces to NaN in a relational comparison, and any comparison involving NaN — including NaN === NaN — evaluates to false. So zeroCount > k silently becomes false instead of throwing, and the shrink loop that depends on it would simply never run." >
+    <p class="q-text">5. If <code>k</code> in <code>while (zeroCount &gt; k)</code> were accidentally <code>undefined</code>, what happens?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nan">The comparison silently evaluates to false (undefined coerces to NaN, and all NaN comparisons are false) — no error, the loop just never runs</button>
+      <button class="btn dsa-quiz-option" data-value="throws">JavaScript throws a TypeError immediately, since undefined can't be compared with a number</button>
+      <button class="btn dsa-quiz-option" data-value="infinite">The while loop runs forever, since undefined is treated as infinitely large</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Sliding Window problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'max-consecutive-ones-iii';
+  const EXAMPLE = [1, 1, 0, 0, 1, 1, 1, 0];
+  const K = 2;
+
+  // ---- Solution 1: brute force (DSA.Bars, uniform — binary labels) ----
+  function buildBruteSteps(nums, k) {
+    const n = nums.length;
+    const steps = [];
+    let best = 0, bestStart = 0, bestEnd = -1;
+
+    steps.push({
+      narration: `Start: nums = [${nums.join(', ')}], k = ${k}. Check every contiguous subarray, counting zeros with a fresh scan each time.`,
+      states: nums.map(() => 'default'),
+    });
+
+    for (let start = 0; start < n; start++) {
+      for (let end = start; end < n; end++) {
+        let zeros = 0;
+        for (let i = start; i <= end; i++) {
+          if (nums[i] === 0) zeros++;
+        }
+        const valid = zeros <= k;
+        const improved = valid && end - start + 1 > best;
+        if (improved) {
+          best = end - start + 1;
+          bestStart = start;
+          bestEnd = end;
+        }
+
+        const states = nums.map((_, i) => {
+          if (i < start || i > end) return 'default';
+          if (!valid) return 'swap';
+          return improved ? 'active' : 'compare';
+        });
+        let narration = `Window [${start}..${end}] = [${nums.slice(start, end + 1).join(', ')}]: ${zeros} zero(s) found by a fresh O(n) scan.`;
+        if (valid) {
+          narration += improved
+            ? ` ${zeros} ≤ k=${k}, length ${end - start + 1} — new best!`
+            : ` ${zeros} ≤ k=${k}, but not longer than best=${best}.`;
+        } else {
+          narration += ` ${zeros} > k=${k} — rejected.`;
+        }
+        steps.push({ narration, states });
+      }
+    }
+
+    const finalStates = nums.map((_, i) => (i >= bestStart && i <= bestEnd ? 'sorted' : 'default'));
+    steps.push({
+      narration: `Checked all ${(n * (n + 1)) / 2} subarrays. Best: [${bestStart}..${bestEnd}], length ${best}.`,
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  const bars1 = new DSA.Bars(document.getElementById('viz1Stage'), { uniform: true });
+  bars1.setData(EXAMPLE);
+  bars1.paint(EXAMPLE.map(() => 'default'));
+  const bruteSteps = buildBruteSteps(EXAMPLE, K);
+  const player1 = new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 500,
+    onStep(step) {
+      if (!step) { bars1.setData(EXAMPLE); bars1.paint(EXAMPLE.map(() => 'default')); return; }
+      bars1.paint(step.states, EXAMPLE);
+    },
+  });
+
+  // ---- Solution 2: optimal (DSA.Bars, uniform — same array/k as Solution 1) ----
+  function buildOptimalSteps(nums, k) {
+    const n = nums.length;
+    const steps = [];
+    let left = 0, zeroCount = 0, best = 0, bestStart = 0, bestEnd = -1;
+
+    steps.push({
+      narration: `Start: nums = [${nums.join(', ')}], k = ${k}. left = right = 0, zeroCount = 0.`,
+      states: nums.map(() => 'default'),
+    });
+
+    for (let right = 0; right < n; right++) {
+      if (nums[right] === 0) zeroCount++;
+
+      steps.push({
+        narration: `right expands to ${right} (nums[${right}] = ${nums[right]}). zeroCount = ${zeroCount}.`,
+        states: nums.map((_, i) => {
+          if (i === right) return 'pointer';
+          if (i >= left && i < right) return 'active';
+          return 'default';
+        }),
+      });
+
+      if (zeroCount > k) {
+        steps.push({
+          narration: `zeroCount (${zeroCount}) > k (${k}) — too many zeros, must shrink from the left.`,
+          states: nums.map((_, i) => {
+            if (i === right) return 'compare';
+            if (i >= left && i < right) return 'active';
+            return 'default';
+          }),
+        });
+
+        while (zeroCount > k) {
+          const leaving = nums[left];
+          steps.push({
+            narration: `left = ${left} leaves the window (nums[${left}] = ${leaving}).` +
+              (leaving === 0 ? ` It was a zero — zeroCount drops to ${zeroCount - 1}.` : ` It was a 1 — zeroCount stays ${zeroCount}.`),
+            states: nums.map((_, i) => {
+              if (i === left) return 'swap';
+              if (i > left && i <= right) return 'active';
+              return 'default';
+            }),
+          });
+          if (leaving === 0) zeroCount--;
+          left++;
+        }
+
+        steps.push({
+          narration: `Window shrunk back to valid: [${left}..${right}], zeroCount = ${zeroCount} ≤ k.`,
+          states: nums.map((_, i) => {
+            if (i === right) return 'pointer';
+            if (i >= left && i < right) return 'active';
+            return 'default';
+          }),
+        });
+      }
+
+      const len = right - left + 1;
+      const improved = len > best;
+      if (improved) { best = len; bestStart = left; bestEnd = right; }
+      steps.push({
+        narration: `Window [${left}..${right}] has length ${len}.` + (improved ? ` New best: ${best}.` : ` Best stays ${best}.`),
+        states: nums.map((_, i) => {
+          if (i < left || i > right) return 'default';
+          return i === right ? 'pointer' : 'active';
+        }),
+      });
+    }
+
+    steps.push({
+      narration: `Done. Best window: [${bestStart}..${bestEnd}], length ${best} (at most k=${k} zeros flipped).`,
+      states: nums.map((_, i) => (i >= bestStart && i <= bestEnd ? 'sorted' : 'default')),
+    });
+    return steps;
+  }
+
+  const bars2 = new DSA.Bars(document.getElementById('viz2Stage'), { uniform: true });
+  bars2.setData(EXAMPLE);
+  bars2.paint(EXAMPLE.map(() => 'default'));
+  const optimalSteps = buildOptimalSteps(EXAMPLE, K);
+  const player2 = new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 800,
+    onStep(step) {
+      if (!step) { bars2.setData(EXAMPLE); bars2.paint(EXAMPLE.map(() => 'default')); return; }
+      bars2.paint(step.states, EXAMPLE);
+    },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('max-consecutive-ones-iii', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
