@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Merge Two Sorted Lists — Problem Bank</title>
+<meta name="description" content="Merge Two Sorted Lists: an extract-sort-rebuild brute force vs. an optimal two-pointer splice that reuses the original nodes in place, both animated — a rare case where time AND space genuinely improve." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/merge-two-sorted-lists.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Merge Two Sorted Lists — Problem Bank" />
+<meta property="og:description" content="Merge Two Sorted Lists: an extract-sort-rebuild brute force vs. an optimal two-pointer splice that reuses the original nodes in place, both animated — a rare case where time AND space genuinely improve." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/merge-two-sorted-lists.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Merge Two Sorted Lists — Problem Bank" />
+<meta name="twitter:description" content="Merge Two Sorted Lists: an extract-sort-rebuild brute force vs. an optimal two-pointer splice that reuses the original nodes in place, both animated — a rare case where time AND space genuinely improve." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Merge Two Sorted Lists", "item": "https://dsa.itszain.tech/problem-bank/merge-two-sorted-lists.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day15.html">Day 15: Linked Lists</a></strong> —
+      this problem is a direct test of pointer manipulation: reading, comparing, and re-pointing
+      <code>.next</code> on existing nodes; read that lesson first if singly-linked list traversal
+      is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">LINKED LIST &middot; EASY</p>
+  <h1>Merge Two Sorted Lists <span class="leetcode-link">(<a href="https://leetcode.com/problems/merge-two-sorted-lists/" target="_blank" rel="noopener">LeetCode: Merge Two Sorted Lists</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given the heads of two singly-linked lists, <code>list1</code> and <code>list2</code>,
+    each already sorted in ascending order. Merge them into a single sorted list and return its
+    head. The catch that makes this a real linked-list exercise, not just an array problem in
+    disguise: the merge has to happen by <strong>splicing together the existing nodes</strong> —
+    re-pointing their <code>.next</code> references — not by creating brand-new nodes to hold the
+    same values. For example, <code>list1 = [1,2,4]</code> and <code>list2 = [1,3,4]</code> merge
+    into <code>[1,1,2,3,4,4]</code>. Either input can be empty: <code>list1 = []</code>,
+    <code>list2 = []</code> returns <code>[]</code>, and <code>list1 = []</code>,
+    <code>list2 = [0]</code> returns <code>[0]</code> — <code>list2</code> untouched, just handed
+    back as-is.</p>
+
+  <h2>Solution 1: Brute force — extract, sort, rebuild</h2>
+  <p>The straightforward approach: walk both lists and dump every value into one plain JS array,
+    sort that array numerically, then build an entirely new linked list from the sorted array,
+    allocating a fresh node for every value. This is completely correct, but it's honest to call it
+    "brute force" for two specific reasons: it runs a full comparison sort on data that was
+    <strong>already sorted on both sides</strong> — genuinely unnecessary work — and it throws away
+    the original nodes entirely instead of reusing them, allocating <code>n + m</code> new node
+    objects for values that already had perfectly good nodes sitting in memory.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: extract every value from both lists into a plain array, sort the array numerically even though both inputs were already sorted, then allocate a brand new node for every value to build a fresh list.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: extract everything, sort it, rebuild from scratch</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="110" y="82" fill="#E2E3E7">extract into array</text>
+      <text x="110" y="98" fill="#9198A6" font-size="10">walk both lists once</text>
+      <rect x="230" y="60" width="180" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">sort numerically</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">already sorted on both sides</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">allocate new nodes</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">original nodes discarded</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-m1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-m1)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="410" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O((n+m) log(n+m)) time for a sort that shouldn't be needed —</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">plus O(n+m) space for the array AND every newly allocated node.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>Tracing <code>list1 = [1,2,4]</code>, <code>list2 = [1,3,4]</code> — rows 1 and 2 are the
+    two inputs (unchanged throughout), row 3 fills in with brand-new nodes as the sorted array
+    gets rebuilt into a list.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> node currently being extracted</span>
+    <span><i class="lg-active"></i> newest node just allocated in the rebuilt list</span>
+    <span><i class="lg-sorted"></i> already part of the finished rebuilt list</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function mergeTwoListsBruteForce(list1, list2) {
+  const values = [];
+
+  let cur = list1;
+  while (cur) { values.push(cur.val); cur = cur.next; }
+  cur = list2;
+  while (cur) { values.push(cur.val); cur = cur.next; }
+
+  values.sort((a, b) => a - b);
+
+  let head = null, tail = null;
+  for (const v of values) {
+    const node = { val: v, next: null };
+    if (!head) { head = node; tail = node; }
+    else { tail.next = node; tail = node; }
+  }
+  return head;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>values</code> collects every value from both lists into one plain array — the two
+      <code>while</code> loops just walk <code>.next</code> until they hit <code>null</code>,
+      exactly like reading any singly-linked list.</li>
+    <li><code>values.sort((a, b) => a - b)</code> — the numeric comparator matters:
+      <code>Array.prototype.sort</code> defaults to comparing elements as strings, so without it
+      <code>[1, 2, 10]</code> would sort to <code>[1, 10, 2]</code>. This line is also the
+      "unnecessary" part of the brute force — both inputs were already sorted, so this is a full
+      <code>O(k log k)</code> sort applied to data that didn't need reordering, only interleaving.</li>
+    <li>The build loop allocates a fresh <code>{ val, next: null }</code> object for every value —
+      none of the original <code>list1</code>/<code>list2</code> node objects are reused. A
+      <code>head</code>/<code>tail</code> pair (rather than always walking from <code>head</code>
+      to append) keeps each append O(1) instead of O(k).</li>
+    <li>Returning <code>head</code> (which stays <code>null</code> if <code>values</code> was
+      empty) correctly handles the <code>list1 = []</code>, <code>list2 = []</code> case.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O((n+m) log(n+m))</td><td>O(n+m)</td><td>Extract into an array, sort, rebuild with brand-new nodes</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — two-pointer merge, splice in place</h2>
+  <p>Both lists are already sorted — the brute force's sort step is solving a problem that doesn't
+    exist. The optimal approach exploits that directly: walk both lists with two pointers at the
+    same time, and at every step, compare the two current values and re-point an existing node's
+    <code>.next</code> to whichever one is smaller — no new memory allocated, ever. A
+    <strong>dummy/sentinel head</strong> node makes the bookkeeping clean: instead of special-casing
+    "is this the very first node of the result?", every real node (from either input) gets spliced
+    onto <code>tail.next</code> the exact same way, and the real answer is just
+    <code>dummy.next</code> at the end.</p>
+  <p>The one place it's easy to get sloppy: once either pointer runs off the end of its list, the
+    other list's remaining nodes are <em>already sorted relative to each other</em> — there's no
+    need to keep comparing them one at a time. Splice the entire remainder directly onto
+    <code>tail.next</code> in a single assignment and stop.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: use a dummy head and a tail pointer, walk both lists comparing current values, splice the smaller node onto tail dot next and advance, then once one list is exhausted splice the remainder of the other list directly without further comparisons.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: dummy head, compare-and-splice, then splice the remainder</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="180" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="110" y="82" fill="#282C34">compare heads</text>
+      <text x="110" y="98" fill="#282C34" font-size="10">p1.val vs p2.val</text>
+      <rect x="230" y="60" width="180" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="320" y="82" fill="#282C34">splice smaller node</text>
+      <text x="320" y="98" fill="#282C34" font-size="10">re-point .next, no new node</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="530" y="82" fill="#282C34">splice the remainder</text>
+      <text x="530" y="98" fill="#282C34" font-size="10">no more comparisons needed</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-m2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-m2)">
+      <line x1="200" y1="83" x2="228" y2="83"/>
+      <line x1="410" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n+m) time — one pass, no sort. O(1) EXTRA space — no array,</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">no new nodes, just pointer variables reusing the input nodes.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>Same inputs as above, <code>list1 = [1,2,4]</code>, <code>list2 = [1,3,4]</code> — but this
+    time watch the nodes themselves move: a node leaves its original row the instant it's spliced,
+    and reappears in row 3 as part of the growing result. Nothing new is ever created.</p>
+  <div class="legend">
+    <span><i class="lg-compare"></i> current heads being compared</span>
+    <span><i class="lg-active"></i> node just spliced onto the result</span>
+    <span><i class="lg-sorted"></i> confirmed part of the finished merged list</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function mergeTwoListsOptimal(list1, list2) {
+  const dummy = { val: 0, next: null };
+  let tail = dummy;
+  let p1 = list1, p2 = list2;
+
+  while (p1 && p2) {
+    if (p1.val <= p2.val) {
+      tail.next = p1;
+      p1 = p1.next;
+    } else {
+      tail.next = p2;
+      p2 = p2.next;
+    }
+    tail = tail.next;
+  }
+
+  // One list is exhausted — the other's remaining nodes are already
+  // sorted relative to each other, so splice the whole remainder at once.
+  tail.next = p1 ? p1 : p2;
+
+  return dummy.next;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>dummy</code> is a throwaway sentinel node — its own <code>val</code> is never used.
+      It exists purely so <code>tail</code> always has something to attach to, even before the
+      first real node is spliced in, avoiding a special case for "is this the first node of the
+      result?"</li>
+    <li><code>p1.val &lt;= p2.val</code> uses <code>&lt;=</code>, not <code>&lt;</code> — when
+      values tie, list1's node is spliced first. Either choice is valid (both produce a correctly
+      sorted merge), but being consistent about it keeps the merge stable and predictable.</li>
+    <li><code>tail.next = p1;</code> is the entire splice: no new object is created, an existing
+      node is simply re-pointed onto the result chain. <code>p1 = p1.next</code> then advances
+      that pointer using the node's <em>original</em> <code>.next</code> — read before it gets
+      overwritten again on some future iteration.</li>
+    <li><code>tail = tail.next;</code> moves the tail pointer forward to the node that was just
+      spliced on, so the next splice attaches after it.</li>
+    <li><code>tail.next = p1 ? p1 : p2;</code> is the remainder shortcut: whichever pointer is
+      still non-null holds an already-sorted-internally chain, so one assignment splices all of
+      it on at once — no loop needed for the tail end.</li>
+    <li><code>return dummy.next;</code> — the sentinel itself is never part of the answer; its
+      <code>.next</code> is wherever the first real node landed. If both inputs were empty,
+      <code>dummy.next</code> is still <code>null</code>, correctly matching the empty-list case.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n+m)</td><td>O(1) extra</td><td>Two-pointer merge, splicing existing nodes in place</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (extract, sort, rebuild)</td><td>O((n+m) log(n+m))</td><td>O(n+m)</td></tr>
+      <tr><td>Optimal (two-pointer splice)</td><td>O(n+m)</td><td>O(1) extra</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This is a rarer case on this site where BOTH
+    dimensions genuinely improve, not just one. Time drops from
+    O((n+m) log(n+m)) to O(n+m) because the optimal solution never re-sorts data that was already
+    sorted — it only needs to interleave the two lists once. Space drops from O(n+m) to O(1) extra
+    because splicing reuses the existing node objects instead of allocating <code>n+m</code> new
+    ones (the O(n+m) output list itself is the answer, not "extra" space beyond what the problem
+    already asks the function to return).</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does using a dummy/sentinel head node actually simplify this problem,
+        instead of just being a stylistic choice?</p>
+      <ul class="pb-ia">
+        <li>Without it, the very first splice is a special case: there's no existing
+          <code>tail</code> to attach to yet, so the code would need an
+          <code>if (!head) head = winner; else tail.next = winner;</code> branch just for that
+          one moment.</li>
+        <li>With <code>dummy</code>, <code>tail</code> always points at something real from the
+          first line of the function onward — the first splice (<code>tail.next = p1</code>, where
+          <code>tail</code> is <code>dummy</code>) is handled by the exact same code path as every
+          later splice. No branch, no asymmetry.</li>
+        <li>It also makes the empty/empty case fall out for free: the <code>while</code> loop never
+          runs, the remainder line assigns <code>null</code>, and <code>dummy.next</code> is
+          correctly still <code>null</code> — no explicit "handle the empty case" logic needed
+          anywhere.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">The remainder step does <code>tail.next = p1 ? p1 : p2;</code> in one line
+        instead of looping through the leftover nodes one at a time. Why is that safe?</p>
+      <ul class="pb-ia">
+        <li>By the time the main <code>while</code> loop exits, at least one of <code>p1</code> /
+          <code>p2</code> is <code>null</code> — that list is fully spliced in. The other pointer
+          still references a valid chain of nodes that were never touched.</li>
+        <li>That remaining chain is still internally sorted (it's a suffix of an input list that
+          was sorted from the start) and every value in it is <code>&gt;=</code> everything already
+          spliced onto <code>tail</code> — merging never skips ahead, so whatever's left in one
+          list can't be smaller than what the other list already contributed up to this point.</li>
+        <li>Because the remaining nodes already point to each other correctly via their own
+          <code>.next</code> chain, attaching just the first one (<code>tail.next = p1</code>, say)
+          transitively brings the entire rest of the chain along — there's nothing left to compare.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if you forgot this shortcut and just let the
+        while loop keep running?" It wouldn't — the loop condition is <code>p1 &amp;&amp; p2</code>,
+        so it necessarily stops the instant either pointer goes <code>null</code>. Forgetting the
+        remainder line entirely (not just the shortcut, but omitting it outright) would silently
+        drop the rest of the longer list from the answer.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">This solution splices existing nodes rather than copying values into new
+        ones. What's the practical risk of that, if the caller still holds a reference to one of
+        the original list variables after calling <code>mergeTwoListsOptimal</code>?</p>
+      <ul class="pb-ia">
+        <li>The nodes aren't copied — they're the exact same objects, just with their
+          <code>.next</code> fields reassigned. If a caller kept a separate variable pointing at,
+          say, <code>list1</code>'s head, that variable now sits inside a list whose downstream
+          shape has been rewritten out from under it.</li>
+        <li>Walking from that old reference no longer reproduces the original
+          <code>list1</code> — its later nodes may now belong to segments interleaved with
+          <code>list2</code>'s nodes, because <code>.next</code> was mutated in place.</li>
+        <li>This is the direct real-world consequence of "splice, don't copy": it's what makes the
+          optimal solution O(1) extra space, but it also means the caller's original
+          <code>list1</code>/<code>list2</code> references are no longer safe to use as if they
+          were untouched — a tradeoff worth stating out loud in an interview, not just assuming.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — since splicing means two variables can end up pointing at
+        the exact same node object, what does this log?</p>
+      <pre><code>const node = { val: 1, next: null };
+const list1 = node; // caller still holds this reference
+
+const dummy = { val: 0, next: null };
+dummy.next = node;       // splice — same object, not a copy
+dummy.next.val = 999;    // mutate through the merged-list path
+
+console.log(list1.val);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>999</code>, not <code>1</code>. <code>node.js</code> verified.</li>
+        <li><code>list1</code> and <code>dummy.next</code> aren't two copies of the same data —
+          they're two variables holding a reference to the exact same object in memory. Mutating a
+          property through one reference (<code>dummy.next.val = 999</code>) is visible through
+          every other reference to that same object, including <code>list1</code>.</li>
+        <li>This is exactly the mechanism the optimal solution relies on for splicing to work at
+          all (re-pointing <code>.next</code> on a shared node reference IS the algorithm) — and
+          exactly why it's not safe to assume an original list variable is untouched after this
+          function runs, per the interview question above.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this has nothing to do with <code>const</code> — <code>const
+        node = ...</code> only prevents reassigning what <code>node</code> points to, it does
+        nothing to freeze the object's own properties. <code>const</code> objects are still fully
+        mutable unless explicitly frozen with <code>Object.freeze()</code>.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="dummy" data-explain="A dummy/sentinel head means tail always has something real to attach to, even before the first node is spliced — so the first splice uses the exact same code path as every later one, with no special-cased branch.">
+    <p class="q-text">1. What problem does the dummy/sentinel head node actually solve?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="dummy">It removes the need for a special case handling the very first node spliced onto the result</button>
+      <button class="btn dsa-quiz-option" data-value="speed7">It makes the algorithm run faster asymptotically</button>
+      <button class="btn dsa-quiz-option" data-value="required7">LeetCode requires every linked list solution to use one</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="bothimprove" data-explain="Time drops from O((n+m) log(n+m)) to O(n+m) because the optimal solution never re-sorts already-sorted data — and space drops from O(n+m) to O(1) extra because splicing reuses existing nodes instead of allocating new ones. Both dimensions genuinely improve here.">
+    <p class="q-text">2. What is the honest complexity improvement of the optimal two-pointer splice over the extract-sort-rebuild brute force?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="bothimprove">Both improve: time drops the unnecessary log factor, and space drops from O(n+m) to O(1) extra</button>
+      <button class="btn dsa-quiz-option" data-value="timeonly7">Only time improves — both use O(n+m) space either way</button>
+      <button class="btn dsa-quiz-option" data-value="spaceonly7">Only space improves — both run in O(n+m) time either way</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="oneassign" data-explain="Once one pointer goes null, the other list's remaining nodes are already sorted relative to each other and all >= everything already spliced — so attaching just the first remaining node (tail.next = p1 or p2) transitively brings its whole already-linked chain along in one assignment." >
+    <p class="q-text">3. Why can the remainder be spliced with one assignment (<code>tail.next = p1 ? p1 : p2</code>) instead of looping node by node?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="oneassign">The remaining chain is already sorted and already linked internally, so attaching its first node brings the whole rest of the chain along automatically</button>
+      <button class="btn dsa-quiz-option" data-value="empty7">Because by that point the remaining list is guaranteed to be empty</button>
+      <button class="btn dsa-quiz-option" data-value="sort7">Because JavaScript automatically re-sorts linked lists when .next is reassigned</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="notcopy" data-explain="Splicing reuses the original node objects and only reassigns .next — it never allocates new nodes or copies values. That's exactly what makes it O(1) extra space, but it also means old references to list1/list2 may now traverse a mutated, interleaved chain." >
+    <p class="q-text">4. After calling the optimal solution, what actually happened to the original <code>list1</code> and <code>list2</code> node objects?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="notcopy">Nothing was copied — the same node objects were reused, with their .next fields re-pointed in place</button>
+      <button class="btn dsa-quiz-option" data-value="deleted7">They were deleted from memory once their values were read</button>
+      <button class="btn dsa-quiz-option" data-value="copied7">Each one was deep-copied into a brand-new node before being linked into the result</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="sameobj" data-explain="list1 and dummy.next are two variables referencing the exact same object — mutating a property through one reference (dummy.next.val = 999) is visible through every other reference to that object, so list1.val logs 999, not 1. const only prevents reassigning what the variable points to, it doesn't freeze the object's properties." >
+    <p class="q-text">5. <code>const node = { val: 1, next: null }; const list1 = node; dummy.next = node; dummy.next.val = 999; console.log(list1.val);</code> — what does this log?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="sameobj">999 — list1 and dummy.next point to the same object, so the mutation is visible through both</button>
+      <button class="btn dsa-quiz-option" data-value="one7">1 — const protects node's original property values from being changed elsewhere</button>
+      <button class="btn dsa-quiz-option" data-value="undef7">undefined — reassigning dummy.next detaches list1 from the object entirely</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Linked List problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'merge-two-sorted-lists';
+
+  // ---- shared demo inputs (matches the problem statement's own example) ----
+  const LIST1_VALS = [1, 2, 4];
+  const LIST2_VALS = [1, 3, 4];
+
+  const ROW1_Y = 50, ROW2_Y = 130, ROW3_Y = 210;
+  const COL_X = (i) => 60 + i * 90;
+
+  // ---- Solution 1: brute force (extract, sort, rebuild with new nodes) ----
+  function buildBruteSteps(vals1, vals2) {
+    const steps = [];
+
+    const list1Nodes = vals1.map((v, i) => ({ id: 'a' + i, x: COL_X(i), y: ROW1_Y, label: String(v) }));
+    const list2Nodes = vals2.map((v, i) => ({ id: 'b' + i, x: COL_X(i), y: ROW2_Y, label: String(v) }));
+    const list1Edges = vals1.slice(1).map((_, i) => ({ from: 'a' + i, to: 'a' + (i + 1), directed: true }));
+    const list2Edges = vals2.slice(1).map((_, i) => ({ from: 'b' + i, to: 'b' + (i + 1), directed: true }));
+
+    function frame(states, resultCount, narration) {
+      const resultNodes = [];
+      const resultEdges = [];
+      for (let i = 0; i < resultCount; i++) {
+        resultNodes.push({ id: 'r' + i, x: COL_X(i), y: ROW3_Y, label: String(frame.values[i]) });
+        if (i > 0) resultEdges.push({ from: 'r' + (i - 1), to: 'r' + i, directed: true });
+      }
+      return {
+        narration,
+        states,
+        nodes: [...list1Nodes, ...list2Nodes, ...resultNodes],
+        edges: [...list1Edges, ...list2Edges, ...resultEdges],
+      };
+    }
+
+    steps.push(frame({}, 0, `Walk both already-sorted lists and extract every value into one plain array — ignoring, for now, the fact that both inputs are already sorted.`));
+
+    const values = [];
+    vals1.forEach((v, i) => {
+      values.push(v);
+      steps.push(frame({ ['a' + i]: 'pointer' }, 0, `Extract list1 node value ${v} (index ${i}).`));
+    });
+    vals2.forEach((v, i) => {
+      values.push(v);
+      steps.push(frame({ ['b' + i]: 'pointer' }, 0, `Extract list2 node value ${v} (index ${i}). Collected so far: [${values.join(', ')}].`));
+    });
+
+    const sorted = values.slice().sort((x, y) => x - y);
+    frame.values = sorted;
+    steps.push(frame({}, 0, `values = [${values.join(', ')}] — sort numerically ascending: [${sorted.join(', ')}]. This full sort is the unnecessary part — both inputs were already sorted.`));
+
+    for (let i = 0; i < sorted.length; i++) {
+      const states = {};
+      for (let j = 0; j < i; j++) states['r' + j] = 'sorted';
+      states['r' + i] = 'active';
+      steps.push(frame(states, i + 1, `Allocate a brand-new node holding ${sorted[i]} and append it to the rebuilt list — a fresh object, not one of the original nodes.`));
+    }
+
+    const finalStates = {};
+    for (let j = 0; j < sorted.length; j++) finalStates['r' + j] = 'sorted';
+    steps.push(frame(finalStates, sorted.length, `Rebuilt list complete: [${sorted.join(', ')}]. Correct, but every node here is new — the ${vals1.length + vals2.length} original nodes were discarded entirely.`));
+
+    return steps;
+  }
+
+  const graph1 = new DSA.Graph(document.getElementById('viz1Stage'), { width: 620, height: 280 });
+  const bruteSteps = buildBruteSteps(LIST1_VALS, LIST2_VALS);
+  graph1.setGraph(bruteSteps[0].nodes, bruteSteps[0].edges);
+  new DSA.StepPlayer({
+    steps: bruteSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) {
+      const s = step || bruteSteps[0];
+      graph1.setGraph(s.nodes, s.edges);
+      graph1.render(step ? step.states : {});
+    },
+  });
+
+  // ---- Solution 2: optimal (two-pointer splice, reusing existing nodes) ----
+  function buildOptimalSteps(vals1, vals2) {
+    const steps = [];
+    const spliced = []; // [{ id, val }] in final splice order
+
+    function pendingNodes(prefix, vals, splicedIds) {
+      const nodes = [];
+      for (let i = 0; i < vals.length; i++) {
+        const id = prefix + i;
+        if (splicedIds.has(id)) continue;
+        nodes.push({ id, x: COL_X(i), y: prefix === 'a' ? ROW1_Y : ROW2_Y, label: String(vals[i]) });
+      }
+      return nodes;
+    }
+    function pendingEdges(prefix, vals, splicedIds) {
+      const edges = [];
+      for (let i = 0; i < vals.length - 1; i++) {
+        const from = prefix + i, to = prefix + (i + 1);
+        if (splicedIds.has(from) || splicedIds.has(to)) continue;
+        edges.push({ from, to, directed: true });
+      }
+      return edges;
+    }
+
+    function frame(states, narration) {
+      const splicedIds = new Set(spliced.map((n) => n.id));
+      const a = pendingNodes('a', vals1, splicedIds);
+      const b = pendingNodes('b', vals2, splicedIds);
+      const aE = pendingEdges('a', vals1, splicedIds);
+      const bE = pendingEdges('b', vals2, splicedIds);
+      const resultNodes = spliced.map((n, i) => ({ id: n.id, x: COL_X(i), y: ROW3_Y, label: String(n.val) }));
+      const resultEdges = spliced.slice(1).map((n, i) => ({ from: spliced[i].id, to: n.id, directed: true }));
+      return {
+        narration,
+        states,
+        nodes: [...a, ...b, ...resultNodes],
+        edges: [...aE, ...bE, ...resultEdges],
+      };
+    }
+
+    steps.push(frame({}, `Two-pointer merge with a dummy head: p1 starts at list1's head, p2 at list2's head. Compare, splice the smaller, advance — no new nodes allocated.`));
+
+    let p1 = 0, p2 = 0;
+    while (p1 < vals1.length && p2 < vals2.length) {
+      const aId = 'a' + p1, bId = 'b' + p2;
+      steps.push(frame({ [aId]: 'compare', [bId]: 'compare' }, `Compare current heads: list1's ${vals1[p1]} vs list2's ${vals2[p2]}.`));
+
+      if (vals1[p1] <= vals2[p2]) {
+        const v = vals1[p1];
+        spliced.push({ id: aId, val: v });
+        p1++;
+        steps.push(frame({ [aId]: 'active' }, `${v} <= ${vals2[p2]} — splice list1's node (${v}) onto tail.next. No new node created, just a re-pointed .next.`));
+      } else {
+        const v = vals2[p2];
+        spliced.push({ id: bId, val: v });
+        p2++;
+        steps.push(frame({ [bId]: 'active' }, `${v} < ${vals1[p1]} — splice list2's node (${v}) onto tail.next. No new node created, just a re-pointed .next.`));
+      }
+    }
+
+    if (p1 < vals1.length || p2 < vals2.length) {
+      const remainderPrefix = p1 < vals1.length ? 'a' : 'b';
+      const remainderVals = p1 < vals1.length ? vals1 : vals2;
+      let remainderStart = p1 < vals1.length ? p1 : p2;
+      steps.push(frame({}, `One list is exhausted — the other's remaining nodes are already sorted relative to each other. No need to keep comparing: splice the entire remainder directly.`));
+      for (let i = remainderStart; i < remainderVals.length; i++) {
+        const id = remainderPrefix + i;
+        const v = remainderVals[i];
+        spliced.push({ id, val: v });
+        steps.push(frame({ [id]: 'active' }, `Splice the next remaining node (${v}) directly — still no comparison needed.`));
+      }
+    }
+
+    const finalStates = {};
+    spliced.forEach((n) => { finalStates[n.id] = 'sorted'; });
+    steps.push(frame(finalStates, `Merge complete: [${spliced.map((n) => n.val).join(', ')}]. Every node here is one of the ${vals1.length + vals2.length} original nodes, just re-pointed — dummy.next is the real answer.`));
+
+    return steps;
+  }
+
+  const graph2 = new DSA.Graph(document.getElementById('viz2Stage'), { width: 620, height: 280 });
+  const optimalSteps = buildOptimalSteps(LIST1_VALS, LIST2_VALS);
+  graph2.setGraph(optimalSteps[0].nodes, optimalSteps[0].edges);
+  new DSA.StepPlayer({
+    steps: optimalSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) {
+      const s = step || optimalSteps[0];
+      graph2.setGraph(s.nodes, s.edges);
+      graph2.render(step ? step.states : {});
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('merge-two-sorted-lists', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
