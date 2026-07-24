@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Remove Nth Node From End of List — Problem Bank</title>
+<meta name="description" content="Remove Nth Node From End of List: a two-pass count-then-splice solution vs. a one-pass fast/slow-pointer solution, both animated — the honest story is halving the traversal work, not a different Big-O class." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/remove-nth-node-from-end-of-list.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Remove Nth Node From End of List — Problem Bank" />
+<meta property="og:description" content="Remove Nth Node From End of List: a two-pass count-then-splice solution vs. a one-pass fast/slow-pointer solution, both animated — the honest story is halving the traversal work, not a different Big-O class." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/remove-nth-node-from-end-of-list.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Remove Nth Node From End of List — Problem Bank" />
+<meta name="twitter:description" content="Remove Nth Node From End of List: a two-pass count-then-splice solution vs. a one-pass fast/slow-pointer solution, both animated — the honest story is halving the traversal work, not a different Big-O class." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Remove Nth Node From End of List", "item": "https://dsa.itszain.tech/problem-bank/remove-nth-node-from-end-of-list.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day15.html">Day 15: Linked Lists</a></strong> —
+      both solutions below assume you're comfortable walking a singly-linked list node by node and
+      splicing a node out by reassigning a <code>.next</code> pointer; read that lesson first if
+      linked-list traversal is still a new idea.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">LINKED LIST &middot; MEDIUM</p>
+  <h1>Remove Nth Node From End of List <span class="leetcode-link">(<a href="https://leetcode.com/problems/remove-nth-node-from-end-of-list/" target="_blank" rel="noopener">LeetCode: Remove Nth Node From End of List</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given the head of a singly-linked list and an integer <code>n</code>. Remove the
+    <code>n</code>th node counting from the <strong>end</strong> of the list, and return the
+    (possibly new) head. The tricky part is "from the end" — a singly-linked list only lets you
+    walk forward, so you can't just look backward <code>n</code> steps from the tail the way you
+    could with an array index.</p>
+  <p>For example, <code>list = [1,2,3,4,5]</code>, <code>n = 2</code> removes the 2nd-from-end
+    node — that's the node with value <code>4</code> — leaving <code>[1,2,3,5]</code>.
+    <code>list = [1]</code>, <code>n = 1</code> removes the only node, leaving <code>[]</code> (an
+    empty list — the function must return a new head, since the original head no longer exists).
+    <code>list = [1,2]</code>, <code>n = 2</code> removes the 2nd-from-end node, which is the
+    <strong>head itself</strong> — leaving <code>[2]</code>, and this is exactly the edge case
+    that trips up naive implementations that assume the node being removed always has a
+    predecessor.</p>
+
+  <h2>Solution 1: Two-pass — count the length, then walk to the target</h2>
+  <p>The most direct way to translate "nth from the end" into something a forward-only list can
+    act on: first find out how long the list is. Once you know the total length <code>L</code>,
+    the node to remove is simply at position <code>L - n</code> counting from the head (0-indexed)
+    — an ordinary forward index. A second walk from the head, this time stopping one node early
+    (at position <code>L - n - 1</code>), lands you on the node <em>right before</em> the target,
+    which is exactly what you need to splice it out.</p>
+  <p>A dummy/sentinel node placed just before the real head sidesteps the "removing the head
+    itself" edge case: instead of writing a special-case check for "is the target the head?", the
+    walk always starts one step earlier, at the dummy, so the node "right before the target" is
+    reachable through the exact same loop even when the target IS the original head.</p>
+  <p>This genuinely takes two full passes over the list — the first counts length end-to-end, the
+    second walks up to (but not always all the way to) the end again. Both passes are still
+    O(n) individually, so the whole thing is O(n) time overall; it just does more total work in
+    practice than the one-pass version below.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: pass one walks the full list once to count its length L, pass two walks from a dummy head for L minus n hops to land on the node just before the target, then splices it out.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Two-pass: count first, then walk to the node before the target</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">Pass 1: walk once</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">count length L</text>
+      <rect x="210" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="310" y="82" fill="#282C34">Pass 2: walk L−n hops</text>
+      <text x="310" y="98" fill="#282C34" font-size="10">from the dummy head</text>
+      <rect x="430" y="60" width="190" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="525" y="82" fill="#E2E3E7">splice out target</text>
+      <text x="525" y="98" fill="#9198A6" font-size="10">prev.next=prev.next.next</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-rn1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-rn1)">
+      <line x1="190" y1="83" x2="208" y2="83"/>
+      <line x1="410" y1="83" x2="428" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E6C07B">Cost: O(n) time — two full passes, up to 2n total node visits.</text>
+    <text x="20" y="156" font-size="12" fill="#E6C07B">Same class as one-pass below — more work, not worse Big-O.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>Tracing <code>list=[1,2,3,4,5]</code>, <code>n=2</code> — pass 1 counts all 5 nodes, then
+    pass 2 walks 3 hops from the dummy head to land on node <code>3</code>, the node right before
+    the target, <code>4</code>.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> current traversal pointer (counting, or walking to the node before the target)</span>
+    <span><i class="lg-swap"></i> the node being spliced out</span>
+    <span><i class="lg-sorted"></i> final list, after removal</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function removeNthFromEndTwoPass(head, n) {
+  const dummy = { val: 0, next: head };
+
+  // Pass 1: walk the whole list once to count its length.
+  let length = 0;
+  let cur = head;
+  while (cur) {
+    length++;
+    cur = cur.next;
+  }
+
+  // Pass 2: walk from the dummy for (length - n) hops. That lands on the
+  // node at index (length - n - 1) — the one right BEFORE the target.
+  let prev = dummy;
+  for (let i = 0; i < length - n; i++) {
+    prev = prev.next;
+  }
+
+  // Splice the target out.
+  prev.next = prev.next.next;
+  return dummy.next;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>const dummy = { val: 0, next: head };</code> — a sentinel node placed before the real
+      head. Every walk in this function starts from <code>dummy</code>, never from <code>head</code>
+      directly, so "the node before the target" is always reachable through the exact same code path
+      even when the target is the original head.</li>
+    <li>Pass 1's <code>while</code> loop is a plain full traversal — nothing is removed yet, it
+      only counts. After the loop, <code>length</code> holds the total node count.</li>
+    <li><code>for (let i = 0; i &lt; length - n; i++)</code> — <code>dummy</code> sits one position
+      "before" the head (call that index <code>-1</code>), so reaching index
+      <code>length - n - 1</code> (the node before the target) takes exactly
+      <code>length - n</code> hops from the dummy. Off-by-one here is the classic bug in this
+      solution — it's easy to write <code>length - n - 1</code> hops by mistake and land one node
+      too early.</li>
+    <li><code>prev.next = prev.next.next;</code> — the actual removal. <code>prev.next</code> is
+      the target node; reassigning it to <code>prev.next.next</code> skips over the target
+      entirely, and nothing still points to it.</li>
+    <li><code>return dummy.next;</code> — not <code>head</code>. If the target was the original
+      head, <code>head</code> itself is now a dangling, removed node; <code>dummy.next</code> is
+      always the correct current head, whether or not the head changed.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>Two passes: count the length, then walk to the node before the target</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — one-pass fast/slow pointers</h2>
+  <p>The two-pass version's real inefficiency is that it doesn't know where the target is until
+    it's already walked the whole list once. The fix: keep two pointers, <code>slow</code> and
+    <code>fast</code>, both starting at a dummy head, but give <code>fast</code> a head start of
+    <code>n + 1</code> steps before <code>slow</code> moves at all. From then on, advance both one
+    step at a time until <code>fast</code> falls off the end of the list (<code>null</code>). The
+    fixed gap between them means that the instant <code>fast</code> runs out of list, <code>slow</code>
+    is sitting exactly one node before the target — no separate counting pass required.</p>
+  <p>The gap size is the one genuinely non-obvious detail: it has to be <code>n + 1</code>, not
+    <code>n</code>. A gap of <code>n</code> would land <code>slow</code> directly <em>on</em> the
+    target when <code>fast</code> exhausts the list — one node too late to do a clean
+    <code>slow.next = slow.next.next</code> splice, since by then <code>slow</code> would need to
+    reach ahead of itself. The extra <code>+1</code> is exactly what buys the "one node before"
+    position. The same dummy-head trick from solution 1 still handles removing the actual head
+    node without a special case.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: fast gets a head start of n plus one steps from the dummy head, then both pointers advance one step at a time until fast is null, at which point slow sits one node before the target and splices it out — a single pass.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: fixed gap, one pass, no separate counting step</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="190" height="46" rx="6" fill="#61AEEE" stroke="#21252B"/>
+      <text x="115" y="82" fill="#282C34">gap: fast leads by n+1</text>
+      <text x="115" y="98" fill="#282C34" font-size="10">from the dummy head</text>
+      <rect x="230" y="60" width="210" height="46" rx="6" fill="#C678DD" stroke="#21252B"/>
+      <text x="335" y="82" fill="#282C34">advance both by 1</text>
+      <text x="335" y="98" fill="#282C34" font-size="10">until fast hits null</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="540" y="82" fill="#282C34">splice at slow.next</text>
+      <text x="540" y="98" fill="#282C34" font-size="10">single pass, done</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow-rn2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow-rn2)">
+      <line x1="210" y1="83" x2="228" y2="83"/>
+      <line x1="440" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) time — one single pass, only n total node visits.</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">Same class as two-pass — real but modest win, not faster Big-O.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <p>This one deliberately traces a different, edge-case example — <code>list=[1,2,3,4,5]</code>,
+    <code>n=5</code> — removing the <strong>head itself</strong>. Watch how <code>fast</code>
+    takes all 6 (<code>n+1</code>) gap steps and runs straight off the end while <code>slow</code>
+    is still sitting on the dummy — proof that the dummy-head trick handles this edge case with
+    zero special-casing.</p>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> slow pointer's current node</span>
+    <span><i class="lg-active"></i> fast pointer's current node</span>
+    <span><i class="lg-swap"></i> the node being spliced out</span>
+    <span><i class="lg-sorted"></i> final list, after removal</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+
+  <h3>The code</h3>
+  <pre><code>function removeNthFromEndOnePass(head, n) {
+  const dummy = { val: 0, next: head };
+  let slow = dummy;
+  let fast = dummy;
+
+  // Give fast a head start of n + 1 steps — not n. That extra step is what
+  // leaves slow exactly one node before the target once fast falls off.
+  for (let i = 0; i < n + 1; i++) {
+    fast = fast.next;
+  }
+
+  // Advance both one step at a time until fast runs out of list.
+  while (fast !== null) {
+    slow = slow.next;
+    fast = fast.next;
+  }
+
+  // slow is now the node right before the target — splice it out.
+  slow.next = slow.next.next;
+  return dummy.next;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>let slow = dummy; let fast = dummy;</code> — both pointers start at the sentinel,
+      not the real head, for the same reason as solution 1: it makes "the node before the target"
+      reachable uniformly, even when the target is the original head.</li>
+    <li><code>for (let i = 0; i &lt; n + 1; i++) fast = fast.next;</code> — the head start. Gapping
+      by <code>n + 1</code> instead of <code>n</code> is the detail that makes the rest of the
+      algorithm work; get this wrong and <code>slow</code> ends up on the target itself instead
+      of one node before it.</li>
+    <li><code>while (fast !== null) { slow = slow.next; fast = fast.next; }</code> — the one and
+      only pass. Both pointers move together, one step each, preserving the fixed gap set up
+      above, until <code>fast</code> walks off the end of the list.</li>
+    <li><code>slow.next = slow.next.next;</code> — identical splice logic to solution 1, just
+      reached without a separate counting pass.</li>
+    <li><code>return dummy.next;</code> — same reasoning as solution 1: correct whether or not the
+      original head was the node removed.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(1)</td><td>One pass: n+1-step gap, then advance both pointers together</td></tr></tbody>
+  </table>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Two-pass (count, then walk)</td><td>O(n)</td><td>O(1)</td></tr>
+      <tr><td>One-pass (fast/slow gap)</td><td>O(n)</td><td>O(1)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Both solutions are O(n) time and O(1) space
+    — this is <strong>not</strong> a case of a dramatic asymptotic improvement, and it would be
+    dishonest to claim one. The two-pass version does up to <code>2n</code> total node visits
+    (a full pass to count, then up to another full pass to walk to the target); the one-pass
+    version does roughly <code>n</code> total node visits (plus the initial <code>n+1</code>-step
+    head start, still O(n) overall). The real, honest win is halving the total traversal work in
+    practice — a genuine but modest improvement, still squarely the same complexity class.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does using a dummy/sentinel head node simplify removing the actual head
+        of the list, compared to not using one?</p>
+      <ul class="pb-ia">
+        <li>Without a dummy, removing any interior node is a uniform "reassign the previous
+          node's <code>.next</code>" operation — but removing the head has no previous node to
+          reassign, so it needs its own special-case branch (typically
+          <code>if (targetIsHead) return head.next;</code>).</li>
+        <li>With a dummy placed one position before the real head, <code>dummy.next</code>
+          <em>is</em> the head. That means "the node before the target" is always a real,
+          reachable node — even when the target is the original head — so the exact same
+          splice logic (<code>prev.next = prev.next.next</code>) handles every case, head
+          included, with zero branching.</li>
+        <li>The function then returns <code>dummy.next</code> instead of the original
+          <code>head</code> variable — which matters precisely because <code>head</code> may no
+          longer be part of the list by the time the function returns.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">In the one-pass solution, why must <code>fast</code> get a head start of
+        exactly <code>n + 1</code> steps, not <code>n</code>?</p>
+      <ul class="pb-ia">
+        <li>The goal is for <code>slow</code> to land on the node <strong>right before</strong>
+          the target — not on the target itself — at the moment <code>fast</code> runs out of
+          list, because a clean splice needs the predecessor, not the target.</li>
+        <li>A gap of exactly <code>n</code> would leave <code>slow</code> sitting directly on the
+          target when <code>fast</code> becomes <code>null</code> — one node too far, with no way
+          to reach back to the predecessor without an extra pointer.</li>
+        <li>The extra <code>+1</code> is what shifts <code>slow</code>'s eventual resting spot
+          back by exactly one node, landing it on the predecessor instead — which is exactly what
+          <code>slow.next = slow.next.next</code> needs to work correctly.</li>
+      </ul>
+      <p class="pb-follow">↳ Common follow-up: "What if you moved <code>fast</code> n steps
+        instead and just tracked one extra 'previous of slow' pointer?" That works too — it's a
+        legitimate variant — but it adds a second tracking variable to do the same job the
+        <code>+1</code> gap already does for free.</p>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Is the one-pass solution actually asymptotically faster than the two-pass
+        one? What's the honest way to describe the difference?</p>
+      <ul class="pb-ia">
+        <li>No — both are O(n) time and O(1) space. Calling one-pass "optimal" here refers to
+          doing less total work, not a different Big-O class; it would be inaccurate to claim the
+          one-pass version is asymptotically faster.</li>
+        <li>The concrete difference: two-pass does up to <code>2n</code> total node visits (one
+          full pass to count, then up to another full pass to reach the target); one-pass does
+          about <code>n</code> total node visits.</li>
+        <li>That's a real, practical win — roughly half the traversal work — just not a change in
+          complexity class. Some problems genuinely have a brute-force-vs-optimal story with a
+          true asymptotic gap; this one doesn't, and it's worth being able to say so precisely in
+          an interview rather than reflexively claiming a bigger win than what's actually there.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — both solutions above check <code>fast !== null</code> (or
+        walk until a <code>.next</code> read returns <code>null</code>) to know when they've run
+        off the end of the list. What actually happens if the tail node's <code>next</code> field
+        is left as <code>undefined</code> instead of explicitly set to <code>null</code> — say,
+        built with <code>{ val: 5 }</code> instead of <code>{ val: 5, next: null }</code>?</p>
+      <pre><code>console.log(undefined === null); // ?
+console.log(undefined == null);  // ?
+// tail.next left undefined, loop checks `cur !== null`:
+// while (cur !== null) { cur = cur.next; }</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>undefined === null</code> is <code>false</code>, and
+          <code>undefined == null</code> is <code>true</code> — strict and loose equality
+          disagree here, and this code uses strict (<code>!==</code>).</li>
+        <li>Because the loop's exit condition is <code>cur !== null</code>, an
+          <code>undefined</code> tail <code>.next</code> does NOT satisfy it — the loop treats
+          "haven't hit null yet" as still true and executes one more iteration.</li>
+        <li>That next iteration then tries to read <code>.next</code> off an
+          <code>undefined</code> value and throws <code>TypeError: Cannot read properties of
+          undefined (reading 'next')</code> — a hard crash, not a silent infinite loop and not a
+          quiet miss. Verified directly: a list built with an explicit
+          <code>next: null</code> tail walks cleanly to the end, while the same list with the
+          tail's <code>next</code> field simply omitted throws exactly that error the moment
+          traversal tries to step past it.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: this is exactly why both solutions' list-building helper always
+        writes <code>{ val: v, next: null }</code> explicitly, never just <code>{ val: v }</code>
+        — an omitted field is <code>undefined</code>, not <code>null</code>, and this code's
+        strict <code>!==</code> null-checks don't treat the two as interchangeable the way
+        loose <code>==</code> would.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="samespace" data-explain="Both solutions are O(n) time and O(1) space — one-pass just does about half the total node visits (n vs up to 2n). That's a real practical win, but not a different complexity class.">
+    <p class="q-text">1. What is the honest complexity relationship between the two-pass and one-pass solutions?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="samespace">Both are O(n) time and O(1) space — one-pass just does roughly half the total traversal work</button>
+      <button class="btn dsa-quiz-option" data-value="fasterbigo">One-pass is asymptotically faster than two-pass — a different Big-O time class</button>
+      <button class="btn dsa-quiz-option" data-value="lessspace">Two-pass uses O(n) extra space for a counter array that one-pass avoids</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="uniformhead" data-explain="Without a dummy, removing the head needs its own special-case branch, since there's no previous node to reassign. With a dummy placed before the real head, the node before the target is always reachable through the same splice logic, head included.">
+    <p class="q-text">2. Why do both solutions use a dummy/sentinel head node?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="uniformhead">So removing the actual head node uses the same splice logic as any other node, with no special case</button>
+      <button class="btn dsa-quiz-option" data-value="fastermath">It makes the algorithm run in O(log n) instead of O(n)</button>
+      <button class="btn dsa-quiz-option" data-value="sortsit">It sorts the list before traversal begins</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="gapn1" data-explain="A gap of exactly n would leave slow sitting directly on the target once fast hits null — one node too late for a clean splice. The extra +1 shifts slow's resting spot back by one, landing it on the predecessor instead.">
+    <p class="q-text">3. In the one-pass solution, why must fast get a head start of n + 1 steps rather than n?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="gapn1">A gap of n would land slow directly on the target instead of the node before it, when fast hits null</button>
+      <button class="btn dsa-quiz-option" data-value="offbyzero">It doesn't actually matter — n and n+1 produce the same result</button>
+      <button class="btn dsa-quiz-option" data-value="dummyskip">The extra step is needed to skip over the dummy node itself</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="countlength" data-explain="Pass 1 is a plain full traversal that counts the total number of nodes. Pass 2 then uses that length to compute exactly how many hops from the dummy reach the node right before the target.">
+    <p class="q-text">4. In the two-pass solution, what is the purpose of pass 1?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="countlength">To count the total length of the list, so pass 2 knows how many hops to make</button>
+      <button class="btn dsa-quiz-option" data-value="findtarget">To find and remove the target node directly</button>
+      <button class="btn dsa-quiz-option" data-value="reverselist">To reverse the list so it can be walked from the tail</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="throwstrict" data-explain="Array/loop code here checks `cur !== null` (strict). undefined !== null is true, so a tail with next left undefined does not stop the loop — the next iteration reads .next off undefined and throws a TypeError, rather than looping forever or silently misbehaving.">
+    <p class="q-text">5. If a linked list's tail node has its next field left as undefined (never explicitly set to null), and the traversal loop checks `cur !== null`, what actually happens?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="throwstrict">The loop doesn't stop at the tail — the next iteration throws a TypeError reading .next off undefined</button>
+      <button class="btn dsa-quiz-option" data-value="stopsfine">The loop stops normally — undefined and null are treated the same by strict !==</button>
+      <button class="btn dsa-quiz-option" data-value="silentskip">The tail node is silently skipped with no error</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Linked List problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'remove-nth-node-from-end-of-list';
+
+  // Shared graph-building helpers -----------------------------------------
+  function nodeIdFor(i) { return 'v' + i; }
+
+  // Builds { nodes, edges, bypassIndex } for a value array + a dummy head.
+  // A "bypass" edge (from the node before the target straight to the node
+  // after it) is always included in the edge list so it can be colored in
+  // on the final splice step — DSA.Graph edges are fixed at setGraph time.
+  function buildGraphLayout(nums, n) {
+    const length = nums.length;
+    const targetIndex = length - n;
+    const beforeIndex = targetIndex - 1;
+    const beforeId = beforeIndex === -1 ? 'd' : nodeIdFor(beforeIndex);
+    const afterIndex = targetIndex + 1;
+    const afterId = afterIndex < length ? nodeIdFor(afterIndex) : null;
+    const targetId = nodeIdFor(targetIndex);
+
+    const nodes = [{ id: 'd', x: 70, y: 140, label: 'D' }];
+    for (let i = 0; i < length; i++) {
+      nodes.push({ id: nodeIdFor(i), x: 170 + i * 100, y: 140, label: String(nums[i]) });
+    }
+
+    const edges = [];
+    let prevId = 'd';
+    for (let i = 0; i < length; i++) {
+      edges.push({ from: prevId, to: nodeIdFor(i), directed: true });
+      prevId = nodeIdFor(i);
+    }
+    let bypassIndex = -1;
+    if (afterId) {
+      bypassIndex = edges.length;
+      edges.push({ from: beforeId, to: afterId, directed: true });
+    }
+
+    return { nodes, edges, beforeId, afterId, targetId, targetIndex, beforeIndex, length, bypassIndex };
+  }
+
+  // ---- Solution 1: two-pass (count, then walk to the node before target) ----
+  function buildTwoPassSteps(nums, n, layout) {
+    const steps = [];
+
+    steps.push({
+      narration: `dummy.next points at the real head. Pass 1 begins: walk the whole list once just to count its length.`,
+      states: {},
+      edgeStates: {},
+    });
+
+    let length = 0;
+    for (let i = 0; i < nums.length; i++) {
+      length++;
+      steps.push({
+        narration: `Visiting node ${nums[i]} (index ${i}). Running length so far: ${length}.`,
+        states: { [nodeIdFor(i)]: 'pointer' },
+        edgeStates: {},
+      });
+    }
+    steps.push({
+      narration: `Reached the end (null). Total length = ${length}. Pass 1 is done.`,
+      states: {},
+      edgeStates: {},
+    });
+
+    const hops = length - n;
+    steps.push({
+      narration: `Pass 2 begins: walk from the dummy head for length − n = ${length} − ${n} = ${hops} hop(s), to land on the node just before the one we're removing.`,
+      states: { d: 'pointer' },
+      edgeStates: {},
+    });
+
+    for (let h = 1; h <= hops; h++) {
+      const id = nodeIdFor(h - 1);
+      steps.push({
+        narration: `Hop ${h}/${hops}: prev moves to node ${nums[h - 1]}.`,
+        states: { [id]: 'pointer' },
+        edgeStates: {},
+      });
+    }
+
+    const removedVal = nums[layout.targetIndex];
+    const beforeVal = layout.beforeIndex === -1 ? 'dummy' : nums[layout.beforeIndex];
+    steps.push({
+      narration: `prev is now on ${beforeVal} — the node right before the target. prev.next = prev.next.next skips over node ${removedVal}, splicing it out.`,
+      states: { [layout.beforeId]: 'pointer', [layout.targetId]: 'swap' },
+      edgeStates: {},
+    });
+
+    const finalStates = { d: 'sorted' };
+    for (let i = 0; i < nums.length; i++) {
+      finalStates[nodeIdFor(i)] = i === layout.targetIndex ? 'swap' : 'sorted';
+    }
+    const finalEdgeStates = {};
+    if (layout.bypassIndex !== -1) finalEdgeStates[layout.bypassIndex] = 'sorted';
+    steps.push({
+      narration: `Node ${removedVal} removed. Final list: ${nums.filter((_, i) => i !== layout.targetIndex).join(' → ')}. Two full passes over the list — up to 2n total node visits.`,
+      states: finalStates,
+      edgeStates: finalEdgeStates,
+    });
+
+    return steps;
+  }
+
+  const TWO_PASS_NUMS = [1, 2, 3, 4, 5];
+  const TWO_PASS_N = 2;
+  const layout1 = buildGraphLayout(TWO_PASS_NUMS, TWO_PASS_N);
+  const graph1 = new DSA.Graph(document.getElementById('viz1Stage'), { width: 640, height: 240 });
+  graph1.setGraph(layout1.nodes, layout1.edges);
+  const twoPassSteps = buildTwoPassSteps(TWO_PASS_NUMS, TWO_PASS_N, layout1);
+  new DSA.StepPlayer({
+    steps: twoPassSteps,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 1100,
+    onStep(step) {
+      graph1.render(step ? step.states : {}, step ? step.edgeStates : {});
+    },
+  });
+
+  // ---- Solution 2: optimal (one-pass fast/slow with a fixed n+1 gap) ----
+  function buildOnePassSteps(nums, n, layout) {
+    const steps = [];
+
+    steps.push({
+      narration: `One pass only. dummy.next points at the real head. Both slow and fast start at the dummy.`,
+      states: { d: 'pointer' },
+      edgeStates: {},
+    });
+
+    let fastIdx = -1; // -1 represents the dummy
+    for (let i = 0; i < n + 1; i++) {
+      fastIdx++;
+      const label = fastIdx < nums.length ? `node ${nums[fastIdx]}` : 'null (off the end)';
+      const st = { d: 'pointer' };
+      if (fastIdx < nums.length) st[nodeIdFor(fastIdx)] = 'active';
+      steps.push({
+        narration: `Gap hop ${i + 1}/${n + 1}: fast moves to ${label}. (The gap must be n+1 = ${n + 1} steps, not n, so slow ends up exactly one node before the target once fast runs off the end.)`,
+        states: st,
+        edgeStates: {},
+      });
+    }
+
+    let slowIdx = -1;
+    while (fastIdx < nums.length) {
+      slowIdx++;
+      fastIdx++;
+      const slowLabel = slowIdx === -1 ? 'dummy' : `node ${nums[slowIdx]}`;
+      const fastLabel = fastIdx < nums.length ? `node ${nums[fastIdx]}` : 'null (off the end)';
+      const st = {};
+      st[slowIdx === -1 ? 'd' : nodeIdFor(slowIdx)] = 'pointer';
+      if (fastIdx < nums.length) st[nodeIdFor(fastIdx)] = 'active';
+      steps.push({
+        narration: `slow and fast both move one step: slow reaches ${slowLabel}, fast reaches ${fastLabel}.`,
+        states: st,
+        edgeStates: {},
+      });
+    }
+
+    const removedVal = nums[layout.targetIndex];
+    const beforeVal = layout.beforeIndex === -1 ? 'dummy' : nums[layout.beforeIndex];
+    steps.push({
+      narration: `fast is null — traversal stops here. slow sits on ${beforeVal}, exactly one node before the target. slow.next = slow.next.next skips over node ${removedVal}, splicing it out.`,
+      states: { [layout.beforeId]: 'pointer', [layout.targetId]: 'swap' },
+      edgeStates: {},
+    });
+
+    const finalStates = { d: 'sorted' };
+    for (let i = 0; i < nums.length; i++) {
+      finalStates[nodeIdFor(i)] = i === layout.targetIndex ? 'swap' : 'sorted';
+    }
+    const finalEdgeStates = {};
+    if (layout.bypassIndex !== -1) finalEdgeStates[layout.bypassIndex] = 'sorted';
+    steps.push({
+      narration: `Node ${removedVal} removed. Final list: ${nums.filter((_, i) => i !== layout.targetIndex).join(' → ')}. One single pass — only n total node visits (plus the initial n+1-step head start).`,
+      states: finalStates,
+      edgeStates: finalEdgeStates,
+    });
+
+    return steps;
+  }
+
+  const ONE_PASS_NUMS = [1, 2, 3, 4, 5];
+  const ONE_PASS_N = 5; // removes the head — the classic edge case
+  const layout2 = buildGraphLayout(ONE_PASS_NUMS, ONE_PASS_N);
+  const graph2 = new DSA.Graph(document.getElementById('viz2Stage'), { width: 640, height: 240 });
+  graph2.setGraph(layout2.nodes, layout2.edges);
+  const onePassSteps = buildOnePassSteps(ONE_PASS_NUMS, ONE_PASS_N, layout2);
+  new DSA.StepPlayer({
+    steps: onePassSteps,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 1100,
+    onStep(step) {
+      graph2.render(step ? step.states : {}, step ? step.edgeStates : {});
+    },
+  });
+
+  // ---- related problems ----
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('remove-nth-node-from-end-of-list', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+  renderRelated();
+
+  // ---- quiz + reveal wiring ----
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  // ---- mark complete ----
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+</script>
+</body>
+</html>
