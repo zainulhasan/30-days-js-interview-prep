@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Largest Rectangle in Histogram — Problem Bank</title>
+<meta name="description" content="Largest Rectangle in Histogram: an O(n²) brute force that expands outward from every bar vs. an O(n) monotonic increasing stack, both animated with line-by-line code." />
+<link rel="canonical" href="https://dsa.itszain.tech/problem-bank/largest-rectangle-in-histogram.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Largest Rectangle in Histogram — Problem Bank" />
+<meta property="og:description" content="Largest Rectangle in Histogram: an O(n²) brute force that expands outward from every bar vs. an O(n) monotonic increasing stack, both animated with line-by-line code." />
+<meta property="og:url" content="https://dsa.itszain.tech/problem-bank/largest-rectangle-in-histogram.html" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Largest Rectangle in Histogram — Problem Bank" />
+<meta name="twitter:description" content="Largest Rectangle in Histogram: an O(n²) brute force that expands outward from every bar vs. an O(n) monotonic increasing stack, both animated with line-by-line code." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282C34'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%2361AEEE'%3E%E2%8C%81%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../css/style.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "30 Days of DSA in JavaScript", "item": "https://dsa.itszain.tech/" },
+    { "@type": "ListItem", "position": 2, "name": "Problem Bank", "item": "https://dsa.itszain.tech/problem-bank/index.html" },
+    { "@type": "ListItem", "position": 3, "name": "Largest Rectangle in Histogram", "item": "https://dsa.itszain.tech/problem-bank/largest-rectangle-in-histogram.html" }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html">⌁ 30 Days of DSA — JS</a>
+  <nav><a href="index.html">← Problem Bank</a></nav>
+</header>
+
+<main class="container">
+  <div class="card prereq-banner">
+    <p>📚 <strong>Builds on <a href="../lessons/day17.html">Day 17: Stacks</a></strong> —
+      the optimal solution below is a monotonic stack, the exact "keep a stack ordered on
+      purpose" idea that lesson introduces — read it first if a stack that only ever grows in
+      one direction still feels unfamiliar.</p>
+  </div>
+
+  <p class="mono" style="color:var(--text-dim);font-size:0.85rem;">STACK &middot; HARD</p>
+  <h1>Largest Rectangle in Histogram <span class="leetcode-link">(<a href="https://leetcode.com/problems/largest-rectangle-in-histogram/" target="_blank" rel="noopener">LeetCode: Largest Rectangle in Histogram</a>)</span></h1>
+
+  <h2>The problem</h2>
+  <p>You're given an array <code>heights</code>, where each element is the height of one bar in a
+    histogram — every bar has width 1 and they sit side by side with no gaps. Find the area of the
+    <strong>largest rectangle</strong> that fits entirely inside the histogram's outline. The
+    rectangle's width can span any contiguous run of bars, but its height is capped by the
+    <em>shortest</em> bar in that run — a taller bar can't poke out above the rectangle's top
+    edge.</p>
+  <p>Example: <code>heights = [2,1,5,6,2,3]</code> → <code>10</code>. That comes from bars at
+    indices 2 and 3 (heights 5 and 6): the shorter of the two, height 5, limits the rectangle, and
+    a width-2 run at height 5 gives area <code>5 &times; 2 = 10</code> — bigger than any single
+    bar alone, and bigger than any wider-but-shorter run.</p>
+
+  <h2>Solution 1: Brute force — expand outward from every bar</h2>
+  <p>Every valid rectangle in this problem is limited by <em>some</em> bar — the shortest one in
+    its span. So a direct way to search is: for every bar <code>i</code>, treat <code>heights[i]</code>
+    as if it were the limiting height, and find the widest possible run centered on <code>i</code>
+    where every bar is at least that tall. Expand a <code>left</code> pointer leftward and a
+    <code>right</code> pointer rightward from <code>i</code> while the neighboring bars are
+    <code>&gt;= heights[i]</code> — the moment a shorter bar is hit in either direction, that
+    boundary is fixed, because a shorter bar would violate "every bar in this run is at least
+    <code>heights[i]</code> tall." The resulting width times <code>heights[i]</code> is a
+    candidate area; the largest one across all <code>i</code> is the answer.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram: for each bar i, expand a left pointer and a right pointer outward while neighboring bars are at least as tall as heights of i, then compute width times heights of i as a candidate area, repeated for every bar, giving quadratic total work in the worst case.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Brute force: for each bar i, expand outward while neighbors are tall enough</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="170" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="105" y="82" fill="#E2E3E7">for each bar i</text>
+      <text x="105" y="98" fill="#9198A6" font-size="10">0 .. n-1</text>
+      <rect x="215" y="60" width="200" height="46" rx="6" fill="#E6C07B" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">expand left/right</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">while neighbor &#8805; heights[i]</text>
+      <rect x="440" y="60" width="180" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="530" y="82" fill="#E2E3E7">area = width &times; heights[i]</text>
+      <text x="530" y="98" fill="#9198A6" font-size="10">track max across all i</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow)">
+      <line x1="190" y1="83" x2="213" y2="83"/>
+      <line x1="415" y1="83" x2="438" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#E06C75">Cost: O(n²) — for a sorted (strictly increasing or decreasing) histogram, expanding</text>
+    <text x="20" y="156" font-size="12" fill="#E06C75">from any one bar can walk all the way across the array.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> bar i — currently the limiting height</span>
+    <span><i class="lg-active"></i> widest run for bar i — new best area</span>
+    <span><i class="lg-compare"></i> widest run for bar i — checked, doesn't beat the best</span>
+    <span><i class="lg-sorted"></i> winning rectangle (shown at the end)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz1Stage"></div></div>
+    <div class="narration" id="viz1Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz1Play">▶ Play</button>
+      <button class="btn" id="viz1Step">Step ⏭</button>
+      <button class="btn" id="viz1Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz1Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">This animation traces
+    heights = [2, 1, 5, 6, 2, 3] — the canonical example above (expected: 10) — verified against
+    a brute-force reference before any HTML was written.</p>
+
+  <h3>The code</h3>
+  <pre><code>function largestRectangleBrute(heights) {
+  const n = heights.length;
+  let best = 0;
+
+  for (let i = 0; i < n; i++) {
+    let left = i;
+    while (left - 1 >= 0 && heights[left - 1] >= heights[i]) left--;
+
+    let right = i;
+    while (right + 1 < n && heights[right + 1] >= heights[i]) right++;
+
+    const width = right - left + 1;
+    const area = width * heights[i];
+    if (area > best) best = area;
+  }
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li><code>best</code> starts at <code>0</code> — heights are non-negative, so an empty/no
+      rectangle answer of <code>0</code> is a safe floor.</li>
+    <li>The first <code>while</code> walks <code>left</code> down from <code>i</code> as long as
+      the bar just to its left is still <code>&gt;= heights[i]</code> — the loop condition also
+      guards <code>left - 1 &gt;= 0</code> so it never reads past the start of the array.</li>
+    <li>The second <code>while</code> does the mirror image on <code>right</code>, using
+      <code>&gt;= heights[i]</code> again — both directions use the same "still tall enough"
+      test, since either side could be the one that ends the run.</li>
+    <li><code>width = right - left + 1</code> counts every bar from <code>left</code> to
+      <code>right</code> inclusive; <code>area = width * heights[i]</code> is the candidate
+      rectangle with <code>heights[i]</code> as its limiting height.</li>
+    <li>Every bar gets its own independent expansion — that's what guarantees the true widest run
+      for <em>each</em> possible limiting height gets checked somewhere in the loop.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n²)</td><td>O(1)</td><td>Every bar expands outward independently; worst case (sorted input) walks the full array each time</td></tr></tbody>
+  </table>
+
+  <h2>Solution 2: Optimal — monotonic increasing stack</h2>
+  <p>The brute force re-derives, from scratch, "how far can this bar's height reach before
+    hitting something shorter?" — for every single bar. A monotonic stack answers that question
+    for many bars at once, in a single left-to-right pass. Keep a stack of indices whose heights
+    are in strictly increasing order (bottom to top). At each new bar <code>i</code>: while the
+    bar on top of the stack is <em>taller</em> than <code>heights[i]</code>, that's the signal
+    that bar's run has just been closed off on the right — pop it and compute its rectangle right
+    then. Its right boundary is <code>i - 1</code> (it can't extend into <code>i</code>, since
+    <code>heights[i]</code> is shorter); its left boundary is one past whatever index is now on
+    top of the stack (or the very start of the array, if the stack is now empty) — because that
+    remaining stack entry is the nearest bar to the left that's still shorter than the bar being
+    popped. After all the necessary pops, push <code>i</code> — the stack stays increasing by
+    construction. Once the scan finishes, anything still left on the stack never found a shorter
+    bar to its right, so it's drained the same way, using the end of the array as the right
+    boundary.</p>
+
+  <svg class="diagram" viewBox="0 0 640 186" role="img" aria-label="Flow diagram of the optimal solution: scan bar i once, pop and compute the area for any stack entry taller than heights of i using the current index and the new stack top as its boundaries, then push i so the stack stays increasing, repeated for every bar and drained at the end.">
+    <text x="20" y="26" font-size="13" fill="#61AEEE" font-weight="bold">Optimal: one pass, pop-and-price taller bars, keep the stack increasing</text>
+    <g font-family="var(--font-head)" font-size="12" text-anchor="middle">
+      <rect x="20" y="60" width="150" height="46" rx="6" fill="#3E4452" stroke="#21252B"/>
+      <text x="95" y="82" fill="#E2E3E7">scan i once</text>
+      <text x="95" y="98" fill="#9198A6" font-size="10">left to right</text>
+      <rect x="200" y="60" width="230" height="46" rx="6" fill="#E06C75" stroke="#21252B"/>
+      <text x="315" y="82" fill="#282C34">pop while top &gt; heights[i]</text>
+      <text x="315" y="98" fill="#282C34" font-size="10">price each pop: width uses i and new top</text>
+      <rect x="460" y="60" width="160" height="46" rx="6" fill="#98C379" stroke="#21252B"/>
+      <text x="540" y="82" fill="#282C34">push i</text>
+      <text x="540" y="98" fill="#282C34" font-size="10">stack stays increasing</text>
+    </g>
+    <defs>
+      <marker id="arrow-flow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#9198A6"/>
+      </marker>
+    </defs>
+    <g stroke="#9198A6" stroke-width="1.5" fill="none" marker-end="url(#arrow-flow2)">
+      <line x1="170" y1="83" x2="198" y2="83"/>
+      <line x1="430" y1="83" x2="458" y2="83"/>
+    </g>
+    <text x="20" y="140" font-size="12" fill="#98C379">Cost: O(n) — each index is pushed exactly once and popped at most once across the</text>
+    <text x="20" y="156" font-size="12" fill="#98C379">whole scan, so the total work of every while loop combined is still bounded by n.</text>
+  </svg>
+
+  <h3>Interactive visualization</h3>
+  <div class="legend">
+    <span><i class="lg-pointer"></i> bar i — currently being examined</span>
+    <span><i class="lg-active"></i> currently in the stack</span>
+    <span><i class="lg-swap"></i> just popped — pricing its rectangle now</span>
+    <span><i class="lg-sorted"></i> winning rectangle (shown at the end)</span>
+  </div>
+  <div class="viz-panel">
+    <div class="viz-stage"><div id="viz2Stage"></div></div>
+    <div class="narration" id="viz2Narration">Press Play or Step to begin.</div>
+    <div class="viz-controls">
+      <button class="btn btn-primary" id="viz2Play">▶ Play</button>
+      <button class="btn" id="viz2Step">Step ⏭</button>
+      <button class="btn" id="viz2Reset">⟲ Reset</button>
+      <span class="viz-counter" id="viz2Counter"></span>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:0.85rem;">Same array as above,
+    heights = [2, 1, 5, 6, 2, 3], so the two traces are directly comparable — both land on the
+    same winning rectangle and the same area, 10.</p>
+
+  <h3>The code</h3>
+  <pre><code>function largestRectangleOptimal(heights) {
+  const n = heights.length;
+  const stack = []; // indices, heights strictly increasing bottom to top
+  let best = 0;
+
+  for (let i = 0; i < n; i++) {
+    while (stack.length && heights[stack[stack.length - 1]] > heights[i]) {
+      const topIdx = stack.pop();
+      const height = heights[topIdx];
+      const width = stack.length ? i - stack[stack.length - 1] - 1 : i;
+      best = Math.max(best, height * width);
+    }
+    stack.push(i);
+  }
+
+  while (stack.length) {
+    const topIdx = stack.pop();
+    const height = heights[topIdx];
+    const width = stack.length ? n - stack[stack.length - 1] - 1 : n;
+    best = Math.max(best, height * width);
+  }
+
+  return best;
+}</code></pre>
+  <p><strong>Line by line:</strong></p>
+  <ul>
+    <li>The stack holds <em>indices</em>, not heights — the height is always recovered via
+      <code>heights[topIdx]</code>, so the boundary index is available for the width math.</li>
+    <li><code>while (stack.length && heights[stack[stack.length - 1]] > heights[i])</code>: this
+      is strictly greater-than, not <code>&gt;=</code> — equal-height bars are allowed to sit
+      together on the stack, since a bar of the same height never actually closes off another
+      bar's run.</li>
+    <li><code>width = stack.length ? i - stack[stack.length - 1] - 1 : i</code> is the classic
+      off-by-one spot. The popped bar's right boundary is <code>i - 1</code> (it stops one short
+      of <code>i</code>, which is shorter). Its left boundary is <code>stack[top] + 1</code> if
+      the stack still has an entry after the pop, or <code>0</code> if it's now empty. Both cases
+      collapse to the same one-line formula: subtract the (now-exclusive) left boundary index from
+      <code>i</code> — when the stack is empty that boundary is effectively <code>-1</code>, so
+      <code>i - (-1) - 1</code> simplifies to just <code>i</code>.</li>
+    <li><code>stack.push(i)</code> runs after every pop is finished — by then everything left on
+      the stack (if anything) is strictly shorter than <code>heights[i]</code>, so pushing
+      <code>i</code> keeps the increasing order intact.</li>
+    <li>The second <code>while</code> after the main loop drains anything left on the stack —
+      those bars never met a shorter bar to their right during the scan, so their right boundary
+      is the actual end of the array, <code>n</code> (or <code>n - 1</code> inclusive), handled
+      with the exact same width formula, just swapping <code>i</code> for <code>n</code>.</li>
+  </ul>
+
+  <h3>Complexity</h3>
+  <table class="complexity-table">
+    <thead><tr><th>Time</th><th>Space</th><th>Approach</th></tr></thead>
+    <tbody><tr><td>O(n)</td><td>O(n)</td><td>Monotonic increasing stack — every index pushed once, popped at most once, over the whole scan</td></tr></tbody>
+  </table>
+  <p>The inner <code>while</code> loop looks like it could make this quadratic, the same shape as
+    a nested loop — but it isn't one. Every index gets pushed onto the stack <strong>exactly
+    once</strong>, and once popped, it is gone for good; it never gets pushed again. That means
+    across the <em>entire</em> run of the algorithm — the whole outer <code>for</code> loop plus
+    the final drain — the total number of pops can never exceed the total number of pushes, which
+    is <code>n</code>. So even though any single iteration of the outer loop might trigger several
+    pops in a row, the pops are "paid for" by earlier pushes that haven't been charged yet — summed
+    over the whole run, the while loops together do at most <code>n</code> units of work, not
+    <code>n</code> per iteration. This is the same amortized-cost argument used to show that a
+    dynamic array's occasional resizing doesn't make individual <code>push</code> calls slow.</p>
+
+  <h2>Complexity comparison</h2>
+  <div style="overflow-x:auto;">
+  <table class="complexity-table">
+    <thead><tr><th>Solution</th><th>Time</th><th>Space</th></tr></thead>
+    <tbody>
+      <tr><td>Brute force (expand outward per bar)</td><td>O(n²)</td><td>O(1)</td></tr>
+      <tr><td>Optimal (monotonic increasing stack)</td><td>O(n)</td><td>O(n)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This is a genuine asymptotic time improvement, not a constant-factor tweak — the monotonic
+    stack replaces "re-derive each bar's reach from scratch" with "resolve each bar's right
+    boundary the moment a shorter bar appears," which an amortized argument shows costs O(n) total
+    rather than O(n) per bar. The trade is real, not free, though: the optimal solution spends
+    O(n) extra space on the stack, where the brute force needed none.</p>
+
+  <h2>Interview corner</h2>
+  <div class="pb-interview-list">
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does expanding <code>left</code>/<code>right</code> while neighbors
+        are <code>&gt;= heights[i]</code> correctly find the widest run where
+        <code>heights[i]</code> is the limiting height?</p>
+      <ul class="pb-ia">
+        <li>"<code>heights[i]</code> is the limiting height of this run" means every bar in the
+          run must be tall enough to support a rectangle of that height — i.e. every bar must be
+          <code>&gt;= heights[i]</code>.</li>
+        <li>The expansion stops the instant a shorter bar is hit in either direction, because that
+          shorter bar cannot be part of a run limited by <code>heights[i]</code> — including it
+          would make <code>heights[i]</code> no longer the true minimum of the run.</li>
+        <li>Since the expansion greedily includes every neighbor that still qualifies and stops
+          the moment one doesn't, the resulting <code>[left, right]</code> window is exactly the
+          widest such run — not an approximation of it.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">The optimal solution's inner <code>while</code> loop is nested inside the
+        outer <code>for</code> loop — why is the total cost still O(n) and not O(n²)?</p>
+      <ul class="pb-ia">
+        <li>Every index enters the stack via <code>push</code> exactly once, ever — there's no
+          code path that pushes the same index twice.</li>
+        <li>Once an index is popped, it's permanently gone — it's never re-pushed later, so it can
+          never be popped a second time either.</li>
+        <li>That means, summed across the <em>entire</em> algorithm (not per iteration), the
+          number of pop operations is capped at <code>n</code>, the same as the number of pushes —
+          so the combined work of every <code>while</code> loop execution, added up, is O(n), even
+          though it's not evenly spread one-per-iteration.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Why does the width formula switch between
+        <code>i - stack[stack.length - 1] - 1</code> and plain <code>i</code> depending on
+        whether the stack is empty after the pop?</p>
+      <ul class="pb-ia">
+        <li>The popped bar's left boundary is defined by the <em>next</em> shorter bar to its
+          left — whatever is now on top of the stack, one position past it.</li>
+        <li>If the stack is empty after the pop, there is no shorter bar anywhere to the left —
+          meaning the popped bar's run extends all the way back to index <code>0</code>, making
+          the width simply <code>i</code> (everything from <code>0</code> to <code>i - 1</code>).</li>
+        <li>Both branches are really the same formula in disguise: treat an empty stack as if its
+          "top" were at index <code>-1</code>, and <code>i - (-1) - 1</code> reduces to
+          <code>i</code> — the <code>if/else</code> just avoids reading <code>stack[-1]</code>,
+          which in JavaScript would silently return <code>undefined</code> rather than throw.</li>
+      </ul>
+    </div>
+    <div class="pb-interview-item">
+      <p class="pb-iq">Trick question — what does this log?</p>
+      <pre><code>const stack = [];
+console.log(stack.pop());
+console.log(stack.length);</code></pre>
+      <ul class="pb-ia">
+        <li>Answer: <code>undefined</code>, then <code>0</code> — not a thrown error.</li>
+        <li><code>Array.prototype.pop()</code> on an empty array doesn't throw; it silently
+          returns <code>undefined</code> and leaves the array unchanged (still length 0).</li>
+        <li>The optimal solution above guards every pop with <code>while (stack.length && ...)</code>
+          — that guard isn't just style. Without it, an empty-stack pop would hand back
+          <code>undefined</code> as an "index," and <code>heights[undefined]</code> is itself
+          <code>undefined</code>, which would silently turn the area calculation into
+          <code>NaN</code> instead of crashing — a much harder bug to notice than a thrown error.</li>
+      </ul>
+      <p class="pb-trap">⚠ Trap: because <code>pop()</code> both mutates the array in place
+        <em>and</em> returns the removed element (not the array itself), it's easy to misread
+        <code>stack.pop()</code> as "get the top" when it's really "remove-and-return the top" —
+        calling it twice in a row removes two different elements, not the same one.</p>
+    </div>
+  </div>
+
+  <h2>Quiz</h2>
+
+  <div class="dsa-quiz" data-answer="limiting" data-explain="For each bar i, the brute force expands left and right while neighboring bars are still >= heights[i], finding the widest run where heights[i] is the shortest (limiting) bar, then multiplies that width by heights[i]." >
+    <p class="q-text">1. In the brute-force solution, what does the expansion around bar <code>i</code> actually find?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="limiting">The widest contiguous run where every bar is at least as tall as heights[i], so heights[i] is the limiting height</button>
+      <button class="btn dsa-quiz-option" data-value="tallest">The single tallest bar anywhere in the whole array</button>
+      <button class="btn dsa-quiz-option" data-value="sorted">A sorted copy of the neighboring bars around index i</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="strictgt" data-explain="The while loop pops only while the stack top is STRICTLY taller than heights[i] (>, not >=). Bars of equal height are allowed to coexist on the stack, since an equal-height bar never actually closes off another bar's run — the rectangle at that height could still extend across both." >
+    <p class="q-text">2. Why does the optimal solution's pop condition use strict <code>&gt;</code> (<code>heights[stack.top] &gt; heights[i]</code>) instead of <code>&gt;=</code>?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="strictgt">Equal-height bars don't close off each other's runs, so they're allowed to coexist on the stack rather than triggering a pop</button>
+      <button class="btn dsa-quiz-option" data-value="faster">It's purely a micro-optimization with no effect on the computed answer</button>
+      <button class="btn dsa-quiz-option" data-value="required">JavaScript's array comparison operators don't support >= between numbers</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="onceeach" data-explain="Every index is pushed onto the stack exactly once and, once popped, is never pushed again. Summed across the whole algorithm (not per iteration), total pops can never exceed n, the total number of pushes — so the combined cost of every while-loop execution is O(n), not O(n) per outer iteration." >
+    <p class="q-text">3. What specifically makes the optimal solution O(n) despite the inner <code>while</code> loop nested inside the outer <code>for</code> loop?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="onceeach">Each index is pushed exactly once and popped at most once across the entire run, so total pop work is bounded by n, not n per iteration</button>
+      <button class="btn dsa-quiz-option" data-value="smallinput">It's only tested on a small 6-element array, not a real complexity guarantee</button>
+      <button class="btn dsa-quiz-option" data-value="skipswork">The while loop is skipped entirely whenever the array is already sorted</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="nextshorter" data-explain="A popped bar's left boundary is the nearest bar to its left that's still shorter than it — exactly whatever index remains on top of the stack after the pop (one position past it). If the stack is empty, no such bar exists anywhere to the left, so the run reaches back to index 0." >
+    <p class="q-text">4. After popping a bar from the stack, why is the new stack top (if any) exactly the popped bar's left boundary marker?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="nextshorter">Because the stack is increasing, whatever remains on top is the nearest bar to the left that's still shorter than the popped bar — the natural left edge of its run</button>
+      <button class="btn dsa-quiz-option" data-value="arbitrary">It's an arbitrary choice — any remaining stack entry would work equally well</button>
+      <button class="btn dsa-quiz-option" data-value="alwayszero">It's always index 0, regardless of what's left on the stack</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="dsa-quiz" data-answer="neverfound" data-explain="Any index still on the stack once the main scan finishes never encountered a shorter bar anywhere to its right during the whole array — meaning its run extends all the way to the actual end of the array, so it needs to be priced using n as the right boundary instead of some i from the loop." >
+    <p class="q-text">5. Why does the optimal solution need a second drain loop after the main <code>for</code> loop finishes?</p>
+    <div class="dsa-quiz-options">
+      <button class="btn dsa-quiz-option" data-value="neverfound">Anything still on the stack never met a shorter bar to its right during the scan, so its rectangle hasn't been priced yet and needs n as its right boundary</button>
+      <button class="btn dsa-quiz-option" data-value="cleanup">It's just memory cleanup with no effect on the computed answer</button>
+      <button class="btn dsa-quiz-option" data-value="redundant">It's redundant — the main loop already prices every bar correctly on its own</button>
+    </div>
+    <p class="dsa-quiz-feedback" hidden></p>
+  </div>
+
+  <div class="continue-row">
+    <button class="btn btn-primary" id="completeBtn">Mark problem complete</button>
+  </div>
+  <div class="continue-row">
+    <a class="btn" href="index.html">← Back to Problem Bank</a>
+  </div>
+
+  <h2>More Stack problems</h2>
+  <div class="day-list" id="relatedList"></div>
+</main>
+
+<footer class="site-footer">
+  30 Days of DSA in JavaScript — a personal study project.
+</footer>
+
+<script src="../js/problemBank.js"></script>
+<script src="../js/problemBankProgress.js"></script>
+<script src="../js/engine.js"></script>
+<script>
+  const SLUG = 'largest-rectangle-in-histogram';
+  const EXAMPLE = [2, 1, 5, 6, 2, 3];
+
+  // ---- Solution 1: brute force (expand outward per bar) ----
+  function buildBruteSteps(heights) {
+    const n = heights.length;
+    const steps = [];
+    let best = 0, bestLeft = 0, bestRight = 0;
+
+    steps.push({
+      narration: `Start: heights = [${heights.join(', ')}]. For each bar, expand outward while neighbors are at least as tall, then multiply the width by that bar's height.`,
+      values: heights.slice(),
+      states: {},
+    });
+
+    for (let i = 0; i < n; i++) {
+      let left = i;
+      while (left - 1 >= 0 && heights[left - 1] >= heights[i]) left--;
+      let right = i;
+      while (right + 1 < n && heights[right + 1] >= heights[i]) right++;
+
+      const width = right - left + 1;
+      const area = width * heights[i];
+      const improved = area > best;
+      if (improved) { best = area; bestLeft = left; bestRight = right; }
+
+      const states = {};
+      for (let k = left; k <= right; k++) states[k] = improved ? 'active' : 'compare';
+      states[i] = 'pointer';
+      steps.push({
+        narration: `Bar i=${i} (height ${heights[i]}): widest run is [${left}..${right}], width ${width} × height ${heights[i]} = ${area}.${improved ? ` New best area: ${best}.` : ` Best area stays ${best} — this run doesn't beat it.`}`,
+        values: heights.slice(),
+        states,
+      });
+    }
+
+    const finalStates = {};
+    for (let k = bestLeft; k <= bestRight; k++) finalStates[k] = 'sorted';
+    steps.push({
+      narration: `Done — checked every bar's widest run. Largest rectangle area: ${best}, from bars [${bestLeft}..${bestRight}].`,
+      values: heights.slice(),
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  // ---- Solution 2: optimal (monotonic increasing stack) ----
+  function buildOptimalSteps(heights) {
+    const n = heights.length;
+    const steps = [];
+    const stack = [];
+    let best = 0, bestLeft = 0, bestRight = 0;
+
+    function stackStates(extra) {
+      const states = {};
+      stack.forEach((idx) => { states[idx] = 'active'; });
+      Object.assign(states, extra);
+      return states;
+    }
+
+    steps.push({
+      narration: `Start: heights = [${heights.join(', ')}]. Empty stack — scan left to right, keeping the stack's heights strictly increasing.`,
+      values: heights.slice(),
+      states: {},
+    });
+
+    for (let i = 0; i < n; i++) {
+      while (stack.length && heights[stack[stack.length - 1]] > heights[i]) {
+        const topIdx = stack.pop();
+        const height = heights[topIdx];
+        const leftBoundary = stack.length ? stack[stack.length - 1] + 1 : 0;
+        const width = i - leftBoundary;
+        const area = height * width;
+        const improved = area > best;
+        if (improved) { best = area; bestLeft = leftBoundary; bestRight = i - 1; }
+        steps.push({
+          narration: `heights[${i}]=${heights[i]} is shorter than the stack top (index ${topIdx}, height ${height}) — pop it. Its run is [${leftBoundary}..${i - 1}], width ${width} × height ${height} = ${area}.${improved ? ` New best area: ${best}.` : ` Best area stays ${best}.`}`,
+          values: heights.slice(),
+          states: stackStates({ [topIdx]: 'swap', [i]: 'pointer' }),
+        });
+      }
+      stack.push(i);
+      steps.push({
+        narration: `Push index ${i} (height ${heights[i]}) — stack is now [${stack.join(', ')}], heights strictly increasing bottom to top.`,
+        values: heights.slice(),
+        states: stackStates({ [i]: 'pointer' }),
+      });
+    }
+
+    while (stack.length) {
+      const topIdx = stack.pop();
+      const height = heights[topIdx];
+      const leftBoundary = stack.length ? stack[stack.length - 1] + 1 : 0;
+      const width = n - leftBoundary;
+      const area = height * width;
+      const improved = area > best;
+      if (improved) { best = area; bestLeft = leftBoundary; bestRight = n - 1; }
+      steps.push({
+        narration: `Draining: index ${topIdx} (height ${height}) never met a shorter bar to its right. Its run is [${leftBoundary}..${n - 1}], width ${width} × height ${height} = ${area}.${improved ? ` New best area: ${best}.` : ` Best area stays ${best}.`}`,
+        values: heights.slice(),
+        states: stackStates({ [topIdx]: 'swap' }),
+      });
+    }
+
+    const finalStates = {};
+    for (let k = bestLeft; k <= bestRight; k++) finalStates[k] = 'sorted';
+    steps.push({
+      narration: `Done — every index pushed once, popped at most once. Largest rectangle area: ${best}, from bars [${bestLeft}..${bestRight}].`,
+      values: heights.slice(),
+      states: finalStates,
+    });
+    return steps;
+  }
+
+  const viz1Stage = document.getElementById('viz1Stage');
+  const bars1 = new DSA.Bars(viz1Stage, { min: 0, max: 6 });
+  bars1.setData(EXAMPLE);
+  const steps1 = buildBruteSteps(EXAMPLE);
+  const player1 = new DSA.StepPlayer({
+    steps: steps1,
+    narrationEl: document.getElementById('viz1Narration'),
+    counterEl: document.getElementById('viz1Counter'),
+    playBtn: document.getElementById('viz1Play'),
+    stepBtn: document.getElementById('viz1Step'),
+    resetBtn: document.getElementById('viz1Reset'),
+    speed: 850,
+    onStep(step) { if (!step) { bars1.paint({}, EXAMPLE); return; } bars1.paint(step.states, step.values); },
+  });
+
+  const viz2Stage = document.getElementById('viz2Stage');
+  const bars2 = new DSA.Bars(viz2Stage, { min: 0, max: 6 });
+  bars2.setData(EXAMPLE);
+  const steps2 = buildOptimalSteps(EXAMPLE);
+  const player2 = new DSA.StepPlayer({
+    steps: steps2,
+    narrationEl: document.getElementById('viz2Narration'),
+    counterEl: document.getElementById('viz2Counter'),
+    playBtn: document.getElementById('viz2Play'),
+    stepBtn: document.getElementById('viz2Step'),
+    resetBtn: document.getElementById('viz2Reset'),
+    speed: 850,
+    onStep(step) { if (!step) { bars2.paint({}, EXAMPLE); return; } bars2.paint(step.states, step.values); },
+  });
+
+  DSA.wireQuiz(document);
+  DSA.wireReveals(document);
+
+  const completeBtn = document.getElementById('completeBtn');
+  function refreshCompleteBtn() {
+    const done = ProblemBankProgress.isDone(SLUG);
+    completeBtn.textContent = done ? '✓ Complete — click to undo' : 'Mark problem complete';
+    completeBtn.classList.toggle('btn-done', done);
+    completeBtn.classList.toggle('btn-primary', !done);
+  }
+  completeBtn.addEventListener('click', () => {
+    ProblemBankProgress.toggle(SLUG);
+    refreshCompleteBtn();
+  });
+  refreshCompleteBtn();
+
+  function renderRelated() {
+    const list = document.getElementById('relatedList');
+    relatedProblems('largest-rectangle-in-histogram', 3).forEach(({ slug, title, difficulty }) => {
+      const a = document.createElement('a');
+      a.className = 'day-row';
+      a.href = `${slug}.html`;
+      a.innerHTML = `
+        <span class="day-badge">${difficulty[0]}</span>
+        <span class="day-info"><span class="day-title">${title}</span></span>
+        <span class="day-status">
+          <span class="chevron-circle" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+        </span>
+      `;
+      list.appendChild(a);
+    });
+  }
+
+  renderRelated();
+</script>
+</body>
+</html>
