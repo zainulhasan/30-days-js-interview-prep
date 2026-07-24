@@ -270,6 +270,42 @@ const PROBLEM_BANK = [
     prereqTitle: 'Binary Search Variations',
     leetcodeUrl: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
   },
+  {
+    slug: 'trapping-rain-water',
+    title: 'Trapping Rain Water',
+    pattern: 'Two Pointers',
+    difficulty: 'Hard',
+    prereqDay: 4,
+    prereqTitle: 'Two-Pointer Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/trapping-rain-water/',
+  },
+  {
+    slug: '4sum',
+    title: '4Sum',
+    pattern: 'Two Pointers',
+    difficulty: 'Medium',
+    prereqDay: 4,
+    prereqTitle: 'Two-Pointer Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/4sum/',
+  },
+  {
+    slug: 'next-permutation',
+    title: 'Next Permutation',
+    pattern: 'Two Pointers',
+    difficulty: 'Medium',
+    prereqDay: 4,
+    prereqTitle: 'Two-Pointer Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/next-permutation/',
+  },
+  {
+    slug: 'find-the-duplicate-number',
+    title: 'Find the Duplicate Number',
+    pattern: 'Two Pointers',
+    difficulty: 'Medium',
+    prereqDay: 4,
+    prereqTitle: 'Two-Pointer Pattern',
+    leetcodeUrl: 'https://leetcode.com/problems/find-the-duplicate-number/',
+  },
 ];
 
 const PROBLEM_BANK_PATTERNS = [
@@ -281,6 +317,7 @@ const PROBLEM_BANK_PATTERNS = [
   { key: 'Arrays & Hashing', title: 'Arrays & Hashing' },
   { key: 'Stack', title: 'Stack' },
   { key: 'Binary Search', title: 'Binary Search' },
+  { key: 'Two Pointers', title: 'Two Pointers' },
 ];
 
 function problemBankInfo(slug) {
